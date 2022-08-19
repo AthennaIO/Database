@@ -144,7 +144,9 @@ export class ConnectionFactory {
     }
 
     if (configs.additionalOptions) {
-      Object.keys(configs.additionalOptions).forEach(k => typeormOptions[k] = configs.additionalOptions[k])
+      Object.keys(configs.additionalOptions).forEach(
+        k => (typeormOptions[k] = configs.additionalOptions[k]),
+      )
     }
 
     const dataSource = new DataSource(typeormOptions)
