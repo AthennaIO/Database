@@ -8,21 +8,9 @@
  */
 
 import { DataSource } from 'typeorm'
-import { createConnection } from 'mongoose'
 import { Config, Options, Parser } from '@secjs/utils'
 
 export class ConnectionFactory {
-  /**
-   * Create the connection with a mongo database.
-   *
-   * @param {string} conName
-   * @param {any} configs
-   * @return {Promise<any>}
-   */
-  static async mongo(conName, configs) {
-    return this.#mongoose(conName, configs)
-  }
-
   /**
    * Create the connection with a mysql database.
    *
@@ -152,20 +140,5 @@ export class ConnectionFactory {
     const dataSource = new DataSource(typeormOptions)
 
     return dataSource.initialize()
-  }
-
-  /**
-   * Create a database connection using mongoose.
-   *
-   * @param {string} conName
-   * @param {any} configs
-   * @return {Promise<any>}
-   */
-  static async #mongoose(conName, configs = {}) {
-    const defaultConfig = Config.get(`database.connections.${conName}`)
-
-    const connectionUrl = this.#createConUrl(defaultConfig, configs)
-
-    return createConnection(connectionUrl, defaultConfig.options)
   }
 }
