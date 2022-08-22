@@ -1,7 +1,10 @@
 import { Table } from 'typeorm'
+import { Is } from '@secjs/utils'
 
+import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 
 export class PostgresDriver {
@@ -13,9 +16,9 @@ export class PostgresDriver {
   #isConnected = false
 
   /**
-   * The client responsible to handle database operations.
+   * The query runner responsible to handle database operations.
    *
-   * @type {import('typeorm').DataSource|null}
+   * @type {import('typeorm').QueryRunner|null}
    */
   #client = null
 
@@ -78,9 +81,24 @@ export class PostgresDriver {
   /**
    * The relations queries done to this instance.
    *
-   * @type {any}
+   * @type {Map<string, any>}
    */
-  #relations = {}
+  #relations = new Map()
+
+  /**
+   * Creates a new instance of PostgresDriver.
+   *
+   * @param {string|any} connection
+   * @param {any} configs
+   * @param {import('typeorm').QueryRunner} [client]
+   * @return {Database}
+   */
+  constructor(connection, configs = {}, client = null) {
+    this.#configs = configs
+    this.#connection = connection
+
+    this.#client = client
+  }
 
   /**
    * Connect to database.
@@ -94,12 +112,14 @@ export class PostgresDriver {
       return
     }
 
-    this.#client = await DriverFactory.createConnectionByDriver(
-      'postgres',
-      this.#connection,
-      this.#configs,
-      saveOnDriver,
-    )
+    this.#client = (
+      await DriverFactory.createConnectionByDriver(
+        'postgres',
+        this.#connection,
+        this.#configs,
+        saveOnDriver,
+      )
+    ).createQueryRunner()
 
     this.#isConnected = true
   }
@@ -114,7 +134,7 @@ export class PostgresDriver {
       return
     }
 
-    await this.#client.destroy()
+    await this.#client.connection.destroy()
 
     this.#table = null
     this.#client = null
@@ -124,55 +144,115 @@ export class PostgresDriver {
   /**
    * Creates a new instance of query builder.
    *
+   * @param fullQuery {boolean}
    * @return {import('typeorm').SelectQueryBuilder}
    */
-  async query() {
+  query(fullQuery = false) {
     if (!this.#table) {
       throw new NoTableSelectedException()
     }
 
     /** @type {import('typeorm').SelectQueryBuilder} */
-    const query = this.#client.createQueryBuilder()
+    let query = null
 
-    query.from(this.#table)
-
-    if (this.#select.length) {
-      query.select(this.#select)
+    if (Is.String(this.#table)) {
+      query = this.#client.manager.createQueryBuilder().from(this.#table)
+    } else {
+      query = this.#client.manager.createQueryBuilder(
+        this.#table,
+        this.#table.name,
+      )
     }
+
+    if (!fullQuery) {
+      return query
+    }
+
+    this.#setRelationsOnQuery(query)
+    this.#setSelectOnQuery(query)
+    this.#setWhereOnQuery(query)
+    this.#setOrderByOnQuery(query)
 
     if (this.#skip) {
       query.skip(this.#skip)
     }
 
     if (this.#limit) {
-      query.skip(this.#limit)
-    }
-
-    if (this.#where.size > 0) {
-      const iterator = this.#where.entries()
-
-      while (iterator.done) {
-        if (!iterator.value[1]) {
-          query.where(iterator.value[0])
-        } else {
-          query.where(iterator.value[0], iterator.value[1])
-        }
-
-        iterator.next()
-      }
-    }
-
-    if (this.#orderBy.size > 0) {
-      const iterator = this.#orderBy.entries()
-
-      while (iterator.done) {
-        query.addOrderBy(iterator.value[0], iterator.value[1])
-
-        iterator.next()
-      }
+      query.limit(this.#limit)
     }
 
     return query
+  }
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  async startTransaction() {
+    const client = await this.#client.connection.createQueryRunner()
+
+    await client.startTransaction()
+
+    const driver = new PostgresDriver(this.#connection, this.#configs, client)
+
+    driver.buildTable(this.#table)
+
+    return new Transaction(driver)
+  }
+
+  /**
+   * Commit the transaction.
+   *
+   * @return {Promise<void>}
+   */
+  async commitTransaction() {
+    await this.#client.commitTransaction()
+    await this.#client.release()
+  }
+
+  /**
+   * Rollback the transaction.
+   *
+   * @return {Promise<void>}
+   */
+  async rollbackTransaction() {
+    await this.#client.rollbackTransaction()
+    await this.#client.release()
+  }
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  async getDatabases() {
+    const actualDatabase = await this.getCurrentDatabase()
+
+    const databases = await this.#client.getDatabases()
+
+    databases.push(actualDatabase)
+
+    return databases
+  }
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  async getCurrentDatabase() {
+    return this.#client.getCurrentDatabase()
+  }
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {Promise<boolean>}
+   */
+  async hasDatabase(database) {
+    return this.#client.hasDatabase(database)
   }
 
   /**
@@ -196,16 +276,45 @@ export class PostgresDriver {
   }
 
   /**
+   * Get metadata information's about some database table.
+   *
+   * @param {string} table
+   * @return {Promise<any>}
+   */
+  async getTable(table) {
+    return this.#client.getTable(table)
+  }
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  async getTables() {
+    const tablesInstance = await this.#client.getTables()
+
+    return tablesInstance.map(tableInstance => tableInstance.name)
+  }
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {Promise<boolean>}
+   */
+  async hasTable(table) {
+    return this.#client.hasTable(table)
+  }
+
+  /**
    * Create a new table in database.
    *
    * @param {string} tableName
    * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
-  async createTable(tableName, options) {
-    const queryRunner = this.#client.createQueryRunner()
-
-    await queryRunner.createTable(
+  async createTable(tableName, options = {}) {
+    await this.#client.createTable(
       new Table({ name: tableName, ...options }),
       true,
     )
@@ -218,19 +327,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async dropTable(tableName) {
-    const queryRunner = this.#client.createQueryRunner()
-
-    await queryRunner.dropTable(tableName, true)
-  }
-
-  /**
-   * Get metadata information's about some database table.
-   *
-   * @param {string} table
-   * @return {Promise<import('typeorm').EntityMetadata>}
-   */
-  async tableInfo(table) {
-    return this.#client.getMetadata(table)
+    await this.#client.dropTable(tableName, true)
   }
 
   /**
@@ -262,7 +359,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async avg(column) {
-    const { avg } = await this.query()
+    const { avg } = await this.query(true)
       .select(`AVG(${column})`, 'avg')
       .getRawOne()
 
@@ -276,7 +373,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async avgDistinct(column) {
-    const { avg } = await this.query()
+    const { avg } = await this.query(true)
       .select(`AVG(${column})`, 'avg')
       .distinct(true)
       .getRawOne()
@@ -291,7 +388,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async max(column) {
-    const { max } = await this.query()
+    const { max } = await this.query(true)
       .select(`MAX(${column})`, 'max')
       .getRawOne()
 
@@ -305,7 +402,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async min(column) {
-    const { min } = await this.query()
+    const { min } = await this.query(true)
       .select(`MIN(${column})`, 'min')
       .getRawOne()
 
@@ -319,7 +416,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async sum(column) {
-    const { sum } = await this.query()
+    const { sum } = await this.query(true)
       .select(`SUM(${column})`, 'sum')
       .getRawOne()
 
@@ -333,7 +430,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async sumDistinct(column) {
-    const { sum } = await this.query()
+    const { sum } = await this.query(true)
       .select(`SUM(${column})`, 'sum')
       .distinct(true)
       .getRawOne()
@@ -348,7 +445,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async increment(column) {
-    return this.query()
+    return this.query(true)
       .update()
       .set({ [column]: () => `${column} + 1` })
       .execute()
@@ -361,7 +458,7 @@ export class PostgresDriver {
    * @return {Promise<number>}
    */
   async decrement(column) {
-    return this.query()
+    return this.query(true)
       .update()
       .set({ [column]: () => `${column} - 1` })
       .execute()
@@ -376,12 +473,12 @@ export class PostgresDriver {
   async count(column = '*') {
     if (column === '*') {
       // eslint-disable-next-line no-unused-vars
-      const [_, count] = await this.query().getManyAndCount()
+      const [_, count] = await this.query(true).getManyAndCount()
 
       return count
     }
 
-    const { count } = await this.query()
+    const { count } = await this.query(true)
       .select(`COUNT(${column})`, 'count')
       .getRawOne()
 
@@ -397,7 +494,7 @@ export class PostgresDriver {
   async countDistinct(column = '*') {
     if (column === '*') {
       // eslint-disable-next-line no-unused-vars
-      const [_, count] = await this.query()
+      const [_, count] = await this.query(true)
         .select()
         .distinct(true)
         .getManyAndCount()
@@ -405,7 +502,7 @@ export class PostgresDriver {
       return count
     }
 
-    const { count } = await this.query()
+    const { count } = await this.query(true)
       .select(`COUNT(${column})`, 'count')
       .distinct(true)
       .getRawOne()
@@ -419,7 +516,7 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async find() {
-    const data = await this.query().limit(1).execute()
+    const data = await this.query(true).take(1).execute()
 
     return data[0]
   }
@@ -430,7 +527,51 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async findMany() {
-    return this.query().execute()
+    return this.query(true).execute()
+  }
+
+  /**
+   * Create a value in database.
+   *
+   * @param {any} data
+   * @return {Promise<any>}
+   */
+  async create(data) {
+    if (Is.Array(data)) {
+      throw new WrongMethodException('create', 'createMany')
+    }
+
+    const select = this.#select.length ? [...this.#select] : '*'
+
+    const result = await this.query(true)
+      .insert()
+      .returning(select)
+      .values(data)
+      .execute()
+
+    return result.raw[0]
+  }
+
+  /**
+   * Create many values in database.
+   *
+   * @param {any[]} data
+   * @return {Promise<any>}
+   */
+  async createMany(data) {
+    if (!Is.Array(data)) {
+      throw new WrongMethodException('createMany', 'create')
+    }
+
+    const select = this.#select.length ? [...this.#select] : '*'
+
+    const result = await this.query(true)
+      .insert()
+      .returning(select)
+      .values(data)
+      .execute()
+
+    return result.raw
   }
 
   /**
@@ -441,20 +582,18 @@ export class PostgresDriver {
    */
   async update(data) {
     if (!this.#where.size) {
-      throw new EmptyWhereException('update', 'updateMany')
+      throw new EmptyWhereException('update')
     }
 
-    return this.query().update().set(data).execute()
-  }
+    const select = this.#select.length ? [...this.#select] : '*'
 
-  /**
-   * Update many values in database.
-   *
-   * @param {any} data
-   * @return {Promise<any>}
-   */
-  async updateMany(data) {
-    return this.query().update().set(data).execute()
+    const result = await this.query(true)
+      .update(this.#table)
+      .set(data)
+      .returning(select)
+      .execute()
+
+    return result.raw
   }
 
   /**
@@ -464,27 +603,20 @@ export class PostgresDriver {
    */
   async delete(soft = false) {
     if (!this.#where.size) {
-      throw new EmptyWhereException('delete', 'deleteMany')
+      throw new EmptyWhereException('delete')
     }
+
+    const select = this.#select.length ? [...this.#select] : '*'
 
     if (soft) {
-      return this.query().softDelete().execute()
+      const result = await this.update({ deletedAt: new Date() })
+
+      return result.raw
     }
 
-    return this.query().delete().execute()
-  }
+    const result = await this.query(true).delete().returning(select).execute()
 
-  /**
-   * Delete many values in database.
-   *
-   * @return {Promise<void>}
-   */
-  async deleteMany(soft = false) {
-    if (soft) {
-      return this.query().softDelete().execute()
-    }
-
-    return this.query().delete().execute()
+    return result.raw
   }
 
   /**
@@ -520,6 +652,22 @@ export class PostgresDriver {
    */
   buildWhere(statement, value) {
     return this.#buildWhere('=', statement, value)
+  }
+
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relation {string|any}
+   * @param [operation] {string}
+   * @return {PostgresDriver}
+   */
+  buildIncludes(relation, operation = 'leftJoinAndSelect') {
+    this.#relations.set(`${this.#table}.${relation}`, {
+      name: relation,
+      operation,
+    })
+
+    return this
   }
 
   /**
@@ -635,7 +783,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildOrderBy(columnName, direction = 'ASC') {
-    this.#orderBy[columnName] = direction.toUpperCase()
+    this.#orderBy.set(columnName, direction.toUpperCase())
 
     return this
   }
@@ -683,7 +831,7 @@ export class PostgresDriver {
     }
 
     if (operation === 'IN' || operation === 'NOT IN') {
-      return `${this.#table}.${fieldName} ${operation}(:...${fieldName})`
+      return `${this.#table}.${fieldName} ${operation} (:...${fieldName})`
     }
 
     return `${this.#table}.${fieldName} ${operation} :${fieldName}`
@@ -722,5 +870,92 @@ export class PostgresDriver {
     })
 
     return this
+  }
+
+  /**
+   * Set select options in query if exists.
+   *
+   * @param query {import('typeorm').SelectQueryBuilder}
+   */
+  #setSelectOnQuery(query) {
+    if (query.returning) {
+      query.returning(this.#select.length ? this.#select : '*')
+
+      return
+    }
+
+    if (!this.#select.length) {
+      return
+    }
+
+    query.select(this.#select)
+
+    this.#select = []
+  }
+
+  /**
+   * Set all where options in query if exists.
+   *
+   * @param query {import('typeorm').SelectQueryBuilder}
+   */
+  #setWhereOnQuery(query) {
+    if (!this.#where.size) {
+      return
+    }
+
+    const iterator = this.#where.entries()
+
+    for (const [key, value] of iterator) {
+      if (!value) {
+        query.where(key)
+
+        continue
+      }
+
+      query.where(key, value)
+    }
+
+    this.#where = new Map()
+  }
+
+  /**
+   * Set all orderBy options in query if exists.
+   *
+   * @param query {import('typeorm').SelectQueryBuilder}
+   */
+  #setOrderByOnQuery(query) {
+    if (!this.#orderBy.size) {
+      return
+    }
+
+    const iterator = this.#orderBy.entries()
+
+    for (const [key, value] of iterator) {
+      query.addOrderBy(key, value)
+    }
+
+    this.#orderBy = new Map()
+  }
+
+  /**
+   * Set all relations options in query if exists.
+   *
+   * @param query {import('typeorm').SelectQueryBuilder}
+   */
+  #setRelationsOnQuery(query) {
+    if (!this.#relations.size) {
+      return
+    }
+
+    const iterator = this.#relations.entries()
+
+    for (const [key, value] of iterator) {
+      const name = value.name
+      const operation = value.operation
+
+      query[operation](key, name)
+    }
+
+    this.#relations = new Map()
   }
 }
