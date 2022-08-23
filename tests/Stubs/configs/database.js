@@ -1,3 +1,6 @@
+import { User } from '#tests/Stubs/models/User'
+import { Product } from '#tests/Stubs/models/Product'
+
 export default {
   /*
   |--------------------------------------------------------------------------
@@ -44,8 +47,8 @@ export default {
       database: 'postgres',
       user: 'postgres',
       password: '12345',
-      debug: true,
-      entities: [],
+      logging: ['error', 'warn'],
+      entities: [User.getSchema(), Product.getSchema()],
       migrations: [],
       synchronize: false,
     },

@@ -65,7 +65,7 @@ export class DriverFactory {
     const { Driver, clientConnection } = this.#drivers.get(conConfig.driver)
 
     if (clientConnection) {
-      return new Driver(clientConnection, runtimeConfig)
+      return new Driver(conName, runtimeConfig, clientConnection)
     }
 
     this.#drivers.set(conConfig.driver, {
@@ -146,6 +146,10 @@ export class DriverFactory {
 
     if (!conName) {
       conName = driverObject.lastConName
+    }
+
+    if (conName === 'default') {
+      conName = Config.get('database.default')
     }
 
     const client = await ConnectionFactory[driverName](conName, configs)

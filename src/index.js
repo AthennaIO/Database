@@ -53,8 +53,6 @@ export class Database {
    * @return {Database}
    */
   connection(connection) {
-    this.close()
-
     this.#driver = DriverFactory.fabricate(connection, this.#configs)
 
     return this
@@ -78,6 +76,15 @@ export class Database {
    */
   async close() {
     return this.#driver.close()
+  }
+
+  /**
+   * Return the TypeORM data source.
+   *
+   * @return {import('typeorm').DataSource|null}
+   */
+  getDataSource() {
+    return this.#driver.getDataSource()
   }
 
   /**
@@ -338,6 +345,18 @@ export class Database {
   }
 
   /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {Promise<import('@secjs/utils').PaginatedResponse>}
+   */
+  async paginate(page = 0, limit = 10, resourceUrl = '/') {
+    return this.#driver.paginate(page, limit, resourceUrl)
+  }
+
+  /**
    * Create a value in database.
    *
    * @param {any} data
@@ -361,7 +380,7 @@ export class Database {
    * Update a value in database.
    *
    * @param {any} data
-   * @return {Promise<any>}
+   * @return {Promise<any|any[]>}
    */
   async update(data) {
     return this.#driver.update(data)
@@ -370,10 +389,10 @@ export class Database {
   /**
    * Delete one value in database.
    *
-   * @return {Promise<void>}
+   * @return {Promise<any|any[]|void>}
    */
-  async delete(soft = false) {
-    return this.#driver.delete(soft)
+  async delete() {
+    return this.#driver.delete()
   }
 
   /**
@@ -395,7 +414,32 @@ export class Database {
    * @return {Database}
    */
   buildSelect(...columns) {
-    this.#driver.buildSelect(columns)
+    this.#driver.buildSelect(...columns)
+
+    return this
+  }
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {Database}
+   */
+  buildAddSelect(...columns) {
+    this.#driver.buildAddSelect(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relation {string|any}
+   * @param [operation] {string}
+   * @return {Database}
+   */
+  buildIncludes(relation, operation) {
+    this.#driver.buildIncludes(relation, operation)
 
     return this
   }
@@ -409,19 +453,6 @@ export class Database {
    */
   buildWhere(statement, value) {
     this.#driver.buildWhere(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a include statement in your query.
-   *
-   * @param relation {string|any}
-   * @param [operation] {string}
-   * @return {Database}
-   */
-  buildIncludes(relation, operation = 'leftJoinAndSelect') {
-    this.#driver.buildIncludes(relation, operation)
 
     return this
   }
@@ -864,6 +895,18 @@ export class Transaction {
   }
 
   /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {Promise<import('@secjs/utils').PaginatedResponse>}
+   */
+  async paginate(page = 0, limit = 10, resourceUrl = '/') {
+    return this.#driver.paginate(page, limit, resourceUrl)
+  }
+
+  /**
    * Create a value in database.
    *
    * @param {any} data
@@ -927,14 +970,13 @@ export class Transaction {
   }
 
   /**
-   * Set a where statement in your query.
+   * Set the columns that should be selected on query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
+   * @param columns {string}
    * @return {Transaction}
    */
-  buildWhere(statement, value) {
-    this.#driver.buildWhere(statement, value)
+  buildAddSelect(...columns) {
+    this.#driver.buildAddSelect(...columns)
 
     return this
   }
@@ -946,8 +988,21 @@ export class Transaction {
    * @param [operation] {string}
    * @return {Transaction}
    */
-  buildIncludes(relation, operation = 'leftJoinAndSelect') {
+  buildIncludes(relation, operation) {
     this.#driver.buildIncludes(relation, operation)
+
+    return this
+  }
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Transaction}
+   */
+  buildWhere(statement, value) {
+    this.#driver.buildWhere(statement, value)
 
     return this
   }

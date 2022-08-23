@@ -123,6 +123,7 @@ export class ConnectionFactory {
       typeormOptions.host = configs.host
       typeormOptions.port = configs.port
       typeormOptions.debug = configs.debug
+      typeormOptions.logging = configs.logging
       typeormOptions.username = configs.user
       typeormOptions.password = configs.password
       typeormOptions.database = configs.database

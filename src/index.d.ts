@@ -19,10 +19,10 @@ export class Database {
   /**
    * Change the database connection.
    *
-   * @param {string} connections
+   * @param {string} connection
    * @return {Database}
    */
-  connection(...connections: string[]): Database
+  connection(connection: string): Database
 
   /**
    * Connect to database.
@@ -39,6 +39,13 @@ export class Database {
    * @return {Promise<void>}
    */
   close(): Promise<void>
+
+  /**
+   * Return the TypeORM data source.
+   *
+   * @return {import('typeorm').DataSource|null}
+   */
+  getDataSource(): import('typeorm').DataSource
 
   /**
    * Creates a new instance of query builder.
@@ -252,6 +259,16 @@ export class Database {
   findMany(): Promise<any>
 
   /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {}
+   */
+  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
+
+  /**
    * Create a value in database.
    *
    * @param {any} data
@@ -278,9 +295,9 @@ export class Database {
   /**
    * Delete one value in database.
    *
-   * @return {Promise<void>}
+   * @return {Promise<any|void>}
    */
-  delete(soft?: boolean): Promise<void>
+  delete(): Promise<any|void>
 
   /**
    * Set the table that this query will be executed.
@@ -297,6 +314,14 @@ export class Database {
    * @return {Database}
    */
   buildSelect(...columns: string[]): Database
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {Database}
+   */
+  buildAddSelect(...columns: string[]): Database
 
   /**
    * Set a where statement in your query.
@@ -635,6 +660,16 @@ export class Transaction {
   findMany(): Promise<any>
 
   /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {}
+   */
+  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
+
+  /**
    * Create a value in database.
    *
    * @param {any} data
@@ -661,25 +696,33 @@ export class Transaction {
   /**
    * Delete one value in database.
    *
-   * @return {Promise<void>}
+   * @return {Promise<any|void>}
    */
-  delete(soft?: boolean): Promise<void>
+  delete(): Promise<any|void>
 
   /**
    * Set the table that this query will be executed.
    *
    * @param tableName {string|any}
-   * @return {Database}
+   * @return {Transaction}
    */
-  buildTable(tableName: string | any): Database
+  buildTable(tableName: string | any): Transaction
 
   /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {Database}
+   * @return {Transaction}
    */
-  buildSelect(...columns: string[]): Database
+  buildSelect(...columns: string[]): Transaction
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {Transaction}
+   */
+  buildAddSelect(...columns: string[]): Transaction
 
   /**
    * Set a where statement in your query.

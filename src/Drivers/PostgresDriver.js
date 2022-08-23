@@ -1,5 +1,14 @@
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 import { Table } from 'typeorm'
-import { Is } from '@secjs/utils'
+import { Exec, Is } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
@@ -14,6 +23,13 @@ export class PostgresDriver {
    * @type {boolean}
    */
   #isConnected = false
+
+  /**
+   * The TypeORM data source.
+   *
+   * @type {import('typeorm').DataSource|null}
+   */
+  #dataSource = null
 
   /**
    * The query runner responsible to handle database operations.
@@ -65,6 +81,13 @@ export class PostgresDriver {
   #select = []
 
   /**
+   * The add select queries done to this instance.
+   *
+   * @type {string[]}
+   */
+  #addSelect = []
+
+  /**
    * The skip value done to this instance.
    *
    * @type {number|null}
@@ -90,14 +113,26 @@ export class PostgresDriver {
    *
    * @param {string|any} connection
    * @param {any} configs
-   * @param {import('typeorm').QueryRunner} [client]
+   * @param {import('typeorm').DataSource} [dataSource]
    * @return {Database}
    */
-  constructor(connection, configs = {}, client = null) {
+  constructor(connection, configs = {}, dataSource = null) {
     this.#configs = configs
     this.#connection = connection
 
-    this.#client = client
+    if (dataSource) {
+      this.#dataSource = dataSource
+      this.#client = this.#dataSource.createQueryRunner()
+    }
+  }
+
+  /**
+   * Return the TypeORM data source.
+   *
+   * @return {import('typeorm').DataSource|null}
+   */
+  getDataSource() {
+    return this.#dataSource
   }
 
   /**
@@ -112,14 +147,14 @@ export class PostgresDriver {
       return
     }
 
-    this.#client = (
-      await DriverFactory.createConnectionByDriver(
-        'postgres',
-        this.#connection,
-        this.#configs,
-        saveOnDriver,
-      )
-    ).createQueryRunner()
+    this.#dataSource = await DriverFactory.createConnectionByDriver(
+      'postgres',
+      this.#connection,
+      this.#configs,
+      saveOnDriver,
+    )
+
+    this.#client = this.#dataSource.createQueryRunner()
 
     this.#isConnected = true
   }
@@ -153,16 +188,9 @@ export class PostgresDriver {
     }
 
     /** @type {import('typeorm').SelectQueryBuilder} */
-    let query = null
-
-    if (Is.String(this.#table)) {
-      query = this.#client.manager.createQueryBuilder().from(this.#table)
-    } else {
-      query = this.#client.manager.createQueryBuilder(
-        this.#table,
-        this.#table.name,
-      )
-    }
+    const query = this.#client.manager
+      .getRepository(this.#table)
+      .createQueryBuilder(this.#table)
 
     if (!fullQuery) {
       return query
@@ -170,6 +198,7 @@ export class PostgresDriver {
 
     this.#setRelationsOnQuery(query)
     this.#setSelectOnQuery(query)
+    this.#setAddSelectOnQuery(query)
     this.#setWhereOnQuery(query)
     this.#setOrderByOnQuery(query)
 
@@ -190,15 +219,9 @@ export class PostgresDriver {
    * @return {Promise<Transaction>}
    */
   async startTransaction() {
-    const client = await this.#client.connection.createQueryRunner()
+    await this.#client.startTransaction()
 
-    await client.startTransaction()
-
-    const driver = new PostgresDriver(this.#connection, this.#configs, client)
-
-    driver.buildTable(this.#table)
-
-    return new Transaction(driver)
+    return new Transaction(this)
   }
 
   /**
@@ -209,6 +232,8 @@ export class PostgresDriver {
   async commitTransaction() {
     await this.#client.commitTransaction()
     await this.#client.release()
+
+    this.#client = this.#dataSource.createQueryRunner()
   }
 
   /**
@@ -219,6 +244,8 @@ export class PostgresDriver {
   async rollbackTransaction() {
     await this.#client.rollbackTransaction()
     await this.#client.release()
+
+    this.#client = this.#dataSource.createQueryRunner()
   }
 
   /**
@@ -516,9 +543,7 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async find() {
-    const data = await this.query(true).take(1).execute()
-
-    return data[0]
+    return this.query(true).getOne()
   }
 
   /**
@@ -527,7 +552,24 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async findMany() {
-    return this.query(true).execute()
+    return this.query(true).getMany()
+  }
+
+  /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {Promise<import('@secjs/utils').PaginatedResponse>}
+   */
+  async paginate(page = 0, limit = 10, resourceUrl = '/') {
+    const [data, count] = await this.query(true)
+      .take(page)
+      .limit(limit)
+      .getManyAndCount()
+
+    return Exec.pagination(data, count, { page, limit, resourceUrl })
   }
 
   /**
@@ -593,6 +635,10 @@ export class PostgresDriver {
       .returning(select)
       .execute()
 
+    if (result.raw.length === 1) {
+      return result.raw[0]
+    }
+
     return result.raw
   }
 
@@ -601,20 +647,18 @@ export class PostgresDriver {
    *
    * @return {Promise<void>}
    */
-  async delete(soft = false) {
+  async delete() {
     if (!this.#where.size) {
       throw new EmptyWhereException('delete')
     }
 
     const select = this.#select.length ? [...this.#select] : '*'
 
-    if (soft) {
-      const result = await this.update({ deletedAt: new Date() })
-
-      return result.raw
-    }
-
     const result = await this.query(true).delete().returning(select).execute()
+
+    if (result.raw && result.raw.length === 1) {
+      return result.raw[0]
+    }
 
     return result.raw
   }
@@ -638,7 +682,25 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildSelect(...columns) {
+    if (columns.find(column => column === '*')) {
+      this.#select = []
+
+      return this
+    }
+
     columns.forEach(column => this.#select.push(`${this.#table}.${column}`))
+
+    return this
+  }
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {PostgresDriver}
+   */
+  buildAddSelect(...columns) {
+    columns.forEach(column => this.#addSelect.push(`${this.#table}.${column}`))
 
     return this
   }
@@ -894,6 +956,27 @@ export class PostgresDriver {
   }
 
   /**
+   * Set add select options in query if exists.
+   *
+   * @param query {import('typeorm').SelectQueryBuilder}
+   */
+  #setAddSelectOnQuery(query) {
+    if (query.returning) {
+      query.returning(this.#addSelect.length ? this.#addSelect : '*')
+
+      return
+    }
+
+    if (!this.#addSelect.length) {
+      return
+    }
+
+    this.#addSelect.forEach(select => query.addSelect(select))
+
+    this.#addSelect = []
+  }
+
+  /**
    * Set all where options in query if exists.
    *
    * @param query {import('typeorm').SelectQueryBuilder}
@@ -907,12 +990,12 @@ export class PostgresDriver {
 
     for (const [key, value] of iterator) {
       if (!value) {
-        query.where(key)
+        query.andWhere(key)
 
         continue
       }
 
-      query.where(key, value)
+      query.andWhere(key, value)
     }
 
     this.#where = new Map()
