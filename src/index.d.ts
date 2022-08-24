@@ -41,11 +41,11 @@ export class Database {
   close(): Promise<void>
 
   /**
-   * Return the TypeORM data source.
+   * Return the client of driver.
    *
    * @return {import('typeorm').DataSource|null}
    */
-  getDataSource(): import('typeorm').DataSource
+  getClient(): import('typeorm').DataSource
 
   /**
    * Creates a new instance of query builder.

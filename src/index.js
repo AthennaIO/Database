@@ -79,12 +79,12 @@ export class Database {
   }
 
   /**
-   * Return the TypeORM data source.
+   * Return the client of driver.
    *
    * @return {import('typeorm').DataSource|null}
    */
-  getDataSource() {
-    return this.#driver.getDataSource()
+  getClient() {
+    return this.#driver.getClient()
   }
 
   /**
@@ -104,6 +104,15 @@ export class Database {
    */
   async startTransaction() {
     return this.#driver.startTransaction()
+  }
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  async runMigrations() {
+    await this.#driver.runMigrations()
   }
 
   /**
@@ -654,6 +663,15 @@ export class Transaction {
    */
   async rollbackTransaction() {
     return this.#driver.rollbackTransaction()
+  }
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  async runMigrations() {
+    await this.#driver.runMigrations()
   }
 
   /**

@@ -84,7 +84,7 @@ export class ModelFactory {
       promises.push(this.#getDefinition(override, 'create'))
     }
 
-    let data = await this.#Model.createMany(await Promise.all(promises))
+    let data = await this.#Model.createMany(await Promise.all(promises), true)
 
     if (this.#returning !== '*') {
       data = data.map(d => d[this.#returning])
@@ -108,16 +108,15 @@ export class ModelFactory {
     const data = await this.#Model.definition()
 
     const promises = Object.keys(data).reduce((promises, key) => {
-      // Do not execute sub factory if the value already exists in values object
-      if (override && override[key]) return promises
-
-      if (data[key] instanceof ModelFactory) {
-        promises.push(
-          Promise.resolve(data[key][method]()).then(
-            result => (data[key] = result),
-          ),
-        )
+      if ((override && override[key]) || !(data[key] instanceof ModelFactory)) {
+        return promises
       }
+
+      const subFactory = data[key]
+
+      const result = subFactory[method]().then(r => (data[key] = r))
+
+      promises.push(result)
 
       return promises
     }, [])

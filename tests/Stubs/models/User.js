@@ -2,25 +2,15 @@ import { Model } from '#src/Models/Model'
 import { Column } from '#src/Models/Column'
 import { Relation } from '#src/Models/Relation'
 import { Product } from '#tests/Stubs/models/Product'
-import { Criteria } from '#src/Utils/Criteria'
 
 export class User extends Model {
   /**
-   * Set the table name of this model instance.
+   * Set the db connection that this model instance will work with.
    *
    * @return {string}
    */
-  static get table() {
-    return 'users'
-  }
-
-  /**
-   * Set the primary key of your model.
-   *
-   * @return {string}
-   */
-  static get primaryKey() {
-    return 'id'
+  static get connection() {
+    return 'default'
   }
 
   /**
@@ -30,17 +20,6 @@ export class User extends Model {
    */
   static get persistOnly() {
     return ['id', 'name', 'email']
-  }
-
-  /**
-   * Return the criterias set to this model.
-   *
-   * @return {any}
-   */
-  static get criterias() {
-    return {
-      deletedAt: Criteria.whereNull(this.DELETED_AT).get(),
-    }
   }
 
   /**

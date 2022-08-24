@@ -130,6 +130,7 @@ export class ConnectionFactory {
       typeormOptions.entities = configs.entities
       typeormOptions.migrations = configs.migrations
       typeormOptions.synchronize = configs.synchronize
+      typeormOptions.migrationsTableName = Config.get('database.migrations')
     }
 
     if (configs.additionalOptions) {

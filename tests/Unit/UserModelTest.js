@@ -27,78 +27,7 @@ test.group('UserModelTest', group => {
     database = new Database()
 
     await database.connect()
-
-    await database.createTable('users', {
-      columns: [
-        {
-          name: 'id',
-          type: 'int',
-          isPrimary: true,
-          isGenerated: true,
-          generationStrategy: 'increment',
-        },
-        {
-          name: 'name',
-          type: 'varchar',
-        },
-        {
-          name: 'email',
-          isUnique: true,
-          type: 'varchar',
-        },
-        {
-          name: 'createdAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'updatedAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'deletedAt',
-          type: 'timestamp',
-          isNullable: true,
-          default: null,
-        },
-      ],
-    })
-    await database.createTable('products', {
-      columns: [
-        {
-          name: 'id',
-          type: 'int',
-          isPrimary: true,
-          isGenerated: true,
-          generationStrategy: 'increment',
-        },
-        {
-          name: 'name',
-          type: 'varchar',
-        },
-        {
-          name: 'userId',
-          type: 'int',
-        },
-        {
-          name: 'createdAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'updatedAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'deletedAt',
-          type: 'timestamp',
-          isNullable: true,
-          default: null,
-        },
-      ],
-    })
+    await database.runMigrations()
 
     database.buildTable('users')
 
@@ -108,6 +37,7 @@ test.group('UserModelTest', group => {
   group.each.teardown(async () => {
     await database.dropTable('users')
     await database.dropTable('products')
+    await database.dropTable('migrations')
     await database.close()
   })
 
@@ -212,5 +142,34 @@ test.group('UserModelTest', group => {
 
     assert.deepEqual(user.products[0].id, 1)
     assert.deepEqual(user.products[0].name, 'iPhone X')
+  })
+
+  test('should be able to make sub queries on relations', async ({ assert }) => {
+    const userId = await User.factory('id').create()
+    await Product.factory().count(5).create({ userId })
+    await Product.factory().count(5).create({ userId, deletedAt: new Date() })
+
+    const user = await User.query()
+      .where('id', userId)
+      .includes('products')
+      .whereNull('products.deletedAt')
+      .select('users.id', 'users.name')
+      .select('products.id', 'products.name')
+      .orderBy('products.id', 'DESC')
+      .find()
+
+    assert.deepEqual(user.id, userId)
+    assert.lengthOf(user.products, 5)
+    assert.deepEqual(user.products[0].id, 5)
+  })
+
+  test('should be able to make database assertions', async ({ assert }) => {
+    const userId = await User.factory('id').create()
+    await Product.factory().count(5).create({ userId })
+    await Product.factory().count(5).create({ userId, deletedAt: new Date() })
+
+    await User.assertExists({ id: userId })
+    await Product.assertCount(5)
+    await Product.assertSoftDelete({ userId })
   })
 })

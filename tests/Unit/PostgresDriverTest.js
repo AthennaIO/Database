@@ -26,45 +26,7 @@ test.group('PostgresDriverTest', group => {
     database = new Database()
 
     await database.connect()
-
-    const options = {
-      columns: [
-        {
-          name: 'id',
-          type: 'int',
-          isPrimary: true,
-          isGenerated: true,
-          generationStrategy: 'increment',
-        },
-        {
-          name: 'name',
-          type: 'varchar',
-        },
-        {
-          name: 'email',
-          isUnique: true,
-          type: 'varchar',
-        },
-        {
-          name: 'createdAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'updatedAt',
-          type: 'timestamp',
-          default: 'now()',
-        },
-        {
-          name: 'deletedAt',
-          type: 'timestamp',
-          isNullable: true,
-          default: null,
-        },
-      ],
-    }
-
-    await database.createTable('users', options)
+    await database.runMigrations()
 
     database.buildTable('users')
 
@@ -73,6 +35,8 @@ test.group('PostgresDriverTest', group => {
 
   group.each.teardown(async () => {
     await database.dropTable('users')
+    await database.dropTable('products')
+    await database.dropTable('migrations')
     await database.close()
   })
 

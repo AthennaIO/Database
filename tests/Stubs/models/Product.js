@@ -5,24 +5,6 @@ import { User } from '#tests/Stubs/models/User'
 
 export class Product extends Model {
   /**
-   * Set the table name of this model instance.
-   *
-   * @return {string}
-   */
-  static get table() {
-    return 'products'
-  }
-
-  /**
-   * Set the primary key of your model.
-   *
-   * @return {string}
-   */
-  static get primaryKey() {
-    return 'id'
-  }
-
-  /**
    * The attributes that could be persisted in database.
    *
    *  @return {string[]}
