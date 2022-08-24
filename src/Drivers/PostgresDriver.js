@@ -127,11 +127,11 @@ export class PostgresDriver {
   }
 
   /**
-   * Return the TypeORM data source.
+   * Return the client of driver.
    *
    * @return {import('typeorm').DataSource|null}
    */
-  getDataSource() {
+  getClient() {
     return this.#dataSource
   }
 
@@ -246,6 +246,15 @@ export class PostgresDriver {
     await this.#client.release()
 
     this.#client = this.#dataSource.createQueryRunner()
+  }
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  async runMigrations() {
+    await this.#dataSource.runMigrations()
   }
 
   /**
@@ -688,7 +697,7 @@ export class PostgresDriver {
       return this
     }
 
-    columns.forEach(column => this.#select.push(`${this.#table}.${column}`))
+    columns.forEach(c => this.#select.push(this.#getColumnParam(c)))
 
     return this
   }
@@ -700,7 +709,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildAddSelect(...columns) {
-    columns.forEach(column => this.#addSelect.push(`${this.#table}.${column}`))
+    columns.forEach(c => this.#addSelect.push(this.#getColumnParam(c)))
 
     return this
   }
@@ -724,7 +733,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildIncludes(relation, operation = 'leftJoinAndSelect') {
-    this.#relations.set(`${this.#table}.${relation}`, {
+    this.#relations.set(this.#getColumnParam(relation), {
       name: relation,
       operation,
     })
@@ -845,7 +854,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildOrderBy(columnName, direction = 'ASC') {
-    this.#orderBy.set(columnName, direction.toUpperCase())
+    this.#orderBy.set(this.#getColumnParam(columnName), direction.toUpperCase())
 
     return this
   }
@@ -883,20 +892,22 @@ export class PostgresDriver {
    */
   #getParsedWhereKey(fieldName, operation) {
     if (operation === 'BETWEEN' || operation === 'NOT BETWEEN') {
-      return `${
-        this.#table
-      }.${fieldName} ${operation} :${fieldName}Gte and :${fieldName}Lte`
+      return `${this.#getColumnParam(
+        fieldName,
+      )} ${operation} :${fieldName}Gte and :${fieldName}Lte`
     }
 
     if (operation === 'IS NULL' || operation === 'IS NOT NULL') {
-      return `${this.#table}.${fieldName} ${operation}`
+      return `${this.#getColumnParam(fieldName)} ${operation}`
     }
 
     if (operation === 'IN' || operation === 'NOT IN') {
-      return `${this.#table}.${fieldName} ${operation} (:...${fieldName})`
+      return `${this.#getColumnParam(
+        fieldName,
+      )} ${operation} (:...${fieldName})`
     }
 
-    return `${this.#table}.${fieldName} ${operation} :${fieldName}`
+    return `${this.#getColumnParam(fieldName)} ${operation} :${fieldName}`
   }
 
   /**
@@ -1040,5 +1051,19 @@ export class PostgresDriver {
     }
 
     this.#relations = new Map()
+  }
+
+  /**
+   * Get the column param verifying if it has a "." to
+   * set the table or not.
+   *
+   * @param column
+   */
+  #getColumnParam(column) {
+    if (column.includes('.')) {
+      return column
+    }
+
+    return `${this.#table}.${column}`
   }
 }
