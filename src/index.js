@@ -116,6 +116,15 @@ export class Database {
   }
 
   /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  async revertMigrations() {
+    await this.#driver.revertMigrations()
+  }
+
+  /**
    * List all databases available.
    *
    * @return {Promise<string[]>}

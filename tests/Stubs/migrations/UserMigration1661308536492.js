@@ -4,9 +4,11 @@ export class UserMigration1661308536492 {
   /**
    * Create a table instance.
    *
-   * @return {Table}
+   * @return {string}
    */
-  tableName = 'users'
+  static get tableName() {
+    return 'users'
+  }
 
   /**
    * Up.
@@ -15,7 +17,7 @@ export class UserMigration1661308536492 {
    * @return {Promise<void>}
    */
   async up(queryRunner) {
-    const table = new Table({ name: this.tableName })
+    const table = new Table({ name: UserMigration1661308536492.tableName })
 
     table.addColumn({
       name: 'id',
@@ -65,6 +67,6 @@ export class UserMigration1661308536492 {
    * @return {Promise<void>}
    */
   async down(queryRunner) {
-    await queryRunner.dropTable(this.tableName)
+    await queryRunner.dropTable(UserMigration1661308536492.tableName)
   }
 }

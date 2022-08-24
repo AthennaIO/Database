@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Table } from 'typeorm'
+import { MigrationExecutor, Table } from 'typeorm'
 import { Exec, Is } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
@@ -255,6 +255,21 @@ export class PostgresDriver {
    */
   async runMigrations() {
     await this.#dataSource.runMigrations()
+  }
+
+  /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  async revertMigrations() {
+    const executor = new MigrationExecutor(this.#dataSource)
+
+    const migrations = await executor.getAllMigrations()
+
+    for (let i = 0; i < migrations.length; i++) {
+      await executor.undoLastMigration()
+    }
   }
 
   /**

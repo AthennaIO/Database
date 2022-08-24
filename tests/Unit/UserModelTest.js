@@ -35,9 +35,7 @@ test.group('UserModelTest', group => {
   })
 
   group.each.teardown(async () => {
-    await database.dropTable('users')
-    await database.dropTable('products')
-    await database.dropTable('migrations')
+    await database.revertMigrations()
     await database.close()
   })
 

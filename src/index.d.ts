@@ -63,18 +63,18 @@ export class Database {
   startTransaction(): Promise<Transaction>
 
   /**
-   * Commit the transaction.
+   * Run database migrations.
    *
    * @return {Promise<void>}
    */
-  commitTransaction(): Promise<void>
+  runMigrations(): Promise<void>
 
   /**
-   * Rollback the transaction.
+   * Revert database migrations.
    *
    * @return {Promise<void>}
    */
-  rollbackTransaction(): Promise<void>
+  revertMigrations(): Promise<void>
 
   /**
    * List all databases available.
