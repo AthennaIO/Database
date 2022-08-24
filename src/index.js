@@ -638,6 +638,15 @@ export class Transaction {
   }
 
   /**
+   * Return the client of driver.
+   *
+   * @return {import('typeorm').DataSource|null}
+   */
+  getClient() {
+    return this.#driver.getClient()
+  }
+
+  /**
    * Creates a new instance of query builder.
    *
    * @param fullQuery {boolean}
