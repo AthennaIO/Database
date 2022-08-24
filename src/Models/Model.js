@@ -8,6 +8,7 @@
  */
 
 import { String } from '@secjs/utils'
+import { Assert } from '@japa/assert'
 import { EntitySchema } from 'typeorm'
 import { faker } from '@faker-js/faker'
 
@@ -163,6 +164,22 @@ export class Model {
   }
 
   /**
+   * Count the number of matches with where in database.
+   *
+   * @param {any} [where]
+   * @return {Promise<number>}
+   */
+  static async count(where = {}) {
+    const query = this.query()
+
+    if (Object.keys(where).length) {
+      query.where(where)
+    }
+
+    return query.where(where).count()
+  }
+
+  /**
    * Get one data in DB and return as a subclass instance.
    *
    * @param {any} [where]
@@ -225,9 +242,10 @@ export class Model {
    * Create a new model in DB and return as a subclass instance.
    *
    * @param {any} data
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>>}
    */
-  static async create(data = {}) {
+  static async create(data = {}, ignorePersistOnly = false) {
     return this.query().create(data)
   }
 
@@ -235,10 +253,11 @@ export class Model {
    * Create many models in DB and return as subclass instances.
    *
    * @param {any[]} data
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>[]>}
    */
-  static async createMany(data = []) {
-    return this.query().createMany(data)
+  static async createMany(data = [], ignorePersistOnly = false) {
+    return this.query().createMany(data, ignorePersistOnly)
   }
 
   /**
@@ -246,14 +265,15 @@ export class Model {
    *
    * @param {any} where
    * @param {any} [data]
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>|InstanceType<this>[]>}
    */
-  static async update(where, data = {}) {
+  static async update(where, data = {}, ignorePersistOnly = false) {
     if (!Object.keys(where).length) {
       throw new EmptyWhereException('update')
     }
 
-    return this.query().where(where).update(data)
+    return this.query().where(where).update(data, ignorePersistOnly)
   }
 
   /**
@@ -269,6 +289,54 @@ export class Model {
     }
 
     return this.query().where(where).delete(force)
+  }
+
+  /**
+   * Assert that the model has been softly deleted.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static async assertSoftDelete(where) {
+    const model = await this.find(where)
+
+    new Assert().isDefined(model[this.DELETED_AT])
+  }
+
+  /**
+   * Assert that the number of respective model is the number.
+   *
+   * @param {number} number
+   * @return {Promise<void>}
+   */
+  static async assertCount(number) {
+    const count = await this.count()
+
+    new Assert().deepEqual(number, count)
+  }
+
+  /**
+   * Assert that the values matches any model in database.
+   *
+   * @param {any} values
+   * @return {Promise<void>}
+   */
+  static async assertExists(where) {
+    const model = await this.find(where)
+
+    new Assert().isNotNull(model)
+  }
+
+  /**
+   * Assert that the values does not match any model in database.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static async assertNotExists(where) {
+    const model = await this.find(where)
+
+    new Assert().isNull(model)
   }
 
   /**

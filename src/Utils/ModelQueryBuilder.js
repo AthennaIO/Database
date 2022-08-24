@@ -44,6 +44,7 @@ export class ModelQueryBuilder {
    *
    * @param model
    * @param DB
+   * @param withCriterias
    * @return {ModelQueryBuilder}
    */
   constructor(model, DB, withCriterias) {
@@ -126,30 +127,45 @@ export class ModelQueryBuilder {
    * Create one model in database.
    *
    * @param data {any}
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<any>}
    */
-  async create(data) {
-    return this.#generateModels(await this.#DB.create(this.#fillable(data)))
+  async create(data, ignorePersistOnly = false) {
+    if (!ignorePersistOnly) {
+      data = this.#fillable(data)
+    }
+
+    return this.#generateModels(await this.#DB.create(data))
   }
 
   /**
    * Create many models in database.
    *
    * @param data {any}
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<any[]>}
    */
-  async createMany(data) {
-    return this.#generateModels(await this.#DB.createMany(this.#fillable(data)))
+  async createMany(data, ignorePersistOnly = false) {
+    if (!ignorePersistOnly) {
+      data = this.#fillable(data)
+    }
+
+    return this.#generateModels(await this.#DB.createMany(data))
   }
 
   /**
    * Update one or more models in database.
    *
    * @param data {any}
+   * @param {boolean} ignorePersistOnly
    * @return {Promise<any|any[]>}
    */
-  async update(data) {
-    return this.#generateModels(await this.#DB.update(this.#fillable(data)))
+  async update(data, ignorePersistOnly = false) {
+    if (!ignorePersistOnly) {
+      data = this.#fillable(data)
+    }
+
+    return this.#generateModels(await this.#DB.update(data))
   }
 
   /**
