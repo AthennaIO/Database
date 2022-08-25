@@ -36,9 +36,9 @@ export class DatabaseImpl {
    *
    * @param {boolean} force
    * @param {boolean} saveOnDriver
-   * @return {Promise<void>}
+   * @return {Promise<this>}
    */
-  connect(force?: boolean, saveOnDriver?: boolean): Promise<void>
+  connect(force?: boolean, saveOnDriver?: boolean): this
 
   /**
    * Close the connection with database in this instance.

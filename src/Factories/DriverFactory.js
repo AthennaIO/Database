@@ -10,7 +10,9 @@
 import { Config } from '@secjs/utils'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
+import { SqliteDriver } from '#src/Drivers/SqliteDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
+
 import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
@@ -25,7 +27,7 @@ export class DriverFactory {
   static #drivers = new Map()
     // .set('mongo', { Driver: MongoDriver })
     .set('mysql', { Driver: MySqlDriver })
-    // .set('sqlite', { Driver: SqliteDriver })
+    .set('sqlite', { Driver: SqliteDriver })
     .set('postgres', { Driver: PostgresDriver })
   // .set('sqlserver', { Driver: SqlServerDriver })
 

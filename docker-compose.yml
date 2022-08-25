@@ -1,11 +1,21 @@
 version: "3"
 
 services:
+  mysql:
+    container_name: athenna_mysql
+    image: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: athenna
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: 12345
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+
   postgres:
     container_name: athenna_postgres
     image: postgres
-    volumes:
-      - ./.docker/postgresql:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     environment:
@@ -13,4 +23,3 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
       POSTGRES_ROOT_PASSWORD: 12345
-

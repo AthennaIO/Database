@@ -19,7 +19,7 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async mysql(conName, configs) {
-    return this.#typeorm(conName, configs)
+    return this.#typeorm(conName, 'mysql', configs)
   }
 
   /**
@@ -30,7 +30,7 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async postgres(conName, configs) {
-    return this.#typeorm(conName, configs)
+    return this.#typeorm(conName, 'postgres', configs)
   }
 
   /**
@@ -41,7 +41,7 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async sqlite(conName, configs) {
-    return this.#typeorm(conName, configs)
+    return this.#typeorm(conName, 'better-sqlite3', configs)
   }
 
   /**
@@ -52,7 +52,7 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async sqlserver(conName, configs) {
-    return this.#typeorm(conName, configs)
+    return this.#typeorm(conName, 'mssql', configs)
   }
 
   /**
@@ -108,10 +108,11 @@ export class ConnectionFactory {
    * Create a database connection using typeorm.
    *
    * @param {string} conName
+   * @param {string} type
    * @param {any} runtimeConfig
    * @return {Promise<import('typeorm').DataSource>}
    */
-  static async #typeorm(conName, runtimeConfig = {}) {
+  static async #typeorm(conName, type, runtimeConfig = {}) {
     const defaultConfig = Config.get(`database.connections.${conName}`)
     const configs = this.#mergeConfigs(defaultConfig, runtimeConfig)
     const typeormOptions = {}

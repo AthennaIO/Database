@@ -149,7 +149,7 @@ export class MySqlDriver {
     }
 
     this.#dataSource = await DriverFactory.createConnectionByDriver(
-      'postgres',
+      'mysql',
       this.#connection,
       this.#configs,
       saveOnDriver,
@@ -603,15 +603,12 @@ export class MySqlDriver {
       throw new WrongMethodException('create', 'createMany')
     }
 
-    const select = this.#select.length ? [...this.#select] : '*'
-
-    const result = await this.query(true)
+    const { identifiers } = await this.query(true)
       .insert()
-      .returning(select)
       .values(data)
       .execute()
 
-    return result.raw[0]
+    return this.query().where('id = :id', { id: identifiers[0].id }).getOne()
   }
 
   /**
@@ -625,15 +622,20 @@ export class MySqlDriver {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    const select = this.#select.length ? [...this.#select] : '*'
-
-    const result = await this.query(true)
+    const { identifiers } = await this.query(true)
       .insert()
-      .returning(select)
       .values(data)
       .execute()
 
-    return result.raw
+    const promises = []
+
+    identifiers.forEach(({ id }) => {
+      const promise = this.query().where('id = :id', { id }).getOne()
+
+      promises.push(promise)
+    })
+
+    return Promise.all(promises)
   }
 
   /**
@@ -647,19 +649,26 @@ export class MySqlDriver {
       throw new EmptyWhereException('update')
     }
 
-    const select = this.#select.length ? [...this.#select] : '*'
-
-    const result = await this.query(true)
+    const { identifiers } = await this.query(true)
       .update(this.#table)
       .set(data)
-      .returning(select)
       .execute()
 
-    if (result.raw.length === 1) {
-      return result.raw[0]
+    const promises = []
+
+    identifiers.forEach(({ id }) => {
+      const promise = this.query().where('id = :id', { id }).getOne()
+
+      promises.push(promise)
+    })
+
+    const result = await Promise.all(promises)
+
+    if (result.length === 1) {
+      return result[0]
     }
 
-    return result.raw
+    return result
   }
 
   /**
@@ -672,15 +681,7 @@ export class MySqlDriver {
       throw new EmptyWhereException('delete')
     }
 
-    const select = this.#select.length ? [...this.#select] : '*'
-
-    const result = await this.query(true).delete().returning(select).execute()
-
-    if (result.raw && result.raw.length === 1) {
-      return result.raw[0]
-    }
-
-    return result.raw
+    await this.query(true).delete().execute()
   }
 
   /**

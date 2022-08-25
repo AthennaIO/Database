@@ -30,16 +30,23 @@ export default {
   connections: {
     sqlite: {
       driver: 'sqlite',
-      filename: ':memory:',
+      database: ':memory:',
+      entities: [User.getSchema(), Product.getSchema()],
+      migrations: [Path.stubs('migrations/**/*.js')],
+      synchronize: false,
     },
 
     mysql: {
       driver: 'mysql',
       host: '127.0.0.1',
-      port: 3306,
-      database: 'mysql',
+      port: 3307,
+      database: 'athenna',
       user: 'mysql',
       password: '12345',
+      logging: ['error', 'warn'],
+      entities: [User.getSchema(), Product.getSchema()],
+      migrations: [Path.stubs('migrations/**/*.js')],
+      synchronize: false,
     },
 
     postgres: {

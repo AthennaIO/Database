@@ -63,10 +63,12 @@ export class DatabaseImpl {
    *
    * @param {boolean} force
    * @param {boolean} saveOnDriver
-   * @return {Promise<void>}
+   * @return {Promise<this>}
    */
   async connect(force = false, saveOnDriver = true) {
-    return this.#driver.connect(force, saveOnDriver)
+    await this.#driver.connect(force, saveOnDriver)
+
+    return this
   }
 
   /**

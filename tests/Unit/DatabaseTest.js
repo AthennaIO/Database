@@ -24,7 +24,6 @@ test.group('DatabaseTest', group => {
   group.each.setup(async () => {
     await new DatabaseProvider().boot()
 
-    await Database.connect()
     await Database.runMigrations()
 
     await User.factory().count(10).create()
@@ -37,6 +36,19 @@ test.group('DatabaseTest', group => {
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
+  })
+
+  test('should be able to change connection to mysql', async ({ assert }) => {
+    const mysqlDb = await Database.connection('mysql').connect()
+
+    await mysqlDb.runMigrations()
+
+    const user = await mysqlDb.buildTable('users').create({ name: 'João Lenon', email: 'lenonSec7@gmail.com' })
+
+    assert.deepEqual(user.id, 1)
+
+    await mysqlDb.revertMigrations()
+    await mysqlDb.close()
   })
 
   test('should be able to get the driver client from the connections', async ({ assert }) => {

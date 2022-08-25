@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "The Athenna database handler for SQL/NoSQL. Built on top of TypeORM.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -41,6 +41,8 @@
     "@athenna/ioc": "1.2.3",
     "@faker-js/faker": "7.4.0",
     "@secjs/utils": "1.9.7",
+    "better-sqlite3": "7.6.2",
+    "mysql2": "2.3.3",
     "pg": "8.7.3",
     "typeorm": "0.3.7",
     "typeorm-extension": "2.1.4"
