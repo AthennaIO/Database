@@ -13,30 +13,26 @@ import { Path, Folder, Config } from '@secjs/utils'
 import { Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 
 test.group('UserModelTest', group => {
-  /** @type {Database} */
-  let database = null
-
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Config().safeLoad(Path.config('database.js'))
   })
 
   group.each.setup(async () => {
-    database = new Database()
+    await new DatabaseProvider().boot()
 
-    await database.connect()
-    await database.runMigrations()
-
-    database.buildTable('users')
+    await Database.connect()
+    await Database.runMigrations()
 
     await User.factory().count(10).create()
   })
 
   group.each.teardown(async () => {
-    await database.revertMigrations()
-    await database.close()
+    await Database.revertMigrations()
+    await Database.close()
   })
 
   group.teardown(async () => {
@@ -161,7 +157,7 @@ test.group('UserModelTest', group => {
     assert.deepEqual(user.products[0].id, 5)
   })
 
-  test('should be able to make database assertions', async ({ assert }) => {
+  test('should be able to make database assertions', async () => {
     const userId = await User.factory('id').create()
     await Product.factory().count(5).create({ userId })
     await Product.factory().count(5).create({ userId, deletedAt: new Date() })

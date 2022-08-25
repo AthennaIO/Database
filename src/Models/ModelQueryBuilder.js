@@ -8,6 +8,8 @@
  */
 
 import { Is, Json } from '@secjs/utils'
+
+import { Database } from '#src/index'
 import { Model } from '#src/Models/Model'
 
 export class ModelQueryBuilder {
@@ -43,16 +45,13 @@ export class ModelQueryBuilder {
    * Creates a new instance of ModelQueryBuilder.
    *
    * @param model
-   * @param DB
    * @param withCriterias
    * @return {ModelQueryBuilder}
    */
-  constructor(model, DB, withCriterias) {
-    DB.connection(model.connection).buildTable(model.table)
-
-    this.#DB = DB
+  constructor(model, withCriterias) {
     this.#Model = model
     this.#withCriterias = withCriterias
+    this.#DB = Database.connection(model.connection).buildTable(model.table)
   }
 
   /**
@@ -69,7 +68,7 @@ export class ModelQueryBuilder {
   /**
    * Find many data in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<any[]>}
    */
   async findMany() {
     this.#setCriterias()
@@ -283,7 +282,6 @@ export class ModelQueryBuilder {
    * Include some relation in your query.
    *
    * @param [relationName] {string|any}
-   * @param [operation] {string}
    * @return {ModelQueryBuilder}
    */
   includes(relationName) {

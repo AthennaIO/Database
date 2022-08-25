@@ -9,49 +9,67 @@
 
 import { test } from '@japa/runner'
 import { Path, Folder, Config } from '@secjs/utils'
+import { DataSource, SelectQueryBuilder } from 'typeorm'
 
 import { Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 
-test.group('PostgresDriverTest', group => {
-  /** @type {Database} */
-  let database = null
-
+test.group('DatabaseTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Config().safeLoad(Path.config('database.js'))
   })
 
   group.each.setup(async () => {
-    database = new Database()
+    await new DatabaseProvider().boot()
 
-    await database.connect()
-    await database.runMigrations()
-
-    database.buildTable('users')
+    await Database.connect()
+    await Database.runMigrations()
 
     await User.factory().count(10).create()
   })
 
   group.each.teardown(async () => {
-    await database.revertMigrations()
-    await database.close()
+    await Database.revertMigrations()
+    await Database.close()
   })
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
   })
 
-  test('should be able to list tables and databases', async ({ assert }) => {
-    const tables = await database.getTables()
-    const databases = await database.getDatabases()
+  test('should be able to get the driver client from the connections', async ({ assert }) => {
+    const client = Database.getClient()
 
-    assert.deepEqual(databases, ['postgres'])
-    assert.isTrue(tables.includes('users'))
+    assert.instanceOf(client, DataSource)
   })
 
+  test('should be able to get the internal query builder of driver', async ({ assert }) => {
+    const query = Database.query()
+
+    assert.instanceOf(query, SelectQueryBuilder)
+  })
+
+  test('should be able to create and list tables/databases', async ({ assert }) => {
+    await Database.createDatabase('testing')
+    await Database.createTable('testing', {})
+
+    const tables = await Database.getTables()
+
+    assert.isTrue(tables.includes('users'))
+    assert.isTrue(tables.includes('testing'))
+
+    assert.isTrue(await Database.hasTable('testing'))
+    assert.isTrue(await Database.hasDatabase('testing'))
+    assert.deepEqual(await Database.getCurrentDatabase(), 'postgres')
+
+    await Database.dropTable('testing')
+    await Database.dropDatabase('testing')
+  }).timeout(10000)
+
   test('should be able to create user and users', async ({ assert }) => {
-    const user = await database.create({
+    const user = await Database.buildTable('users').create({
       name: 'João Lenon',
       email: 'lenonSec7@gmail.com',
     })
@@ -60,7 +78,7 @@ test.group('PostgresDriverTest', group => {
     assert.isDefined(user.updatedAt)
     assert.isNull(user.deletedAt)
 
-    const users = await database.createMany([
+    const users = await Database.buildTable('users').createMany([
       { name: 'Victor Tesoura', email: 'txsoura@gmail.com' },
       { name: 'Henry Bernardo', email: 'hbplay@gmail.com' },
     ])
@@ -69,11 +87,11 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to find user and users', async ({ assert }) => {
-    const user = await database.buildWhere('id', 1).find()
+    const user = await Database.buildTable('users').buildWhere('id', 1).find()
 
     assert.deepEqual(user.id, 1)
 
-    const users = await database.buildWhereIn('id', [1, 2]).buildOrderBy('id', 'DESC').findMany()
+    const users = await Database.buildTable('users').buildWhereIn('id', [1, 2]).buildOrderBy('id', 'DESC').findMany()
 
     assert.lengthOf(users, 2)
     assert.deepEqual(users[0].id, 2)
@@ -81,7 +99,10 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to get paginate users', async ({ assert }) => {
-    const { data, meta, links } = await database.buildWhereIn('id', [1, 2]).buildOrderBy('id', 'DESC').paginate()
+    const { data, meta, links } = await Database.buildTable('users')
+      .buildWhereIn('id', [1, 2])
+      .buildOrderBy('id', 'DESC')
+      .paginate()
 
     assert.lengthOf(data, 2)
     assert.deepEqual(meta.itemCount, 2)
@@ -97,12 +118,12 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to update user and users', async ({ assert }) => {
-    const user = await database.buildWhere('id', 1).update({ name: 'João Lenon Updated' })
+    const user = await Database.buildTable('users').buildWhere('id', 1).update({ name: 'João Lenon Updated' })
 
     assert.deepEqual(user.id, 1)
     assert.deepEqual(user.name, 'João Lenon Updated')
 
-    const users = await database.buildWhereIn('id', [1, 2]).update({ name: 'João Lenon Updated' })
+    const users = await Database.buildTable('users').buildWhereIn('id', [1, 2]).update({ name: 'João Lenon Updated' })
 
     assert.lengthOf(users, 2)
     assert.deepEqual(users[0].id, 1)
@@ -112,15 +133,15 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to delete user and users', async ({ assert }) => {
-    await database.buildWhere('id', 3).delete()
+    await Database.buildTable('users').buildWhere('id', 3).delete()
 
-    const notFoundUser = await database.buildWhere('id', 3).find()
+    const notFoundUser = await Database.buildTable('users').buildWhere('id', 3).find()
 
     assert.isNull(notFoundUser)
   })
 
   test('should be able to start/commit/rollback transactions', async ({ assert }) => {
-    const trx = await database.startTransaction()
+    const trx = await Database.buildTable('users').startTransaction()
 
     await trx.buildWhereIn('id', [1, 2]).delete()
 
@@ -128,6 +149,6 @@ test.group('PostgresDriverTest', group => {
 
     await trx.rollbackTransaction()
 
-    assert.isNotEmpty(await database.buildWhereIn('id', [1, 2]).findMany())
+    assert.isNotEmpty(await Database.buildTable('users').buildWhereIn('id', [1, 2]).findMany())
   })
 })
