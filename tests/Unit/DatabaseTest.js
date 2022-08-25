@@ -24,6 +24,7 @@ test.group('DatabaseTest', group => {
   group.each.setup(async () => {
     await new DatabaseProvider().boot()
 
+    await Database.connect()
     await Database.runMigrations()
 
     await User.factory().count(10).create()

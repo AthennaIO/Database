@@ -7,11 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@secjs/utils'
 import { ServiceProvider } from '@athenna/ioc'
 
 import { DatabaseImpl } from '#src/index'
-import { DriverFactory } from '#src/Factories/DriverFactory'
 
 export class DatabaseProvider extends ServiceProvider {
   /**
@@ -20,8 +18,6 @@ export class DatabaseProvider extends ServiceProvider {
    * @return {Promise<void>}
    */
   async boot() {
-    await DriverFactory.createConnectionByName(Config.get('database.default'))
-
     this.container.bind('Athenna/Core/Database', DatabaseImpl)
   }
 }
