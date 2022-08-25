@@ -7,12 +7,19 @@
  * file that was distributed with this source code.
  */
 
-export class Database {
+import { Facade } from '@athenna/ioc'
+import { EntitySchema } from 'typeorm'
+import { Faker } from '@faker-js/faker'
+import { PaginatedResponse } from '@secjs/utils'
+
+export const Database: Facade & DatabaseImpl
+
+export class DatabaseImpl {
   /**
-   * Creates a new instance of Database.
+   * Creates a new instance of DatabaseImpl.
    *
    * @param {any} configs
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   constructor(configs?: any)
 
@@ -20,9 +27,9 @@ export class Database {
    * Change the database connection.
    *
    * @param {string} connection
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  connection(connection: string): Database
+  connection(connection: string): DatabaseImpl
 
   /**
    * Connect to database.
@@ -77,13 +84,6 @@ export class Database {
   revertMigrations(): Promise<void>
 
   /**
-   * List all databases available.
-   *
-   * @return {Promise<string[]>}
-   */
-  getDatabases(): Promise<string[]>
-
-  /**
    * Verify if database exists.
    *
    * @param {string} database
@@ -254,9 +254,9 @@ export class Database {
   /**
    * Find many values in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<any[]>}
    */
-  findMany(): Promise<any>
+  findMany(): Promise<any[]>
 
   /**
    * Find many values in database and return as paginated response.
@@ -303,147 +303,147 @@ export class Database {
    * Set the table that this query will be executed.
    *
    * @param tableName {string|any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildTable(tableName: string | any): Database
+  buildTable(tableName: string | any): DatabaseImpl
 
   /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildSelect(...columns: string[]): Database
+  buildSelect(...columns: string[]): DatabaseImpl
 
   /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildAddSelect(...columns: string[]): Database
+  buildAddSelect(...columns: string[]): DatabaseImpl
 
   /**
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhere(statement: string | Record<string, any>, value?: any): Database
+  buildWhere(statement: string | Record<string, any>, value?: any): DatabaseImpl
 
   /**
    * Set a include statement in your query.
    *
    * @param relation {string|any}
    * @param [operation] {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildIncludes(relation: string | any, operation?: string): Database
+  buildIncludes(relation: string | any, operation?: string): DatabaseImpl
 
   /**
    * Set a where like statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereLike(statement: string | Record<string, any>, value?: any): Database
+  buildWhereLike(statement: string | Record<string, any>, value?: any): DatabaseImpl
 
   /**
    * Set a where ILike statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereILike(statement: string | Record<string, any>, value?: any): Database
+  buildWhereILike(statement: string | Record<string, any>, value?: any): DatabaseImpl
 
   /**
    * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereNot(statement: string | Record<string, any>, value?: any): Database
+  buildWhereNot(statement: string | Record<string, any>, value?: any): DatabaseImpl
 
   /**
    * Set a where in statement in your query.
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereIn(columnName: string, values: any[]): Database
+  buildWhereIn(columnName: string, values: any[]): DatabaseImpl
 
   /**
    * Set a where not in statement in your query.
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereNotIn(columnName: string, values: any[]): Database
+  buildWhereNotIn(columnName: string, values: any[]): DatabaseImpl
 
   /**
    * Set a where null statement in your query.
    *
    * @param columnName {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereNull(columnName: string): Database
+  buildWhereNull(columnName: string): DatabaseImpl
 
   /**
    * Set a where not null statement in your query.
    *
    * @param columnName {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereNotNull(columnName: string): Database
+  buildWhereNotNull(columnName: string): DatabaseImpl
 
   /**
    * Set a where between statement in your query.
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereBetween(columnName: string, values: [any, any]): Database
+  buildWhereBetween(columnName: string, values: [any, any]): DatabaseImpl
 
   /**
    * Set a where not between statement in your query.
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildWhereNotBetween(columnName: string, values: [any, any]): Database
+  buildWhereNotBetween(columnName: string, values: [any, any]): DatabaseImpl
 
   /**
    * Set a order by statement in your query.
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): Database
+  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): DatabaseImpl
 
   /**
    * Set the skip number in your query.
    *
    * @param number {number}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildSkip(number: number): Database
+  buildSkip(number: number): DatabaseImpl
 
   /**
    * Set the limit number in your query.
    *
    * @param number {number}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
-  buildLimit(number: number): Database
+  buildLimit(number: number): DatabaseImpl
 }
 
 export class Transaction {
@@ -476,13 +476,6 @@ export class Transaction {
    * @return {Promise<void>}
    */
   rollbackTransaction(): Promise<void>
-
-  /**
-   * List all databases available.
-   *
-   * @return {Promise<string[]>}
-   */
-  getDatabases(): Promise<string[]>
 
   /**
    * Verify if database exists.
@@ -655,9 +648,9 @@ export class Transaction {
   /**
    * Find many values in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<any[]>}
    */
-  findMany(): Promise<any>
+  findMany(): Promise<any[]>
 
   /**
    * Find many values in database and return as paginated response.
@@ -845,4 +838,846 @@ export class Transaction {
    * @return {Transaction}
    */
   buildLimit(number: number): Transaction
+}
+
+export class Criteria {
+  /**
+   * Set the table that this query will be executed.
+   *
+   * @param tableName {string|any}
+   * @return {Criteria}
+   */
+  static table(tableName: string | any): Criteria
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {Criteria}
+   */
+  static select(...columns: string[]): Criteria
+
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relation {string|any}
+   * @param [operation] {string}
+   * @return {Criteria}
+   */
+  static includes(relation: string | any, operation?: string): Criteria
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static where(statement: string | Record<string, any>, value?: any): Criteria
+
+  /**
+   * Set a where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereLike(statement: string | Record<string, any>, value?: any): Criteria
+
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereILike(statement: string | Record<string, any>, value?: any): Criteria
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereNot(statement: string | Record<string, any>, value?: any): Criteria
+
+  /**
+   * Set a where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {Criteria}
+   */
+  static whereIn(columnName: string, values?: any[]): Criteria
+
+  /**
+   * Set a where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {Criteria}
+   */
+  static whereNotIn(columnName: string, values?: any[]): Criteria
+
+  /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {Criteria}
+   */
+  static whereNull(columnName: string): Criteria
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {Criteria}
+   */
+  static whereNotNull(columnName: string): Criteria
+
+  /**
+   * Set a where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {Criteria}
+   */
+  static whereBetween(columnName: string, values: [any, any]): Criteria
+
+  /**
+   * Set a where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {Criteria}
+   */
+  static whereNotBetween(columnName: string, values: [any, any]): Criteria
+
+  /**
+   * Set a order by statement in your query.
+   *
+   * @param columnName {string}
+   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
+   * @return {Criteria}
+   */
+  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): Criteria
+
+  /**
+   * Set the skip number in your query.
+   *
+   * @param number {number}
+   * @return {Criteria}
+   */
+  static skip(number: number): Criteria
+
+  /**
+   * Set the limit number in your query.
+   *
+   * @param number {number}
+   * @return {Criteria}
+   */
+  static limit(number: number): Criteria
+
+  /**
+   * Get the criteria map.
+   *
+   * @return {Map<string, any[]>}
+   */
+  static get(): Map<string, any[]>
+}
+
+export class ModelFactory {
+  /**
+   * Creates a new instance of ModelFactory.
+   *
+   * @param Model {any}
+   * @param returning {string}
+   * @return {ModelFactory}
+   */
+  constructor(Model: any, returning?: string)
+
+  /**
+   * Set the number of models to be created
+   *
+   * @param number
+   * @return {ModelFactory}
+   */
+  count(number: number): ModelFactory
+
+  /**
+   * Make models without creating it on database.
+   *
+   * @param override {any}
+   * @param asArrayOnOne {boolean}
+   */
+  make(override?: any, asArrayOnOne?: boolean): Promise<any | any[]>
+
+  /**
+   * Create models creating it on database.
+   *
+   * @param override {any}
+   * @param asArrayOnOne {boolean}
+   * @return {any | any[]}
+   */
+  create(override?: any, asArrayOnOne?: boolean): Promise<any | any[]>
+}
+
+export class Model {
+  /**
+   * Set the db connection that this model instance will work with.
+   *
+   * @return {string}
+   */
+  static get connection(): string
+
+  /**
+   * Set the table name of this model instance.
+   *
+   * @return {string}
+   */
+  static get table(): string
+
+  /**
+   * Set the primary key of your model.
+   *
+   * @return {string}
+   */
+  static get primaryKey(): string
+
+  /**
+   * The attributes that could be persisted in database.
+   *
+   *  @return {string[]}
+   */
+  static get persistOnly(): string[]
+
+  /**
+   * Return a boolean specifying if Model will use soft delete.
+   *
+   *  @return {boolean}
+   */
+  static get isSoftDelete(): boolean
+
+  /**
+   * Return the DELETED_AT column name in database.
+   *
+   *  @return {string}
+   */
+  static get DELETED_AT(): string
+
+  /**
+   * Return the criterias set to this model.
+   *
+   * @return {any}
+   */
+  static get criterias(): any
+  /**
+   * The faker instance to create fake data.
+   *
+   * @type {Faker}
+   */
+  static faker: Faker
+
+  /**
+   * The default schema for model instances.
+   *
+   * @return {any}
+   */
+  static schema(): any
+
+  /**
+   * The definition method used by factories.
+   *
+   * @return {any}
+   */
+  static definition(): any
+
+  /**
+   * Create the factory object to generate data.
+   *
+   * @return {ModelFactory}
+   */
+  static factory(returning?: string): ModelFactory
+
+  /**
+   * The TypeORM entity schema instance.
+   *
+   * @return {EntitySchema<any>}
+   */
+  static getSchema(): EntitySchema<any>
+
+  /**
+   * Create a new model query builder.
+   *
+   * @param [withCriterias] {boolean}
+   * @return {ModelQueryBuilder}
+   */
+  static query(withCriterias?: boolean): ModelQueryBuilder
+
+  /**
+   * Count the number of matches with where in database.
+   *
+   * @param {any} [where]
+   * @return {Promise<number>}
+   */
+  static count(where?: any): Promise<void>
+
+  /**
+   * Get one data in DB and return as a subclass instance.
+   *
+   * @param {any} [where]
+   * @return {Promise<InstanceType<this>>}
+   */
+  static find<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+
+  /**
+   * Get many data in DB and return as an array of subclass instance.
+   *
+   * @param {any} [where]
+   * @return {Promise<InstanceType<this>[]>}
+   */
+  static findMany<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+
+  /**
+   * Find many models in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {Promise<{
+   *   data: InstanceType<this>[],
+   *   meta: {
+   *     totalItems: number,
+   *     itemsPerPage: number,
+   *     totalPages: number,
+   *     currentPage: number,
+   *     itemCount: number,
+   *   },
+   *   links: {
+   *     next: string,
+   *     previous: string,
+   *     last: string,
+   *     first: string
+   *   }
+   * }>}
+   */
+  static paginate<Class extends typeof Model>(this: Class, page?: number, limit?: number, resourceUrl?: string): Promise<PaginatedResponse>
+
+  /**
+   * Create a new model in DB and return as a subclass instance.
+   *
+   * @param {any} data
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<InstanceType<this>>}
+   */
+  static create<Class extends typeof Model>(this: Class, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class>>
+
+  /**
+   * Create many models in DB and return as subclass instances.
+   *
+   * @param {any[]} data
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<InstanceType<this>[]>}
+   */
+  static createMany<Class extends typeof Model>(this: Class, data?: any[], ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+
+  /**
+   * Update a model in DB and return as a subclass instance.
+   *
+   * @param {any} where
+   * @param {any} [data]
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<InstanceType<this>|InstanceType<this>[]>}
+   */
+  static update<Class extends typeof Model>(this: Class, where: any, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+
+  /**
+   * Delete a model in DB and return as a subclass instance or void.
+   *
+   * @param {any} where
+   * @param {boolean} force
+   * @return {Promise<InstanceType<this>|void>}
+   */
+  static delete<Class extends typeof Model>(this: Class, where: any, force?: boolean): Promise<InstanceType<Class> | void>
+
+  /**
+   * Assert that the model has been softly deleted.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static assertSoftDelete(where: any): Promise<void>
+
+  /**
+   * Assert that the number of respective model is the number.
+   *
+   * @param {number} number
+   * @return {Promise<void>}
+   */
+  static assertCount(number: number): Promise<void>
+
+  /**
+   * Assert that the values matches any model in database.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static assertExists(where: any): Promise<void>
+
+  /**
+   * Assert that the values does not match any model in database.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static assertNotExists(where: any): Promise<void>
+
+  /**
+   * Return a Json object from the actual subclass instance.
+   *
+   * @return {any|any[]}
+   */
+  toJSON(): any | any[]
+}
+
+export class ModelQueryBuilder {
+  /**
+   * Creates a new instance of ModelQueryBuilder.
+   *
+   * @param model
+   * @param withCriterias
+   * @return {ModelQueryBuilder}
+   */
+  constructor(model: any, withCriterias?: boolean)
+
+  /**
+   * Find one data in database.
+   *
+   * @return {Promise<any>}
+   */
+  find(): Promise<any>
+
+  /**
+   * Find many data in database.
+   *
+   * @return {Promise<any[]>}
+   */
+  findMany(): Promise<any[]>
+
+  /**
+   * Find many models in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {Promise<{
+   *   data: Model[],
+   *   meta: {
+   *     totalItems: number,
+   *     itemsPerPage: number,
+   *     totalPages: number,
+   *     currentPage: number,
+   *     itemCount: number,
+   *   },
+   *   links: {
+   *     next: string,
+   *     previous: string,
+   *     last: string,
+   *     first: string
+   *   }
+   * }>}
+   */
+  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<PaginatedResponse>
+
+  /**
+   * Count the number of models in database.
+   *
+   * @return {Promise<number>}
+   */
+  count(): Promise<number>
+
+  /**
+   * Create one model in database.
+   *
+   * @param data {any}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any>}
+   */
+  create(data: any, ignorePersistOnly?: boolean): Promise<any>
+
+  /**
+   * Create many models in database.
+   *
+   * @param data {any}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any[]>}
+   */
+  createMany(data: any, ignorePersistOnly?: boolean): Promise<any[]>
+
+  /**
+   * Update one or more models in database.
+   *
+   * @param data {any}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any|any[]>}
+   */
+  update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+
+  /**
+   * Delete one or more models in database.
+   *
+   * @param [force] {boolean}
+   * @return {Promise<any|any[]|void>}
+   */
+  delete(force?: boolean): Promise<any | any[] | void>
+
+  /**
+   * Remove the criteria from query builder by name.
+   *
+   * @param name
+   * @return {ModelQueryBuilder}
+   */
+  removeCriteria(name: string): ModelQueryBuilder
+
+  /**
+   * List the criterias from query builder.
+   *
+   * @param withRemoved {boolean}
+   * @return {any}
+   */
+  listCriterias(withRemoved?: boolean): any
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {ModelQueryBuilder}
+   */
+  select(...columns: string[]): ModelQueryBuilder
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {ModelQueryBuilder}
+   */
+  addSelect(...columns: string[]): ModelQueryBuilder
+
+  /**
+   * Set how many models should be skipped in your query.
+   *
+   * @param number {number}
+   * @return {ModelQueryBuilder}
+   */
+  skip(number: number): ModelQueryBuilder
+
+  /**
+   * Set the limit of models in your query.
+   *
+   * @param number {number}
+   * @return {ModelQueryBuilder}
+   */
+  limit(number: number): ModelQueryBuilder
+
+  /**
+   * Set the order in your query.
+   *
+   * @param [columnName] {string}
+   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
+   * @return {ModelQueryBuilder}
+   */
+  orderBy(columnName?: boolean, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): ModelQueryBuilder
+
+  /**
+   * Include some relation in your query.
+   *
+   * @param [relationName] {string|any}
+   * @return {ModelQueryBuilder}
+   */
+  includes(relationName: string): ModelQueryBuilder
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  where(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+
+  /**
+   * Set a where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  whereLike(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  whereILike(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  whereNot(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+
+  /**
+   * Set a where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  whereIn(columnName: string, values: any[]): ModelQueryBuilder
+
+  /**
+   * Set a where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  whereNotIn(columnName: string, values: any[]): ModelQueryBuilder
+
+  /**
+   * Set a where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  whereBetween(columnName: string, values: [any, any]): ModelQueryBuilder
+
+  /**
+   * Set a where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  whereNotBetween(columnName: string, values: [any, any]): ModelQueryBuilder
+
+  /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  whereNull(columnName: string): ModelQueryBuilder
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  whereNotNull(columnName: string): ModelQueryBuilder
+}
+
+export class Column {
+  /**
+   * Create an auto incremented integer primary key. Usefully for id's.
+   *
+   * This method is an alias for:
+   * @example Column.type('int').isGenerated().isPrimary().get()
+   *
+   * @return {any}
+   */
+  static autoIncrementedIntPk(): any
+
+  /**
+   * Create a "createdAt" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('timestamp').default('now()').get()
+   *
+   * @return {any}
+   */
+  static createdAt(): any
+
+  /**
+   * Create a "updatedAt" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('timestamp').default('now()').get()
+   *
+   * @return {any}
+   */
+  static updatedAt(): any
+
+  /**
+   * Create a "deletedAt" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('timestamp').default(null).isNullable().get()
+   *
+   * @return {any}
+   */
+  static deletedAt(): any
+
+  /**
+   * Set the type of your column.
+   *
+   * @return {Column}
+   */
+  static type(type): Column
+
+  /**
+   * Set the default value of your column.
+   *
+   * @return {Column}
+   */
+  static default(value): Column
+
+  /**
+   * Set if this column should be hidded.
+   */
+  static isHidden(): Column
+
+  /**
+   * Set if your column is auto generated.
+   *
+   * @return {Column}
+   */
+  static isGenerated(): Column
+
+  /**
+   * Set if your column is primary.
+   *
+   * @return {Column}
+   */
+  static isPrimary(): Column
+
+  /**
+   * Set if your column is unique.
+   *
+   * @return {Column}
+   */
+  static isUnique(): Column
+
+  /**
+   * Set if your column is nullable.
+   *
+   * @return {Column}
+   */
+  static isNullable(): Column
+
+  /**
+   * Get the clean object built.
+   *
+   * @return {any}
+   */
+  static get(): any
+}
+
+export class Relation {
+  /**
+   * Create a oneToOne relation schema.
+   *
+   * This method is an alias for:
+   * @example Relation.target(model).type('one-to-one').inverseSide(inverseSide).get()
+   *
+   * @param inverseSide {string}
+   * @param model {any}
+   * @param cascade {boolean}
+   * @return {any}
+   */
+  static oneToOne(inverseSide: string, model: any, cascade?: boolean): any
+
+  /**
+   * Create a oneToMany relation schema.
+   *
+   * This method is an alias for:
+   * @example Relation.target(model).type('one-to-many').inverseSide(inverseSide).get()
+   *
+   * @param inverseSide {string}
+   * @param model {any}
+   * @param cascade {boolean}
+   * @return {any}
+   */
+  static oneToMany(inverseSide: string, model: any, cascade?: boolean): any
+
+  /**
+   * Create a manyToOne relation schema.
+   *
+   * This method is an alias for:
+   * @example Relation.target(model).type('many-to-one').inverseSide(inverseSide).get()
+   *
+   * @param inverseSide {string}
+   * @param model {any}
+   * @param cascade {boolean}
+   * @return {any}
+   */
+  static manyToOne(inverseSide: string, model: any, cascade?: boolean): any
+
+  /**
+   * Create a manyToMany relation schema.
+   *
+   * This method is an alias for:
+   * @example Relation.target(model).type('many-tomany').inverseSide(inverseSide).get()
+   *
+   * @param inverseSide {string}
+   * @param model {any}
+   * @param cascade {boolean}
+   * @return {any}
+   */
+  static manyToMany(inverseSide: string, model: any, cascade?: boolean): any
+
+  /**
+   * Set the target model that your relation is pointing.
+   *
+   * @param model {any}
+   * @return {Relation}
+   */
+  static target(model: any): Relation
+
+  /**
+   * Set the relation type.
+   *
+   * @param type {"one-to-one","one-to-many","many-to-one","many-to-many"}
+   * @return {Relation}
+   */
+  static type(type: "one-to-one" | "one-to-many" | "many-to-one" | "many-to-many"): Relation
+
+  /**
+   * Set the inverse side of your model schema.
+   *
+   * @param name
+   * @return {Relation}
+   */
+  static inverseSide(name: string): Relation
+
+  /**
+   * Set the column that the relation should join.
+   *
+   * @param column
+   * @return {Relation}
+   */
+  static joinColumn(column: any): Relation
+
+  /**
+   * Set if relation should be cascaded on delete/update.
+   *
+   * @return {Relation}
+   */
+  static cascade(): Relation
+
+  /**
+   * Get the clean object built.
+   *
+   * @return {any}
+   */
+  static get(): any
 }

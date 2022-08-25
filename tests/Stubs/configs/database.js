@@ -1,7 +1,7 @@
+import { Path } from '@secjs/utils'
+
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
-import { UserMigration1661308536492 } from '#tests/Stubs/migrations/UserMigration1661308536492'
-import { ProductMigration1661308536493 } from '#tests/Stubs/migrations/ProductMigration1661308536493'
 
 export default {
   /*
@@ -51,7 +51,7 @@ export default {
       password: '12345',
       logging: ['error', 'warn'],
       entities: [User.getSchema(), Product.getSchema()],
-      migrations: [UserMigration1661308536492, ProductMigration1661308536493],
+      migrations: [Path.stubs('migrations/**/*.js')],
       synchronize: false,
     },
 

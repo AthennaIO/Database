@@ -121,6 +121,7 @@ export class PostgresDriver {
     this.#connection = connection
 
     if (dataSource) {
+      this.#isConnected = true
       this.#dataSource = dataSource
       this.#client = this.#dataSource.createQueryRunner()
     }
@@ -169,10 +170,11 @@ export class PostgresDriver {
       return
     }
 
-    await this.#client.connection.destroy()
+    await DriverFactory.closeConnectionByDriver('postgres')
 
     this.#table = null
     this.#client = null
+    this.#dataSource = null
     this.#isConnected = false
   }
 
@@ -183,6 +185,10 @@ export class PostgresDriver {
    * @return {import('typeorm').SelectQueryBuilder}
    */
   query(fullQuery = false) {
+    if (!fullQuery) {
+      return this.#client.manager.createQueryBuilder()
+    }
+
     if (!this.#table) {
       throw new NoTableSelectedException()
     }
@@ -191,10 +197,6 @@ export class PostgresDriver {
     const query = this.#client.manager
       .getRepository(this.#table)
       .createQueryBuilder(this.#table)
-
-    if (!fullQuery) {
-      return query
-    }
 
     this.#setRelationsOnQuery(query)
     this.#setSelectOnQuery(query)
@@ -278,13 +280,7 @@ export class PostgresDriver {
    * @return {Promise<string[]>}
    */
   async getDatabases() {
-    const actualDatabase = await this.getCurrentDatabase()
-
-    const databases = await this.#client.getDatabases()
-
-    databases.push(actualDatabase)
-
-    return databases
+    return this.#client.getDatabases()
   }
 
   /**
@@ -313,7 +309,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async createDatabase(databaseName) {
-    await this.#client.query('CREATE DATABASE ??', [databaseName])
+    await this.#client.createDatabase(databaseName, true)
   }
 
   /**
@@ -323,7 +319,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async dropDatabase(databaseName) {
-    await this.#client.query('DROP DATABASE IF EXISTS ??', [databaseName])
+    await this.#client.dropDatabase(databaseName, true)
   }
 
   /**

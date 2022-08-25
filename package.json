@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "The Athenna database handler for SQL/NoSQL. Built on top of TypeORM.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -28,7 +28,9 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./facades/Database": "./src/Facades/Database.js",
+    "./providers/DatabaseProvider": "./src/Providers/DatabaseProvider.js"
   },
   "imports": {
     "#src/*": "./src/*.js",

@@ -11,7 +11,7 @@ import { Path, Config } from '@secjs/utils'
 
 import { DriverFactory } from '#src/Factories/DriverFactory'
 
-export class Database {
+export class DatabaseImpl {
   /**
    * The runtime configurations for this instance.
    *
@@ -34,10 +34,10 @@ export class Database {
   #driver = null
 
   /**
-   * Creates a new instance of Database.
+   * Creates a new instance of DatabaseImpl.
    *
    * @param {any} configs
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   constructor(configs = {}) {
     new Config().safeLoad(Path.config('database'))
@@ -50,7 +50,7 @@ export class Database {
    * Change the database connection.
    *
    * @param {string} connection
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   connection(connection) {
     this.#driver = DriverFactory.fabricate(connection, this.#configs)
@@ -356,7 +356,7 @@ export class Database {
   /**
    * Find many values in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<any[]>}
    */
   async findMany() {
     return this.#driver.findMany()
@@ -417,7 +417,7 @@ export class Database {
    * Set the table that this query will be executed.
    *
    * @param tableName {string|any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildTable(tableName) {
     this.#driver.buildTable(tableName)
@@ -429,7 +429,7 @@ export class Database {
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildSelect(...columns) {
     this.#driver.buildSelect(...columns)
@@ -441,7 +441,7 @@ export class Database {
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildAddSelect(...columns) {
     this.#driver.buildAddSelect(...columns)
@@ -454,7 +454,7 @@ export class Database {
    *
    * @param relation {string|any}
    * @param [operation] {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildIncludes(relation, operation) {
     this.#driver.buildIncludes(relation, operation)
@@ -467,7 +467,7 @@ export class Database {
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhere(statement, value) {
     this.#driver.buildWhere(statement, value)
@@ -480,7 +480,7 @@ export class Database {
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereLike(statement, value) {
     this.#driver.buildWhereLike(statement, value)
@@ -493,7 +493,7 @@ export class Database {
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereILike(statement, value) {
     this.#driver.buildWhereILike(statement, value)
@@ -506,7 +506,7 @@ export class Database {
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereNot(statement, value) {
     this.#driver.buildWhereNot(statement, value)
@@ -519,7 +519,7 @@ export class Database {
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereIn(columnName, values) {
     this.#driver.buildWhereIn(columnName, values)
@@ -532,7 +532,7 @@ export class Database {
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereNotIn(columnName, values) {
     this.#driver.buildWhereNotIn(columnName, values)
@@ -544,7 +544,7 @@ export class Database {
    * Set a where null statement in your query.
    *
    * @param columnName {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereNull(columnName) {
     this.#driver.buildWhereNull(columnName)
@@ -556,7 +556,7 @@ export class Database {
    * Set a where not null statement in your query.
    *
    * @param columnName {string}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereNotNull(columnName) {
     this.#driver.buildWhereNotNull(columnName)
@@ -569,7 +569,7 @@ export class Database {
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereBetween(columnName, values) {
     this.#driver.buildWhereBetween(columnName, values)
@@ -582,7 +582,7 @@ export class Database {
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildWhereNotBetween(columnName, values) {
     this.#driver.buildWhereNotBetween(columnName, values)
@@ -595,7 +595,7 @@ export class Database {
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildOrderBy(columnName, direction = 'ASC') {
     this.#driver.buildOrderBy(columnName, direction)
@@ -607,7 +607,7 @@ export class Database {
    * Set the skip number in your query.
    *
    * @param number {number}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildSkip(number) {
     this.#driver.buildSkip(number)
@@ -619,7 +619,7 @@ export class Database {
    * Set the limit number in your query.
    *
    * @param number {number}
-   * @return {Database}
+   * @return {DatabaseImpl}
    */
   buildLimit(number) {
     this.#driver.buildLimit(number)
@@ -640,7 +640,7 @@ export class Transaction {
    * Creates a new instance of transaction.
    *
    * @param {any} driver
-   * @return {Database}
+   * @return {Transaction}
    */
   constructor(driver) {
     this.#driver = driver
@@ -924,7 +924,7 @@ export class Transaction {
   /**
    * Find many values in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<any[]>}
    */
   async findMany() {
     return this.#driver.findMany()
@@ -1195,3 +1195,14 @@ export class Transaction {
     return this
   }
 }
+
+export * from './Facades/Database.js'
+
+export * from './Factories/ModelFactory.js'
+export * from './Factories/DriverFactory.js'
+export * from './Factories/ConnectionFactory.js'
+
+export * from './Models/Model.js'
+export * from './Models/Column.js'
+export * from './Models/Relation.js'
+export * from './Models/Criteria.js'

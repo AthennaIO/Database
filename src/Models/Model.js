@@ -12,10 +12,9 @@ import { Assert } from '@japa/assert'
 import { EntitySchema } from 'typeorm'
 import { faker } from '@faker-js/faker'
 
-import { Database } from '#src/index'
-import { Criteria } from '#src/Utils/Criteria'
+import { Criteria } from '#src/Models/Criteria'
 import { ModelFactory } from '#src/Factories/ModelFactory'
-import { ModelQueryBuilder } from '#src/Utils/ModelQueryBuilder'
+import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
@@ -160,7 +159,7 @@ export class Model {
    * @return {ModelQueryBuilder}
    */
   static query(withCriterias = true) {
-    return new ModelQueryBuilder(this, new Database(), withCriterias)
+    return new ModelQueryBuilder(this, withCriterias)
   }
 
   /**
