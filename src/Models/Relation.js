@@ -125,6 +125,7 @@ export class Relation {
    * Set the column that the relation should join.
    *
    * @param column
+   * @return {Relation}
    */
   static joinColumn(column) {
     if (!this.#relation.joinColumn) {
@@ -132,6 +133,8 @@ export class Relation {
     }
 
     this.#relation.joinColumn.name = column
+
+    return this
   }
 
   /**
