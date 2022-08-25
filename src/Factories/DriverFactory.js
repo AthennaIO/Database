@@ -9,6 +9,7 @@
 
 import { Config } from '@secjs/utils'
 
+import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
@@ -23,7 +24,7 @@ export class DriverFactory {
    */
   static #drivers = new Map()
     // .set('mongo', { Driver: MongoDriver })
-    // .set('mysql', { Driver: MySqlDriver })
+    .set('mysql', { Driver: MySqlDriver })
     // .set('sqlite', { Driver: SqliteDriver })
     .set('postgres', { Driver: PostgresDriver })
   // .set('sqlserver', { Driver: SqlServerDriver })
@@ -175,10 +176,10 @@ export class DriverFactory {
 
     const client = driverObject.clientConnection
 
-    if (client.close) {
-      await client.close()
-    } else {
+    if (client.destroy) {
       await client.destroy()
+    } else {
+      await client.close()
     }
 
     driverObject.clientConnection = null
