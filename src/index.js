@@ -7,18 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Path, Config } from '@secjs/utils'
-
 import { DriverFactory } from '#src/Factories/DriverFactory'
 
 export class DatabaseImpl {
-  /**
-   * The runtime configurations for this instance.
-   *
-   * @type {any}
-   */
-  #configs = {}
-
   /**
    * The connection name used for this instance.
    *
@@ -36,14 +27,10 @@ export class DatabaseImpl {
   /**
    * Creates a new instance of DatabaseImpl.
    *
-   * @param {any} configs
    * @return {DatabaseImpl}
    */
-  constructor(configs = {}) {
-    new Config().safeLoad(Path.config('database'))
-
-    this.#configs = configs
-    this.#driver = DriverFactory.fabricate(this.#connection, this.#configs)
+  constructor() {
+    this.#driver = DriverFactory.fabricate(this.#connection)
   }
 
   /**
@@ -53,7 +40,7 @@ export class DatabaseImpl {
    * @return {DatabaseImpl}
    */
   connection(connection) {
-    this.#driver = DriverFactory.fabricate(connection, this.#configs)
+    this.#driver = DriverFactory.fabricate(connection)
 
     return this
   }

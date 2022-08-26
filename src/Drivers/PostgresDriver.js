@@ -40,13 +40,6 @@ export class PostgresDriver {
   #runner = null
 
   /**
-   * The runtime configurations for this instance.
-   *
-   * @type {any}
-   */
-  #configs = {}
-
-  /**
    * The connection name used for this instance.
    *
    * @type {string|null}
@@ -113,12 +106,10 @@ export class PostgresDriver {
    * Creates a new instance of PostgresDriver.
    *
    * @param {string|any} connection
-   * @param {any} configs
    * @param {any} [client]
    * @return {Database}
    */
-  constructor(connection, configs = {}, client = null) {
-    this.#configs = configs
+  constructor(connection, client = null) {
     this.#connection = connection
 
     if (client) {
@@ -152,7 +143,6 @@ export class PostgresDriver {
     const { runner, dataSource } = await DriverFactory.createConnectionByDriver(
       'postgres',
       this.#connection,
-      this.#configs,
       saveOnDriver,
     )
 

@@ -56,26 +56,25 @@ export class DriverFactory {
   /**
    * Fabricate a new connection with some database driver.
    *
-   * @param {string} conName
-   * @param {any} runtimeConfig
+   * @param {string} connectionName
    * @return {{ Driver: any, lastConName?: string, clientConnection?: any }}
    */
-  static fabricate(conName, runtimeConfig = {}) {
-    const conConfig = this.#getConnectionConfig(conName)
+  static fabricate(connectionName) {
+    const conConfig = this.#getConnectionConfig(connectionName)
 
     const { Driver, clientConnection } = this.#drivers.get(conConfig.driver)
 
     if (clientConnection) {
-      return new Driver(conName, runtimeConfig, clientConnection)
+      return new Driver(connectionName, clientConnection)
     }
 
     this.#drivers.set(conConfig.driver, {
       Driver,
       clientConnection,
-      lastConName: conName,
+      lastConName: connectionName,
     })
 
-    return new Driver(conName, runtimeConfig)
+    return new Driver(connectionName)
   }
 
   /**
@@ -133,14 +132,12 @@ export class DriverFactory {
    *
    * @param {string} driverName
    * @param {string} [conName]
-   * @param {any} [configs]
    * @param {boolean} [saveOnDriver]
    * @return {Promise<any>}
    */
   static async createConnectionByDriver(
     driverName,
     conName,
-    configs = {},
     saveOnDriver = true,
   ) {
     const driverObject = this.#getDriver(driverName)
@@ -153,7 +150,7 @@ export class DriverFactory {
       conName = Config.get('database.default')
     }
 
-    const client = await ConnectionFactory[driverName](conName, configs)
+    const client = await ConnectionFactory[driverName](conName)
 
     const dataSource = client
     const runner = client.createQueryRunner()
@@ -196,21 +193,15 @@ export class DriverFactory {
    * Create the connection with database by connection name.
    *
    * @param {string} [conName]
-   * @param {any} [configs]
    * @param {boolean} [saveOnDriver]
    * @return {Promise<any>}
    */
-  static async createConnectionByName(
-    conName,
-    configs = {},
-    saveOnDriver = true,
-  ) {
+  static async createConnectionByName(conName, saveOnDriver = true) {
     const conConfig = this.#getConnectionConfig(conName)
 
     return this.createConnectionByDriver(
       conConfig.driver,
       conName,
-      configs,
       saveOnDriver,
     )
   }
@@ -244,18 +235,18 @@ export class DriverFactory {
   /**
    * Get the connection configuration of config/database file.
    *
-   * @param {string} [conName]
+   * @param {string} [connectionName]
    * @return {any}
    */
-  static #getConnectionConfig(conName = 'default') {
-    if (conName === 'default') {
-      conName = Config.get('database.default')
+  static #getConnectionConfig(connectionName = 'default') {
+    if (connectionName === 'default') {
+      connectionName = Config.get('database.default')
     }
 
-    const conConfig = Config.get(`database.connections.${conName}`)
+    const conConfig = Config.get(`database.connections.${connectionName}`)
 
     if (!conConfig) {
-      throw new NotImplementedConfigException(conName)
+      throw new NotImplementedConfigException(connectionName)
     }
 
     if (!this.#drivers.has(conConfig.driver)) {

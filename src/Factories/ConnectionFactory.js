@@ -8,100 +8,47 @@
  */
 
 import { DataSource } from 'typeorm'
-import { Config, Options, Parser } from '@secjs/utils'
+import { Config, Json } from '@secjs/utils'
 
 export class ConnectionFactory {
   /**
    * Create the connection with a mysql database.
    *
    * @param {string} conName
-   * @param {any} configs
    * @return {Promise<any>}
    */
-  static async mysql(conName, configs) {
-    return this.#typeorm(conName, 'mysql', configs)
+  static async mysql(conName) {
+    return this.#typeorm(conName, 'mysql')
   }
 
   /**
    * Create the connection with a postgres database.
    *
    * @param {string} conName
-   * @param {any} configs
    * @return {Promise<any>}
    */
-  static async postgres(conName, configs) {
-    return this.#typeorm(conName, 'postgres', configs)
+  static async postgres(conName) {
+    return this.#typeorm(conName, 'postgres')
   }
 
   /**
    * Create the connection with a sqlite database.
    *
    * @param {string} conName
-   * @param {any} configs
    * @return {Promise<any>}
    */
-  static async sqlite(conName, configs) {
-    return this.#typeorm(conName, 'better-sqlite3', configs)
+  static async sqlite(conName) {
+    return this.#typeorm(conName, 'better-sqlite3')
   }
 
   /**
    * Create the connection with a sqlserver database.
    *
    * @param {string} conName
-   * @param {any} configs
    * @return {Promise<any>}
    */
-  static async sqlserver(conName, configs) {
-    return this.#typeorm(conName, 'mssql', configs)
-  }
-
-  /**
-   * Merge runtime configs with default configs when it does not
-   * exist.
-   *
-   * @param {any} defaultConfig
-   * @param {any} runtimeConfig
-   * @return {any}
-   */
-  static #mergeConfigs(defaultConfig, runtimeConfig) {
-    return Options.create(runtimeConfig, defaultConfig)
-  }
-
-  /**
-   * Create the connection url using configs.
-   *
-   * @param {any} defaultConfig
-   * @param {any} runtimeConfig
-   * @return {string}
-   */
-  static #createConUrl(defaultConfig, runtimeConfig) {
-    const url = runtimeConfig.url || defaultConfig.url
-
-    if (url) {
-      const connectionObject = Parser.dbUrlToConnectionObj(url)
-
-      if (runtimeConfig.host) connectionObject.host = runtimeConfig.host
-      if (runtimeConfig.port) connectionObject.port = runtimeConfig.port
-      if (runtimeConfig.user) connectionObject.user = runtimeConfig.user
-      if (runtimeConfig.protocol)
-        connectionObject.protocol = runtimeConfig.protocol
-      if (runtimeConfig.password)
-        connectionObject.password = runtimeConfig.password
-      if (runtimeConfig.database)
-        connectionObject.database = runtimeConfig.database
-
-      return Parser.connectionObjToDbUrl(connectionObject)
-    }
-
-    return Parser.connectionObjToDbUrl({
-      host: runtimeConfig.host || defaultConfig.host,
-      port: runtimeConfig.port || defaultConfig.port,
-      user: runtimeConfig.user || defaultConfig.user,
-      protocol: runtimeConfig.protocol || defaultConfig.protocol,
-      password: runtimeConfig.password || defaultConfig.password,
-      database: runtimeConfig.database || defaultConfig.database,
-      options: runtimeConfig.options || defaultConfig.options,
-    })
+  static async sqlserver(conName) {
+    return this.#typeorm(conName, 'mssql')
   }
 
   /**
@@ -109,38 +56,18 @@ export class ConnectionFactory {
    *
    * @param {string} conName
    * @param {string} type
-   * @param {any} runtimeConfig
    * @return {Promise<import('typeorm').DataSource>}
    */
-  static async #typeorm(conName, type, runtimeConfig = {}) {
-    const defaultConfig = Config.get(`database.connections.${conName}`)
-    const configs = this.#mergeConfigs(defaultConfig, runtimeConfig)
-    const typeormOptions = {}
+  static async #typeorm(conName, type) {
+    const configs = Json.copy(Config.get(`database.connections.${conName}`))
 
-    if (configs.url) {
-      typeormOptions.url = configs.url
-    } else {
-      typeormOptions.type = configs.driver
-      typeormOptions.host = configs.host
-      typeormOptions.port = configs.port
-      typeormOptions.debug = configs.debug
-      typeormOptions.logging = configs.logging
-      typeormOptions.username = configs.user
-      typeormOptions.password = configs.password
-      typeormOptions.database = configs.database
-      typeormOptions.entities = configs.entities
-      typeormOptions.migrations = configs.migrations
-      typeormOptions.synchronize = configs.synchronize
-      typeormOptions.migrationsTableName = Config.get('database.migrations')
-    }
+    delete configs.driver
 
-    if (configs.additionalOptions) {
-      Object.keys(configs.additionalOptions).forEach(
-        k => (typeormOptions[k] = configs.additionalOptions[k]),
-      )
-    }
-
-    const dataSource = new DataSource(typeormOptions)
+    const dataSource = new DataSource({
+      type,
+      migrationsTableName: Config.get('database.migrations'),
+      ...configs,
+    })
 
     return dataSource.initialize()
   }
