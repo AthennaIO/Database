@@ -15,6 +15,7 @@ import { DriverFactory } from '#src/Factories/DriverFactory'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
+import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 export class PostgresDriver {
   /**
@@ -36,7 +37,7 @@ export class PostgresDriver {
    *
    * @type {import('typeorm').QueryRunner|null}
    */
-  #client = null
+  #runner = null
 
   /**
    * The runtime configurations for this instance.
@@ -113,17 +114,17 @@ export class PostgresDriver {
    *
    * @param {string|any} connection
    * @param {any} configs
-   * @param {import('typeorm').DataSource} [dataSource]
+   * @param {any} [client]
    * @return {Database}
    */
-  constructor(connection, configs = {}, dataSource = null) {
+  constructor(connection, configs = {}, client = null) {
     this.#configs = configs
     this.#connection = connection
 
-    if (dataSource) {
+    if (client) {
       this.#isConnected = true
-      this.#dataSource = dataSource
-      this.#client = this.#dataSource.createQueryRunner()
+      this.#runner = client.runner
+      this.#dataSource = client.dataSource
     }
   }
 
@@ -148,14 +149,15 @@ export class PostgresDriver {
       return
     }
 
-    this.#dataSource = await DriverFactory.createConnectionByDriver(
+    const { runner, dataSource } = await DriverFactory.createConnectionByDriver(
       'postgres',
       this.#connection,
       this.#configs,
       saveOnDriver,
     )
 
-    this.#client = this.#dataSource.createQueryRunner()
+    this.#runner = runner
+    this.#dataSource = dataSource
 
     this.#isConnected = true
   }
@@ -173,7 +175,7 @@ export class PostgresDriver {
     await DriverFactory.closeConnectionByDriver('postgres')
 
     this.#table = null
-    this.#client = null
+    this.#runner = null
     this.#dataSource = null
     this.#isConnected = false
   }
@@ -185,8 +187,12 @@ export class PostgresDriver {
    * @return {import('typeorm').SelectQueryBuilder}
    */
   query(fullQuery = false) {
+    if (!this.#isConnected) {
+      throw new NotConnectedDatabaseException()
+    }
+
     if (!fullQuery) {
-      return this.#client.manager.createQueryBuilder()
+      return this.#runner.manager.createQueryBuilder()
     }
 
     if (!this.#table) {
@@ -194,7 +200,7 @@ export class PostgresDriver {
     }
 
     /** @type {import('typeorm').SelectQueryBuilder} */
-    const query = this.#client.manager
+    const query = this.#runner.manager
       .getRepository(this.#table)
       .createQueryBuilder(this.#table)
 
@@ -221,7 +227,9 @@ export class PostgresDriver {
    * @return {Promise<Transaction>}
    */
   async startTransaction() {
-    await this.#client.startTransaction()
+    this.#runner = this.#dataSource.createQueryRunner()
+
+    await this.#runner.startTransaction()
 
     return new Transaction(this)
   }
@@ -232,10 +240,13 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async commitTransaction() {
-    await this.#client.commitTransaction()
-    await this.#client.release()
+    await this.#runner.commitTransaction()
+    await this.#runner.release()
 
-    this.#client = this.#dataSource.createQueryRunner()
+    this.#table = null
+    this.#runner = null
+    this.#dataSource = null
+    this.#isConnected = false
   }
 
   /**
@@ -244,10 +255,13 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async rollbackTransaction() {
-    await this.#client.rollbackTransaction()
-    await this.#client.release()
+    await this.#runner.rollbackTransaction()
+    await this.#runner.release()
 
-    this.#client = this.#dataSource.createQueryRunner()
+    this.#table = null
+    this.#runner = null
+    this.#dataSource = null
+    this.#isConnected = false
   }
 
   /**
@@ -280,7 +294,7 @@ export class PostgresDriver {
    * @return {Promise<string[]>}
    */
   async getDatabases() {
-    return this.#client.getDatabases()
+    return this.#runner.getDatabases()
   }
 
   /**
@@ -289,7 +303,7 @@ export class PostgresDriver {
    * @return {Promise<string | undefined>}
    */
   async getCurrentDatabase() {
-    return this.#client.getCurrentDatabase()
+    return this.#runner.getCurrentDatabase()
   }
 
   /**
@@ -299,7 +313,7 @@ export class PostgresDriver {
    * @return {Promise<boolean>}
    */
   async hasDatabase(database) {
-    return this.#client.hasDatabase(database)
+    return this.#runner.hasDatabase(database)
   }
 
   /**
@@ -309,7 +323,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async createDatabase(databaseName) {
-    await this.#client.createDatabase(databaseName, true)
+    await this.#runner.createDatabase(databaseName, true)
   }
 
   /**
@@ -319,7 +333,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async dropDatabase(databaseName) {
-    await this.#client.dropDatabase(databaseName, true)
+    await this.#runner.dropDatabase(databaseName, true)
   }
 
   /**
@@ -329,7 +343,7 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async getTable(table) {
-    return this.#client.getTable(table)
+    return this.#runner.getTable(table)
   }
 
   /**
@@ -338,7 +352,7 @@ export class PostgresDriver {
    * @return {Promise<string[]>}
    */
   async getTables() {
-    const tablesInstance = await this.#client.getTables()
+    const tablesInstance = await this.#runner.getTables()
 
     return tablesInstance.map(tableInstance => tableInstance.name)
   }
@@ -350,7 +364,7 @@ export class PostgresDriver {
    * @return {Promise<boolean>}
    */
   async hasTable(table) {
-    return this.#client.hasTable(table)
+    return this.#runner.hasTable(table)
   }
 
   /**
@@ -361,7 +375,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async createTable(tableName, options = {}) {
-    await this.#client.createTable(
+    await this.#runner.createTable(
       new Table({ name: tableName, ...options }),
       true,
     )
@@ -374,7 +388,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async dropTable(tableName) {
-    await this.#client.dropTable(tableName, true)
+    await this.#runner.dropTable(tableName, true)
   }
 
   /**
@@ -385,7 +399,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async truncate(tableName) {
-    await this.raw('TRUNCATE ?? RESTART IDENTITY CASCADE', [tableName])
+    await this.raw(`TRUNCATE TABLE ${tableName} RESTART IDENTITY CASCADE`)
   }
 
   /**
@@ -396,7 +410,7 @@ export class PostgresDriver {
    * @return {Promise<any>}
    */
   async raw(raw, queryValues) {
-    return this.#client?.query(raw, queryValues)
+    return this.#runner?.query(raw, queryValues)
   }
 
   /**
@@ -410,7 +424,7 @@ export class PostgresDriver {
       .select(`AVG(${column})`, 'avg')
       .getRawOne()
 
-    return avg
+    return parseInt(avg)
   }
 
   /**
@@ -425,7 +439,7 @@ export class PostgresDriver {
       .distinct(true)
       .getRawOne()
 
-    return avg
+    return parseInt(avg)
   }
 
   /**
@@ -439,7 +453,7 @@ export class PostgresDriver {
       .select(`MAX(${column})`, 'max')
       .getRawOne()
 
-    return max
+    return parseInt(max)
   }
 
   /**
@@ -453,7 +467,7 @@ export class PostgresDriver {
       .select(`MIN(${column})`, 'min')
       .getRawOne()
 
-    return min
+    return parseInt(min)
   }
 
   /**
@@ -467,7 +481,7 @@ export class PostgresDriver {
       .select(`SUM(${column})`, 'sum')
       .getRawOne()
 
-    return sum
+    return parseInt(sum)
   }
 
   /**
@@ -482,33 +496,39 @@ export class PostgresDriver {
       .distinct(true)
       .getRawOne()
 
-    return sum
+    return parseInt(sum)
   }
 
   /**
    * Increment a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
   async increment(column) {
-    return this.query(true)
-      .update()
-      .set({ [column]: () => `${column} + 1` })
-      .execute()
+    const result = await this.update({ [column]: () => `${column} + 1` }, true)
+
+    if (Is.Array(result)) {
+      return result.map(r => r[column])
+    }
+
+    return result[column]
   }
 
   /**
    * Decrement a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
   async decrement(column) {
-    return this.query(true)
-      .update()
-      .set({ [column]: () => `${column} - 1` })
-      .execute()
+    const result = await this.update({ [column]: () => `${column} - 1` }, true)
+
+    if (Is.Array(result)) {
+      return result.map(r => r[column])
+    }
+
+    return result[column]
   }
 
   /**
@@ -529,7 +549,7 @@ export class PostgresDriver {
       .select(`COUNT(${column})`, 'count')
       .getRawOne()
 
-    return count
+    return parseInt(count)
   }
 
   /**
@@ -554,7 +574,7 @@ export class PostgresDriver {
       .distinct(true)
       .getRawOne()
 
-    return count
+    return parseInt(count)
   }
 
   /**
@@ -640,10 +660,11 @@ export class PostgresDriver {
    * Update a value in database.
    *
    * @param {any} data
+   * @param {boolean} force
    * @return {Promise<any>}
    */
-  async update(data) {
-    if (!this.#where.size) {
+  async update(data, force = false) {
+    if (!this.#where.size && !force) {
       throw new EmptyWhereException('update')
     }
 

@@ -18,15 +18,21 @@ export class NotImplementedConfigException extends Exception {
    */
   constructor(conName) {
     const content = `Connection ${conName} is not configured inside database.connections object from config/database file.`
-    const availableConfigs = Object.keys(
-      Config.get('database.connections'),
-    ).join(', ')
 
-    super(
-      content,
-      500,
-      'E_NOT_IMPLEMENTED_CONFIG_ERROR',
-      `Available configurations are: ${availableConfigs}. Create your configuration inside connections object to use it.`,
-    )
+    let help = ''
+
+    if (Config.get('database.connections')) {
+      const availableConfigs = Object.keys(
+        Config.get('database.connections'),
+      ).join(', ')
+
+      help += `Available configurations are: ${availableConfigs}.`
+    } else {
+      help += `The "Config.get('database.connections') is empty, maybe your configuration files are not loaded?`
+    }
+
+    help += ` Create your configuration inside connections object to use it. Or load your configuration files using "new Config().safeLoad(Path.config('database.js'))`
+
+    super(content, 500, 'E_NOT_IMPLEMENTED_CONFIG_ERROR', help)
   }
 }

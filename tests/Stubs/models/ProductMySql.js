@@ -1,9 +1,27 @@
 import { Model } from '#src/Models/Model'
 import { Column } from '#src/Models/Column'
 import { Relation } from '#src/Models/Relation'
-import { User } from '#tests/Stubs/models/User'
+import { UserMySql } from '#tests/Stubs/models/UserMySql'
 
-export class Product extends Model {
+export class ProductMySql extends Model {
+  /**
+   * Set the db connection that this model instance will work with.
+   *
+   * @return {string}
+   */
+  static get connection() {
+    return 'mysql'
+  }
+
+  /**
+   * Set the table name of this model instance.
+   *
+   * @return {string}
+   */
+  static get table() {
+    return 'products'
+  }
+
   /**
    * The attributes that could be persisted in database.
    *
@@ -24,7 +42,7 @@ export class Product extends Model {
       name: Column.type('varchar').get(),
       price: Column.type('int').default(0).get(),
       userId: Column.type('int').get(),
-      user: Relation.manyToOne('products', User),
+      user: Relation.manyToOne('products', UserMySql),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
       deletedAt: Column.deletedAt(),
@@ -41,7 +59,7 @@ export class Product extends Model {
       id: this.faker.datatype.number(),
       name: this.faker.name.fullName(),
       price: this.faker.datatype.number(),
-      userId: User.factory('id'),
+      userId: UserMySql.factory('id'),
       createdAt: this.faker.date.recent(),
       updatedAt: this.faker.date.recent(),
       deletedAt: null,

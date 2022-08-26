@@ -33,6 +33,12 @@ export class ProductMigration1661308536493 {
     })
 
     table.addColumn({
+      name: 'price',
+      type: 'int',
+      default: 0,
+    })
+
+    table.addColumn({
       name: 'userId',
       type: 'int',
     })

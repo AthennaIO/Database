@@ -157,14 +157,15 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
+   * @param {boolean} force
    * @return {Promise<any|any[]>}
    */
-  async update(data, ignorePersistOnly = false) {
+  async update(data, ignorePersistOnly = false, force = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#DB.update(data))
+    return this.#generateModels(await this.#DB.update(data, force))
   }
 
   /**

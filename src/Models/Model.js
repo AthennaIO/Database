@@ -245,7 +245,7 @@ export class Model {
    * @return {Promise<InstanceType<this>>}
    */
   static async create(data = {}, ignorePersistOnly = false) {
-    return this.query().create(data)
+    return this.query().create(data, ignorePersistOnly)
   }
 
   /**

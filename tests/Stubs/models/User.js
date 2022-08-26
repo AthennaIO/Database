@@ -5,15 +5,6 @@ import { Product } from '#tests/Stubs/models/Product'
 
 export class User extends Model {
   /**
-   * Set the db connection that this model instance will work with.
-   *
-   * @return {string}
-   */
-  static get connection() {
-    return 'default'
-  }
-
-  /**
    * The attributes that could be persisted in database.
    *
    *  @return {string[]}
@@ -49,8 +40,8 @@ export class User extends Model {
       id: this.faker.datatype.number(),
       name: this.faker.name.fullName(),
       email: this.faker.internet.email(),
-      createdAt: this.faker.datatype.datetime(),
-      updatedAt: this.faker.datatype.datetime(),
+      createdAt: this.faker.date.recent(),
+      updatedAt: this.faker.date.recent(),
       deletedAt: null,
     }
   }

@@ -310,7 +310,7 @@ export class DatabaseImpl {
    * Increment a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
   async increment(column) {
     return this.#driver.increment(column)
@@ -320,7 +320,7 @@ export class DatabaseImpl {
    * Decrement a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
   async decrement(column) {
     return this.#driver.decrement(column)
@@ -400,9 +400,10 @@ export class DatabaseImpl {
    * Update a value in database.
    *
    * @param {any} data
-   * @return {Promise<any|any[]>}
+   * @param {boolean} [force]
+   * @return {Promise<any | any[]>}
    */
-  async update(data) {
+  async update(data, force = false) {
     return this.#driver.update(data)
   }
 

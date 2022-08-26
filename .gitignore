@@ -128,3 +128,5 @@ out
 
 # Docker volumes
 .docker
+
+test.js

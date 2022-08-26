@@ -216,17 +216,17 @@ export class DatabaseImpl {
    * Increment a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
-  increment(column: string): Promise<number>
+  increment(column: string): Promise<number | number[]>
 
   /**
    * Decrement a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<number | number[]>}
    */
-  decrement(column: string): Promise<number>
+  decrement(column: string): Promise<number | number[]>
 
   /**
    * Calculate the average of a given column using distinct.
@@ -288,16 +288,17 @@ export class DatabaseImpl {
    * Update a value in database.
    *
    * @param {any} data
-   * @return {Promise<any>}
+   * @param {boolean} force
+   * @return {Promise<any | any[]>}
    */
-  update(data: any): Promise<any>
+  update(data: any, force?: boolean): Promise<any | any[]>
 
   /**
    * Delete one value in database.
    *
-   * @return {Promise<any|void>}
+   * @return {Promise<any | void>}
    */
-  delete(): Promise<any|void>
+  delete(): Promise<any | void>
 
   /**
    * Set the table that this query will be executed.

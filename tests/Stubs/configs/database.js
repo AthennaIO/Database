@@ -2,6 +2,8 @@ import { Path } from '@secjs/utils'
 
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
+import { UserMySql } from '#tests/Stubs/models/UserMySql'
+import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 
 export default {
   /*
@@ -41,10 +43,10 @@ export default {
       host: '127.0.0.1',
       port: 3307,
       database: 'athenna',
-      user: 'mysql',
+      user: 'root',
       password: '12345',
       logging: ['error', 'warn'],
-      entities: [User.getSchema(), Product.getSchema()],
+      entities: [UserMySql.getSchema(), ProductMySql.getSchema()],
       migrations: [Path.stubs('migrations/**/*.js')],
       synchronize: false,
     },
@@ -60,6 +62,10 @@ export default {
       entities: [User.getSchema(), Product.getSchema()],
       migrations: [Path.stubs('migrations/**/*.js')],
       synchronize: false,
+    },
+
+    nullDriver: {
+      driver: 'notImplemented',
     },
 
     sqlserver: {

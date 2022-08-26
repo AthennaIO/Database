@@ -10,7 +10,6 @@
 import { Config } from '@secjs/utils'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
-import { SqliteDriver } from '#src/Drivers/SqliteDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 
 import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
@@ -27,7 +26,6 @@ export class DriverFactory {
   static #drivers = new Map()
     // .set('mongo', { Driver: MongoDriver })
     .set('mysql', { Driver: MySqlDriver })
-    .set('sqlite', { Driver: SqliteDriver })
     .set('postgres', { Driver: PostgresDriver })
   // .set('sqlserver', { Driver: SqlServerDriver })
 
@@ -111,7 +109,7 @@ export class DriverFactory {
    * @return {Promise<void>}
    */
   static async closeAllDriversConnection() {
-    for (const [key] of this.#drivers.keys()) {
+    for (const key of this.#drivers.keys()) {
       await this.closeConnectionByDriver(key)
     }
   }
@@ -157,14 +155,18 @@ export class DriverFactory {
 
     const client = await ConnectionFactory[driverName](conName, configs)
 
+    const dataSource = client
+    const runner = client.createQueryRunner()
+
     if (!saveOnDriver) {
-      return client
+      return { runner, dataSource }
     }
 
-    driverObject.clientConnection = client
+    driverObject.clientConnection = { runner, dataSource }
+
     this.#drivers.set(driverName, driverObject)
 
-    return client
+    return { runner, dataSource }
   }
 
   /**
@@ -178,11 +180,12 @@ export class DriverFactory {
 
     const client = driverObject.clientConnection
 
-    if (client.destroy) {
-      await client.destroy()
-    } else {
-      await client.close()
+    if (!client || !client.dataSource.isInitialized) {
+      return
     }
+
+    await client.runner.release()
+    await client.dataSource.destroy()
 
     driverObject.clientConnection = null
 
