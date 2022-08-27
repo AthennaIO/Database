@@ -20,14 +20,14 @@ export class Product extends Model {
    */
   static schema() {
     return {
-      id: Column.autoIncrementedIntPk(),
+      id: Column.autoIncrementedInt('id'),
       name: Column.type('varchar').get(),
       price: Column.type('int').default(0).get(),
       userId: Column.type('int').get(),
       user: Relation.manyToOne('products', User),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
-      deletedAt: Column.deletedAt(),
+      deletedAt: Column.deletedAt(this.DELETED_AT),
     }
   }
 

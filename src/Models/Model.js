@@ -233,8 +233,14 @@ export class Model {
    *   }
    * }>}
    */
-  static async paginate(page = 0, limit = 10, resourceUrl = '/') {
-    return this.query().paginate(page, limit, resourceUrl)
+  static async paginate(page = 0, limit = 10, resourceUrl = '/', where = {}) {
+    const query = this.query()
+
+    if (Object.keys(where).length) {
+      query.where(where)
+    }
+
+    return query.paginate(page, limit, resourceUrl)
   }
 
   /**

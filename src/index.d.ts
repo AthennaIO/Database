@@ -35,10 +35,10 @@ export class DatabaseImpl {
    * Connect to database.
    *
    * @param {boolean} force
-   * @param {boolean} saveOnDriver
+   * @param {boolean} saveOnFactory
    * @return {Promise<this>}
    */
-  connect(force?: boolean, saveOnDriver?: boolean): this
+  connect(force?: boolean, saveOnFactory?: boolean): this
 
   /**
    * Close the connection with database in this instance.

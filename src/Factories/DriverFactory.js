@@ -21,7 +21,7 @@ export class DriverFactory {
   /**
    * All athenna drivers connection configuration.
    *
-   * @type {Map<string, { Driver: any, lastConName?: string, clientConnection?: any }>}
+   * @type {Map<string, { Driver: any, clientConnection?: any }>}
    */
   static #drivers = new Map()
     // .set('mongo', { Driver: MongoDriver })
@@ -57,7 +57,7 @@ export class DriverFactory {
    * Fabricate a new connection with some database driver.
    *
    * @param {string} connectionName
-   * @return {{ Driver: any, lastConName?: string, clientConnection?: any }}
+   * @return {{ Driver: any, clientConnection?: any }}
    */
   static fabricate(connectionName) {
     const conConfig = this.#getConnectionConfig(connectionName)
@@ -71,7 +71,6 @@ export class DriverFactory {
     this.#drivers.set(conConfig.driver, {
       Driver,
       clientConnection,
-      lastConName: connectionName,
     })
 
     return new Driver(connectionName)
@@ -81,7 +80,7 @@ export class DriverFactory {
    * Create a new driver implementation.
    *
    * @param {string} name
-   * @param {new (connection: string, configs?: any) => { Driver: any, lastConName?: string, clientConnection?: any }} driver
+   * @param {any} driver
    */
   static createDriver(name, driver) {
     if (this.#drivers.has(name)) {
@@ -89,42 +88,6 @@ export class DriverFactory {
     }
 
     this.#drivers.set(name, { Driver: driver })
-  }
-
-  /**
-   * Create the connection with all drivers.
-   *
-   * @return {Promise<void>}
-   */
-  static async createAllDriversConnection() {
-    for (const [key] of this.#drivers.keys()) {
-      await this.createConnectionByDriver(key)
-    }
-  }
-
-  /**
-   * Close the connection with all drivers.
-   *
-   * @return {Promise<void>}
-   */
-  static async closeAllDriversConnection() {
-    for (const key of this.#drivers.keys()) {
-      await this.closeConnectionByDriver(key)
-    }
-  }
-
-  /**
-   * Set the client connection for driver.
-   *
-   * @param {string} driverName
-   * @param {any} clientConnection
-   */
-  static setClientConnection(driverName, clientConnection) {
-    const driverObject = this.#getDriver(driverName)
-
-    driverObject.clientConnection = clientConnection
-
-    this.#drivers.set(driverName, driverObject)
   }
 
   /**
@@ -141,10 +104,6 @@ export class DriverFactory {
     saveOnDriver = true,
   ) {
     const driverObject = this.#getDriver(driverName)
-
-    if (!conName) {
-      conName = driverObject.lastConName
-    }
 
     if (conName === 'default') {
       conName = Config.get('database.default')
@@ -222,7 +181,7 @@ export class DriverFactory {
    * Safe get the driver verifying if it exists.
    *
    * @param {string} driverName
-   * @return {{ Driver: any, lastConName?: string, clientConnection?: any }}
+   * @return {{ Driver: any, clientConnection?: any }}
    */
   static #getDriver(driverName) {
     if (!this.#drivers.has(driverName)) {

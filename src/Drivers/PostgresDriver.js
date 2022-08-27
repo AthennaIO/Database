@@ -26,6 +26,13 @@ export class PostgresDriver {
   #isConnected = false
 
   /**
+   * Set if the connection will be saved on factory.
+   *
+   * @type {boolean}
+   */
+  #isSavedOnFactory = true
+
+  /**
    * The TypeORM data source.
    *
    * @type {import('typeorm').DataSource|null}
@@ -114,6 +121,8 @@ export class PostgresDriver {
 
     if (client) {
       this.#isConnected = true
+      this.#isSavedOnFactory = true
+
       this.#runner = client.runner
       this.#dataSource = client.dataSource
     }
@@ -132,10 +141,10 @@ export class PostgresDriver {
    * Connect to database.
    *
    * @param {boolean} force
-   * @param {boolean} saveOnDriver
+   * @param {boolean} saveOnFactory
    * @return {Promise<void>}
    */
-  async connect(force = false, saveOnDriver = true) {
+  async connect(force = false, saveOnFactory = true) {
     if (this.#isConnected && !force) {
       return
     }
@@ -143,13 +152,14 @@ export class PostgresDriver {
     const { runner, dataSource } = await DriverFactory.createConnectionByDriver(
       'postgres',
       this.#connection,
-      saveOnDriver,
+      saveOnFactory,
     )
 
     this.#runner = runner
     this.#dataSource = dataSource
 
     this.#isConnected = true
+    this.#isSavedOnFactory = saveOnFactory
   }
 
   /**
@@ -162,7 +172,12 @@ export class PostgresDriver {
       return
     }
 
-    await DriverFactory.closeConnectionByDriver('postgres')
+    if (this.#isSavedOnFactory) {
+      await DriverFactory.closeConnectionByDriver('postgres')
+    } else {
+      await this.#runner.release()
+      await this.#dataSource.destroy()
+    }
 
     this.#table = null
     this.#runner = null

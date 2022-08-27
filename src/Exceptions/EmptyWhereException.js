@@ -23,7 +23,7 @@ export class EmptyWhereException extends Exception {
       content,
       500,
       'E_EMPTY_WHERE_ERROR',
-      `If you really want to do that use you will need to use the default TypeORM query builder. You can do that using the "database.query()" method.`,
+      `If you really want to do that, you will need to use the default TypeORM query builder. You can do that using the "Database.query()" method.`,
     )
   }
 }

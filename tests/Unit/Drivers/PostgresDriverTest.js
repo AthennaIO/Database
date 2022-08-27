@@ -267,4 +267,14 @@ test.group('PostgresDriverTest', group => {
     await mysqlDb.revertMigrations()
     await mysqlDb.close()
   })
+
+  test('should be able to create connection without saving on driver', async ({ assert }) => {
+    const DB = await Database.connect(true, false)
+
+    const user = await DB.buildTable('users').buildWhere('id', 1).find()
+
+    assert.deepEqual(user.id, 1)
+
+    await DB.close()
+  })
 })

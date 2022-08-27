@@ -26,9 +26,15 @@ export class Relation {
    * @return {any}
    */
   static oneToOne(inverseSide, model, cascade = false) {
-    this.#relation.cascade = cascade
+    const relation = this.target(model)
+      .type('one-to-one')
+      .inverseSide(inverseSide)
 
-    return this.target(model).type('one-to-one').inverseSide(inverseSide).get()
+    if (cascade) {
+      relation.cascade()
+    }
+
+    return relation.get()
   }
 
   /**
@@ -43,9 +49,15 @@ export class Relation {
    * @return {any}
    */
   static oneToMany(inverseSide, model, cascade = false) {
-    this.#relation.cascade = cascade
+    const relation = this.target(model)
+      .type('one-to-many')
+      .inverseSide(inverseSide)
 
-    return this.target(model).type('one-to-many').inverseSide(inverseSide).get()
+    if (cascade) {
+      relation.cascade()
+    }
+
+    return relation.get()
   }
 
   /**
@@ -60,9 +72,15 @@ export class Relation {
    * @return {any}
    */
   static manyToOne(inverseSide, model, cascade = false) {
-    this.#relation.cascade = cascade
+    const relation = this.target(model)
+      .type('many-to-one')
+      .inverseSide(inverseSide)
 
-    return this.target(model).type('many-to-one').inverseSide(inverseSide).get()
+    if (cascade) {
+      relation.cascade()
+    }
+
+    return relation.get()
   }
 
   /**
@@ -77,19 +95,22 @@ export class Relation {
    * @return {any}
    */
   static manyToMany(inverseSide, model, cascade = false) {
-    this.#relation.cascade = cascade
-
-    return this.target(model)
+    const relation = this.target(model)
       .type('many-to-many')
       .inverseSide(inverseSide)
-      .get()
+
+    if (cascade) {
+      relation.cascade()
+    }
+
+    return relation.get()
   }
 
   /**
    * Set the target model that your relation is pointing.
    *
    * @param model {any}
-   * @return {Relation}
+   * @return {this}
    */
   static target(model) {
     this.#relation.target = model.table
@@ -101,7 +122,7 @@ export class Relation {
    * Set the relation type.
    *
    * @param type {"one-to-one","one-to-many","many-to-one","many-to-many"}
-   * @return {Relation}
+   * @return {this}
    */
   static type(type) {
     this.#relation.type = type
@@ -113,7 +134,7 @@ export class Relation {
    * Set the inverse side of your model schema.
    *
    * @param name
-   * @return {Relation}
+   * @return {this}
    */
   static inverseSide(name) {
     this.#relation.inverseSide = name
@@ -125,7 +146,7 @@ export class Relation {
    * Set the column that the relation should join.
    *
    * @param column
-   * @return {Relation}
+   * @return {this}
    */
   static joinColumn(column) {
     if (!this.#relation.joinColumn) {
@@ -140,7 +161,7 @@ export class Relation {
   /**
    * Set if relation should be cascaded on delete/update.
    *
-   * @return {Relation}
+   * @return {this}
    */
   static cascade() {
     this.#relation.cascade = true

@@ -20,10 +20,17 @@ export class Column {
    * This method is an alias for:
    * @example Column.type('int').isGenerated().isPrimary().get()
    *
+   * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedIntPk() {
-    return this.type('int').isGenerated().isPrimary().get()
+  static autoIncrementedInt(name) {
+    const column = this.type('int').isGenerated().isPrimary()
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
   }
 
   /**
@@ -32,10 +39,17 @@ export class Column {
    * This method is an alias for:
    * @example Column.type('timestamp').default('now()').get()
    *
+   * @param [name] {string}
    * @return {any}
    */
-  static createdAt() {
-    return this.type('timestamp').default('now()').get()
+  static createdAt(name) {
+    const column = this.type('timestamp').default('now()')
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
   }
 
   /**
@@ -44,10 +58,17 @@ export class Column {
    * This method is an alias for:
    * @example Column.type('timestamp').default('now()').get()
    *
+   * @param [name] {string}
    * @return {any}
    */
-  static updatedAt() {
-    return this.type('timestamp').default('now()').get()
+  static updatedAt(name) {
+    const column = this.type('timestamp').default('now()')
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
   }
 
   /**
@@ -56,16 +77,23 @@ export class Column {
    * This method is an alias for:
    * @example Column.type('timestamp').default(null).isNullable().get()
    *
+   * @param [name] {string}
    * @return {any}
    */
-  static deletedAt() {
-    return this.type('timestamp').default(null).isNullable().get()
+  static deletedAt(name) {
+    const column = this.type('timestamp').default(null).isNullable()
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
   }
 
   /**
    * Set the type of your column.
    *
-   * @return {Column}
+   * @return {this}
    */
   static type(type) {
     this.#column.type = type
@@ -74,9 +102,20 @@ export class Column {
   }
 
   /**
+   * Set the real name of your column.
+   *
+   * @return {this}
+   */
+  static name(name) {
+    this.#column.name = name
+
+    return this
+  }
+
+  /**
    * Set the default value of your column.
    *
-   * @return {Column}
+   * @return {this}
    */
   static default(value) {
     this.#column.default = value
@@ -85,7 +124,9 @@ export class Column {
   }
 
   /**
-   * Set if this column should be hidded.
+   * Set if this column should be hided.
+   *
+   * @return {this}
    */
   static isHidden() {
     this.#column.select = false
@@ -96,7 +137,7 @@ export class Column {
   /**
    * Set if your column is auto generated.
    *
-   * @return {Column}
+   * @return {this}
    */
   static isGenerated() {
     this.#column.generated = true
@@ -107,7 +148,7 @@ export class Column {
   /**
    * Set if your column is primary.
    *
-   * @return {Column}
+   * @return {this}
    */
   static isPrimary() {
     this.#column.primary = true
@@ -118,7 +159,7 @@ export class Column {
   /**
    * Set if your column is unique.
    *
-   * @return {Column}
+   * @return {this}
    */
   static isUnique() {
     this.#column.unique = true
@@ -129,7 +170,7 @@ export class Column {
   /**
    * Set if your column is nullable.
    *
-   * @return {Column}
+   * @return {this}
    */
   static isNullable() {
     this.#column.nullable = true

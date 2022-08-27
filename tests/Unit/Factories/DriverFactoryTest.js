@@ -23,12 +23,12 @@ test.group('DriverFactoryTest', group => {
   })
 
   group.each.setup(async () => {
-    await DriverFactory.closeAllDriversConnection()
     await DriverFactory.createConnectionByName('postgres')
   })
 
   group.each.teardown(async () => {
-    await DriverFactory.closeAllDriversConnection()
+    await DriverFactory.closeConnectionByName('mysql')
+    await DriverFactory.closeConnectionByName('postgres')
   })
 
   group.teardown(async () => {
@@ -71,5 +71,9 @@ test.group('DriverFactoryTest', group => {
 
   test('should throw a not implemented driver exception', async ({ assert }) => {
     assert.throws(() => DriverFactory.fabricate('nullDriver'), NotFoundDriverException)
+  })
+
+  test('should throw a not found driver exception', async ({ assert }) => {
+    await assert.rejects(() => DriverFactory.closeConnectionByDriver('nullDriver'), NotFoundDriverException)
   })
 })

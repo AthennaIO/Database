@@ -38,13 +38,13 @@ export class UserMySql extends Model {
    */
   static schema() {
     return {
-      id: Column.autoIncrementedIntPk(),
+      id: Column.autoIncrementedInt(),
       name: Column.type('varchar').get(),
       email: Column.type('varchar').isHidden().isUnique().get(),
       products: Relation.oneToMany('user', ProductMySql, true),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
-      deletedAt: Column.deletedAt(),
+      deletedAt: Column.deletedAt(this.DELETED_AT),
     }
   }
 

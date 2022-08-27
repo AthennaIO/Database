@@ -41,4 +41,10 @@ test.group('ModelTest', group => {
     assert.throws(() => Model.getSchema(), NotImplementedSchemaException)
     await assert.rejects(() => Model.definition(), NotImplementedDefinitionException)
   })
+
+  test('should be able to list criterias', async ({ assert }) => {
+    const criterias = Model.query().listCriterias()
+
+    assert.isDefined(criterias.deletedAt)
+  })
 })

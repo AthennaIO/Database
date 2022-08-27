@@ -11,6 +11,7 @@ import { Is, Json } from '@secjs/utils'
 
 import { Database } from '#src/index'
 import { Model } from '#src/Models/Model'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 export class ModelQueryBuilder {
   /**
@@ -286,6 +287,25 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   includes(relationName) {
+    const relations = []
+    const schema = this.#Model.schema()
+
+    Object.keys(schema).forEach(key => {
+      const relation = schema[key]
+
+      if (relation.isRelation) {
+        relations.push(key)
+      }
+    })
+
+    if (!relations.includes(relationName)) {
+      throw new NotImplementedRelationException(
+        relationName,
+        this.#Model.name,
+        relations.length ? relations.join(',') : null,
+      )
+    }
+
     this.#DB.buildIncludes(relationName)
 
     return this

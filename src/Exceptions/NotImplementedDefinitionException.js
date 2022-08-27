@@ -22,7 +22,7 @@ export class NotImplementedDefinitionException extends Exception {
       content,
       500,
       'E_NOT_IMPLEMENTED_DEFINITION_ERROR',
-      `Open you ${modelName} model and write your "static definition()" method using the "faker" method.`,
+      `Open your ${modelName} model and write your "static definition()" method using the "faker" method.`,
     )
   }
 }

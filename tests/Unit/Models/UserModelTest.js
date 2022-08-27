@@ -14,6 +14,8 @@ import { Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
@@ -70,14 +72,48 @@ test.group('UserModelTest', group => {
     assert.isDefined(users[1].email)
     assert.deepEqual(users[0].id, 2)
     assert.deepEqual(users[1].id, 1)
+
+    const allUsers = await User.findMany()
+
+    assert.lengthOf(allUsers, 10)
+  })
+
+  test('should be able to find user using query builder', async ({ assert }) => {
+    await Database.truncate('users')
+
+    const createdAt = new Date(Date.now() - 100000)
+
+    await User.factory().create({ name: 'João', createdAt })
+    await User.factory().create({ name: 'joão lenon', createdAt })
+    await User.factory().create({ name: 'Victor', createdAt })
+    await User.factory().create({ name: 'victor tesoura' })
+
+    assert.lengthOf(await User.query().whereLike('name', 'João').findMany(), 1)
+    assert.lengthOf(await User.query().whereILike('name', 'João').findMany(), 2)
+    assert.lengthOf(await User.query().whereNot('name', 'João').findMany(), 3)
+    assert.lengthOf(await User.query().whereNotIn('name', ['João', 'Victor']).findMany(), 2)
+
+    await User.query().whereILike('name', 'joão%').update({ deletedAt: new Date() }, true)
+
+    assert.lengthOf(await User.query().removeCriteria('deletedAt').whereNotNull('deletedAt').findMany(), 2)
+
+    assert.lengthOf(
+      await User.query().removeCriteria('deletedAt').whereBetween('createdAt', [createdAt, new Date()]).findMany(),
+      3,
+    )
+
+    assert.lengthOf(
+      await User.query().removeCriteria('deletedAt').whereNotBetween('createdAt', [createdAt, new Date()]).findMany(),
+      1,
+    )
   })
 
   test('should be able to get paginate users', async ({ assert }) => {
-    const { data, meta, links } = await User.query().whereIn('id', [1, 2]).orderBy('id', 'DESC').paginate()
+    const { data, meta, links } = await User.paginate()
 
-    assert.lengthOf(data, 2)
-    assert.deepEqual(meta.itemCount, 2)
-    assert.deepEqual(meta.totalItems, 2)
+    assert.lengthOf(data, 10)
+    assert.deepEqual(meta.itemCount, 10)
+    assert.deepEqual(meta.totalItems, 10)
     assert.deepEqual(meta.totalPages, 1)
     assert.deepEqual(meta.currentPage, 0)
     assert.deepEqual(meta.itemsPerPage, 10)
@@ -109,6 +145,10 @@ test.group('UserModelTest', group => {
     assert.deepEqual(users[1].name, 'João Lenon Updated')
   })
 
+  test('should throw a empty where exception on update without where', async ({ assert }) => {
+    await assert.rejects(() => User.update({}), EmptyWhereException)
+  })
+
   test('should be able to delete/softDelete user and users', async ({ assert }) => {
     await User.delete({ id: 3 }, true)
 
@@ -127,6 +167,10 @@ test.group('UserModelTest', group => {
 
     assert.deepEqual(users[1].id, 2)
     assert.isDefined(users[1].deletedAt)
+  })
+
+  test('should throw a empty where exception on delete without where', async ({ assert }) => {
+    await assert.rejects(() => User.delete({}), EmptyWhereException)
   })
 
   test('should be able to add products to user', async ({ assert }) => {
@@ -165,5 +209,17 @@ test.group('UserModelTest', group => {
     await User.assertExists({ id: userId })
     await Product.assertCount(5)
     await Product.assertSoftDelete({ userId })
+  })
+
+  test('should be able to get the user as JSON', async ({ assert }) => {
+    const [user] = await User.query().includes('products').findMany()
+
+    const userJson = user.toJSON()
+
+    assert.notInstanceOf(userJson, User)
+  })
+
+  test('should throw a not implemented relation exception', async ({ assert }) => {
+    assert.throws(() => User.query().includes('notImplemented'), NotImplementedRelationException)
   })
 })

@@ -31,25 +31,25 @@ export class ConnectionFactory {
     return this.#typeorm(conName, 'postgres')
   }
 
-  /**
-   * Create the connection with a sqlite database.
-   *
-   * @param {string} conName
-   * @return {Promise<any>}
-   */
-  static async sqlite(conName) {
-    return this.#typeorm(conName, 'better-sqlite3')
-  }
-
-  /**
-   * Create the connection with a sqlserver database.
-   *
-   * @param {string} conName
-   * @return {Promise<any>}
-   */
-  static async sqlserver(conName) {
-    return this.#typeorm(conName, 'mssql')
-  }
+  // /**
+  //  * Create the connection with a sqlite database.
+  //  *
+  //  * @param {string} conName
+  //  * @return {Promise<any>}
+  //  */
+  // static async sqlite(conName) {
+  //   return this.#typeorm(conName, 'better-sqlite3')
+  // }
+  //
+  // /**
+  //  * Create the connection with a sqlserver database.
+  //  *
+  //  * @param {string} conName
+  //  * @return {Promise<any>}
+  //  */
+  // static async sqlserver(conName) {
+  //   return this.#typeorm(conName, 'mssql')
+  // }
 
   /**
    * Create a database connection using typeorm.
