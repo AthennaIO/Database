@@ -9,7 +9,7 @@
 
 import { ServiceProvider } from '@athenna/ioc'
 
-import { DatabaseImpl } from '#src/index'
+import { Database, DatabaseImpl } from '#src/index'
 
 export class DatabaseProvider extends ServiceProvider {
   /**
@@ -19,5 +19,12 @@ export class DatabaseProvider extends ServiceProvider {
    */
   async boot() {
     this.container.bind('Athenna/Core/Database', DatabaseImpl)
+
+    if (
+      process.env.ATHENNA_APPLICATIONS &&
+      !process.env.ATHENNA_APPLICATIONS.includes('artisan')
+    ) {
+      await Database.connect()
+    }
   }
 }

@@ -134,7 +134,7 @@ export class DriverFactory {
 
       return { runner, dataSource }
     } catch (error) {
-      throw ConnectionFailedException(conName, driverName, error)
+      throw new ConnectionFailedException(conName, driverName, error)
     }
   }
 
