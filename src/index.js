@@ -9,6 +9,17 @@
 
 import { DriverFactory } from '#src/Factories/DriverFactory'
 
+export * from './Facades/Database.js'
+
+export * from './Factories/ModelFactory.js'
+export * from './Factories/DriverFactory.js'
+export * from './Factories/ConnectionFactory.js'
+
+export * from './Models/Model.js'
+export * from './Models/Column.js'
+export * from './Models/Relation.js'
+export * from './Models/Criteria.js'
+
 export class DatabaseImpl {
   /**
    * The connection name used for this instance.
@@ -1185,14 +1196,3 @@ export class Transaction {
     return this
   }
 }
-
-export * from './Facades/Database.js'
-
-export * from './Factories/ModelFactory.js'
-export * from './Factories/DriverFactory.js'
-export * from './Factories/ConnectionFactory.js'
-
-export * from './Models/Model.js'
-export * from './Models/Column.js'
-export * from './Models/Relation.js'
-export * from './Models/Criteria.js'

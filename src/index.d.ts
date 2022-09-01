@@ -848,7 +848,7 @@ export class Criteria {
    * @param tableName {string|any}
    * @return {Criteria}
    */
-  static table(tableName: string | any): Criteria
+  static table(tableName: string | any): typeof Criteria
 
   /**
    * Set the columns that should be selected on query.
@@ -856,7 +856,7 @@ export class Criteria {
    * @param columns {string}
    * @return {Criteria}
    */
-  static select(...columns: string[]): Criteria
+  static select(...columns: string[]): typeof Criteria
 
   /**
    * Set a include statement in your query.
@@ -865,7 +865,7 @@ export class Criteria {
    * @param [operation] {string}
    * @return {Criteria}
    */
-  static includes(relation: string | any, operation?: string): Criteria
+  static includes(relation: string | any, operation?: string): typeof Criteria
 
   /**
    * Set a where statement in your query.
@@ -874,7 +874,7 @@ export class Criteria {
    * @param [value] {any}
    * @return {Criteria}
    */
-  static where(statement: string | Record<string, any>, value?: any): Criteria
+  static where(statement: string | Record<string, any>, value?: any): typeof Criteria
 
   /**
    * Set a where like statement in your query.
@@ -883,7 +883,7 @@ export class Criteria {
    * @param [value] {any}
    * @return {Criteria}
    */
-  static whereLike(statement: string | Record<string, any>, value?: any): Criteria
+  static whereLike(statement: string | Record<string, any>, value?: any): typeof Criteria
 
   /**
    * Set a where ILike statement in your query.
@@ -892,7 +892,7 @@ export class Criteria {
    * @param [value] {any}
    * @return {Criteria}
    */
-  static whereILike(statement: string | Record<string, any>, value?: any): Criteria
+  static whereILike(statement: string | Record<string, any>, value?: any): typeof Criteria
 
   /**
    * Set a where not statement in your query.
@@ -901,7 +901,7 @@ export class Criteria {
    * @param [value] {any}
    * @return {Criteria}
    */
-  static whereNot(statement: string | Record<string, any>, value?: any): Criteria
+  static whereNot(statement: string | Record<string, any>, value?: any): typeof Criteria
 
   /**
    * Set a where in statement in your query.
@@ -910,7 +910,7 @@ export class Criteria {
    * @param values {any[]}
    * @return {Criteria}
    */
-  static whereIn(columnName: string, values?: any[]): Criteria
+  static whereIn(columnName: string, values?: any[]): typeof Criteria
 
   /**
    * Set a where not in statement in your query.
@@ -919,7 +919,7 @@ export class Criteria {
    * @param values {any[]}
    * @return {Criteria}
    */
-  static whereNotIn(columnName: string, values?: any[]): Criteria
+  static whereNotIn(columnName: string, values?: any[]): typeof Criteria
 
   /**
    * Set a where null statement in your query.
@@ -927,7 +927,7 @@ export class Criteria {
    * @param columnName {string}
    * @return {Criteria}
    */
-  static whereNull(columnName: string): Criteria
+  static whereNull(columnName: string): typeof Criteria
 
   /**
    * Set a where not null statement in your query.
@@ -935,7 +935,7 @@ export class Criteria {
    * @param columnName {string}
    * @return {Criteria}
    */
-  static whereNotNull(columnName: string): Criteria
+  static whereNotNull(columnName: string): typeof Criteria
 
   /**
    * Set a where between statement in your query.
@@ -944,7 +944,7 @@ export class Criteria {
    * @param values {[any, any]}
    * @return {Criteria}
    */
-  static whereBetween(columnName: string, values: [any, any]): Criteria
+  static whereBetween(columnName: string, values: [any, any]): typeof Criteria
 
   /**
    * Set a where not between statement in your query.
@@ -953,7 +953,7 @@ export class Criteria {
    * @param values {[any, any]}
    * @return {Criteria}
    */
-  static whereNotBetween(columnName: string, values: [any, any]): Criteria
+  static whereNotBetween(columnName: string, values: [any, any]): typeof Criteria
 
   /**
    * Set a order by statement in your query.
@@ -962,7 +962,7 @@ export class Criteria {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {Criteria}
    */
-  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): Criteria
+  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): typeof Criteria
 
   /**
    * Set the skip number in your query.
@@ -970,7 +970,7 @@ export class Criteria {
    * @param number {number}
    * @return {Criteria}
    */
-  static skip(number: number): Criteria
+  static skip(number: number): typeof Criteria
 
   /**
    * Set the limit number in your query.
@@ -978,7 +978,7 @@ export class Criteria {
    * @param number {number}
    * @return {Criteria}
    */
-  static limit(number: number): Criteria
+  static limit(number: number): typeof Criteria
 
   /**
    * Get the criteria map.
@@ -1533,47 +1533,47 @@ export class Column {
    *
    * @return {Column}
    */
-  static type(type): Column
+  static type(type): typeof Column
 
   /**
    * Set the default value of your column.
    *
    * @return {Column}
    */
-  static default(value): Column
+  static default(value): typeof Column
 
   /**
    * Set if this column should be hidded.
    */
-  static isHidden(): Column
+  static isHidden(): typeof Column
 
   /**
    * Set if your column is auto generated.
    *
    * @return {Column}
    */
-  static isGenerated(): Column
+  static isGenerated(): typeof Column
 
   /**
    * Set if your column is primary.
    *
    * @return {Column}
    */
-  static isPrimary(): Column
+  static isPrimary(): typeof Column
 
   /**
    * Set if your column is unique.
    *
    * @return {Column}
    */
-  static isUnique(): Column
+  static isUnique(): typeof Column
 
   /**
    * Set if your column is nullable.
    *
    * @return {Column}
    */
-  static isNullable(): Column
+  static isNullable(): typeof Column
 
   /**
    * Get the clean object built.
@@ -1642,7 +1642,7 @@ export class Relation {
    * @param model {any}
    * @return {Relation}
    */
-  static target(model: any): Relation
+  static target(model: any): typeof Relation
 
   /**
    * Set the relation type.
@@ -1650,7 +1650,7 @@ export class Relation {
    * @param type {"one-to-one","one-to-many","many-to-one","many-to-many"}
    * @return {Relation}
    */
-  static type(type: "one-to-one" | "one-to-many" | "many-to-one" | "many-to-many"): Relation
+  static type(type: "one-to-one" | "one-to-many" | "many-to-one" | "many-to-many"): typeof Relation
 
   /**
    * Set the inverse side of your model schema.
@@ -1658,7 +1658,7 @@ export class Relation {
    * @param name
    * @return {Relation}
    */
-  static inverseSide(name: string): Relation
+  static inverseSide(name: string): typeof Relation
 
   /**
    * Set the column that the relation should join.
@@ -1666,14 +1666,14 @@ export class Relation {
    * @param column
    * @return {Relation}
    */
-  static joinColumn(column: any): Relation
+  static joinColumn(column: any): typeof Relation
 
   /**
    * Set if relation should be cascaded on delete/update.
    *
    * @return {Relation}
    */
-  static cascade(): Relation
+  static cascade(): typeof Relation
 
   /**
    * Get the clean object built.
@@ -1681,4 +1681,65 @@ export class Relation {
    * @return {any}
    */
   static get(): any
+}
+
+export class DriverFactory {
+  /**
+   * Return all available drivers.
+   *
+   * @param {boolean} onlyConnected
+   * @return {string[]}
+   */
+  static availableDrivers(onlyConnected?: boolean): string[]
+
+  /**
+   * Fabricate a new connection with some database driver.
+   *
+   * @param {string} connectionName
+   * @return {{ Driver: any, clientConnection?: any }}
+   */
+  static fabricate(connectionName: string): { Driver: any, clientConnection?: any }
+
+  /**
+   * Create a new driver implementation.
+   *
+   * @param {string} name
+   * @param {any} driver
+   */
+  static createDriver(name: string, driver: any): void
+
+  /**
+   * Create the connection with database by driver name.
+   *
+   * @param {string} driverName
+   * @param {string} [conName]
+   * @param {boolean} [saveOnDriver]
+   * @return {Promise<any>}
+   */
+  static createConnectionByDriver(driverName: string, conName?: string, saveOnDriver?: boolean): Promise<any>
+
+  /**
+   * Close the connection with database by driver name.
+   *
+   * @param {string} driverName
+   * @return {Promise<void>}
+   */
+  static closeConnectionByDriver(driverName: string): Promise<void>
+
+  /**
+   * Create the connection with database by connection name.
+   *
+   * @param {string} [conName]
+   * @param {boolean} [saveOnDriver]
+   * @return {Promise<any>}
+   */
+  static createConnectionByName(conName?: string, saveOnDriver?: boolean): Promise<any>
+
+  /**
+   * Close the connection with database by connection name.
+   *
+   * @param {string} [conName]
+   * @return {Promise<void>}
+   */
+  static closeConnectionByName(conName?: string): Promise<void>
 }

@@ -1,6 +1,15 @@
 version: "3"
 
 services:
+  mongo:
+    container_name: athenna_mongo
+    image: mongo
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 12345
+
   mysql:
     container_name: athenna_mysql
     image: mysql
@@ -8,8 +17,6 @@ services:
       - "3307:3306"
     environment:
       MYSQL_DATABASE: athenna
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 12345
       MYSQL_ROOT_PASSWORD: 12345
       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
 
