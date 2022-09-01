@@ -17,6 +17,7 @@ import { Product } from '#tests/Stubs/models/Product'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
@@ -62,6 +63,31 @@ test.group('UserModelTest', group => {
     assert.lengthOf(users, 2)
   })
 
+  test('should be able to create or update user', async ({ assert }) => {
+    const userCreated = await User.createOrUpdate(
+      { name: 'João Lenon' },
+      {
+        name: 'João Lenon',
+        email: 'lenonSec7@gmail.com',
+      },
+    )
+
+    assert.isDefined(userCreated.createdAt)
+    assert.isDefined(userCreated.updatedAt)
+    assert.isNull(userCreated.deletedAt)
+
+    const userUpdated = await User.createOrUpdate(
+      { name: 'João Lenon' },
+      {
+        name: 'Victor Tesoura',
+      },
+    )
+
+    assert.deepEqual(userCreated.id, userUpdated.id)
+    assert.deepEqual(userCreated.name, 'João Lenon')
+    assert.deepEqual(userUpdated.name, 'Victor Tesoura')
+  })
+
   test('should be able to find user and users', async ({ assert }) => {
     const user = await User.find({ id: 1 })
 
@@ -79,6 +105,15 @@ test.group('UserModelTest', group => {
     const allUsers = await User.findMany()
 
     assert.lengthOf(allUsers, 10)
+  })
+
+  test('should be able to find user and fail', async ({ assert }) => {
+    const user = await User.findOrFail({ id: 1 })
+
+    assert.isUndefined(user.email)
+    assert.deepEqual(user.id, 1)
+
+    await assert.rejects(() => User.findOrFail({ id: 123459 }), NotFoundDataException)
   })
 
   test('should be able to find user using query builder', async ({ assert }) => {

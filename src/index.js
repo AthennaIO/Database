@@ -346,8 +346,14 @@ export class DatabaseImpl {
     return this.#driver.countDistinct(column)
   }
 
-  // TODO Implement findOrFail
-  // async findOrFail() {}
+  /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  async findOrFail() {
+    return this.#driver.findOrFail()
+  }
 
   /**
    * Find a value in database.
@@ -399,8 +405,15 @@ export class DatabaseImpl {
     return this.#driver.createMany(data)
   }
 
-  // TODO Implement createOrUpdate
-  // async createOrUpdate() {}
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any | any[]} data
+   * @return {Promise<any | any[]>}
+   */
+  async createOrUpdate(data) {
+    return this.#driver.createOrUpdate(data)
+  }
 
   /**
    * Update a value in database.

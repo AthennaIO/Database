@@ -17,6 +17,7 @@ import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 test.group('ProductModelTest', group => {
   let userId = null
@@ -68,6 +69,32 @@ test.group('ProductModelTest', group => {
     assert.lengthOf(products, 2)
   })
 
+  test('should be able to create or update product', async ({ assert }) => {
+    const productCreated = await ProductMySql.createOrUpdate(
+      { name: 'iPhone X' },
+      {
+        name: 'iPhone X',
+        userId,
+      },
+    )
+
+    assert.isDefined(productCreated.createdAt)
+    assert.isDefined(productCreated.updatedAt)
+    assert.isNull(productCreated.deletedAt)
+
+    const productUpdated = await ProductMySql.createOrUpdate(
+      { name: 'iPhone X' },
+      {
+        name: 'iPhone 11',
+        userId,
+      },
+    )
+
+    assert.deepEqual(productCreated.id, productUpdated.id)
+    assert.deepEqual(productCreated.name, 'iPhone X')
+    assert.deepEqual(productUpdated.name, 'iPhone 11')
+  })
+
   test('should be able to find product and products', async ({ assert }) => {
     const product = await ProductMySql.find({ id: 1 })
 
@@ -84,6 +111,14 @@ test.group('ProductModelTest', group => {
     const allProductMySqls = await ProductMySql.findMany({ id: 1 })
 
     assert.lengthOf(allProductMySqls, 1)
+  })
+
+  test('should be able to find product and fail', async ({ assert }) => {
+    const product = await ProductMySql.findOrFail({ id: 1 })
+
+    assert.deepEqual(product.id, 1)
+
+    await assert.rejects(() => ProductMySql.findOrFail({ id: 123459 }), NotFoundDataException)
   })
 
   test('should be able to find products using query builder', async ({ assert }) => {

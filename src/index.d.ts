@@ -245,6 +245,13 @@ export class DatabaseImpl {
   countDistinct(column?: string): Promise<number>
 
   /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  findOrFail(): Promise<any>
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}
@@ -283,6 +290,14 @@ export class DatabaseImpl {
    * @return {Promise<any[]>}
    */
   createMany(data: any[]): Promise<any[]>
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any): Promise<any | any[]>
 
   /**
    * Update a value in database.
@@ -640,6 +655,13 @@ export class Transaction {
   countDistinct(column?: string): Promise<number>
 
   /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  findOrFail(): Promise<any>
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}
@@ -678,6 +700,14 @@ export class Transaction {
    * @return {Promise<any[]>}
    */
   createMany(data: any[]): Promise<any[]>
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any): Promise<any | any[]>
 
   /**
    * Update a value in database.
@@ -1125,6 +1155,15 @@ export class Model {
   static count(where?: any): Promise<void>
 
   /**
+   * Get one data in DB and return as a subclass instance or
+   * throw exception if undefined.
+   *
+   * @param {any} [where]
+   * @return {Promise<InstanceType<this>>}
+   */
+  static findOrFail<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+
+  /**
    * Get one data in DB and return as a subclass instance.
    *
    * @param {any} [where]
@@ -1182,6 +1221,16 @@ export class Model {
    * @return {Promise<InstanceType<this>[]>}
    */
   static createMany<Class extends typeof Model>(this: Class, data?: any[], ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+
+  /**
+   * Create or update models in DB and return as subclass instances.
+   *
+   * @param {any} where
+   * @param {any} data
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<InstanceType<this> | InstanceType<this>[]>}
+   */
+  static createOrUpdate<Class extends typeof Model>(this: Class, where?: any, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
 
   /**
    * Update a model in DB and return as a subclass instance.
@@ -1253,6 +1302,13 @@ export class ModelQueryBuilder {
   constructor(model: any, withCriterias?: boolean)
 
   /**
+   * Find one data in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  findOrFail(): Promise<any>
+
+  /**
    * Find one data in database.
    *
    * @return {Promise<any>}
@@ -1310,17 +1366,26 @@ export class ModelQueryBuilder {
   /**
    * Create many models in database.
    *
-   * @param data {any}
-   * @param {boolean} ignorePersistOnly
+   * @param data {any[]}
+   * @param {boolean} [ignorePersistOnly]
    * @return {Promise<any[]>}
    */
-  createMany(data: any, ignorePersistOnly?: boolean): Promise<any[]>
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
 
   /**
    * Update one or more models in database.
    *
    * @param data {any}
-   * @param {boolean} ignorePersistOnly
+   * @param {boolean} [ignorePersistOnly]
    * @return {Promise<any|any[]>}
    */
   update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>

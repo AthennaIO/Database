@@ -20,6 +20,7 @@ import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 test.group('MySqlDriverTest', group => {
   group.setup(async () => {
@@ -175,6 +176,29 @@ test.group('MySqlDriverTest', group => {
     assert.lengthOf(users, 2)
   })
 
+  test('should be able to create or update user', async ({ assert }) => {
+    const userCreated = await Database.connection('mysql')
+      .buildTable('users')
+      .buildWhere('name', 'João Lenon')
+      .createOrUpdate({
+        name: 'João Lenon',
+        email: 'lenonSec7@gmail.com',
+      })
+
+    assert.isDefined(userCreated.createdAt)
+    assert.isDefined(userCreated.updatedAt)
+    assert.isNull(userCreated.deletedAt)
+
+    const userUpdated = await Database.connection('mysql')
+      .buildTable('users')
+      .buildWhere('name', 'João Lenon')
+      .createOrUpdate({ name: 'Victor Tesoura' })
+
+    assert.deepEqual(userCreated.id, userUpdated.id)
+    assert.deepEqual(userCreated.name, 'João Lenon')
+    assert.deepEqual(userUpdated.name, 'Victor Tesoura')
+  })
+
   test('should throw an exception when trying to execute the wrong method for input', async ({ assert }) => {
     await assert.rejects(() => Database.connection('mysql').create([]), WrongMethodException)
     await assert.rejects(() => Database.connection('mysql').createMany({}), WrongMethodException)
@@ -194,6 +218,17 @@ test.group('MySqlDriverTest', group => {
       .findMany()
 
     assert.lengthOf(users, 2)
+  })
+
+  test('should be able to find user and fail', async ({ assert }) => {
+    await assert.rejects(
+      () => Database.connection('mysql').buildTable('users').buildWhere('id', 12349).findOrFail(),
+      NotFoundDataException,
+    )
+
+    const user = await Database.connection('mysql').buildTable('users').buildWhere('id', 1).findOrFail()
+
+    assert.deepEqual(user.id, 1)
   })
 
   test('should be able to get paginate users', async ({ assert }) => {

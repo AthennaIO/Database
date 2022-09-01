@@ -16,6 +16,7 @@ import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 export class MySqlDriver {
   /**
@@ -583,6 +584,23 @@ export class MySqlDriver {
   }
 
   /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  async findOrFail() {
+    const where = Json.copy(this.#where)
+
+    const data = await this.find()
+
+    if (!data) {
+      throw new NotFoundDataException(where, this.#connection)
+    }
+
+    return data
+  }
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}
@@ -688,6 +706,36 @@ export class MySqlDriver {
   }
 
   /**
+   * Create data or update if already exists.
+   *
+   * @param {any | any[]} data
+   * @return {Promise<any | any[]>}
+   */
+  async createOrUpdate(data) {
+    const select = Json.copy(this.#select)
+    const orderBy = Json.copy(this.#orderBy)
+    const relations = Json.copy(this.#relations)
+    const addSelect = Json.copy(this.#addSelect)
+
+    const hasValue = await this.find()
+
+    if (hasValue) {
+      const firstKey = Object.keys(hasValue)[0]
+
+      this.buildWhere(firstKey, hasValue[firstKey])
+
+      this.#select = select
+      this.#orderBy = orderBy
+      this.#relations = relations
+      this.#addSelect = addSelect
+
+      return this.update(data)
+    }
+
+    return this.create(data)
+  }
+
+  /**
    * Update a value in database.
    *
    * @param {any} data
@@ -700,36 +748,20 @@ export class MySqlDriver {
     }
 
     const where = Json.copy(this.#where)
-    const select = [...this.#select]
-    const addSelect = [...this.#addSelect]
+    const select = Json.copy(this.#select)
+    const orderBy = Json.copy(this.#orderBy)
+    const relations = Json.copy(this.#relations)
+    const addSelect = Json.copy(this.#addSelect)
 
     await this.query(true).update(this.#table).set(data).execute()
 
-    const query = this.query(true)
+    this.#where = where
+    this.#select = select
+    this.#orderBy = orderBy
+    this.#relations = relations
+    this.#addSelect = addSelect
 
-    if (select.length) {
-      query.select(select)
-    }
-
-    if (addSelect.length) {
-      query.addSelect(addSelect)
-    }
-
-    if (where.size) {
-      const iterator = where.entries()
-
-      for (const [key, value] of iterator) {
-        if (!value) {
-          query.andWhere(key)
-
-          continue
-        }
-
-        query.andWhere(key, value)
-      }
-    }
-
-    const result = await query.getMany()
+    const result = await this.findMany()
 
     if (result.length === 1) {
       return result[0]

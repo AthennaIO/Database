@@ -183,6 +183,23 @@ export class Model {
   }
 
   /**
+   * Get one data in DB and return as a subclass instance or
+   * throw exception if undefined.
+   *
+   * @param {any} [where]
+   * @return {Promise<InstanceType<this>>}
+   */
+  static async findOrFail(where = {}) {
+    const query = this.query()
+
+    if (Object.keys(where).length) {
+      query.where(where)
+    }
+
+    return query.where(where).findOrFail()
+  }
+
+  /**
    * Get one data in DB and return as a subclass instance.
    *
    * @param {any} [where]
@@ -197,9 +214,6 @@ export class Model {
 
     return query.where(where).find()
   }
-
-  // TODO Implement findOrFail
-  // static async findOrFail() {}
 
   /**
    * Get many data in DB and return as an array of subclass instance.
@@ -272,8 +286,21 @@ export class Model {
     return this.query().createMany(data, ignorePersistOnly)
   }
 
-  // TODO Implement createOrUpdate
-  // static async createOrUpdate() {}
+  /**
+   * Create or update models in DB and return as subclass instances.
+   *
+   * @param {any} where
+   * @param {any} data
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<InstanceType<this> | InstanceType<this>[]>}
+   */
+  static async createOrUpdate(
+    where = {},
+    data = {},
+    ignorePersistOnly = false,
+  ) {
+    return this.query().where(where).createOrUpdate(data, ignorePersistOnly)
+  }
 
   /**
    * Update a model in DB and return as a subclass instance.

@@ -56,6 +56,17 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Find one data in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  async findOrFail() {
+    this.#setCriterias()
+
+    return this.#generateModels(await this.#DB.findOrFail())
+  }
+
+  /**
    * Find one data in database.
    *
    * @return {Promise<any>}
@@ -151,6 +162,21 @@ export class ModelQueryBuilder {
     }
 
     return this.#generateModels(await this.#DB.createMany(data))
+  }
+
+  /**
+   * Create or update models in database.
+   *
+   * @param data {any | any[]}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any | any[]>}
+   */
+  async createOrUpdate(data, ignorePersistOnly = false) {
+    if (!ignorePersistOnly) {
+      data = this.#fillable(data)
+    }
+
+    return this.#generateModels(await this.#DB.createOrUpdate(data))
   }
 
   /**

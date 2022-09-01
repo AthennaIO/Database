@@ -8,7 +8,7 @@
  */
 
 import { MigrationExecutor, Table } from 'typeorm'
-import { Exec, Is } from '@secjs/utils'
+import { Exec, Is, Json } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
@@ -16,6 +16,7 @@ import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 export class PostgresDriver {
   /**
@@ -583,6 +584,23 @@ export class PostgresDriver {
   }
 
   /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  async findOrFail() {
+    const where = Json.copy(this.#where)
+
+    const data = await this.query(true).getOne()
+
+    if (!data) {
+      throw new NotFoundDataException(where, this.#connection)
+    }
+
+    return data
+  }
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}
@@ -659,6 +677,34 @@ export class PostgresDriver {
       .execute()
 
     return result.raw
+  }
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @return {Promise<any | any[]>}
+   */
+  async createOrUpdate(data) {
+    const where = Json.copy(this.#where)
+    const select = Json.copy(this.#select)
+    const orderBy = Json.copy(this.#orderBy)
+    const relations = Json.copy(this.#relations)
+    const addSelect = Json.copy(this.#addSelect)
+
+    const hasValue = await this.find()
+
+    if (hasValue) {
+      this.#where = where
+      this.#select = select
+      this.#orderBy = orderBy
+      this.#relations = relations
+      this.#addSelect = addSelect
+
+      return this.update(data)
+    }
+
+    return this.create(data)
   }
 
   /**
