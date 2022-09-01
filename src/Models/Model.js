@@ -62,7 +62,7 @@ export class Model {
    *  @return {boolean}
    */
   static get isSoftDelete() {
-    return true
+    return false
   }
 
   /**
@@ -80,9 +80,13 @@ export class Model {
    * @return {any}
    */
   static get criterias() {
-    return {
-      deletedAt: Criteria.whereNull(this.DELETED_AT).get(),
+    if (this.isSoftDelete) {
+      return {
+        deletedAt: Criteria.whereNull(this.DELETED_AT).get(),
+      }
     }
+
+    return {}
   }
 
   /**

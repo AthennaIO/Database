@@ -14,6 +14,15 @@ export class Product extends Model {
   }
 
   /**
+   * Return a boolean specifying if Model will use soft delete.
+   *
+   *  @return {boolean}
+   */
+  static get isSoftDelete() {
+    return true
+  }
+
+  /**
    * The default schema for model instances.
    *
    * @return {any}

@@ -45,6 +45,6 @@ test.group('ModelTest', group => {
   test('should be able to list criterias', async ({ assert }) => {
     const criterias = Model.query().listCriterias()
 
-    assert.isDefined(criterias.deletedAt)
+    assert.isDefined(criterias)
   })
 })
