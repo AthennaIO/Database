@@ -17,6 +17,8 @@ import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
 import { Log } from '@athenna/logger'
+import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
+import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
 
 export class DriverFactory {
   /**
@@ -132,9 +134,7 @@ export class DriverFactory {
 
       return { runner, dataSource }
     } catch (error) {
-      Log.error(
-        `Error occurred when trying to connect to database using ${conName} connection and ${driverName} driver: ${error}`,
-      )
+      throw ConnectionFailedException(conName, driverName, error)
     }
   }
 
@@ -165,9 +165,7 @@ export class DriverFactory {
         `Successfully closed connection with database for ${driverName} driver`,
       )
     } catch (error) {
-      Log.success(
-        `Error occurred when trying to close the connection with database for ${driverName} driver: ${error}`,
-      )
+      throw new CloseConnectionFailedException(driverName, error)
     }
   }
 
