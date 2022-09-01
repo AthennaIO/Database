@@ -1496,7 +1496,7 @@ export class Column {
    *
    * @return {any}
    */
-  static autoIncrementedIntPk(): any
+  static autoIncrementedInt(): any
 
   /**
    * Create a "createdAt" column.
