@@ -16,6 +16,7 @@ import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
+import { Log } from '@athenna/logger'
 
 export class DriverFactory {
   /**
@@ -109,20 +110,32 @@ export class DriverFactory {
       conName = Config.get('database.default')
     }
 
-    const client = await ConnectionFactory[driverName](conName)
+    let client = null
 
-    const dataSource = client
-    const runner = client.createQueryRunner()
+    try {
+      client = await ConnectionFactory[driverName](conName)
 
-    if (!saveOnDriver) {
+      Log.success(
+        `Successfully connected to database using ${conName} connection and ${driverName} driver`,
+      )
+
+      const dataSource = client
+      const runner = client.createQueryRunner()
+
+      if (!saveOnDriver) {
+        return { runner, dataSource }
+      }
+
+      driverObject.clientConnection = { runner, dataSource }
+
+      this.#drivers.set(driverName, driverObject)
+
       return { runner, dataSource }
+    } catch (error) {
+      Log.error(
+        `Error occurred when trying to connect to database using ${conName} connection and ${driverName} driver: ${error}`,
+      )
     }
-
-    driverObject.clientConnection = { runner, dataSource }
-
-    this.#drivers.set(driverName, driverObject)
-
-    return { runner, dataSource }
   }
 
   /**
@@ -140,12 +153,22 @@ export class DriverFactory {
       return
     }
 
-    await client.runner.release()
-    await client.dataSource.destroy()
+    try {
+      await client.runner.release()
+      await client.dataSource.destroy()
 
-    driverObject.clientConnection = null
+      driverObject.clientConnection = null
 
-    this.#drivers.set(driverName, driverObject)
+      this.#drivers.set(driverName, driverObject)
+
+      Log.success(
+        `Successfully closed connection with database for ${driverName} driver`,
+      )
+    } catch (error) {
+      Log.success(
+        `Error occurred when trying to close the connection with database for ${driverName} driver: ${error}`,
+      )
+    }
   }
 
   /**

@@ -1,0 +1,25 @@
+import { Model, Column } from '@athenna/database'
+
+export class <%= namePascal %> extends Model {
+    /**
+     * The default schema for model instances.
+     *
+     * @return {any}
+     */
+    static schema() {
+      return {
+        id: Column.autoIncrementedInt()
+      }
+    }
+
+    /**
+     * The definition method used by factories.
+     *
+     * @return {any}
+     */
+    static async definition() {
+      return {
+        id: this.faker.datatype.number()
+      }
+    }
+}

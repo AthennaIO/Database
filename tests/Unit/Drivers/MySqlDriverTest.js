@@ -10,6 +10,7 @@
 import { test } from '@japa/runner'
 import { Path, Folder, Config } from '@secjs/utils'
 import { DataSource, SelectQueryBuilder } from 'typeorm'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
 import { UserMySql } from '#tests/Stubs/models/UserMySql'
@@ -24,9 +25,11 @@ test.group('MySqlDriverTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Config().safeLoad(Path.config('database.js'))
+    await new Config().safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
+    new LoggerProvider().register()
     await new DatabaseProvider().boot()
 
     await Database.connection('mysql').connect()

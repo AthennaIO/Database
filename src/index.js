@@ -15,6 +15,8 @@ export * from './Factories/ModelFactory.js'
 export * from './Factories/DriverFactory.js'
 export * from './Factories/ConnectionFactory.js'
 
+export * from './Helpers/DatabaseCommandsLoader.js'
+
 export * from './Models/Model.js'
 export * from './Models/Column.js'
 export * from './Models/Relation.js'

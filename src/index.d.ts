@@ -1743,3 +1743,19 @@ export class DriverFactory {
    */
   static closeConnectionByName(conName?: string): Promise<void>
 }
+
+export class DatabaseCommandsLoader {
+  /**
+   * Return all commands from database package.
+   *
+   * @return {any[]}
+   */
+  static loadCommands(): any[]
+
+  /**
+   * Return all custom templates from database package.
+   *
+   * @return {any[]}
+   */
+  static loadTemplates(): any[]
+}

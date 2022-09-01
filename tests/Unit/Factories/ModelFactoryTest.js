@@ -9,6 +9,7 @@
 
 import { test } from '@japa/runner'
 import { Path, Folder, Config } from '@secjs/utils'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
@@ -18,9 +19,11 @@ test.group('ModelFactoryTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Config().safeLoad(Path.config('database.js'))
+    await new Config().safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
+    new LoggerProvider().register()
     await new DatabaseProvider().boot()
 
     await Database.connect()
