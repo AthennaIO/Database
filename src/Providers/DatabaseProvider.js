@@ -21,8 +21,9 @@ export class DatabaseProvider extends ServiceProvider {
     this.container.bind('Athenna/Core/Database', DatabaseImpl)
 
     if (
-      process.env.ATHENNA_APPLICATIONS &&
-      !process.env.ATHENNA_APPLICATIONS.includes('artisan')
+      process.env.AUTO_CONNECT_DB &&
+      (process.env.AUTO_CONNECT_DB === true ||
+        process.env.AUTO_CONNECT_DB === 'true')
     ) {
       await Database.connect()
     }
