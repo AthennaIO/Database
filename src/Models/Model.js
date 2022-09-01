@@ -198,6 +198,9 @@ export class Model {
     return query.where(where).find()
   }
 
+  // TODO Implement findOrFail
+  // static async findOrFail() {}
+
   /**
    * Get many data in DB and return as an array of subclass instance.
    *
@@ -268,6 +271,9 @@ export class Model {
   static async createMany(data = [], ignorePersistOnly = false) {
     return this.query().createMany(data, ignorePersistOnly)
   }
+
+  // TODO Implement createOrUpdate
+  // static async createOrUpdate() {}
 
   /**
    * Update a model in DB and return as a subclass instance.

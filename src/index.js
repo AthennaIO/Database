@@ -346,6 +346,9 @@ export class DatabaseImpl {
     return this.#driver.countDistinct(column)
   }
 
+  // TODO Implement findOrFail
+  // async findOrFail() {}
+
   /**
    * Find a value in database.
    *
@@ -395,6 +398,9 @@ export class DatabaseImpl {
   async createMany(data) {
     return this.#driver.createMany(data)
   }
+
+  // TODO Implement createOrUpdate
+  // async createOrUpdate() {}
 
   /**
    * Update a value in database.
