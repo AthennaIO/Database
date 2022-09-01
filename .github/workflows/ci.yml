@@ -11,6 +11,24 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: athenna
+          MYSQL_ROOT_PASSWORD: 12345
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - '3307:3306'
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 12345
+          POSTGRES_ROOT_PASSWORD: 12345
+        ports:
+          - '5433:5432'
     strategy:
       matrix:
         node-version:
@@ -32,6 +50,24 @@ jobs:
 
   windows:
     runs-on: windows-latest
+    services:
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: athenna
+          MYSQL_ROOT_PASSWORD: 12345
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - '3307:3306'
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 12345
+          POSTGRES_ROOT_PASSWORD: 12345
+        ports:
+          - '5433:5432'
     strategy:
       matrix:
         node-version:
