@@ -1,6 +1,7 @@
 import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
 
+// TODO Test
 export class DbWipe extends Command {
   /**
    * The name and signature of the console command.
