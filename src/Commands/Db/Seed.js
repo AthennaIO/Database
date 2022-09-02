@@ -36,7 +36,7 @@ export class DbSeed extends Command {
         'default',
       )
       .option(
-        '-c, --class <className>',
+        '--class <className>',
         'Set the only class that should be run.',
         null,
       )
@@ -49,7 +49,7 @@ export class DbSeed extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog('[ SEEDING DATABASE ]', 'rmNewLineStart', 'bold', 'green')
+    this.simpleLog('[ SEEDING DATABASE ]\n', 'rmNewLineStart', 'bold', 'green')
 
     const DB = await Database.connection(options.connection).connect()
 
@@ -60,7 +60,7 @@ export class DbSeed extends Command {
 
       const seed = new Seed()
 
-      this.success(`Running ({yellow} "${Seed.name}") seeder.`)
+      this.info(`Running ({yellow} "${Seed.name}") seeder.`)
 
       await seed.run()
 
@@ -74,7 +74,7 @@ export class DbSeed extends Command {
     for (const Seed of seeds) {
       const seed = new Seed()
 
-      this.success(`Running ({yellow} "${Seed.name}") seeder.`)
+      this.info(`Running ({yellow} "${Seed.name}") seeder.`)
 
       await seed.run()
     }
