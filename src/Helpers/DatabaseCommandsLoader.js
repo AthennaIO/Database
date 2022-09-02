@@ -10,6 +10,7 @@ export class DatabaseCommandsLoader {
   static loadCommands() {
     return [
       import('#src/Commands/Make/Model'),
+      import('#src/Commands/Make/Seeder'),
       import('#src/Commands/Make/Migration'),
     ]
   }

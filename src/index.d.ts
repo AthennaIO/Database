@@ -1824,3 +1824,13 @@ export class DatabaseCommandsLoader {
    */
   static loadTemplates(): any[]
 }
+
+export class Seeder {
+  /**
+   * Run the database seeders.
+   *
+   * @return {void|Promise<void>}
+   */
+  run(): void | Promise<void>
+}
+
