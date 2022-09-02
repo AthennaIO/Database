@@ -9,9 +9,13 @@ export class DatabaseCommandsLoader {
    */
   static loadCommands() {
     return [
+      import('#src/Commands/Db/Seed'),
+      import('#src/Commands/Db/Wipe'),
       import('#src/Commands/Make/Model'),
       import('#src/Commands/Make/Seeder'),
       import('#src/Commands/Make/Migration'),
+      import('#src/Commands/Migration/Revert'),
+      import('#src/Commands/Migration/Run'),
     ]
   }
 
