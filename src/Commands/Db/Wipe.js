@@ -1,5 +1,6 @@
 import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
+import { Config } from '@secjs/utils'
 
 // TODO Test
 export class DbWipe extends Command {
@@ -49,9 +50,8 @@ export class DbWipe extends Command {
 
     const dbName = await DB.getCurrentDatabase()
 
-    await DB.dropDatabase(dbName)
-
-    await DB.createDatabase(dbName)
+    await DB.revertMigrations()
+    await DB.dropTable(Config.get('database.migrations'))
 
     await DB.close()
 

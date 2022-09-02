@@ -2,7 +2,6 @@ import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
 import { Module, Path } from '@secjs/utils'
 
-// TODO Test
 export class DbSeed extends Command {
   /**
    * The name and signature of the console command.
