@@ -8,7 +8,10 @@ export class DatabaseCommandsLoader {
    * @return {any[]}
    */
   static loadCommands() {
-    return [import('#src/Commands/Make/Model')]
+    return [
+      import('#src/Commands/Make/Model'),
+      import('#src/Commands/Make/Migration'),
+    ]
   }
 
   /**

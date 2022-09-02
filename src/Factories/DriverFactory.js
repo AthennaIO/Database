@@ -8,6 +8,7 @@
  */
 
 import { Config } from '@secjs/utils'
+import { Logger } from '@athenna/logger'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
@@ -16,7 +17,6 @@ import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
-import { Log } from '@athenna/logger'
 import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
 import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
 
@@ -117,7 +117,7 @@ export class DriverFactory {
     try {
       client = await ConnectionFactory[driverName](conName)
 
-      Log.success(
+      this.getLogger().success(
         `Successfully connected to database using ${conName} connection and ${driverName} driver`,
       )
 
@@ -161,7 +161,7 @@ export class DriverFactory {
 
       this.#drivers.set(driverName, driverObject)
 
-      Log.success(
+      this.getLogger().success(
         `Successfully closed connection with database for ${driverName} driver`,
       )
     } catch (error) {
@@ -234,5 +234,24 @@ export class DriverFactory {
     }
 
     return conConfig
+  }
+
+  /**
+   * Mocking the Logger when client doesn't want to show it.
+   *
+   * @return {Logger}
+   */
+  static getLogger() {
+    return process.env.NODE_ENV === 'test' || process.env.BOOT_LOGS === 'false'
+      ? {
+          channel: (_channel, _runtimeConfig) => {},
+          log: (_message, _options = {}) => {},
+          info: (_message, _options = {}) => {},
+          warn: (_message, _options = {}) => {},
+          error: (_message, _options = {}) => {},
+          debug: (_message, _options = {}) => {},
+          success: (_message, _options = {}) => {},
+        }
+      : new Logger()
   }
 }

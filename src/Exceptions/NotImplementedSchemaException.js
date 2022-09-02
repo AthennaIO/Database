@@ -22,7 +22,7 @@ export class NotImplementedSchemaException extends Exception {
       content,
       500,
       'E_NOT_IMPLEMENTED_SCHEMA_ERROR',
-      `Open you ${modelName} model and write your "static schema()" method using the "Column" class from @athenna/database package.`,
+      `Open your ${modelName} model and write your "static schema()" method using the "Column" class from @athenna/database package.`,
     )
   }
 }
