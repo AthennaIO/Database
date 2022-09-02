@@ -42,7 +42,12 @@ export class MigrationRun extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog(`[ MIGRATING DATABASE]\n`, 'rmNewLineStart', 'bold', 'green')
+    this.simpleLog(
+      `[ MIGRATING DATABASE ]\n`,
+      'rmNewLineStart',
+      'bold',
+      'green',
+    )
 
     const DB = await Database.connection(options.connection).connect()
 

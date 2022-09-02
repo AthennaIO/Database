@@ -42,7 +42,7 @@ export class DbWipe extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog(`[ WIPING DATABASE]\n`, 'rmNewLineStart', 'bold', 'green')
+    this.simpleLog(`[ WIPING DATABASE ]\n`, 'rmNewLineStart', 'bold', 'green')
 
     const DB = await Database.connection(options.connection).connect()
 
