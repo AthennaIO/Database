@@ -54,4 +54,11 @@ export class User extends Model {
       deletedAt: null,
     }
   }
+
+  toResource(criterias = {}) {
+    return {
+      id: this.id,
+      name: this.name,
+    }
+  }
 }

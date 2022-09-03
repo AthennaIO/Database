@@ -1,0 +1,15 @@
+import { Resource } from '@athenna/database'
+
+export class <%= namePascal %>Resource extends Resource {
+    /**
+     * Set your object blueprint to execute in resources.
+     *
+     * @param object
+     * @return {any}
+     */
+    static blueprint(object) {
+        return {
+            id: object.id,
+        }
+    }
+}

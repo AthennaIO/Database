@@ -47,7 +47,7 @@ export default {
       password: '12345',
       logging: ['error', 'warn'],
       entities: [UserMySql.getSchema(), ProductMySql.getSchema()],
-      migrations: [Path.stubs('migrations/**/*.js')],
+      migrations: [Path.stubs('database/migrations/**/*.js')],
       synchronize: false,
     },
 
@@ -60,7 +60,7 @@ export default {
       password: '12345',
       logging: ['error', 'warn'],
       entities: [User.getSchema(), Product.getSchema()],
-      migrations: [Path.stubs('migrations/**/*.js')],
+      migrations: [Path.stubs('database/migrations/**/*.js')],
       synchronize: false,
     },
 

@@ -12,6 +12,12 @@ import { EntitySchema } from 'typeorm'
 import { Faker } from '@faker-js/faker'
 import { PaginatedResponse } from '@secjs/utils'
 
+declare global {
+  interface Array<T> {
+    toResource(criterias?: any): T[];
+  }
+}
+
 export const Database: Facade & DatabaseImpl
 
 export class DatabaseImpl {
@@ -1832,5 +1838,31 @@ export class Seeder {
    * @return {void|Promise<void>}
    */
   run(): void | Promise<void>
+}
+
+export class Resource {
+  /**
+   * Set your object blueprint to execute in resources.
+   *
+   * @param object
+   * @return {any}
+   */
+  static blueprint(object: any): any
+
+  /**
+   * Parse model to resource.
+   *
+   * @param object {any}
+   * @return {null|any}
+   */
+  static toJson(object): null | any[]
+
+  /**
+   * Parse objects to resource.
+   *
+   * @param objects {any[]}
+   * @return {null|any[]}
+   */
+  static toArray(objects: any[]): null | any[]
 }
 
