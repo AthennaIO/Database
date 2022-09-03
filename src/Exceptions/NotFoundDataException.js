@@ -22,7 +22,7 @@ export class NotFoundDataException extends Exception {
 
     super(
       content,
-      500,
+      404,
       'E_NOT_FOUND_DATA_ERROR',
       `The where query used was: \n\t${JSON.stringify(where, null, 2)}`,
     )
