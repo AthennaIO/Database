@@ -10,7 +10,6 @@
 import { Is, Json } from '@secjs/utils'
 
 import { Database } from '#src/index'
-import { Model } from '#src/Models/Model'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 export class ModelQueryBuilder {
@@ -476,7 +475,7 @@ export class ModelQueryBuilder {
     }
 
     if (!Is.Array(data)) {
-      const model = new Model()
+      const model = new this.#Model()
 
       Object.keys(data).forEach(key => (model[key] = data[key]))
 

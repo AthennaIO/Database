@@ -19,6 +19,11 @@ import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
+// eslint-disable-next-line no-extend-native
+Array.prototype.toResource = function (criterias = {}) {
+  return this.map(model => model.toResource(criterias))
+}
+
 export class Model {
   /**
    * Set the db connection that this model instance will work with.
@@ -392,6 +397,16 @@ export class Model {
     Object.keys(this).forEach(key => (json[key] = this[key]))
 
     return json
+  }
+
+  /**
+   * Return the model resource.
+   *
+   * @param [criterias] {any}
+   * @return {any|any[]}
+   */
+  toResource(criterias = {}) {
+    return this.toJSON()
   }
 
   // TODO

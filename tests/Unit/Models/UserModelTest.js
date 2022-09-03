@@ -18,6 +18,7 @@ import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
@@ -255,6 +256,28 @@ test.group('UserModelTest', group => {
     const userJson = user.toJSON()
 
     assert.notInstanceOf(userJson, User)
+  })
+
+  test('should be able to get the user/users as resource', async ({ assert }) => {
+    const users = await User.query().includes('products').findMany()
+
+    const userResource = users[0].toResource()
+
+    assert.notInstanceOf(userResource, User)
+
+    assert.isUndefined(userResource.createdAt)
+    assert.isUndefined(users.toResource({ role: 'admin' })[0].createdAt)
+  })
+
+  test('should be able to get the user/users as resource using resource class', async ({ assert }) => {
+    const users = await User.query().includes('products').findMany()
+
+    const userResource = UserResource.toJson(users[0])
+
+    assert.notInstanceOf(userResource, User)
+
+    assert.isUndefined(userResource.createdAt)
+    assert.isUndefined(UserResource.toArray(users)[0].createdAt)
   })
 
   test('should throw a not implemented relation exception', async ({ assert }) => {
