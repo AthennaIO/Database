@@ -1866,3 +1866,14 @@ export class Resource {
   static toArray(objects: any[]): null | any[]
 }
 
+export class DatabaseLoader {
+  /**
+   * Get the schema of all models with same connection.
+   *
+   * @param connection {string}
+   * @param [path] {string}
+   * @param [defaultConnection] {string}
+   * @return {Promise<any[]>}
+   */
+  static loadEntities(connection: string, path?: string, defaultConnection?: string): Promise<any[]>
+}

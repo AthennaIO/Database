@@ -12,6 +12,8 @@ import { pathToFileURL } from 'node:url'
 import { specReporter } from '@japa/spec-reporter'
 import { processCliArgs, configure, run } from '@japa/runner'
 
+process.env.DB_CONNECTION = 'postgres'
+
 /*
 |--------------------------------------------------------------------------
 | Configure tests
