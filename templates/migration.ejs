@@ -1,13 +1,13 @@
 import { Table } from 'typeorm'
 
-export class <%= namePascal %> {
+export class <%= namePascalTimestamp %> {
     /**
      * Return the table name.
      *
      * @return {string}
      */
     get tableName() {
-        return 'your-table-name'
+        return '<%= nameCamel %>'
     }
 
     /**

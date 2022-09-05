@@ -1,6 +1,6 @@
+import { Config } from '@secjs/utils'
 import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
-import { Config } from '@secjs/utils'
 
 // TODO Test
 export class DbWipe extends Command {
@@ -44,7 +44,7 @@ export class DbWipe extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog(`[ WIPING DATABASE ]\n`, 'rmNewLineStart', 'bold', 'green')
+    this.title(`WIPING DATABASE\n`, 'bold', 'green')
 
     const DB = await Database.connection(options.connection).connect()
 

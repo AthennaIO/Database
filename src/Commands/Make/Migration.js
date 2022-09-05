@@ -1,5 +1,5 @@
 import { Path } from '@secjs/utils'
-import { Artisan, Command, TemplateHelper } from '@athenna/artisan'
+import { Command } from '@athenna/artisan'
 
 export class MakeMigration extends Command {
   /**
@@ -44,24 +44,12 @@ export class MakeMigration extends Command {
    */
   async handle(name, options) {
     const resource = 'Migration'
-    const subPath = Path.migrations()
+    const path = Path.migrations(`${name}.js`)
 
-    this.simpleLog(
-      `[ MAKING ${resource.toUpperCase()} ]\n`,
-      'rmNewLineStart',
-      'bold',
-      'green',
-    )
+    this.title(`MAKING ${resource}\n`, 'bold', 'green')
 
-    name = name.concat('Mig', Date.now())
-
-    let file = await TemplateHelper.getResourceFile(name, resource, subPath)
-    file = await file.move(file.path.replace(`${name}${resource}`, name))
+    const file = await this.makeFile(path, 'migration', options.lint)
 
     this.success(`${resource} ({yellow} "${file.name}") successfully created.`)
-
-    if (options.lint) {
-      await Artisan.call(`eslint:fix ${file.path} --resource ${resource}`)
-    }
   }
 }

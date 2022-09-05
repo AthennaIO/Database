@@ -15,7 +15,7 @@ import { Kernel } from '#tests/Stubs/app/Console/Kernel'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
 
-test.group('MakeSeederTest', group => {
+test.group('MakeResourceTest', group => {
   group.each.setup(async () => {
     await new Folder(Path.stubs('app')).copy(Path.app())
     await new Folder(Path.stubs('configs')).copy(Path.config())
@@ -31,7 +31,7 @@ test.group('MakeSeederTest', group => {
 
     await kernel.registerCommands()
     await kernel.registerErrorHandler()
-    await kernel.registerCustomTemplates()
+    await kernel.registerTemplates()
   })
 
   group.each.teardown(async () => {
@@ -43,7 +43,7 @@ test.group('MakeSeederTest', group => {
   test('should be able to create a resource file', async ({ assert }) => {
     await Artisan.call('make:resource User')
 
-    const path = Path.app('Resources/UserResource.js')
+    const path = Path.app('Resources/User.js')
 
     assert.isTrue(await File.exists(path))
   }).timeout(60000)

@@ -1,5 +1,5 @@
-import { Path, String } from '@secjs/utils'
-import { Artisan, Command, TemplateHelper } from '@athenna/artisan'
+import { Path } from '@secjs/utils'
+import { Command } from '@athenna/artisan'
 
 export class MakeResource extends Command {
   /**
@@ -44,21 +44,12 @@ export class MakeResource extends Command {
    */
   async handle(name, options) {
     const resource = 'Resource'
-    const subPath = Path.app(String.pluralize(resource))
+    const path = Path.app(`Resources/${name}.js`)
 
-    this.simpleLog(
-      `[ MAKING ${resource.toUpperCase()} ]\n`,
-      'rmNewLineStart',
-      'bold',
-      'green',
-    )
+    this.title(`MAKING ${resource}\n`, 'bold', 'green')
 
-    const file = await TemplateHelper.getResourceFile(name, resource, subPath)
+    const file = await this.makeFile(path, 'resource', options.lint)
 
     this.success(`${resource} ({yellow} "${file.name}") successfully created.`)
-
-    if (options.lint) {
-      await Artisan.call(`eslint:fix ${file.path} --resource ${resource}`)
-    }
   }
 }

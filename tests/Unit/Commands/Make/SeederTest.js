@@ -31,7 +31,7 @@ test.group('MakeSeederTest', group => {
 
     await kernel.registerCommands()
     await kernel.registerErrorHandler()
-    await kernel.registerCustomTemplates()
+    await kernel.registerTemplates()
   })
 
   group.each.teardown(async () => {
@@ -43,7 +43,7 @@ test.group('MakeSeederTest', group => {
   test('should be able to create a seeder file', async ({ assert }) => {
     await Artisan.call('make:seeder User')
 
-    const path = Path.seeders('UserSeeder.js')
+    const path = Path.seeders('User.js')
 
     assert.isTrue(await File.exists(path))
   }).timeout(60000)
