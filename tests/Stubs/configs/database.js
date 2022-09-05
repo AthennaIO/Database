@@ -1,9 +1,6 @@
 import { Path } from '@secjs/utils'
 
-import { User } from '#tests/Stubs/models/User'
-import { Product } from '#tests/Stubs/models/Product'
-import { UserMySql } from '#tests/Stubs/models/UserMySql'
-import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
+import { DatabaseLoader } from '#src/index'
 
 export default {
   /*
@@ -33,7 +30,7 @@ export default {
     sqlite: {
       driver: 'sqlite',
       database: ':memory:',
-      entities: [User.getSchema(), Product.getSchema()],
+      entities: await DatabaseLoader.loadEntities('sqlite', Path.stubs('models')),
       migrations: [Path.stubs('migrations/**/*.js')],
       synchronize: false,
     },
@@ -46,7 +43,7 @@ export default {
       username: 'root',
       password: '12345',
       logging: ['error', 'warn'],
-      entities: [UserMySql.getSchema(), ProductMySql.getSchema()],
+      entities: await DatabaseLoader.loadEntities('mysql', Path.stubs('models')),
       migrations: [Path.stubs('database/migrations/**/*.js')],
       synchronize: false,
     },
@@ -59,7 +56,7 @@ export default {
       username: 'postgres',
       password: '12345',
       logging: ['error', 'warn'],
-      entities: [User.getSchema(), Product.getSchema()],
+      entities: await DatabaseLoader.loadEntities('postgres', Path.stubs('models')),
       migrations: [Path.stubs('database/migrations/**/*.js')],
       synchronize: false,
     },
