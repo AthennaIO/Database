@@ -14,9 +14,9 @@ import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 export class MySqlDriver {
   /**

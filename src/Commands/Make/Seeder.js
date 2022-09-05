@@ -1,5 +1,5 @@
 import { Path } from '@secjs/utils'
-import { Artisan, Command, TemplateHelper } from '@athenna/artisan'
+import { Command } from '@athenna/artisan'
 
 export class MakeSeeder extends Command {
   /**
@@ -44,21 +44,12 @@ export class MakeSeeder extends Command {
    */
   async handle(name, options) {
     const resource = 'Seeder'
-    const subPath = Path.seeders()
+    const path = Path.seeders(`${name}.js`)
 
-    this.simpleLog(
-      `[ MAKING ${resource.toUpperCase()} ]\n`,
-      'rmNewLineStart',
-      'bold',
-      'green',
-    )
+    this.title(`MAKING ${resource}\n`, 'bold', 'green')
 
-    const file = await TemplateHelper.getResourceFile(name, resource, subPath)
+    const file = await this.makeFile(path, 'seeder', options.lint)
 
     this.success(`${resource} ({yellow} "${file.name}") successfully created.`)
-
-    if (options.lint) {
-      await Artisan.call(`eslint:fix ${file.path} --resource ${resource}`)
-    }
   }
 }

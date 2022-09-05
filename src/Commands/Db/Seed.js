@@ -49,7 +49,7 @@ export class DbSeed extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog('[ SEEDING DATABASE ]\n', 'rmNewLineStart', 'bold', 'green')
+    this.title('SEEDING DATABASE\n', 'bold', 'green')
 
     const DB = await Database.connection(options.connection).connect()
 

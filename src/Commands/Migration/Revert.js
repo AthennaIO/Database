@@ -43,12 +43,7 @@ export class MigrationRevert extends Command {
    * @return {Promise<void>}
    */
   async handle(options) {
-    this.simpleLog(
-      `[ REVERTING DATABASE ]\n`,
-      'rmNewLineStart',
-      'bold',
-      'green',
-    )
+    this.title(`REVERTING DATABASE\n`, 'bold', 'green')
 
     const DB = await Database.connection(options.connection).connect()
 

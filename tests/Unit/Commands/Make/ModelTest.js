@@ -31,7 +31,7 @@ test.group('MakeModelTest', group => {
 
     await kernel.registerCommands()
     await kernel.registerErrorHandler()
-    await kernel.registerCustomTemplates()
+    await kernel.registerTemplates()
   })
 
   group.each.teardown(async () => {
