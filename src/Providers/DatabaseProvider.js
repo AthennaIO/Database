@@ -23,7 +23,8 @@ export class DatabaseProvider extends ServiceProvider {
     if (
       process.env.DB_AUTO_CONNECT &&
       (process.env.DB_AUTO_CONNECT === true ||
-        process.env.DB_AUTO_CONNECT === 'true')
+        process.env.DB_AUTO_CONNECT === 'true' ||
+        process.env.DB_AUTO_CONNECT === '(true)')
     ) {
       await Database.connect()
     }
