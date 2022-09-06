@@ -248,6 +248,6 @@ export class DriverFactory {
           debug: (_message, _options = {}) => {},
           success: (_message, _options = {}) => {},
         }
-      : new Logger().channel('console')
+      : new Logger()
   }
 }
