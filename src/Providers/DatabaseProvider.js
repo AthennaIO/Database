@@ -20,12 +20,19 @@ export class DatabaseProvider extends ServiceProvider {
   async boot() {
     this.container.bind('Athenna/Core/Database', DatabaseImpl)
 
-    if (
+    const isToAutoConnect =
       process.env.DB_AUTO_CONNECT &&
       (process.env.DB_AUTO_CONNECT === true ||
         process.env.DB_AUTO_CONNECT === 'true' ||
         process.env.DB_AUTO_CONNECT === '(true)')
-    ) {
+
+    const isArtisanApp =
+      process.env.IS_ARTISAN &&
+      (process.env.IS_ARTISAN === true ||
+        process.env.IS_ARTISAN === 'true' ||
+        process.env.IS_ARTISAN === '(true)')
+
+    if (isToAutoConnect && !isArtisanApp) {
       await Database.connect()
     }
   }
