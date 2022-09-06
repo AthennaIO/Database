@@ -118,7 +118,7 @@ export class DriverFactory {
       client = await ConnectionFactory[driverName](conName)
 
       this.getLogger().success(
-        `Successfully connected to database using ${conName} connection and ${driverName} driver`,
+        `Successfully connected to ${conName} database connection`,
       )
 
       const dataSource = client
@@ -160,10 +160,6 @@ export class DriverFactory {
       driverObject.clientConnection = null
 
       this.#drivers.set(driverName, driverObject)
-
-      this.getLogger().success(
-        `Successfully closed connection with database for ${driverName} driver`,
-      )
     } catch (error) {
       throw new CloseConnectionFailedException(driverName, error)
     }
@@ -252,6 +248,6 @@ export class DriverFactory {
           debug: (_message, _options = {}) => {},
           success: (_message, _options = {}) => {},
         }
-      : new Logger()
+      : new Logger().channel('console')
   }
 }
