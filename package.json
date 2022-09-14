@@ -1,7 +1,7 @@
 {
   "name": "@athenna/database",
-  "version": "1.1.0",
-  "description": "The Athenna database handler for SQL/NoSQL. Built on top of TypeORM.",
+  "version": "1.1.1",
+  "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
   "bugs": "https://github.com/AthennaIO/Database/issues",
@@ -46,8 +46,6 @@
     "@faker-js/faker": "7.4.0",
     "@secjs/utils": "1.9.9",
     "better-sqlite3": "7.6.2",
-    "mysql2": "2.3.3",
-    "pg": "8.7.3",
     "typeorm": "0.3.7"
   },
   "devDependencies": {
@@ -69,7 +67,9 @@
     "husky": "3.0.9",
     "lint-staged": "12.4.1",
     "minimist": "1.2.6",
+    "mysql2": "2.3.3",
     "nodemon": "2.0.19",
+    "pg": "8.7.3",
     "prettier": "2.6.2",
     "rimraf": "3.0.2",
     "typescript": "4.6.4"
