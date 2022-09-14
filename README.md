@@ -1,6 +1,6 @@
 # Database 🛢️
 
-> The Athenna database handler for SQL/NoSQL. Built on top of TypeORM.
+> The Athenna database handler for SQL/NoSQL.
 
 [![GitHub followers](https://img.shields.io/github/followers/athennaio.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/athennaio?tab=followers)
 [![GitHub stars](https://img.shields.io/github/stars/AthennaIO/Database.svg?style=social&label=Star&maxAge=2592000)](https://github.com/AthennaIO/Database/stargazers/)
@@ -31,4 +31,12 @@
 
 ---
 
-Made with 🖤 by [Athenna Team](https://github.com/AthennaIO) :wave:
+<p align='center'>
+  With 💜 by <a href='https://github.com/AthennaIO'>Athenna community</a>
+</p>
+
+<p align='center'>
+  <a href='https://github.com/AthennaIO/Database/graphs/contributors'>
+    <img src='https://contrib.rocks/image?repo=AthennaIO/Database'/>
+  </a>
+</p>
