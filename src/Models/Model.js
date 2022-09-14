@@ -158,6 +158,10 @@ export class Model {
       tableName: this.table,
       columns,
       relations,
+      synchronize:
+        process.env.DB_SYNCHRONIZE === 'true' ||
+        process.env.DB_SYNCHRONIZE === '(true)' ||
+        false,
     })
   }
 
