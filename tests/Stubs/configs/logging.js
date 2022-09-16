@@ -20,23 +20,26 @@ export default {
   | Here you may configure the log channels for your application.
   |
   | Available Drivers:
-  |   "console", "debug", "discord", "file", "null", "pino", "slack", "telegram".
+  |   "console", "discord", "file", "null", "slack", "telegram".
   | Available Formatters:
-  |   "cli", "simple", "nest", "json", "request", "message", "pino-pretty(only for pino driver)".
+  |   "cli", "simple", "json", "request", "message".
   |
   */
 
   channels: {
+    application: {
+      driver: 'null',
+      formatter: 'simple',
+    },
     console: {
       driver: 'null',
       formatter: 'cli',
-      streamType: 'stdout',
-      formatterConfig: {},
     },
     exception: {
       driver: 'console',
+      streamType: 'stderr',
+
       formatter: 'none',
-      streamType: 'stdout',
     },
   },
 }

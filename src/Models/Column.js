@@ -34,16 +34,32 @@ export class Column {
   }
 
   /**
-   * Create a "createdAt" column.
+   * Create an auto incremented uuid primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('timestamp').default('now()').get()
+   * @example Column.type('uuid').isGenerated().isPrimary().get()
+   *
+   * @param [name] {string}
+   * @return {any}
+   */
+  static autoIncrementedUuid(name) {
+    const column = this.type('uuid').isGenerated().isPrimary()
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
+  }
+
+  /**
+   * Create a "createdAt" column.
    *
    * @param [name] {string}
    * @return {any}
    */
   static createdAt(name) {
-    const column = this.type('timestamp').default('now()')
+    const column = this.isCreateDate()
 
     if (name) {
       column.name(name)
@@ -55,14 +71,11 @@ export class Column {
   /**
    * Create a "updatedAt" column.
    *
-   * This method is an alias for:
-   * @example Column.type('timestamp').default('now()').get()
-   *
    * @param [name] {string}
    * @return {any}
    */
   static updatedAt(name) {
-    const column = this.type('timestamp').default('now()')
+    const column = this.isUpdateDate()
 
     if (name) {
       column.name(name)
@@ -74,14 +87,11 @@ export class Column {
   /**
    * Create a "deletedAt" column.
    *
-   * This method is an alias for:
-   * @example Column.type('timestamp').default(null).isNullable().get()
-   *
    * @param [name] {string}
    * @return {any}
    */
   static deletedAt(name) {
-    const column = this.type('timestamp').default(null).isNullable()
+    const column = this.isDeleteDate()
 
     if (name) {
       column.name(name)
@@ -119,6 +129,39 @@ export class Column {
    */
   static default(value) {
     this.#column.default = value
+
+    return this
+  }
+
+  /**
+   * Set if this column should be created date.
+   *
+   * @return {this}
+   */
+  static isCreateDate() {
+    this.#column.createDate = true
+
+    return this
+  }
+
+  /**
+   * Set if this column should be updated date.
+   *
+   * @return {this}
+   */
+  static isUpdateDate() {
+    this.#column.updateDate = true
+
+    return this
+  }
+
+  /**
+   * Set if this column should be deleted date.
+   *
+   * @return {this}
+   */
+  static isDeleteDate() {
+    this.#column.deleteDate = true
 
     return this
   }
