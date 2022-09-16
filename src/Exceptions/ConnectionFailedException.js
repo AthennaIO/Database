@@ -22,7 +22,7 @@ export class ConnectionFailedException extends Exception {
       content,
       500,
       'E_CONNECTION_FAILED_ERROR',
-      `${JSON.stringify(error, null, 2)}`,
+      JSON.stringify(error, null, 2),
     )
   }
 }

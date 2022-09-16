@@ -209,6 +209,7 @@ export class PostgresDriver {
     const query = this.#runner.manager
       .getRepository(this.#table)
       .createQueryBuilder(this.#table)
+      .withDeleted()
 
     this.#setRelationsOnQuery(query)
     this.#setSelectOnQuery(query)

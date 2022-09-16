@@ -27,10 +27,8 @@ export class DriverFactory {
    * @type {Map<string, { Driver: any, clientConnection?: any }>}
    */
   static #drivers = new Map()
-    // .set('mongo', { Driver: MongoDriver })
     .set('mysql', { Driver: MySqlDriver })
     .set('postgres', { Driver: PostgresDriver })
-  // .set('sqlserver', { Driver: SqlServerDriver })
 
   /**
    * Return all available drivers.
@@ -238,16 +236,10 @@ export class DriverFactory {
    * @return {Logger}
    */
   static getLogger() {
+    const logger = new Logger()
+
     return process.env.NODE_ENV === 'test' || process.env.BOOT_LOGS === 'false'
-      ? {
-          channel: (_channel, _runtimeConfig) => {},
-          log: (_message, _options = {}) => {},
-          info: (_message, _options = {}) => {},
-          warn: (_message, _options = {}) => {},
-          error: (_message, _options = {}) => {},
-          debug: (_message, _options = {}) => {},
-          success: (_message, _options = {}) => {},
-        }
-      : new Logger()
+      ? logger.channel('discard')
+      : logger.channel('application')
   }
 }

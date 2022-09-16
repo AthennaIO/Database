@@ -30,8 +30,8 @@ export class User extends Model {
   static schema() {
     return {
       id: Column.autoIncrementedInt(),
-      name: Column.type('varchar').get(),
-      email: Column.type('varchar').isHidden().isUnique().get(),
+      name: Column.string('name', 200),
+      email: Column.string({ isHidden: true, isUnique: true }),
       products: Relation.oneToMany('user', Product, true),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
