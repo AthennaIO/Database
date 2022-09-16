@@ -78,6 +78,7 @@
       "src/**/*.js"
     ],
     "exclude": [
+      "src/Models/Column.js",
       "src/Models/Criteria.js",
       "src/index.js"
     ],

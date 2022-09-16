@@ -30,9 +30,9 @@ export class Product extends Model {
   static schema() {
     return {
       id: Column.autoIncrementedInt('id'),
-      name: Column.type('varchar').get(),
-      price: Column.type('int').default(0).get(),
-      userId: Column.type('int').get(),
+      name: Column.string('name', 200),
+      price: Column.integer({ default: 0 }),
+      userId: Column.integer(),
       user: Relation.manyToOne('products', User),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),

@@ -10,7 +10,7 @@
 import { Facade } from '@athenna/ioc'
 import { EntitySchema } from 'typeorm'
 import { Faker } from '@faker-js/faker'
-import { PaginatedResponse } from '@secjs/utils'
+import { Is, Json, PaginatedResponse } from '@secjs/utils'
 
 declare global {
   interface Array<T> {
@@ -1565,86 +1565,544 @@ export class Column {
    * This method is an alias for:
    * @example Column.type('int').isGenerated().isPrimary().get()
    *
+   * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedInt(): any
+  static autoIncrementedInt(name: string): any
+
+  /**
+   * Create an auto incremented uuid primary key. Usefully for id's.
+   *
+   * This method is an alias for:
+   * @example Column.type('uuid').isGenerated().isPrimary().get()
+   *
+   * @param [name] {string}
+   * @return {any}
+   */
+  static autoIncrementedUuid(name: string): any
+
+  /**
+   * Create a "string" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('varchar').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  length?: string|number,
+   *  default?: any,
+   *  enu?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {string|number} [length]
+   */
+  static string(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    length?: string|number,
+    default?: any,
+    enu?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }, length?: number): any
+
+  /**
+   * Create an "enum" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('enum').enu(values).get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  length?: string|number,
+   *  default?: any,
+   *  enu?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {any} [values]
+   */
+  static enum(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    length?: string|number,
+    default?: any,
+    enu?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }, values?: any): any
+
+  /**
+   * Create an "integer" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('int').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  scale?: number,
+   *  precision?: number,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   */
+  static integer(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    scale?: number,
+    precision?: number,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "float" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('float').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  scale?: number,
+   *  precision?: number,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static float(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    scale?: number,
+    precision?: number,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "double" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('double').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  scale?: number,
+   *  precision?: number,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static double(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    scale?: number,
+    precision?: number,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "numeric" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('numeric').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  scale?: number,
+   *  precision?: number,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {number} [scale]
+   * @param {number} [precision]
+   * @return {any}
+   */
+  static numeric(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    scale?: number,
+    precision?: number,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }, scale?: number, precision?: number): any
+
+  /**
+   * Create a "decimal" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('decimal').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  scale?: number,
+   *  precision?: number,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @param {number} [scale]
+   *  @param {number} [precision]
+   *  @return {any}
+   */
+  static decimal(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    scale?: number,
+    precision?: number,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }, scale?: number, precision?: number): any
+
+  /**
+   * Create a "json" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('json').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static json(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "jsonb" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('jsonb').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static jsonb(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "date" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('date').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static date(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "datetime" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('datetime').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static datetime(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
+
+  /**
+   * Create a "timestamp" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('timestamp').get()
+   *
+   * @param {string|{
+   *  type?: import('typeorm').ColumnType,
+   *  name?: string,
+   *  default?: any,
+   *  isHidden?: boolean,
+   *  isGenerated?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   *  @return {any}
+   */
+  static timestamp(optionsOrName?: string | {
+    type?: import('typeorm').ColumnType,
+    name?: string,
+    default?: any,
+    isHidden?: boolean,
+    isGenerated?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }): any
 
   /**
    * Create a "createdAt" column.
    *
-   * This method is an alias for:
-   * @example Column.type('timestamp').default('now()').get()
-   *
+   * @param [name] {string}
    * @return {any}
    */
-  static createdAt(): any
+  static createdAt(name: string): any
 
   /**
    * Create a "updatedAt" column.
    *
-   * This method is an alias for:
-   * @example Column.type('timestamp').default('now()').get()
-   *
+   * @param [name] {string}
    * @return {any}
    */
-  static updatedAt(): any
+  static updatedAt(name: string): any
 
   /**
    * Create a "deletedAt" column.
    *
-   * This method is an alias for:
-   * @example Column.type('timestamp').default(null).isNullable().get()
-   *
+   * @param [name] {string}
    * @return {any}
    */
-  static deletedAt(): any
+  static deletedAt(name: string): any
 
   /**
    * Set the type of your column.
    *
-   * @return {Column}
+   * @param {import('typeorm').ColumnType} type
+   * @return {this}
    */
-  static type(type): typeof Column
+  static type(type: import('typeorm').ColumnType): typeof Column
+
+  /**
+   * Set the real name of your column.
+   *
+   * @param {string} name
+   * @return {this}
+   */
+  static name(name: string): typeof Column
 
   /**
    * Set the default value of your column.
    *
-   * @return {Column}
+   * @param {any} value
+   * @return {this}
    */
-  static default(value): typeof Column
+  static default(value: any): typeof Column
 
   /**
-   * Set if this column should be hidded.
+   * Set the length of your column.
+   *
+   * @param {string|number} length
+   * @return {this}
    */
-  static isHidden(): typeof Column
+  static length(length: string | number): typeof Column
+
+  /**
+   * Set the enum of your column.
+   *
+   * @param {any} enu
+   * @return {this}
+   */
+  static enu(enu: any): typeof Column
+
+  /**
+   * Set the scale of your column.
+   *
+   * @param {number} scale
+   * @return {this}
+   */
+  static scale(scale: number): typeof Column
+
+  /**
+   * Set the precision of your column.
+   *
+   * @param {number} precision
+   * @return {this}
+   */
+  static precision(precision: number): typeof Column
+
+  /**
+   * Set if this column should be created date.
+   *
+   * @param {boolean} [is]
+   * @return {this}
+   */
+  static isCreateDate(is?: boolean): typeof Column
+
+  /**
+   * Set if this column should be updated date.
+   *
+   * @param {boolean} [is]
+   * @return {this}
+   */
+  static isUpdateDate(is?: boolean): typeof Column
+
+  /**
+   * Set if this column should be deleted date.
+   *
+   * @param {boolean} [is]
+   * @return {this}
+   */
+  static isDeleteDate(is?: boolean): typeof Column
+
+  /**
+   * Set if this column should be hided.
+   *
+   * @param {boolean} [is]
+   * @return {this}
+   */
+  static isHidden(is?: boolean): typeof Column
 
   /**
    * Set if your column is auto generated.
    *
-   * @return {Column}
+   * @param {boolean} [is]
+   * @return {this}
    */
-  static isGenerated(): typeof Column
+  static isGenerated(is?: boolean): typeof Column
 
   /**
    * Set if your column is primary.
    *
-   * @return {Column}
+   * @param {boolean} [is]
+   * @return {this}
    */
-  static isPrimary(): typeof Column
+  static isPrimary(is?: boolean): typeof Column
 
   /**
    * Set if your column is unique.
    *
-   * @return {Column}
+   * @param {boolean} [is]
+   * @return {this}
    */
-  static isUnique(): typeof Column
+  static isUnique(is?: boolean): typeof Column
 
   /**
    * Set if your column is nullable.
    *
-   * @return {Column}
+   * @param {boolean} [is]
+   * @return {this}
    */
-  static isNullable(): typeof Column
+  static isNullable(is?: boolean): typeof Column
 
   /**
    * Get the clean object built.
