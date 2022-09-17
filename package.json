@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -40,9 +40,9 @@
     "#tests/*": "./tests/*.js"
   },
   "dependencies": {
-    "@athenna/artisan": "1.4.8",
+    "@athenna/artisan": "1.5.0",
     "@athenna/ioc": "1.2.4",
-    "@athenna/logger": "1.3.0",
+    "@athenna/logger": "1.3.1",
     "@faker-js/faker": "7.4.0",
     "@secjs/utils": "1.9.9",
     "typeorm": "0.3.7"
