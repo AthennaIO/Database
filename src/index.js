@@ -18,7 +18,6 @@ export * from './Factories/ConnectionFactory.js'
 export * from './Helpers/Seeder.js'
 export * from './Helpers/Resource.js'
 export * from './Helpers/DatabaseLoader.js'
-export * from './Helpers/DatabaseCommandsLoader.js'
 
 export * from './Models/Model.js'
 export * from './Models/Column.js'

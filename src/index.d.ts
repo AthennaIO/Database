@@ -2273,22 +2273,6 @@ export class DriverFactory {
   static closeConnectionByName(conName?: string): Promise<void>
 }
 
-export class DatabaseCommandsLoader {
-  /**
-   * Return all commands from database package.
-   *
-   * @return {any[]}
-   */
-  static loadCommands(): any[]
-
-  /**
-   * Return all custom templates from database package.
-   *
-   * @return {any[]}
-   */
-  static loadTemplates(): any[]
-}
-
 export class Seeder {
   /**
    * Run the database seeders.
@@ -2325,6 +2309,20 @@ export class Resource {
 }
 
 export class DatabaseLoader {
+  /**
+   * Return all commands from database package.
+   *
+   * @return {any[]}
+   */
+  static loadCommands(): any[]
+
+  /**
+   * Return all custom templates from database package.
+   *
+   * @return {any[]}
+   */
+  static loadTemplates(): any[]
+
   /**
    * Get the schema of all models with same connection.
    *

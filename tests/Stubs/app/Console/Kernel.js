@@ -8,19 +8,14 @@
  */
 
 import { ArtisanLoader, ConsoleKernel } from '@athenna/artisan'
-import { DatabaseCommandsLoader } from '#src/Helpers/DatabaseCommandsLoader'
+import { DatabaseLoader } from '#src/Helpers/DatabaseLoader'
 
 export class Kernel extends ConsoleKernel {
-  /**
-   * Register the commands for the application.
-   *
-   * @return {Promise<any[]>}
-   */
   get commands() {
-    return [...ArtisanLoader.loadCommands(), ...DatabaseCommandsLoader.loadCommands()]
+    return [...ArtisanLoader.loadCommands(), ...DatabaseLoader.loadCommands()]
   }
 
   get templates() {
-    return [...DatabaseCommandsLoader.loadTemplates()]
+    return [...DatabaseLoader.loadTemplates()]
   }
 }
