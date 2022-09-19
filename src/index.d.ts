@@ -20,156 +20,7 @@ declare global {
 
 export const Database: Facade & DatabaseImpl
 
-export class DatabaseImpl {
-  /**
-   * Creates a new instance of DatabaseImpl.
-   *
-   * @param {any} configs
-   * @return {DatabaseImpl}
-   */
-  constructor(configs?: any)
-
-  /**
-   * Change the database connection.
-   *
-   * @param {string} connection
-   * @return {DatabaseImpl}
-   */
-  connection(connection: string): DatabaseImpl
-
-  /**
-   * Connect to database.
-   *
-   * @param {boolean} force
-   * @param {boolean} saveOnFactory
-   * @return {Promise<this>}
-   */
-  connect(force?: boolean, saveOnFactory?: boolean): this
-
-  /**
-   * Close the connection with database in this instance.
-   *
-   * @return {Promise<void>}
-   */
-  close(): Promise<void>
-
-  /**
-   * Return the client of driver.
-   *
-   * @return {import('typeorm').DataSource|null}
-   */
-  getClient(): import('typeorm').DataSource
-
-  /**
-   * Creates a new instance of query builder.
-   *
-   * @param fullQuery {boolean}
-   * @return {any}
-   */
-  query(fullQuery?: boolean): any
-
-  /**
-   * Create a new transaction.
-   *
-   * @return {Promise<Transaction>}
-   */
-  startTransaction(): Promise<Transaction>
-
-  /**
-   * Run database migrations.
-   *
-   * @return {Promise<void>}
-   */
-  runMigrations(): Promise<void>
-
-  /**
-   * Revert database migrations.
-   *
-   * @return {Promise<void>}
-   */
-  revertMigrations(): Promise<void>
-
-  /**
-   * Verify if database exists.
-   *
-   * @param {string} database
-   * @return {boolean}
-   */
-  hasDatabase(database: string): Promise<boolean>
-
-  /**
-   * Create a new database.
-   *
-   * @param {string} databaseName
-   * @return {Promise<void>}
-   */
-  createDatabase(databaseName: string): Promise<void>
-
-  /**
-   * Drop some database.
-   *
-   * @param {string} databaseName
-   * @return {Promise<void>}
-   */
-  dropDatabase(databaseName: string): Promise<void>
-
-  /**
-   * List all tables available.
-   *
-   * @return {Promise<string[]>}
-   */
-  getTables(): Promise<string[]>
-
-  /**
-   * Get the current database name.
-   *
-   * @return {Promise<string | undefined>}
-   */
-  getCurrentDatabase(): Promise<string | undefined>
-
-  /**
-   * Verify if table exists.
-   *
-   * @param {string} table
-   * @return {boolean}
-   */
-  hasTable(table: string): Promise<boolean>
-
-  /**
-   * Create a new table in database.
-   *
-   * @param {string} tableName
-   * @param {any} options
-   * @return {Promise<void>}
-   */
-  createTable(tableName: string, options: any): Promise<void>
-
-  /**
-   * Drop a table in database.
-   *
-   * @param {string} tableName
-   * @return {Promise<void>}
-   */
-  dropTable(tableName: string): Promise<void>
-
-  /**
-   * Remove all data inside some database table
-   * and restart the identity of the table.
-   *
-   * @param {string} tableName
-   * @return {Promise<void>}
-   */
-  truncate(tableName: string): Promise<void>
-
-  /**
-   * Make a raw query in database.
-   *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
-   * @return {Promise<any>}
-   */
-  raw(raw: string, queryValues: any[]): Promise<any>
-
+export class QueryBuilder {
   /**
    * Calculate the average of a given column.
    *
@@ -322,150 +173,293 @@ export class DatabaseImpl {
   delete(): Promise<any | void>
 
   /**
-   * Set the table that this query will be executed.
+   * Set the columns that should be selected on query.
    *
-   * @param tableName {string|any}
-   * @return {DatabaseImpl}
+   * @param columns {string}
+   * @return {QueryBuilder}
    */
-  buildTable(tableName: string | any): DatabaseImpl
+  buildSelect(...columns: string[]): QueryBuilder
 
   /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildSelect(...columns: string[]): DatabaseImpl
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {DatabaseImpl}
-   */
-  buildAddSelect(...columns: string[]): DatabaseImpl
+  buildAddSelect(...columns: string[]): QueryBuilder
 
   /**
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhere(statement: string | Record<string, any>, value?: any): DatabaseImpl
+  buildWhere(statement: string | Record<string, any>, value?: any): QueryBuilder
 
   /**
    * Set a include statement in your query.
    *
    * @param relation {string|any}
    * @param [operation] {string}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildIncludes(relation: string | any, operation?: string): DatabaseImpl
+  buildIncludes(relation: string | any, operation?: string): QueryBuilder
 
   /**
    * Set a where like statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereLike(statement: string | Record<string, any>, value?: any): DatabaseImpl
+  buildWhereLike(statement: string | Record<string, any>, value?: any): QueryBuilder
 
   /**
    * Set a where ILike statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereILike(statement: string | Record<string, any>, value?: any): DatabaseImpl
+  buildWhereILike(statement: string | Record<string, any>, value?: any): QueryBuilder
 
   /**
    * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
    * @param [value] {any}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereNot(statement: string | Record<string, any>, value?: any): DatabaseImpl
+  buildWhereNot(statement: string | Record<string, any>, value?: any): QueryBuilder
 
   /**
    * Set a where in statement in your query.
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereIn(columnName: string, values: any[]): DatabaseImpl
+  buildWhereIn(columnName: string, values: any[]): QueryBuilder
 
   /**
    * Set a where not in statement in your query.
    *
    * @param columnName {string}
    * @param values {any[]}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereNotIn(columnName: string, values: any[]): DatabaseImpl
+  buildWhereNotIn(columnName: string, values: any[]): QueryBuilder
 
   /**
    * Set a where null statement in your query.
    *
    * @param columnName {string}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereNull(columnName: string): DatabaseImpl
+  buildWhereNull(columnName: string): QueryBuilder
 
   /**
    * Set a where not null statement in your query.
    *
    * @param columnName {string}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereNotNull(columnName: string): DatabaseImpl
+  buildWhereNotNull(columnName: string): QueryBuilder
 
   /**
    * Set a where between statement in your query.
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereBetween(columnName: string, values: [any, any]): DatabaseImpl
+  buildWhereBetween(columnName: string, values: [any, any]): QueryBuilder
 
   /**
    * Set a where not between statement in your query.
    *
    * @param columnName {string}
    * @param values {[any, any]}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildWhereNotBetween(columnName: string, values: [any, any]): DatabaseImpl
+  buildWhereNotBetween(columnName: string, values: [any, any]): QueryBuilder
 
   /**
    * Set a order by statement in your query.
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): DatabaseImpl
+  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): QueryBuilder
 
   /**
    * Set the skip number in your query.
    *
    * @param number {number}
-   * @return {DatabaseImpl}
+   * @return {QueryBuilder}
    */
-  buildSkip(number: number): DatabaseImpl
+  buildSkip(number: number): QueryBuilder
 
   /**
    * Set the limit number in your query.
    *
    * @param number {number}
+   * @return {QueryBuilder}
+   */
+  buildLimit(number: number): QueryBuilder
+}
+
+export class DatabaseImpl {
+  /**
+   * Creates a new instance of DatabaseImpl.
+   *
+   * @param {any} configs
    * @return {DatabaseImpl}
    */
-  buildLimit(number: number): DatabaseImpl
+  constructor(configs?: any)
+
+  /**
+   * Change the database connection.
+   *
+   * @param {string} connection
+   * @return {DatabaseImpl}
+   */
+  connection(connection: string): DatabaseImpl
+
+  /**
+   * Connect to database.
+   *
+   * @param {boolean} force
+   * @param {boolean} saveOnFactory
+   * @return {Promise<this>}
+   */
+  connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Close the connection with database in this instance.
+   *
+   * @return {Promise<void>}
+   */
+  close(): Promise<void>
+
+  /**
+   * Return the client of driver.
+   *
+   * @return {import('typeorm').DataSource|null}
+   */
+  getClient(): import('typeorm').DataSource
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  startTransaction(): Promise<Transaction>
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  runMigrations(): Promise<void>
+
+  /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  revertMigrations(): Promise<void>
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {boolean}
+   */
+  hasDatabase(database: string): Promise<boolean>
+
+  /**
+   * Create a new database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  createDatabase(databaseName: string): Promise<void>
+
+  /**
+   * Drop some database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  dropDatabase(databaseName: string): Promise<void>
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getTables(): Promise<string[]>
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  getCurrentDatabase(): Promise<string | undefined>
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {boolean}
+   */
+  hasTable(table: string): Promise<boolean>
+
+  /**
+   * Create a new table in database.
+   *
+   * @param {string} tableName
+   * @param {any} options
+   * @return {Promise<void>}
+   */
+  createTable(tableName: string, options: any): Promise<void>
+
+  /**
+   * Drop a table in database.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  dropTable(tableName: string): Promise<void>
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  truncate(tableName: string): Promise<void>
+
+  /**
+   * Make a raw query in database.
+   *
+   * @param {string} raw
+   * @param {any[]} [queryValues]
+   * @return {Promise<any>}
+   */
+  raw(raw: string, queryValues: any[]): Promise<any>
+
+  /**
+   * Creates a new instance of QueryBuilder for this table.
+   *
+   * @param tableName {string|any}
+   * @return {QueryBuilder}
+   */
+  buildTable(tableName: string | any): QueryBuilder
 }
 
 export class Transaction {
@@ -476,14 +470,6 @@ export class Transaction {
    * @return {Transaction}
    */
   constructor(driver: any)
-
-  /**
-   * Creates a new instance of query builder.
-   *
-   * @param fullQuery {boolean}
-   * @return {any}
-   */
-  query(fullQuery?: boolean): any
 
   /**
    * Commit the transaction.
@@ -581,300 +567,12 @@ export class Transaction {
   raw(raw: string, queryValues: any[]): Promise<any>
 
   /**
-   * Calculate the average of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  avg(column: string): Promise<number>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  avgDistinct(column: string): Promise<number>
-
-  /**
-   * Get the max number of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  max(column: string): Promise<number>
-
-  /**
-   * Get the min number of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  min(column: string): Promise<number>
-
-  /**
-   * Sum all numbers of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  sum(column: string): Promise<number>
-
-  /**
-   * Sum all numbers of a given column in distinct mode.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  sumDistinct(column: string): Promise<number>
-
-  /**
-   * Increment a value of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  increment(column: string): Promise<number>
-
-  /**
-   * Decrement a value of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  decrement(column: string): Promise<number>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  count(column?: string): Promise<number>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  countDistinct(column?: string): Promise<number>
-
-  /**
-   * Find a value in database or throw exception if undefined.
-   *
-   * @return {Promise<any>}
-   */
-  findOrFail(): Promise<any>
-
-  /**
-   * Find a value in database.
-   *
-   * @return {Promise<any>}
-   */
-  find(): Promise<any>
-
-  /**
-   * Find many values in database.
-   *
-   * @return {Promise<any[]>}
-   */
-  findMany(): Promise<any[]>
-
-  /**
-   * Find many values in database and return as paginated response.
-   *
-   * @param [page] {boolean}
-   * @param [limit] {boolean}
-   * @param [resourceUrl] {string}
-   * @return {}
-   */
-  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
-
-  /**
-   * Create a value in database.
-   *
-   * @param {any} data
-   * @return {Promise<any>}
-   */
-  create(data: any): Promise<any>
-
-  /**
-   * Create many values in database.
-   *
-   * @param {any[]} data
-   * @return {Promise<any[]>}
-   */
-  createMany(data: any[]): Promise<any[]>
-
-  /**
-   * Create data or update if already exists.
-   *
-   * @param {any} data
-   * @return {Promise<any | any[]>}
-   */
-  createOrUpdate(data: any): Promise<any | any[]>
-
-  /**
-   * Update a value in database.
-   *
-   * @param {any} data
-   * @return {Promise<any>}
-   */
-  update(data: any): Promise<any>
-
-  /**
-   * Delete one value in database.
-   *
-   * @return {Promise<any|void>}
-   */
-  delete(): Promise<any|void>
-
-  /**
-   * Set the table that this query will be executed.
+   * Creates a new instance of QueryBuilder for this table.
    *
    * @param tableName {string|any}
-   * @return {Transaction}
+   * @return {QueryBuilder}
    */
-  buildTable(tableName: string | any): Transaction
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {Transaction}
-   */
-  buildSelect(...columns: string[]): Transaction
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {Transaction}
-   */
-  buildAddSelect(...columns: string[]): Transaction
-
-  /**
-   * Set a where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Transaction}
-   */
-  buildWhere(statement: string | Record<string, any>, value?: any): Transaction
-
-  /**
-   * Set a include statement in your query.
-   *
-   * @param relation {string|any}
-   * @param [operation] {string}
-   * @return {Transaction}
-   */
-  buildIncludes(relation: string | any, operation?: string): Transaction
-
-  /**
-   * Set a where like statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Transaction}
-   */
-  buildWhereLike(statement: string | Record<string, any>, value?: any): Transaction
-
-  /**
-   * Set a where ILike statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Transaction}
-   */
-  buildWhereILike(statement: string | Record<string, any>, value?: any): Transaction
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Transaction}
-   */
-  buildWhereNot(statement: string | Record<string, any>, value?: any): Transaction
-
-  /**
-   * Set a where in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {Transaction}
-   */
-  buildWhereIn(columnName: string, values: any[]): Transaction
-
-  /**
-   * Set a where not in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {Transaction}
-   */
-  buildWhereNotIn(columnName: string, values: any[]): Transaction
-
-  /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {Transaction}
-   */
-  buildWhereNull(columnName: string): Transaction
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {Transaction}
-   */
-  buildWhereNotNull(columnName: string): Transaction
-
-  /**
-   * Set a where between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {Transaction}
-   */
-  buildWhereBetween(columnName: string, values: [any, any]): Transaction
-
-  /**
-   * Set a where not between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {Transaction}
-   */
-  buildWhereNotBetween(columnName: string, values: [any, any]): Transaction
-
-  /**
-   * Set a order by statement in your query.
-   *
-   * @param columnName {string}
-   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {Transaction}
-   */
-  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): Transaction
-
-  /**
-   * Set the skip number in your query.
-   *
-   * @param number {number}
-   * @return {Transaction}
-   */
-  buildSkip(number: number): Transaction
-
-  /**
-   * Set the limit number in your query.
-   *
-   * @param number {number}
-   * @return {Transaction}
-   */
-  buildLimit(number: number): Transaction
+  buildTable(tableName: string | any): QueryBuilder
 }
 
 export class Criteria {

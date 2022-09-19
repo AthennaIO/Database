@@ -763,6 +763,10 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   buildTable(tableName) {
+    if (!this.#isConnected) {
+      throw new NotConnectedDatabaseException()
+    }
+
     this.#table = tableName
 
     return this

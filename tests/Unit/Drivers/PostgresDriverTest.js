@@ -8,8 +8,8 @@
  */
 
 import { test } from '@japa/runner'
+import { DataSource } from 'typeorm'
 import { Path, Folder, Config } from '@secjs/utils'
-import { DataSource, SelectQueryBuilder } from 'typeorm'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
@@ -18,9 +18,8 @@ import { Product } from '#tests/Stubs/models/Product'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
-import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
-import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 test.group('PostgresDriverTest', group => {
   group.setup(async () => {
@@ -52,7 +51,7 @@ test.group('PostgresDriverTest', group => {
   test('should throw not connected database exception', async ({ assert }) => {
     await Database.close()
 
-    assert.throws(() => Database.query(), NotConnectedDatabaseException)
+    assert.throws(() => Database.buildTable('users'), NotConnectedDatabaseException)
 
     await Database.connect()
   })
@@ -61,16 +60,6 @@ test.group('PostgresDriverTest', group => {
     const client = Database.getClient()
 
     assert.instanceOf(client, DataSource)
-  })
-
-  test('should be able to get the internal query builder of driver', async ({ assert }) => {
-    const query = Database.query()
-
-    assert.instanceOf(query, SelectQueryBuilder)
-  })
-
-  test('should throw a no table selected exception when not selecting the table', async ({ assert }) => {
-    assert.throws(() => Database.query(true), NoTableSelectedException)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
@@ -193,8 +182,8 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should throw an exception when trying to execute the wrong method for input', async ({ assert }) => {
-    await assert.rejects(() => Database.create([]), WrongMethodException)
-    await assert.rejects(() => Database.createMany({}), WrongMethodException)
+    await assert.rejects(() => Database.buildTable('users').create([]), WrongMethodException)
+    await assert.rejects(() => Database.buildTable('users').createMany({}), WrongMethodException)
   })
 
   test('should be able to find user and users', async ({ assert }) => {
@@ -223,8 +212,8 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to get paginate users', async ({ assert }) => {
-    const { data, meta, links } = await Database.buildSelect('*')
-      .buildTable('users')
+    const { data, meta, links } = await Database.buildTable('users')
+      .buildSelect('*')
       .buildWhereIn('id', [1, 2])
       .buildOrderBy('id', 'DESC')
       .paginate()
@@ -258,8 +247,8 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should throw an empty where exception on delete/update', async ({ assert }) => {
-    await assert.rejects(() => Database.delete(), EmptyWhereException)
-    await assert.rejects(() => Database.update({}), EmptyWhereException)
+    await assert.rejects(() => Database.buildTable('users').delete(), EmptyWhereException)
+    await assert.rejects(() => Database.buildTable('users').update({}), EmptyWhereException)
   })
 
   test('should be able to delete user and users', async ({ assert }) => {
@@ -271,18 +260,24 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to start/commit/rollback transactions', async ({ assert }) => {
-    const rollbackTrx = await Database.buildTable('users').startTransaction()
+    const rollbackTrx = await Database.startTransaction()
+    const rollbackTrxQuery = rollbackTrx.buildTable('users')
 
-    await rollbackTrx.buildWhereIn('id', [1, 2]).delete()
-    assert.isEmpty(await rollbackTrx.buildWhereIn('id', [1, 2]).findMany())
+    await rollbackTrxQuery.buildWhereIn('id', [1, 2]).delete()
+    assert.isEmpty(await rollbackTrxQuery.buildWhereIn('id', [1, 2]).findMany())
+
     await rollbackTrx.rollbackTransaction()
+
     assert.isNotEmpty(await Database.buildTable('users').buildWhereIn('id', [1, 2]).findMany())
 
-    const commitTrx = await Database.buildTable('users').startTransaction()
+    const commitTrx = await Database.startTransaction()
+    const commitTrxQuery = commitTrx.buildTable('users')
 
-    await commitTrx.buildWhereIn('id', [1, 2]).delete()
-    assert.isEmpty(await commitTrx.buildWhereIn('id', [1, 2]).findMany())
+    await commitTrxQuery.buildWhereIn('id', [1, 2]).delete()
+    assert.isEmpty(await commitTrxQuery.buildWhereIn('id', [1, 2]).findMany())
+
     await commitTrx.commitTransaction()
+
     assert.isEmpty(await Database.buildTable('users').buildWhereIn('id', [1, 2]).findMany())
   })
 
