@@ -422,10 +422,10 @@ export class DatabaseImpl {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {any} options
+   * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
-  createTable(tableName: string, options: any): Promise<void>
+  createTable(tableName: string, options: import('typeorm').TableOptions): Promise<void>
 
   /**
    * Drop a table in database.
@@ -535,10 +535,10 @@ export class Transaction {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {any} options
+   * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
-  createTable(tableName: string, options: any): Promise<void>
+  createTable(tableName: string, options: import('typeorm').TableOptions): Promise<void>
 
   /**
    * Drop a table in database.

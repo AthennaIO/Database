@@ -611,7 +611,7 @@ export class DatabaseImpl {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {any} options
+   * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
   async createTable(tableName, options = {}) {
@@ -796,7 +796,7 @@ export class Transaction {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {any} options
+   * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
   async createTable(tableName, options = {}) {
