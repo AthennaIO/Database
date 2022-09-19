@@ -9,7 +9,7 @@
 
 import { test } from '@japa/runner'
 import { Path, Folder, Config } from '@secjs/utils'
-import { DataSource, SelectQueryBuilder } from 'typeorm'
+import { DataSource } from 'typeorm'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
@@ -18,9 +18,8 @@ import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
-import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
-import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 test.group('MySqlDriverTest', group => {
   group.setup(async () => {
@@ -52,7 +51,7 @@ test.group('MySqlDriverTest', group => {
   test('should throw not connected database exception', async ({ assert }) => {
     await Database.connection('mysql').close()
 
-    assert.throws(() => Database.connection('mysql').query(), NotConnectedDatabaseException)
+    assert.throws(() => Database.connection('mysql').buildTable('users'), NotConnectedDatabaseException)
 
     await Database.connection('mysql').connect()
   })
@@ -61,16 +60,6 @@ test.group('MySqlDriverTest', group => {
     const client = Database.connection('mysql').getClient()
 
     assert.instanceOf(client, DataSource)
-  })
-
-  test('should be able to get the internal query builder of driver', async ({ assert }) => {
-    const query = Database.connection('mysql').query()
-
-    assert.instanceOf(query, SelectQueryBuilder)
-  })
-
-  test('should throw a no table selected exception when not selecting the table', async ({ assert }) => {
-    assert.throws(() => Database.connection('mysql').query(true), NoTableSelectedException)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
@@ -200,8 +189,8 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should throw an exception when trying to execute the wrong method for input', async ({ assert }) => {
-    await assert.rejects(() => Database.connection('mysql').create([]), WrongMethodException)
-    await assert.rejects(() => Database.connection('mysql').createMany({}), WrongMethodException)
+    await assert.rejects(() => Database.connection('mysql').buildTable('users').create([]), WrongMethodException)
+    await assert.rejects(() => Database.connection('mysql').buildTable('users').createMany({}), WrongMethodException)
   })
 
   test('should be able to find user and users', async ({ assert }) => {
@@ -233,8 +222,8 @@ test.group('MySqlDriverTest', group => {
 
   test('should be able to get paginate users', async ({ assert }) => {
     const { data, meta, links } = await Database.connection('mysql')
-      .buildSelect('*')
       .buildTable('users')
+      .buildSelect('*')
       .buildWhereIn('id', [1, 2])
       .buildOrderBy('id', 'DESC')
       .paginate()
@@ -274,8 +263,8 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should throw an empty where exception on delete/update', async ({ assert }) => {
-    await assert.rejects(() => Database.connection('mysql').delete(), EmptyWhereException)
-    await assert.rejects(() => Database.connection('mysql').update({}), EmptyWhereException)
+    await assert.rejects(() => Database.connection('mysql').buildTable('users').delete(), EmptyWhereException)
+    await assert.rejects(() => Database.connection('mysql').buildTable('users').update({}), EmptyWhereException)
   })
 
   test('should be able to delete user and users', async ({ assert }) => {
@@ -287,18 +276,24 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should be able to start/commit/rollback transactions', async ({ assert }) => {
-    const rollbackTrx = await Database.connection('mysql').buildTable('users').startTransaction()
+    const rollbackTrx = await Database.connection('mysql').startTransaction()
+    const rollbackTrxQuery = rollbackTrx.buildTable('users')
 
-    await rollbackTrx.buildWhereIn('id', [1, 2]).delete()
-    assert.isEmpty(await rollbackTrx.buildWhereIn('id', [1, 2]).findMany())
+    await rollbackTrxQuery.buildWhereIn('id', [1, 2]).delete()
+    assert.isEmpty(await rollbackTrxQuery.buildWhereIn('id', [1, 2]).findMany())
+
     await rollbackTrx.rollbackTransaction()
+
     assert.isNotEmpty(await Database.connection('mysql').buildTable('users').buildWhereIn('id', [1, 2]).findMany())
 
-    const commitTrx = await Database.connection('mysql').buildTable('users').startTransaction()
+    const commitTrx = await Database.connection('mysql').startTransaction()
+    const commitTrxQuery = commitTrx.buildTable('users')
 
-    await commitTrx.buildWhereIn('id', [1, 2]).delete()
-    assert.isEmpty(await commitTrx.buildWhereIn('id', [1, 2]).findMany())
+    await commitTrxQuery.buildWhereIn('id', [1, 2]).delete()
+    assert.isEmpty(await commitTrxQuery.buildWhereIn('id', [1, 2]).findMany())
+
     await commitTrx.commitTransaction()
+
     assert.isEmpty(await Database.connection('mysql').buildTable('users').buildWhereIn('id', [1, 2]).findMany())
   })
 

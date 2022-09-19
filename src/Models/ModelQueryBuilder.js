@@ -21,11 +21,11 @@ export class ModelQueryBuilder {
   #Model
 
   /**
-   * The database instance used to handle database operations.
+   * The database query builder instance used to handle database operations.
    *
-   * @type {import('#src/index').Database}
+   * @type {import('#src/index').QueryBuilder}
    */
-  #DB
+  #QB
 
   /**
    * Set if this instance of query builder will use criterias or not.
@@ -51,7 +51,7 @@ export class ModelQueryBuilder {
   constructor(model, withCriterias) {
     this.#Model = model
     this.#withCriterias = withCriterias
-    this.#DB = Database.connection(model.connection).buildTable(model.table)
+    this.#QB = Database.connection(model.connection).buildTable(model.table)
   }
 
   /**
@@ -62,7 +62,7 @@ export class ModelQueryBuilder {
   async findOrFail() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#DB.findOrFail())
+    return this.#generateModels(await this.#QB.findOrFail())
   }
 
   /**
@@ -73,7 +73,7 @@ export class ModelQueryBuilder {
   async find() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#DB.find())
+    return this.#generateModels(await this.#QB.find())
   }
 
   /**
@@ -84,7 +84,7 @@ export class ModelQueryBuilder {
   async findMany() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#DB.findMany())
+    return this.#generateModels(await this.#QB.findMany())
   }
 
   /**
@@ -113,7 +113,7 @@ export class ModelQueryBuilder {
   async paginate(page = 0, limit = 10, resourceUrl = '/') {
     this.#setCriterias()
 
-    const { data, meta, links } = await this.#DB.paginate(
+    const { data, meta, links } = await this.#QB.paginate(
       page,
       limit,
       resourceUrl,
@@ -130,7 +130,7 @@ export class ModelQueryBuilder {
   async count() {
     this.#setCriterias()
 
-    return this.#DB.count()
+    return this.#QB.count()
   }
 
   /**
@@ -145,7 +145,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#DB.create(data))
+    return this.#generateModels(await this.#QB.create(data))
   }
 
   /**
@@ -160,7 +160,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#DB.createMany(data))
+    return this.#generateModels(await this.#QB.createMany(data))
   }
 
   /**
@@ -175,7 +175,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#DB.createOrUpdate(data))
+    return this.#generateModels(await this.#QB.createOrUpdate(data))
   }
 
   /**
@@ -191,7 +191,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#DB.update(data, force))
+    return this.#generateModels(await this.#QB.update(data, force))
   }
 
   /**
@@ -203,11 +203,11 @@ export class ModelQueryBuilder {
   async delete(force = false) {
     if (this.#Model.isSoftDelete && !force) {
       return this.#generateModels(
-        await this.#DB.update({ [this.#Model.DELETED_AT]: new Date() }),
+        await this.#QB.update({ [this.#Model.DELETED_AT]: new Date() }),
       )
     }
 
-    return this.#generateModels(await this.#DB.delete())
+    return this.#generateModels(await this.#QB.delete())
   }
 
   /**
@@ -251,7 +251,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   select(...columns) {
-    this.#DB.buildSelect(...columns)
+    this.#QB.buildSelect(...columns)
 
     return this
   }
@@ -263,7 +263,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   addSelect(...columns) {
-    this.#DB.buildAddSelect(...columns)
+    this.#QB.buildAddSelect(...columns)
 
     return this
   }
@@ -275,7 +275,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   skip(number) {
-    this.#DB.buildSkip(number)
+    this.#QB.buildSkip(number)
 
     return this
   }
@@ -287,7 +287,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   limit(number) {
-    this.#DB.buildLimit(number)
+    this.#QB.buildLimit(number)
 
     return this
   }
@@ -300,7 +300,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orderBy(columnName = this.#Model.primaryKey, direction = 'ASC') {
-    this.#DB.buildOrderBy(columnName, direction)
+    this.#QB.buildOrderBy(columnName, direction)
 
     return this
   }
@@ -331,7 +331,7 @@ export class ModelQueryBuilder {
       )
     }
 
-    this.#DB.buildIncludes(relationName)
+    this.#QB.buildIncludes(relationName)
 
     return this
   }
@@ -344,7 +344,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   where(statement, value) {
-    this.#DB.buildWhere(statement, value)
+    this.#QB.buildWhere(statement, value)
 
     return this
   }
@@ -357,7 +357,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereLike(statement, value) {
-    this.#DB.buildWhereLike(statement, value)
+    this.#QB.buildWhereLike(statement, value)
 
     return this
   }
@@ -370,7 +370,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereILike(statement, value) {
-    this.#DB.buildWhereILike(statement, value)
+    this.#QB.buildWhereILike(statement, value)
 
     return this
   }
@@ -383,7 +383,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNot(statement, value) {
-    this.#DB.buildWhereNot(statement, value)
+    this.#QB.buildWhereNot(statement, value)
 
     return this
   }
@@ -396,7 +396,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereIn(columnName, values) {
-    this.#DB.buildWhereIn(columnName, values)
+    this.#QB.buildWhereIn(columnName, values)
 
     return this
   }
@@ -409,7 +409,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotIn(columnName, values) {
-    this.#DB.buildWhereNotIn(columnName, values)
+    this.#QB.buildWhereNotIn(columnName, values)
 
     return this
   }
@@ -422,7 +422,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereBetween(columnName, values) {
-    this.#DB.buildWhereBetween(columnName, values)
+    this.#QB.buildWhereBetween(columnName, values)
 
     return this
   }
@@ -435,7 +435,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotBetween(columnName, values) {
-    this.#DB.buildWhereNotBetween(columnName, values)
+    this.#QB.buildWhereNotBetween(columnName, values)
 
     return this
   }
@@ -447,7 +447,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNull(columnName) {
-    this.#DB.buildWhereNull(columnName)
+    this.#QB.buildWhereNull(columnName)
 
     return this
   }
@@ -459,7 +459,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotNull(columnName) {
-    this.#DB.buildWhereNotNull(columnName)
+    this.#QB.buildWhereNotNull(columnName)
 
     return this
   }

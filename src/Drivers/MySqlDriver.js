@@ -791,6 +791,10 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildTable(tableName) {
+    if (!this.#isConnected) {
+      throw new NotConnectedDatabaseException()
+    }
+
     this.#table = tableName
 
     return this
