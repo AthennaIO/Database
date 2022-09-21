@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Collection } from '@secjs/utils'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 
 export * from './Facades/Database.js'
@@ -23,6 +24,20 @@ export * from './Models/Model.js'
 export * from './Models/Column.js'
 export * from './Models/Relation.js'
 export * from './Models/Criteria.js'
+
+// eslint-disable-next-line no-extend-native
+Array.prototype.toResource = function (criterias = {}) {
+  return this.map(model => model.toResource(criterias))
+}
+
+// eslint-disable-next-line no-extend-native
+Array.prototype.toCollection = function () {
+  return new Collection(this)
+}
+
+Collection.prototype.toResource = function (criterias = {}) {
+  return this.all().map(model => model.toResource(criterias))
+}
 
 export class QueryBuilder {
   /**
@@ -169,6 +184,15 @@ export class QueryBuilder {
    */
   async findMany() {
     return this.#driver.findMany()
+  }
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  async collection() {
+    return this.#driver.collection()
   }
 
   /**

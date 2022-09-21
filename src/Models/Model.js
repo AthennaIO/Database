@@ -19,11 +19,6 @@ import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
-// eslint-disable-next-line no-extend-native
-Array.prototype.toResource = function (criterias = {}) {
-  return this.map(model => model.toResource(criterias))
-}
-
 export class Model {
   /**
    * Set the db connection that this model instance will work with.
@@ -238,6 +233,22 @@ export class Model {
     }
 
     return query.where(where).findMany()
+  }
+
+  /**
+   * Get many data in DB and return as a collection of subclass instance.
+   *
+   * @param {any} [where]
+   * @return {Promise<Collection<InstanceType<Class>>>}
+   */
+  static async collection(where = {}) {
+    const query = this.query()
+
+    if (Object.keys(where).length) {
+      query.where(where)
+    }
+
+    return query.where(where).collection()
   }
 
   /**

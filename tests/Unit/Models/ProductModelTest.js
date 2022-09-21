@@ -113,6 +113,27 @@ test.group('ProductModelTest', group => {
     assert.lengthOf(allProductMySqls, 1)
   })
 
+  test('should be able to get products as a collection', async ({ assert }) => {
+    const collection = await ProductMySql.query()
+      .addSelect('name')
+      .whereIn('id', [1, 2])
+      .orderBy('id', 'DESC')
+      .collection()
+
+    const products = collection.all()
+
+    assert.lengthOf(products, 2)
+    assert.isDefined(products[0].name)
+    assert.isDefined(products[1].name)
+    assert.deepEqual(products[0].id, 2)
+    assert.deepEqual(products[1].id, 1)
+
+    const collectionMySql = await ProductMySql.collection({ id: 1 })
+    const allProductsMySql = collectionMySql.all()
+
+    assert.lengthOf(allProductsMySql, 1)
+  })
+
   test('should be able to find product and fail', async ({ assert }) => {
     const product = await ProductMySql.findOrFail({ id: 1 })
 

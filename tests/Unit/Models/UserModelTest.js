@@ -15,10 +15,10 @@ import { Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
-import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
+import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
@@ -106,6 +106,23 @@ test.group('UserModelTest', group => {
     const allUsers = await User.findMany()
 
     assert.lengthOf(allUsers, 10)
+  })
+
+  test('should be able to get users as a collection', async ({ assert }) => {
+    const collection = await User.query().addSelect('name').whereIn('id', [1, 2]).orderBy('id', 'DESC').collection()
+
+    const users = collection.all()
+
+    assert.lengthOf(users, 2)
+    assert.isDefined(users[0].name)
+    assert.isDefined(users[1].name)
+    assert.deepEqual(users[0].id, 2)
+    assert.deepEqual(users[1].id, 1)
+
+    const otherCollection = await User.collection({ id: 1 })
+    const allUsers = otherCollection.all()
+
+    assert.lengthOf(allUsers, 1)
   })
 
   test('should be able to find user and fail', async ({ assert }) => {

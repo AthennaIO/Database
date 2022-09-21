@@ -209,6 +209,36 @@ test.group('MySqlDriverTest', group => {
     assert.lengthOf(users, 2)
   })
 
+  test('should be able to find users as a Collection', async ({ assert }) => {
+    const collection = await Database.connection('mysql')
+      .buildTable('users')
+      .buildWhereIn('id', [1, 2])
+      .buildOrderBy('id', 'DESC')
+      .buildSkip(0)
+      .buildLimit(10)
+      .collection()
+
+    const users = collection.all()
+
+    assert.lengthOf(users, 2)
+  })
+
+  test('should be able to transform array to a Collection', async ({ assert }) => {
+    const collection = await (
+      await Database.connection('mysql')
+        .buildTable('users')
+        .buildWhereIn('id', [1, 2])
+        .buildOrderBy('id', 'DESC')
+        .buildSkip(0)
+        .buildLimit(10)
+        .findMany()
+    ).toCollection()
+
+    const users = collection.all()
+
+    assert.lengthOf(users, 2)
+  })
+
   test('should be able to find user and fail', async ({ assert }) => {
     await assert.rejects(
       () => Database.connection('mysql').buildTable('users').buildWhere('id', 12349).findOrFail(),

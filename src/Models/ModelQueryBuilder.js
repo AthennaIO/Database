@@ -88,6 +88,19 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Find many data in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  async collection() {
+    this.#setCriterias()
+
+    const collection = await this.#QB.collection()
+
+    return collection.map(item => this.#generateModels(item))
+  }
+
+  /**
    * Find many models in database and return as paginated response.
    *
    * @param [page] {boolean}
@@ -467,7 +480,7 @@ export class ModelQueryBuilder {
   /**
    * Generate model instances from data.
    *
-   * @param {any|any[]} data
+   * @param {any|any[]|import('@secjs/utils').Collection} data
    */
   #generateModels(data) {
     if (!data) {
