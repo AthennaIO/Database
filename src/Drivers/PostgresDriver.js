@@ -8,15 +8,15 @@
  */
 
 import { MigrationExecutor, Table } from 'typeorm'
-import { Exec, Is, Json } from '@secjs/utils'
+import { Collection, Exec, Is, Json } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 
 export class PostgresDriver {
   /**
@@ -617,6 +617,15 @@ export class PostgresDriver {
    */
   async findMany() {
     return this.query(true).getMany()
+  }
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  async collection() {
+    return new Collection(await this.findMany())
   }
 
   /**

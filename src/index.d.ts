@@ -10,11 +10,18 @@
 import { Facade } from '@athenna/ioc'
 import { EntitySchema } from 'typeorm'
 import { Faker } from '@faker-js/faker'
-import { Is, Json, PaginatedResponse } from '@secjs/utils'
+import { Collection, PaginatedResponse } from '@secjs/utils'
 
 declare global {
   interface Array<T> {
     toResource(criterias?: any): T[];
+    toCollection(): Collection;
+  }
+}
+
+declare module '@secjs/utils' {
+  export interface Collection<Item = any> {
+    toResource(): Item[]
   }
 }
 
@@ -121,6 +128,13 @@ export class QueryBuilder {
    * @return {Promise<any[]>}
    */
   findMany(): Promise<any[]>
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  collection(): Promise<import('@secjs/utils').Collection>
 
   /**
    * Find many values in database and return as paginated response.
@@ -884,6 +898,14 @@ export class Model {
   static findMany<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
 
   /**
+   * Get many data in DB and return as a collection of subclass instance.
+   *
+   * @param {any} [where]
+   * @return {Promise<Collection<InstanceType<Class>>>}
+   */
+  static collection<Class extends typeof Model>(this: Class, where?: any): Promise<Collection<InstanceType<Class>>>
+
+  /**
    * Find many models in database and return as paginated response.
    *
    * @param [page] {boolean}
@@ -1025,6 +1047,13 @@ export class ModelQueryBuilder {
    * @return {Promise<any[]>}
    */
   findMany(): Promise<any[]>
+
+  /**
+   * Find many data in database and return as a Collection.
+   *
+   * @return {Promise<import('@secjs/utils').Collection>}
+   */
+  collection(): Promise<Collection>
 
   /**
    * Find many models in database and return as paginated response.

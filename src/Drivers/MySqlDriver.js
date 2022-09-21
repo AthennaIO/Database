@@ -8,7 +8,7 @@
  */
 
 import { MigrationExecutor, Table } from 'typeorm'
-import { Exec, Is, Json } from '@secjs/utils'
+import { Collection, Exec, Is, Json } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
@@ -617,6 +617,15 @@ export class MySqlDriver {
    */
   async findMany() {
     return this.query(true).getMany()
+  }
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  async collection() {
+    return new Collection(await this.findMany())
   }
 
   /**
