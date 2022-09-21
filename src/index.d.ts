@@ -12,19 +12,6 @@ import { EntitySchema } from 'typeorm'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@secjs/utils'
 
-declare global {
-  interface Array<T> {
-    toResource(criterias?: any): T[];
-    toCollection(): Collection;
-  }
-}
-
-declare module '@secjs/utils' {
-  export interface Collection<Item = any> {
-    toResource(): Item[]
-  }
-}
-
 export const Database: Facade & DatabaseImpl
 
 export class QueryBuilder {
