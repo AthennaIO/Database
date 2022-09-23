@@ -8,7 +8,7 @@
  */
 
 import { Facade } from '@athenna/ioc'
-import { EntitySchema } from 'typeorm'
+import { DataSource, EntitySchema } from 'typeorm'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@secjs/utils'
 
@@ -192,11 +192,19 @@ export class QueryBuilder {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhere(statement: string | Record<string, any>, value?: any): QueryBuilder
+  buildWhere(statement: Record<string, any>): QueryBuilder
+  buildWhere(statement: string, value: any): QueryBuilder
+  buildWhere(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  buildWhereNot(statement: Record<string, any>, value: any): QueryBuilder
+  buildWhereNot(statement: string, value: any): QueryBuilder
 
   /**
    * Set a include statement in your query.
@@ -210,35 +218,22 @@ export class QueryBuilder {
   /**
    * Set a where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhereLike(statement: string | Record<string, any>, value?: any): QueryBuilder
+  buildWhereLike(statement: Record<string, any>): QueryBuilder
+  buildWhereLike(statement: string, value: any): QueryBuilder
 
   /**
    * Set a where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhereILike(statement: string | Record<string, any>, value?: any): QueryBuilder
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {QueryBuilder}
-   */
-  buildWhereNot(statement: string | Record<string, any>, value?: any): QueryBuilder
+  buildWhereILike(statement: Record<string, any>): QueryBuilder
+  buildWhereILike(statement: string, value: any): QueryBuilder
 
   /**
    * Set a where in statement in your query.
    *
-   * @param columnName {string}
-   * @param values {any[]}
    * @return {QueryBuilder}
    */
   buildWhereIn(columnName: string, values: any[]): QueryBuilder
@@ -844,6 +839,13 @@ export class Model {
   static getSchema(): EntitySchema<any>
 
   /**
+   * The TypeORM client instance.
+   *
+   * @return {DataSource}
+   */
+  static getClient(): DataSource
+
+  /**
    * Create a new model query builder.
    *
    * @param [withCriterias] {boolean}
@@ -1186,38 +1188,35 @@ export class ModelQueryBuilder {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
-  where(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
-
-  /**
-   * Set a where like statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {ModelQueryBuilder}
-   */
-  whereLike(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
-
-  /**
-   * Set a where ILike statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {ModelQueryBuilder}
-   */
-  whereILike(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+  where(statement: Record<string, any>): ModelQueryBuilder
+  where(statement: string, value: any): ModelQueryBuilder
+  where(statement: string, operation: string, value: any): ModelQueryBuilder
 
   /**
    * Set a where not statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
-  whereNot(statement: string | Record<string, any>, value?: any): ModelQueryBuilder
+  whereNot(statement: Record<string, any>): ModelQueryBuilder
+  whereNot(statement: string, value: any): ModelQueryBuilder
+
+  /**
+   * Set a where like statement in your query.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  whereLike(statement: Record<string, any>): ModelQueryBuilder
+  whereLike(statement: string, value: any): ModelQueryBuilder
+
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  whereILike(statement: Record<string, any>): ModelQueryBuilder
+  whereILike(statement: string, value: any): ModelQueryBuilder
 
   /**
    * Set a where in statement in your query.

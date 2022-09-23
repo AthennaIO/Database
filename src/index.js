@@ -283,11 +283,25 @@ export class QueryBuilder {
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhere(statement, value) {
-    this.#driver.buildWhere(statement, value)
+  buildWhere(statement, operation, value) {
+    this.#driver.buildWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  buildWhereNot(statement, value) {
+    this.#driver.buildWhereNot(statement, value)
 
     return this
   }
@@ -314,19 +328,6 @@ export class QueryBuilder {
    */
   buildWhereILike(statement, value) {
     this.#driver.buildWhereILike(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {QueryBuilder}
-   */
-  buildWhereNot(statement, value) {
-    this.#driver.buildWhereNot(statement, value)
 
     return this
   }
