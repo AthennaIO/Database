@@ -843,11 +843,17 @@ export class MySqlDriver {
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
-   * @param [value] {any}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
    * @return {MySqlDriver}
    */
-  buildWhere(statement, value) {
-    return this.#buildWhere('=', statement, value)
+  buildWhere(statement, operation = '=', value) {
+    if (!value) {
+      value = operation
+      operation = '='
+    }
+
+    return this.#buildWhere(operation, statement, value)
   }
 
   /**
@@ -1044,7 +1050,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   #buildWhere(operation, statement, value) {
-    if (typeof statement === 'string') {
+    if (Is.String(statement)) {
       const key = statement
 
       statement = { [key]: value }

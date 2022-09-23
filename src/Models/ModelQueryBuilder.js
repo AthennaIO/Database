@@ -353,11 +353,25 @@ export class ModelQueryBuilder {
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
-  where(statement, value) {
-    this.#QB.buildWhere(statement, value)
+  where(statement, operation, value) {
+    this.#QB.buildWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  whereNot(statement, value) {
+    this.#QB.buildWhereNot(statement, value)
 
     return this
   }
@@ -384,19 +398,6 @@ export class ModelQueryBuilder {
    */
   whereILike(statement, value) {
     this.#QB.buildWhereILike(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {ModelQueryBuilder}
-   */
-  whereNot(statement, value) {
-    this.#QB.buildWhereNot(statement, value)
 
     return this
   }

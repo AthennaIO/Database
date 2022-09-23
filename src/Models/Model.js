@@ -12,6 +12,7 @@ import { Assert } from '@japa/assert'
 import { EntitySchema } from 'typeorm'
 import { faker } from '@faker-js/faker'
 
+import { Database } from '#src/index'
 import { Criteria } from '#src/Models/Criteria'
 import { ModelFactory } from '#src/Factories/ModelFactory'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
@@ -158,6 +159,15 @@ export class Model {
         process.env.DB_SYNCHRONIZE === '(true)' ||
         false,
     })
+  }
+
+  /**
+   * The TypeORM client instance.
+   *
+   * @return {DataSource}
+   */
+  static getClient() {
+    return Database.connection(this.connection).getClient()
   }
 
   /**
