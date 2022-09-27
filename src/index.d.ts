@@ -137,25 +137,28 @@ export class QueryBuilder {
    * Create a value in database.
    *
    * @param {any} data
+   * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  create(data: any): Promise<any>
+  create(data: any, primaryKey?: string): Promise<any>
 
   /**
    * Create many values in database.
    *
    * @param {any[]} data
+   * @param {string} [primaryKey]
    * @return {Promise<any[]>}
    */
-  createMany(data: any[]): Promise<any[]>
+  createMany(data: any[], primaryKey?: string): Promise<any[]>
 
   /**
    * Create data or update if already exists.
    *
    * @param {any} data
+   * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
-  createOrUpdate(data: any): Promise<any | any[]>
+  createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
 
   /**
    * Update a value in database.
@@ -182,14 +185,6 @@ export class QueryBuilder {
   buildSelect(...columns: string[]): QueryBuilder
 
   /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {QueryBuilder}
-   */
-  buildAddSelect(...columns: string[]): QueryBuilder
-
-  /**
    * Set a where statement in your query.
    *
    * @return {QueryBuilder}
@@ -207,13 +202,26 @@ export class QueryBuilder {
   buildWhereNot(statement: string, value: any): QueryBuilder
 
   /**
-   * Set a include statement in your query.
+   * Set a join statement in your query.
    *
-   * @param relation {string|any}
+   * @param tableName {string}
+   * @param column1 {string}
    * @param [operation] {string}
+   * @param column2 {string}
+   * @param joinType {string}
    * @return {QueryBuilder}
    */
-  buildIncludes(relation: string | any, operation?: string): QueryBuilder
+  buildJoin(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): QueryBuilder
+  buildJoin(tableName: string, column1: string, operation: string, column2: string): QueryBuilder
+  buildJoin(tableName: string, column1: string, column2: string): QueryBuilder
+
+  /**
+   * Set a group by statement in your query.
+   *
+   * @param columns {string}
+   * @return {QueryBuilder}
+   */
+  buildGroupBy(...columns: string[]): QueryBuilder
 
   /**
    * Set a where like statement in your query.
@@ -288,7 +296,7 @@ export class QueryBuilder {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {QueryBuilder}
    */
-  buildOrderBy(columnName: string, direction: 'asc'|'desc'|'ASC'|'DESC'): QueryBuilder
+  buildOrderBy(columnName: string, direction: 'asc' | 'desc' | 'ASC' | 'DESC'): QueryBuilder
 
   /**
    * Set the skip number in your query.
@@ -296,7 +304,7 @@ export class QueryBuilder {
    * @param number {number}
    * @return {QueryBuilder}
    */
-  buildSkip(number: number): QueryBuilder
+  buildOffset(number: number): QueryBuilder
 
   /**
    * Set the limit number in your query.
@@ -418,10 +426,10 @@ export class DatabaseImpl {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {import('typeorm').TableOptions} options
+   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
    * @return {Promise<void>}
    */
-  createTable(tableName: string, options: import('typeorm').TableOptions): Promise<void>
+  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
 
   /**
    * Drop a table in database.
@@ -480,6 +488,20 @@ export class Transaction {
    * @return {Promise<void>}
    */
   rollbackTransaction(): Promise<void>
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  runMigrations(): Promise<void>
+
+  /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  revertMigrations(): Promise<void>
 
   /**
    * Verify if database exists.
@@ -1984,6 +2006,43 @@ export class DriverFactory {
    * @return {Promise<void>}
    */
   static closeConnectionByName(conName?: string): Promise<void>
+}
+
+export class Migration {
+  /**
+   * Create a table instance.
+   *
+   * @return {string}
+   */
+  static get tableName(): string
+
+  /**
+   * Create a table instance.
+   *
+   * @return {string}
+   */
+  static get connection(): string
+
+  /**
+   * Return a new database instance using the migration connection.
+   *
+   * @return {DatabaseImpl}
+   */
+  static get DB(): DatabaseImpl
+
+  /**
+   * Run the migrations.
+   *
+   * @return {Promise<void>}
+   */
+  up(): Promise<void>
+
+  /**
+   * Reverse the migrations.
+   *
+   * @return {Promise<void>}
+   */
+  down(): Promise<void>
 }
 
 export class Seeder {

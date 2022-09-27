@@ -7,15 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { MigrationExecutor, Table } from 'typeorm'
-import { Collection, Exec, Is, Json } from '@secjs/utils'
+import { Collection, Exec, Is } from '@secjs/utils'
 
 import { Transaction } from '#src/index'
 import { DriverFactory } from '#src/Factories/DriverFactory'
-import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { MigrationSource } from '#src/Migrations/MigrationSource'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
-import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
+import { PROTECTED_QUERY_METHODS } from '#src/Constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 export class MySqlDriver {
@@ -34,20 +33,6 @@ export class MySqlDriver {
   #isSavedOnFactory = true
 
   /**
-   * The TypeORM data source.
-   *
-   * @type {import('typeorm').DataSource|null}
-   */
-  #dataSource = null
-
-  /**
-   * The query runner responsible to handle database operations.
-   *
-   * @type {import('typeorm').QueryRunner|null}
-   */
-  #runner = null
-
-  /**
    * The connection name used for this instance.
    *
    * @type {string|null}
@@ -62,53 +47,18 @@ export class MySqlDriver {
   #table = null
 
   /**
-   * The where queries done to this instance.
+   * Set the client of this driver.
    *
-   * @type {Map<string, any>}
+   * @type {import('knex').Knex|import('knex').Knex.Transaction|null}
    */
-  #where = new Map()
+  #client = null
 
   /**
-   * The orderBy queries done to this instance.
+   * The main query builder of driver.
    *
-   * @type {Map<string, any>}
+   * @type {import('knex').Knex.QueryBuilder|null}
    */
-  #orderBy = new Map()
-
-  /**
-   * The select queries done to this instance.
-   *
-   * @type {string[]}
-   */
-  #select = []
-
-  /**
-   * The add select queries done to this instance.
-   *
-   * @type {string[]}
-   */
-  #addSelect = []
-
-  /**
-   * The skip value done to this instance.
-   *
-   * @type {number|null}
-   */
-  #skip = null
-
-  /**
-   * The limit value done to this instance.
-   *
-   * @type {number|null}
-   */
-  #limit = null
-
-  /**
-   * The relations queries done to this instance.
-   *
-   * @type {Map<string, any>}
-   */
-  #relations = new Map()
+  #qb = null
 
   /**
    * Creates a new instance of MySqlDriver.
@@ -123,19 +73,17 @@ export class MySqlDriver {
     if (client) {
       this.#isConnected = true
       this.#isSavedOnFactory = true
-
-      this.#runner = client.runner
-      this.#dataSource = client.dataSource
+      this.#client = client
     }
   }
 
   /**
    * Return the client of driver.
    *
-   * @return {import('typeorm').DataSource|null}
+   * @return {import('knex').Knex|null}
    */
   getClient() {
-    return this.#dataSource
+    return this.#client
   }
 
   /**
@@ -150,17 +98,16 @@ export class MySqlDriver {
       return
     }
 
-    const { runner, dataSource } = await DriverFactory.createConnectionByDriver(
+    this.#client = await DriverFactory.createConnectionByDriver(
       'mysql',
       this.#connection,
       saveOnFactory,
     )
 
-    this.#runner = runner
-    this.#dataSource = dataSource
-
     this.#isConnected = true
     this.#isSavedOnFactory = saveOnFactory
+
+    this.#qb = this.query()
   }
 
   /**
@@ -176,56 +123,38 @@ export class MySqlDriver {
     if (this.#isSavedOnFactory) {
       await DriverFactory.closeConnectionByDriver('mysql')
     } else {
-      await this.#runner.release()
-      await this.#dataSource.destroy()
+      await this.#client.destroy()
     }
 
+    this.#qb = null
     this.#table = null
-    this.#runner = null
-    this.#dataSource = null
+    this.#client = null
     this.#isConnected = false
   }
 
   /**
    * Creates a new instance of query builder.
    *
-   * @param fullQuery {boolean}
-   * @return {import('typeorm').SelectQueryBuilder}
+   * @return {import('knex').Knex.QueryBuilder}
    */
-  query(fullQuery = false) {
+  query() {
     if (!this.#isConnected) {
       throw new NotConnectedDatabaseException()
     }
 
-    if (!fullQuery) {
-      return this.#runner.manager.createQueryBuilder()
+    const query = this.#client.queryBuilder().table(this.#table)
+
+    const handler = {
+      get: (target, propertyKey) => {
+        if (PROTECTED_QUERY_METHODS.includes(propertyKey)) {
+          this.#qb = this.query()
+        }
+
+        return target[propertyKey]
+      },
     }
 
-    if (!this.#table) {
-      throw new NoTableSelectedException()
-    }
-
-    /** @type {import('typeorm').SelectQueryBuilder} */
-    const query = this.#runner.manager
-      .getRepository(this.#table)
-      .createQueryBuilder(this.#table)
-      .withDeleted()
-
-    this.#setRelationsOnQuery(query)
-    this.#setSelectOnQuery(query)
-    this.#setAddSelectOnQuery(query)
-    this.#setWhereOnQuery(query)
-    this.#setOrderByOnQuery(query)
-
-    if (this.#skip) {
-      query.skip(this.#skip)
-    }
-
-    if (this.#limit) {
-      query.limit(this.#limit)
-    }
-
-    return query
+    return new Proxy(query, handler)
   }
 
   /**
@@ -234,11 +163,9 @@ export class MySqlDriver {
    * @return {Promise<Transaction>}
    */
   async startTransaction() {
-    this.#runner = this.#dataSource.createQueryRunner()
-
-    await this.#runner.startTransaction()
-
-    return new Transaction(this)
+    return new Transaction(
+      new MySqlDriver(this.#connection, await this.#client.transaction()),
+    )
   }
 
   /**
@@ -247,12 +174,10 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async commitTransaction() {
-    await this.#runner.commitTransaction()
-    await this.#runner.release()
+    await this.#client.commit()
 
     this.#table = null
-    this.#runner = null
-    this.#dataSource = null
+    this.#client = null
     this.#isConnected = false
   }
 
@@ -262,12 +187,10 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async rollbackTransaction() {
-    await this.#runner.rollbackTransaction()
-    await this.#runner.release()
+    await this.#client.rollback()
 
     this.#table = null
-    this.#runner = null
-    this.#dataSource = null
+    this.#client = null
     this.#isConnected = false
   }
 
@@ -277,7 +200,9 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async runMigrations() {
-    await this.#dataSource.runMigrations()
+    await this.#client.migrate.latest({
+      migrationSource: new MigrationSource(this.#connection),
+    })
   }
 
   /**
@@ -286,13 +211,9 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async revertMigrations() {
-    const executor = new MigrationExecutor(this.#dataSource)
-
-    const migrations = await executor.getAllMigrations()
-
-    for (let i = 0; i < migrations.length; i++) {
-      await executor.undoLastMigration()
-    }
+    await this.#client.migrate.rollback({
+      migrationSource: new MigrationSource(this.#connection),
+    })
   }
 
   /**
@@ -301,7 +222,9 @@ export class MySqlDriver {
    * @return {Promise<string[]>}
    */
   async getDatabases() {
-    return this.#runner.getDatabases()
+    const [databases] = await this.raw('SHOW DATABASES')
+
+    return databases.map(database => database.Database)
   }
 
   /**
@@ -310,7 +233,7 @@ export class MySqlDriver {
    * @return {Promise<string | undefined>}
    */
   async getCurrentDatabase() {
-    return this.#runner.getCurrentDatabase()
+    return this.#client.client.database()
   }
 
   /**
@@ -320,7 +243,9 @@ export class MySqlDriver {
    * @return {Promise<boolean>}
    */
   async hasDatabase(database) {
-    return this.#runner.hasDatabase(database)
+    const databases = await this.getDatabases()
+
+    return databases.includes(database)
   }
 
   /**
@@ -330,7 +255,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async createDatabase(databaseName) {
-    await this.#runner.createDatabase(databaseName, true)
+    await this.raw('CREATE DATABASE IF NOT EXISTS ??', databaseName)
   }
 
   /**
@@ -340,17 +265,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async dropDatabase(databaseName) {
-    await this.#runner.dropDatabase(databaseName, true)
-  }
-
-  /**
-   * Get metadata information's about some database table.
-   *
-   * @param {string} table
-   * @return {Promise<any>}
-   */
-  async getTable(table) {
-    return this.#runner.getTable(table)
+    await this.raw('DROP DATABASE IF EXISTS ??', databaseName)
   }
 
   /**
@@ -359,9 +274,12 @@ export class MySqlDriver {
    * @return {Promise<string[]>}
    */
   async getTables() {
-    const tablesInstance = await this.#runner.getTables()
+    const [tables] = await this.raw(
+      'SELECT table_name FROM information_schema.tables WHERE table_schema = ?',
+      await this.getCurrentDatabase(),
+    )
 
-    return tablesInstance.map(tableInstance => tableInstance.name)
+    return tables.map(table => table.TABLE_NAME)
   }
 
   /**
@@ -371,21 +289,18 @@ export class MySqlDriver {
    * @return {Promise<boolean>}
    */
   async hasTable(table) {
-    return this.#runner.hasTable(table)
+    return this.#client.schema.hasTable(table)
   }
 
   /**
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {import('typeorm').TableOptions} options
+   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
    * @return {Promise<void>}
    */
-  async createTable(tableName, options = {}) {
-    await this.#runner.createTable(
-      new Table({ name: tableName, ...options }),
-      true,
-    )
+  async createTable(tableName, callback) {
+    await this.#client.schema.createTable(tableName, callback)
   }
 
   /**
@@ -395,7 +310,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async dropTable(tableName) {
-    await this.#runner.dropTable(tableName, true)
+    await this.#client.schema.dropTableIfExists(tableName)
   }
 
   /**
@@ -406,182 +321,134 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async truncate(tableName) {
-    await this.raw(`TRUNCATE TABLE ${tableName}`)
+    await this.raw('TRUNCATE TABLE ??', tableName)
   }
 
   /**
    * Make a raw query in database.
    *
    * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {any} [queryValues]
    * @return {Promise<any>}
    */
-  async raw(raw, queryValues) {
-    return this.#runner?.query(raw, queryValues)
+  async raw(raw, ...queryValues) {
+    return this.#client.raw(raw, ...queryValues)
   }
 
   /**
    * Calculate the average of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async avg(column) {
-    const { avg } = await this.query(true)
-      .select(`AVG(${column})`, 'avg')
-      .getRawOne()
+    const [{ avg }] = await this.#qb.avg({ avg: column })
 
-    return parseInt(avg)
+    return avg
   }
 
   /**
    * Calculate the average of a given column using distinct.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async avgDistinct(column) {
-    const { avg } = await this.query(true)
-      .select(`AVG(${column})`, 'avg')
-      .distinct(true)
-      .getRawOne()
+    const [{ avg }] = await this.#qb.avgDistinct({ avg: column })
 
-    return parseInt(avg)
+    return avg
   }
 
   /**
    * Get the max number of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async max(column) {
-    const { max } = await this.query(true)
-      .select(`MAX(${column})`, 'max')
-      .getRawOne()
+    const [{ max }] = await this.#qb.max({ max: column })
 
-    return parseInt(max)
+    return max
   }
 
   /**
    * Get the min number of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async min(column) {
-    const { min } = await this.query(true)
-      .select(`MIN(${column})`, 'min')
-      .getRawOne()
+    const [{ min }] = await this.#qb.min({ min: column })
 
-    return parseInt(min)
+    return min
   }
 
   /**
    * Sum all numbers of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async sum(column) {
-    const { sum } = await this.query(true)
-      .select(`SUM(${column})`, 'sum')
-      .getRawOne()
+    const [{ sum }] = await this.#qb.sum({ sum: column })
 
-    return parseInt(sum)
+    return sum
   }
 
   /**
    * Sum all numbers of a given column in distinct mode.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async sumDistinct(column) {
-    const { sum } = await this.query(true)
-      .select(`SUM(${column})`, 'sum')
-      .distinct(true)
-      .getRawOne()
+    const [{ sum }] = await this.#qb.sumDistinct({ sum: column })
 
-    return parseInt(sum)
+    return sum
   }
 
   /**
    * Increment a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<void>}
    */
   async increment(column) {
-    const result = await this.update({ [column]: () => `${column} + 1` }, true)
-
-    if (Is.Array(result)) {
-      return result.map(r => r[column])
-    }
-
-    return result[column]
+    return this.#qb.increment(column)
   }
 
   /**
    * Decrement a value of a given column.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<void>}
    */
   async decrement(column) {
-    const result = await this.update({ [column]: () => `${column} - 1` }, true)
-
-    if (Is.Array(result)) {
-      return result.map(r => r[column])
-    }
-
-    return result[column]
+    return this.#qb.decrement(column)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
   async count(column = '*') {
-    if (column === '*') {
-      // eslint-disable-next-line no-unused-vars
-      const [_, count] = await this.query(true).getManyAndCount()
+    const [{ count }] = await this.#qb.count({ count: column })
 
-      return count
-    }
-
-    const { count } = await this.query(true)
-      .select(`COUNT(${column})`, 'count')
-      .getRawOne()
-
-    return parseInt(count)
+    return `${count}`
   }
 
   /**
    * Calculate the average of a given column using distinct.
    *
    * @param {string} column
-   * @return {Promise<number>}
+   * @return {Promise<string>}
    */
-  async countDistinct(column = '*') {
-    if (column === '*') {
-      // eslint-disable-next-line no-unused-vars
-      const [_, count] = await this.query(true)
-        .select()
-        .distinct(true)
-        .getManyAndCount()
+  async countDistinct(column) {
+    const [{ count }] = await this.#qb.countDistinct({ count: column })
 
-      return count
-    }
-
-    const { count } = await this.query(true)
-      .select(`COUNT(${column})`, 'count')
-      .distinct(true)
-      .getRawOne()
-
-    return parseInt(count)
+    return `${count}`
   }
 
   /**
@@ -590,12 +457,10 @@ export class MySqlDriver {
    * @return {Promise<any>}
    */
   async findOrFail() {
-    const where = Json.copy(this.#where)
-
     const data = await this.find()
 
     if (!data) {
-      throw new NotFoundDataException(where, this.#connection)
+      throw new NotFoundDataException(this.#connection)
     }
 
     return data
@@ -607,7 +472,7 @@ export class MySqlDriver {
    * @return {Promise<any>}
    */
   async find() {
-    return this.query(true).getOne()
+    return this.#qb.first()
   }
 
   /**
@@ -616,7 +481,11 @@ export class MySqlDriver {
    * @return {Promise<any>}
    */
   async findMany() {
-    return this.query(true).getMany()
+    const data = await this.#qb
+
+    this.#qb = this.query()
+
+    return data
   }
 
   /**
@@ -637,10 +506,13 @@ export class MySqlDriver {
    * @return {Promise<import('@secjs/utils').PaginatedResponse>}
    */
   async paginate(page = 0, limit = 10, resourceUrl = '/') {
-    const [data, count] = await this.query(true)
-      .take(page)
-      .limit(limit)
-      .getManyAndCount()
+    const [{ count }] = await this.#qb
+      .clone()
+      .clearOrder()
+      .clearSelect()
+      .count({ count: '*' })
+
+    const data = await this.buildOffset(page).buildLimit(limit).findMany()
 
     return Exec.pagination(data, count, { page, limit, resourceUrl })
   }
@@ -649,100 +521,58 @@ export class MySqlDriver {
    * Create a value in database.
    *
    * @param {any} data
+   * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async create(data) {
+  async create(data, primaryKey = 'id') {
     if (Is.Array(data)) {
       throw new WrongMethodException('create', 'createMany')
     }
 
-    const select = [...this.#select]
-    const addSelect = [...this.#addSelect]
+    const created = await this.createMany([data], primaryKey)
 
-    const { identifiers } = await this.query(true)
-      .insert()
-      .values(data)
-      .execute()
-
-    const query = this.query(true)
-
-    if (select.length) {
-      query.select(select)
-    }
-
-    if (addSelect.length) {
-      query.addSelect(addSelect)
-    }
-
-    return query.where('id = :id', { id: identifiers[0].id }).getOne()
+    return created[0]
   }
 
   /**
    * Create many values in database.
    *
    * @param {any[]} data
+   * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async createMany(data) {
+  async createMany(data, primaryKey = 'id') {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    const select = [...this.#select]
-    const addSelect = [...this.#addSelect]
+    const ids = []
 
-    const { identifiers } = await this.query(true)
-      .insert()
-      .values(data)
-      .execute()
+    await Promise.all(
+      data.map(d => this.#qb.insert(d).then(([id]) => ids.push(id))),
+    )
 
-    const promises = []
-
-    identifiers.forEach(({ id }) => {
-      const query = this.query(true)
-
-      if (select.length) {
-        query.select(select)
-      }
-
-      if (addSelect.length) {
-        query.addSelect(addSelect)
-      }
-
-      promises.push(query.where('id = :id', { id }).getOne())
-    })
-
-    return Promise.all(promises)
+    return this.buildWhereIn(primaryKey, ids).findMany()
   }
 
   /**
    * Create data or update if already exists.
    *
    * @param {any | any[]} data
+   * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
-  async createOrUpdate(data) {
-    const select = Json.copy(this.#select)
-    const orderBy = Json.copy(this.#orderBy)
-    const relations = Json.copy(this.#relations)
-    const addSelect = Json.copy(this.#addSelect)
-
-    const hasValue = await this.find()
+  async createOrUpdate(data, primaryKey = 'id') {
+    const query = this.#qb.clone()
+    const hasValue = await query.first()
 
     if (hasValue) {
-      const firstKey = Object.keys(hasValue)[0]
+      await this.#qb.where(primaryKey, hasValue[primaryKey]).update(data)
 
-      this.buildWhere(firstKey, hasValue[firstKey])
-
-      this.#select = select
-      this.#orderBy = orderBy
-      this.#relations = relations
-      this.#addSelect = addSelect
-
-      return this.update(data)
+      return this.buildWhere(primaryKey, hasValue[primaryKey]).find()
     }
 
-    return this.create(data)
+    return this.create(data, primaryKey)
   }
 
   /**
@@ -753,23 +583,7 @@ export class MySqlDriver {
    * @return {Promise<any>}
    */
   async update(data, force = false) {
-    if (!this.#where.size && !force) {
-      throw new EmptyWhereException('update')
-    }
-
-    const where = Json.copy(this.#where)
-    const select = Json.copy(this.#select)
-    const orderBy = Json.copy(this.#orderBy)
-    const relations = Json.copy(this.#relations)
-    const addSelect = Json.copy(this.#addSelect)
-
-    await this.query(true).update(this.#table).set(data).execute()
-
-    this.#where = where
-    this.#select = select
-    this.#orderBy = orderBy
-    this.#relations = relations
-    this.#addSelect = addSelect
+    await this.#qb.clone().update(data)
 
     const result = await this.findMany()
 
@@ -786,11 +600,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async delete() {
-    if (!this.#where.size) {
-      throw new EmptyWhereException('delete')
-    }
-
-    await this.query(true).delete().execute()
+    await this.#qb.delete()
   }
 
   /**
@@ -805,6 +615,7 @@ export class MySqlDriver {
     }
 
     this.#table = tableName
+    this.#qb = this.query()
 
     return this
   }
@@ -816,25 +627,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildSelect(...columns) {
-    if (columns.find(column => column === '*')) {
-      this.#select = []
-
-      return this
-    }
-
-    columns.forEach(c => this.#select.push(this.#getColumnParam(c)))
-
-    return this
-  }
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {MySqlDriver}
-   */
-  buildAddSelect(...columns) {
-    columns.forEach(c => this.#addSelect.push(this.#getColumnParam(c)))
+    this.#qb.select(...columns)
 
     return this
   }
@@ -848,26 +641,53 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhere(statement, operation = '=', value) {
-    if (!value) {
-      value = operation
-      operation = '='
+    if (Is.Object(statement)) {
+      this.#qb.where(statement)
+
+      return this
     }
 
-    return this.#buildWhere(operation, statement, value)
+    if (!value) {
+      this.#qb.where(statement, operation)
+
+      return this
+    }
+
+    this.#qb.where(statement, operation, value)
+
+    return this
   }
 
   /**
-   * Set a include statement in your query.
+   * Set a join statement in your query.
    *
-   * @param relation {string|any}
+   * @param tableName {string}
+   * @param column1 {string}
    * @param [operation] {string}
+   * @param column2 {string}
+   * @param joinType {string}
    * @return {MySqlDriver}
    */
-  buildIncludes(relation, operation = 'leftJoinAndSelect') {
-    this.#relations.set(this.#getColumnParam(relation), {
-      name: relation,
-      operation,
-    })
+  buildJoin(tableName, column1, operation = '=', column2, joinType = 'join') {
+    if (operation && !column2) {
+      this.#qb[joinType](tableName, column1, operation)
+
+      return this
+    }
+
+    this.#qb[joinType](tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a group by statement in your query.
+   *
+   * @param columns {string}
+   * @return {MySqlDriver}
+   */
+  buildGroupBy(...columns) {
+    this.#qb.groupBy(...columns)
 
     return this
   }
@@ -880,11 +700,15 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereLike(statement, value) {
-    if (!value.includes('%')) {
-      value = `%${value}%`
+    if (!value) {
+      this.#qb.whereLike(statement)
+
+      return this
     }
 
-    return this.#buildWhere('LIKE', statement, value)
+    this.#qb.whereLike(statement, value)
+
+    return this
   }
 
   /**
@@ -895,11 +719,15 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereILike(statement, value) {
-    if (!value.includes('%')) {
-      value = `%${value}%`
+    if (!value) {
+      this.#qb.whereILike(statement)
+
+      return this
     }
 
-    return this.#buildWhere('LIKE', statement, value)
+    this.#qb.whereILike(statement, value)
+
+    return this
   }
 
   /**
@@ -910,7 +738,15 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereNot(statement, value) {
-    return this.#buildWhere('!=', statement, value)
+    if (!value) {
+      this.#qb.whereNot(statement)
+
+      return this
+    }
+
+    this.#qb.whereNot(statement, value)
+
+    return this
   }
 
   /**
@@ -921,7 +757,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereIn(columnName, values) {
-    return this.#buildWhere('IN', columnName, values)
+    this.#qb.whereIn(columnName, values)
+
+    return this
   }
 
   /**
@@ -932,7 +770,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereNotIn(columnName, values) {
-    return this.#buildWhere('NOT IN', columnName, values)
+    this.#qb.whereNotIn(columnName, values)
+
+    return this
   }
 
   /**
@@ -942,7 +782,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereNull(columnName) {
-    return this.#buildWhere('IS NULL', columnName)
+    this.#qb.whereNull(columnName)
+
+    return this
   }
 
   /**
@@ -952,7 +794,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereNotNull(columnName) {
-    return this.#buildWhere('IS NOT NULL', columnName)
+    this.#qb.whereNotNull(columnName)
+
+    return this
   }
 
   /**
@@ -963,7 +807,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereBetween(columnName, values) {
-    return this.#buildWhere('BETWEEN', columnName, values)
+    this.#qb.whereBetween(columnName, values)
+
+    return this
   }
 
   /**
@@ -974,7 +820,9 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildWhereNotBetween(columnName, values) {
-    return this.#buildWhere('NOT BETWEEN', columnName, values)
+    this.#qb.whereNotBetween(columnName, values)
+
+    return this
   }
 
   /**
@@ -985,7 +833,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildOrderBy(columnName, direction = 'ASC') {
-    this.#orderBy.set(this.#getColumnParam(columnName), direction.toUpperCase())
+    this.#qb.orderBy(columnName, direction.toUpperCase())
 
     return this
   }
@@ -996,8 +844,8 @@ export class MySqlDriver {
    * @param number {number}
    * @return {MySqlDriver}
    */
-  buildSkip(number) {
-    this.#skip = number
+  buildOffset(number) {
+    this.#qb.offset(number)
 
     return this
   }
@@ -1009,192 +857,8 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   buildLimit(number) {
-    this.#limit = number
+    this.#qb.limit(number)
 
     return this
-  }
-
-  /**
-   * Get the parsed string to use in where keys.
-   *
-   * @param fieldName {string}
-   * @param operation {string}
-   * @return {string}
-   */
-  #getParsedWhereKey(fieldName, operation) {
-    if (operation === 'BETWEEN' || operation === 'NOT BETWEEN') {
-      return `${this.#getColumnParam(
-        fieldName,
-      )} ${operation} :${fieldName}Gte and :${fieldName}Lte`
-    }
-
-    if (operation === 'IS NULL' || operation === 'IS NOT NULL') {
-      return `${this.#getColumnParam(fieldName)} ${operation}`
-    }
-
-    if (operation === 'IN' || operation === 'NOT IN') {
-      return `${this.#getColumnParam(
-        fieldName,
-      )} ${operation} (:...${fieldName})`
-    }
-
-    return `${this.#getColumnParam(fieldName)} ${operation} :${fieldName}`
-  }
-
-  /**
-   * Build where used by all other methods.
-   *
-   * @param operation {string}
-   * @param statement {string}
-   * @param [value] {any}
-   * @return {MySqlDriver}
-   */
-  #buildWhere(operation, statement, value) {
-    if (Is.String(statement)) {
-      const key = statement
-
-      statement = { [key]: value }
-    }
-
-    Object.keys(statement).forEach(key => {
-      let value = { [key]: statement[key] }
-
-      if (operation === 'IS NULL' || operation === 'IS NOT NULL') {
-        value = null
-      }
-
-      if (operation === 'BETWEEN' || operation === 'NOT BETWEEN') {
-        value = {
-          [`${key}Gte`]: statement[key][0],
-          [`${key}Lte`]: statement[key][1],
-        }
-      }
-
-      this.#where.set(this.#getParsedWhereKey(key, operation), value)
-    })
-
-    return this
-  }
-
-  /**
-   * Set select options in query if exists.
-   *
-   * @param query {import('typeorm').SelectQueryBuilder}
-   */
-  #setSelectOnQuery(query) {
-    if (query.returning) {
-      query.returning(this.#select.length ? this.#select : '*')
-
-      return
-    }
-
-    if (!this.#select.length) {
-      return
-    }
-
-    query.select(this.#select)
-
-    this.#select = []
-  }
-
-  /**
-   * Set add select options in query if exists.
-   *
-   * @param query {import('typeorm').SelectQueryBuilder}
-   */
-  #setAddSelectOnQuery(query) {
-    if (query.returning) {
-      query.returning(this.#addSelect.length ? this.#addSelect : '*')
-
-      return
-    }
-
-    if (!this.#addSelect.length) {
-      return
-    }
-
-    this.#addSelect.forEach(select => query.addSelect(select))
-
-    this.#addSelect = []
-  }
-
-  /**
-   * Set all where options in query if exists.
-   *
-   * @param query {import('typeorm').SelectQueryBuilder}
-   */
-  #setWhereOnQuery(query) {
-    if (!this.#where.size) {
-      return
-    }
-
-    const iterator = this.#where.entries()
-
-    for (const [key, value] of iterator) {
-      if (!value) {
-        query.andWhere(key)
-
-        continue
-      }
-
-      query.andWhere(key, value)
-    }
-
-    this.#where = new Map()
-  }
-
-  /**
-   * Set all orderBy options in query if exists.
-   *
-   * @param query {import('typeorm').SelectQueryBuilder}
-   */
-  #setOrderByOnQuery(query) {
-    if (!this.#orderBy.size) {
-      return
-    }
-
-    const iterator = this.#orderBy.entries()
-
-    for (const [key, value] of iterator) {
-      query.addOrderBy(key, value)
-    }
-
-    this.#orderBy = new Map()
-  }
-
-  /**
-   * Set all relations options in query if exists.
-   *
-   * @param query {import('typeorm').SelectQueryBuilder}
-   */
-  #setRelationsOnQuery(query) {
-    if (!this.#relations.size) {
-      return
-    }
-
-    const iterator = this.#relations.entries()
-
-    for (const [key, value] of iterator) {
-      const name = value.name
-      const operation = value.operation
-
-      query[operation](key, name)
-    }
-
-    this.#relations = new Map()
-  }
-
-  /**
-   * Get the column param verifying if it has a "." to
-   * set the table or not.
-   *
-   * @param column
-   */
-  #getColumnParam(column) {
-    if (column.includes('.')) {
-      return column
-    }
-
-    return `${this.#table}.${column}`
   }
 }

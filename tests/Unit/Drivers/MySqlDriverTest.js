@@ -9,21 +9,21 @@
 
 import { test } from '@japa/runner'
 import { Path, Folder, Config } from '@secjs/utils'
-import { DataSource } from 'typeorm'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
-import { UserMySql } from '#tests/Stubs/models/UserMySql'
-import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 test.group('MySqlDriverTest', group => {
+  /** @type {DatabaseImpl} */
+  let DB = null
+
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
+    await new Folder(Path.stubs('database')).copy(Path.database())
     await new Config().safeLoad(Path.config('database.js'))
     await new Config().safeLoad(Path.config('logging.js'))
   })
@@ -32,121 +32,126 @@ test.group('MySqlDriverTest', group => {
     new LoggerProvider().register()
     await new DatabaseProvider().boot()
 
-    await Database.connection('mysql').connect()
-    await Database.connection('mysql').runMigrations()
+    DB = await Database.connection('mysql').connect()
 
-    const [user] = await UserMySql.factory().count(10).create({ id: null })
-    await ProductMySql.factory().count(5).create({ id: null, userId: user.id })
+    await DB.runMigrations()
+
+    const [{ id }] = await DB.buildTable('users').createMany([
+      { name: 'João Lenon', email: 'lenon@athenna.io' },
+      { name: 'Victor Tesoura', email: 'txsoura@athenna.io' },
+    ])
+    await DB.buildTable('products').createMany([
+      { userId: id, name: 'iPhone 13', price: 1000 },
+      { userId: id, name: 'iPhone 14', price: 2000 },
+    ])
   })
 
   group.each.teardown(async () => {
-    await Database.connection('mysql').revertMigrations()
-    await Database.connection('mysql').close()
+    await DB.dropTable('testing')
+    await DB.dropDatabase('testing')
+    await DB.revertMigrations()
+    await DB.close()
   })
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
+    await Folder.safeRemove(Path.database())
   })
 
   test('should throw not connected database exception', async ({ assert }) => {
-    await Database.connection('mysql').close()
+    await DB.close()
 
-    assert.throws(() => Database.connection('mysql').buildTable('users'), NotConnectedDatabaseException)
+    assert.throws(() => DB.buildTable('users'), NotConnectedDatabaseException)
 
-    await Database.connection('mysql').connect()
+    await DB.connect()
   })
 
   test('should be able to get the driver client from the connections', async ({ assert }) => {
-    const client = Database.connection('mysql').getClient()
+    const client = DB.getClient()
 
-    assert.instanceOf(client, DataSource)
+    assert.isDefined(client)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
-    await Database.connection('mysql').createDatabase('testing')
-    await Database.connection('mysql').createTable('testing', {
-      columns: [{ name: 'id', type: 'int' }],
+    await DB.createDatabase('testing')
+    await DB.createTable('testing', table => {
+      table.integer('id')
     })
 
-    // TODO Refactor to use SHOW TABLES
-    // const tables = await Database.connection('mysql').getTables()
-    //
-    // assert.isTrue(tables.includes('users'))
-    // assert.isTrue(tables.includes('testing'))
+    const tables = await DB.getTables()
+    const databases = await DB.getDatabases()
 
-    assert.isDefined(await Database.connection('mysql').getDatabases())
-    assert.isTrue(await Database.connection('mysql').hasTable('testing'))
-    assert.isTrue(await Database.connection('mysql').hasDatabase('testing'))
-    assert.deepEqual(await Database.connection('mysql').getCurrentDatabase(), 'athenna')
+    assert.isTrue(tables.includes('users'))
+    assert.isTrue(tables.includes('testing'))
+    assert.isTrue(databases.includes('mysql'))
+    assert.isTrue(databases.includes('athenna'))
+    assert.isTrue(databases.includes('information_schema'))
 
-    await Database.connection('mysql').dropDatabase('testing')
-  })
-
-  test('should be able to take truncate table data', async ({ assert }) => {
-    const users = await Database.connection('mysql').buildTable('users').findMany()
-
-    assert.lengthOf(users, 10)
-
-    await Database.connection('mysql').truncate('users')
-
-    assert.lengthOf(await Database.connection('mysql').buildTable('users').findMany(), 0)
+    assert.isTrue(await DB.hasTable('testing'))
+    assert.isTrue(await DB.hasDatabase('testing'))
+    assert.deepEqual(await DB.getCurrentDatabase(), 'athenna')
   })
 
   test('should be able to get avg/avgDistinct from int values in table column', async ({ assert }) => {
-    const avg = await Database.connection('mysql').buildTable('products').avg('price')
-    const avgDistinct = await Database.connection('mysql').buildTable('products').avgDistinct('price')
+    const avg = await DB.buildTable('products').avg('price')
+    const avgDistinct = await DB.buildTable('products').avgDistinct('price')
 
-    assert.isNumber(avg)
-    assert.isNumber(avgDistinct)
+    assert.isDefined(avg)
+    assert.isDefined(avgDistinct)
   })
 
   test('should be able to get min/max values in table column', async ({ assert }) => {
-    const min = await Database.connection('mysql').buildTable('products').min('price')
-    const max = await Database.connection('mysql').buildTable('products').max('price')
+    const min = await DB.buildTable('products').min('price')
+    const max = await DB.buildTable('products').max('price')
 
-    assert.isNumber(min)
-    assert.isNumber(max)
+    assert.isDefined(min)
+    assert.isDefined(max)
   })
 
   test('should be able to sum/sumDistinct from int values in table column', async ({ assert }) => {
-    const sum = await Database.connection('mysql').buildTable('products').sum('price')
-    const sumDistinct = await Database.connection('mysql').buildTable('products').sumDistinct('price')
+    const sum = await DB.buildTable('products').sum('price')
+    const sumDistinct = await DB.buildTable('products').sumDistinct('price')
 
-    assert.isNumber(sum)
-    assert.isNumber(sumDistinct)
+    assert.isDefined(sum)
+    assert.isDefined(sumDistinct)
   })
 
-  test('should be able to increment/decrement values in table column', async ({ assert }) => {
-    const DB = Database.connection('mysql').buildTable('products')
+  test('should be able to increment values in table column', async ({ assert }) => {
+    const product = await DB.buildTable('products').find()
 
-    const increment = await DB.increment('price')
-    const decrement = await DB.decrement('price')
+    await DB.buildTable('products').increment('price')
 
-    increment.forEach(i => assert.isNumber(i))
-    decrement.forEach(i => assert.isNumber(i))
+    const productUpdated = await DB.buildTable('products').find()
 
-    assert.isNumber(await DB.buildWhere('id', 1).increment('price'))
-    assert.isNumber(await DB.buildWhere('id', 1).decrement('price'))
+    assert.deepEqual(product.price + 1, productUpdated.price)
+  })
+
+  test('should be able to decrement values in table column', async ({ assert }) => {
+    const product = await DB.buildTable('products').find()
+
+    await DB.buildTable('products').decrement('price')
+
+    const productUpdated = await DB.buildTable('products').find()
+
+    assert.deepEqual(product.price - 1, productUpdated.price)
   })
 
   test('should be able to count database values and table column', async ({ assert }) => {
-    const DB = Database.connection('mysql').buildTable('products')
+    assert.deepEqual(await DB.buildTable('products').count(), '2')
+    assert.deepEqual(await DB.buildTable('products').count('price'), '2')
+    assert.deepEqual(await DB.buildTable('products').countDistinct('price'), '2')
+  })
 
-    const count = await DB.count()
-    assert.deepEqual(count, 5)
+  test('should be able to truncate table data', async ({ assert }) => {
+    assert.lengthOf(await DB.buildTable('products').findMany(), 2)
 
-    const countColumn = await DB.count('price')
-    assert.isNumber(countColumn)
+    await DB.truncate('products')
 
-    const countDistinct = await DB.countDistinct()
-    assert.deepEqual(countDistinct, 5)
-
-    const countDistinctColumn = await DB.countDistinct('price')
-    assert.isNumber(countDistinctColumn)
+    assert.lengthOf(await DB.buildTable('products').findMany(), 0)
   })
 
   test('should be able to create user and users', async ({ assert }) => {
-    const user = await Database.connection('mysql').buildTable('users').create({
+    const user = await DB.buildTable('users').create({
       name: 'João Lenon',
       email: 'lenonSec7@gmail.com',
     })
@@ -155,31 +160,25 @@ test.group('MySqlDriverTest', group => {
     assert.isDefined(user.updatedAt)
     assert.isNull(user.deletedAt)
 
-    const users = await Database.connection('mysql')
-      .buildTable('users')
-      .createMany([
-        { name: 'Victor Tesoura', email: 'txsoura@gmail.com' },
-        { name: 'Henry Bernardo', email: 'hbplay@gmail.com' },
-      ])
+    const users = await DB.buildTable('users').createMany([
+      { name: 'Victor Tesoura', email: 'txsoura@gmail.com' },
+      { name: 'Henry Bernardo', email: 'hbplay@gmail.com' },
+    ])
 
     assert.lengthOf(users, 2)
   })
 
   test('should be able to create or update user', async ({ assert }) => {
-    const userCreated = await Database.connection('mysql')
-      .buildTable('users')
-      .buildWhere('name', 'João Lenon')
-      .createOrUpdate({
-        name: 'João Lenon',
-        email: 'lenonSec7@gmail.com',
-      })
+    const userCreated = await DB.buildTable('users').buildWhere('name', 'João Lenon').createOrUpdate({
+      name: 'João Lenon',
+      email: 'lenonSec7@gmail.com',
+    })
 
     assert.isDefined(userCreated.createdAt)
     assert.isDefined(userCreated.updatedAt)
     assert.isNull(userCreated.deletedAt)
 
-    const userUpdated = await Database.connection('mysql')
-      .buildTable('users')
+    const userUpdated = await DB.buildTable('users')
       .buildWhere('name', 'João Lenon')
       .createOrUpdate({ name: 'Victor Tesoura' })
 
@@ -189,78 +188,83 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should throw an exception when trying to execute the wrong method for input', async ({ assert }) => {
-    await assert.rejects(() => Database.connection('mysql').buildTable('users').create([]), WrongMethodException)
-    await assert.rejects(() => Database.connection('mysql').buildTable('users').createMany({}), WrongMethodException)
+    await assert.rejects(() => DB.buildTable('users').create([]), WrongMethodException)
+    await assert.rejects(() => DB.buildTable('users').createMany({}), WrongMethodException)
   })
 
   test('should be able to find user and users', async ({ assert }) => {
-    const user = await Database.connection('mysql').buildTable('users').buildWhere('id', 1).find()
+    const user = await DB.buildTable('users')
+      .buildSelect('users.id as users_id')
+      .buildSelect('products.id as products_id')
+      .buildWhere('users.id', 1)
+      .buildJoin('products', 'users.id', 'products.userId')
+      .find()
 
-    assert.deepEqual(user.id, 1)
+    assert.deepEqual(user.users_id, 1)
+    assert.deepEqual(user.products_id, 1)
 
-    const users = await Database.connection('mysql')
-      .buildTable('users')
-      .buildWhereIn('id', [1, 2])
-      .buildOrderBy('id', 'DESC')
-      .buildSkip(0)
+    const users = await DB.buildTable('users')
+      .buildSelect('users.id as users_id')
+      .buildSelect('products.id as products_id')
+      .buildWhereIn('users.id', [1])
+      .buildOrderBy('users.id', 'DESC')
+      .buildOffset(0)
       .buildLimit(10)
+      .buildJoin('products', 'users.id', 'products.userId')
       .findMany()
 
     assert.lengthOf(users, 2)
+    assert.deepEqual(users[0].users_id, users[1].users_id)
+    assert.deepEqual(users[0].products_id, 1)
+    assert.deepEqual(users[1].products_id, 2)
   })
 
   test('should be able to find users as a Collection', async ({ assert }) => {
-    const collection = await Database.connection('mysql')
-      .buildTable('users')
-      .buildWhereIn('id', [1, 2])
+    const collection = await DB.buildTable('users')
+      .buildWhereIn('id', [1])
       .buildOrderBy('id', 'DESC')
-      .buildSkip(0)
+      .buildOffset(0)
       .buildLimit(10)
       .collection()
 
     const users = collection.all()
 
-    assert.lengthOf(users, 2)
+    assert.lengthOf(users, 1)
   })
 
   test('should be able to transform array to a Collection', async ({ assert }) => {
     const collection = await (
-      await Database.connection('mysql')
-        .buildTable('users')
-        .buildWhereIn('id', [1, 2])
+      await DB.buildTable('users')
+        .buildWhereIn('id', [1])
         .buildOrderBy('id', 'DESC')
-        .buildSkip(0)
+        .buildOffset(0)
         .buildLimit(10)
         .findMany()
     ).toCollection()
 
     const users = collection.all()
 
-    assert.lengthOf(users, 2)
+    assert.lengthOf(users, 1)
   })
 
   test('should be able to find user and fail', async ({ assert }) => {
-    await assert.rejects(
-      () => Database.connection('mysql').buildTable('users').buildWhere('id', 12349).findOrFail(),
-      NotFoundDataException,
-    )
+    await assert.rejects(() => DB.buildTable('users').buildWhere('id', 12349).findOrFail(), NotFoundDataException)
 
-    const user = await Database.connection('mysql').buildTable('users').buildWhere('id', 1).findOrFail()
+    const user = await DB.buildTable('users').buildWhere('id', 1).findOrFail()
 
     assert.deepEqual(user.id, 1)
   })
 
   test('should be able to get paginate users', async ({ assert }) => {
-    const { data, meta, links } = await Database.connection('mysql')
-      .buildTable('users')
+    const { data, meta, links } = await DB.buildTable('users')
       .buildSelect('*')
-      .buildWhereIn('id', [1, 2])
+      .buildWhereIn('id', [1])
       .buildOrderBy('id', 'DESC')
       .paginate()
 
-    assert.lengthOf(data, 2)
-    assert.deepEqual(meta.itemCount, 2)
-    assert.deepEqual(meta.totalItems, 2)
+    assert.lengthOf(data, 1)
+    assert.deepEqual(meta.itemCount, 1)
+    assert.deepEqual(meta.totalItems, 1)
     assert.deepEqual(meta.totalPages, 1)
     assert.deepEqual(meta.currentPage, 0)
     assert.deepEqual(meta.itemsPerPage, 10)
@@ -272,18 +276,12 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should be able to update user and users', async ({ assert }) => {
-    const user = await Database.connection('mysql')
-      .buildTable('users')
-      .buildWhere('id', 1)
-      .update({ name: 'João Lenon Updated' })
+    const user = await DB.buildTable('users').buildWhere('id', 1).update({ name: 'João Lenon Updated' })
 
     assert.deepEqual(user.id, 1)
     assert.deepEqual(user.name, 'João Lenon Updated')
 
-    const users = await Database.connection('mysql')
-      .buildTable('users')
-      .buildWhereIn('id', [1, 2])
-      .update({ name: 'João Lenon Updated' })
+    const users = await DB.buildTable('users').buildWhereIn('id', [1, 2]).update({ name: 'João Lenon Updated' })
 
     assert.lengthOf(users, 2)
     assert.deepEqual(users[0].id, 1)
@@ -292,39 +290,34 @@ test.group('MySqlDriverTest', group => {
     assert.deepEqual(users[1].name, 'João Lenon Updated')
   })
 
-  test('should throw an empty where exception on delete/update', async ({ assert }) => {
-    await assert.rejects(() => Database.connection('mysql').buildTable('users').delete(), EmptyWhereException)
-    await assert.rejects(() => Database.connection('mysql').buildTable('users').update({}), EmptyWhereException)
-  })
-
   test('should be able to delete user and users', async ({ assert }) => {
-    await Database.connection('mysql').buildTable('users').buildWhere('id', 3).delete()
+    await DB.buildTable('users').buildWhere('id', 3).delete()
 
-    const notFoundUser = await Database.connection('mysql').buildTable('users').buildWhere('id', 3).find()
+    const notFoundUser = await DB.buildTable('users').buildWhere('id', 3).find()
 
-    assert.isNull(notFoundUser)
+    assert.isUndefined(notFoundUser)
   })
 
   test('should be able to start/commit/rollback transactions', async ({ assert }) => {
-    const rollbackTrx = await Database.connection('mysql').startTransaction()
-    const rollbackTrxQuery = rollbackTrx.buildTable('users')
+    const rollbackTrx = await DB.startTransaction()
+    const rollbackTrxQuery = rollbackTrx.buildTable('products')
 
     await rollbackTrxQuery.buildWhereIn('id', [1, 2]).delete()
     assert.isEmpty(await rollbackTrxQuery.buildWhereIn('id', [1, 2]).findMany())
 
     await rollbackTrx.rollbackTransaction()
 
-    assert.isNotEmpty(await Database.connection('mysql').buildTable('users').buildWhereIn('id', [1, 2]).findMany())
+    assert.isNotEmpty(await DB.buildTable('products').buildWhereIn('id', [1, 2]).findMany())
 
-    const commitTrx = await Database.connection('mysql').startTransaction()
-    const commitTrxQuery = commitTrx.buildTable('users')
+    const commitTrx = await DB.startTransaction()
+    const commitTrxQuery = commitTrx.buildTable('products')
 
     await commitTrxQuery.buildWhereIn('id', [1, 2]).delete()
     assert.isEmpty(await commitTrxQuery.buildWhereIn('id', [1, 2]).findMany())
 
     await commitTrx.commitTransaction()
 
-    assert.isEmpty(await Database.connection('mysql').buildTable('users').buildWhereIn('id', [1, 2]).findMany())
+    assert.isEmpty(await DB.buildTable('products').buildWhereIn('id', [1, 2]).findMany())
   })
 
   test('should be able to change connection to postgresql', async ({ assert }) => {
@@ -341,12 +334,12 @@ test.group('MySqlDriverTest', group => {
   })
 
   test('should be able to create connection without saving on driver', async ({ assert }) => {
-    const DB = await Database.connection('mysql').connect(true, false)
+    const otherDB = await Database.connection('mysql').connect(true, false)
 
-    const user = await DB.buildTable('users').buildWhere('id', 1).find()
+    const user = await otherDB.buildTable('users').buildWhere('id', 1).find()
 
     assert.deepEqual(user.id, 1)
 
-    await DB.close()
+    await otherDB.close()
   })
 })
