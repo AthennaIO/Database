@@ -195,6 +195,7 @@ test.group('PostgresDriverTest', group => {
       .buildSelect('users.id as users_id')
       .buildSelect('products.id as products_id')
       .buildWhere('users.id', 1)
+      .buildOrWhere('users.id', 2)
       .buildJoin('products', 'users.id', 'products.userId')
       .find()
 
@@ -205,6 +206,7 @@ test.group('PostgresDriverTest', group => {
       .buildSelect('users.id as users_id')
       .buildSelect('products.id as products_id')
       .buildWhereIn('users.id', [1])
+      .buildOrWhere('users.id', 2)
       .buildOrderBy('users.id', 'DESC')
       .buildOffset(0)
       .buildLimit(10)

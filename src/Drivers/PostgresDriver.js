@@ -639,32 +639,6 @@ export class PostgresDriver {
   }
 
   /**
-   * Set a where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string|Record<string, any>}
-   * @param [value] {Record<string, any>}
-   * @return {PostgresDriver}
-   */
-  buildWhere(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
-      this.#qb.where(statement)
-
-      return this
-    }
-
-    if (!value) {
-      this.#qb.where(statement, operation)
-
-      return this
-    }
-
-    this.#qb.where(statement, operation, value)
-
-    return this
-  }
-
-  /**
    * Set a join statement in your query.
    *
    * @param tableName {string}
@@ -694,6 +668,58 @@ export class PostgresDriver {
    */
   buildGroupBy(...columns) {
     this.#qb.groupBy(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {PostgresDriver}
+   */
+  buildWhere(statement, operation = '=', value) {
+    if (Is.Object(statement)) {
+      this.#qb.where(statement)
+
+      return this
+    }
+
+    if (!value) {
+      this.#qb.where(statement, operation)
+
+      return this
+    }
+
+    this.#qb.where(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {PostgresDriver}
+   */
+  buildOrWhere(statement, operation = '=', value) {
+    if (Is.Object(statement)) {
+      this.#qb.orWhere(statement)
+
+      return this
+    }
+
+    if (!value) {
+      this.#qb.orWhere(statement, operation)
+
+      return this
+    }
+
+    this.#qb.orWhere(statement, operation, value)
 
     return this
   }

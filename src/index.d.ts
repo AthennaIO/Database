@@ -8,7 +8,7 @@
  */
 
 import { Facade } from '@athenna/ioc'
-import { DataSource, EntitySchema } from 'typeorm'
+import { DataSource } from 'typeorm'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@secjs/utils'
 
@@ -185,23 +185,6 @@ export class QueryBuilder {
   buildSelect(...columns: string[]): QueryBuilder
 
   /**
-   * Set a where statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhere(statement: Record<string, any>): QueryBuilder
-  buildWhere(statement: string, value: any): QueryBuilder
-  buildWhere(statement: string, operation: string, value: any): QueryBuilder
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhereNot(statement: Record<string, any>, value: any): QueryBuilder
-  buildWhereNot(statement: string, value: any): QueryBuilder
-
-  /**
    * Set a join statement in your query.
    *
    * @param tableName {string}
@@ -222,6 +205,32 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   buildGroupBy(...columns: string[]): QueryBuilder
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  buildWhere(statement: Record<string, any>): QueryBuilder
+  buildWhere(statement: string, value: any): QueryBuilder
+  buildWhere(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  buildOrWhere(statement: Record<string, any>): QueryBuilder
+  buildOrWhere(statement: string, value: any): QueryBuilder
+  buildOrWhere(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  buildWhereNot(statement: Record<string, any>): QueryBuilder
+  buildWhereNot(statement: string, value: any): QueryBuilder
 
   /**
    * Set a where like statement in your query.
@@ -351,9 +360,9 @@ export class DatabaseImpl {
   /**
    * Return the client of driver.
    *
-   * @return {import('typeorm').DataSource|null}
+   * @return {import('knex').Knex|null}
    */
-  getClient(): import('typeorm').DataSource
+  getClient(): import('knex').Knex
 
   /**
    * Create a new transaction.
@@ -740,6 +749,143 @@ export class Criteria {
   static get(): Map<string, any[]>
 }
 
+export class SchemaBuilder {
+  /**
+   * Set the table name of this schema instance.
+   *
+   * @return {string}
+   */
+  name: string
+
+  /**
+   * Set the table name of this schema instance.
+   *
+   * @return {string}
+   */
+  table: string
+
+  /**
+   * Set the db connection that this schema instance will work with.
+   *
+   * @return {string}
+   */
+  connection: string
+
+  /**
+   * All the model columns mapped
+   *
+   * @type {any[]}
+   */
+  columns: any[]
+
+  /**
+   * Dictionary to specify the column name in database to class property.
+   *
+   * @type {Record<string, string>}
+   */
+  columnDictionary: Record<string, string>
+
+  /**
+   * All the model relations mapped
+   *
+   * @type {any[]}
+   */
+  relations: any[]
+
+  /**
+   * Set the connection of schema.
+   *
+   * @param {string} connection
+   * @return {SchemaBuilder}
+   */
+  buildConnection(connection: string): this
+
+  /**
+   * Set the schema name.
+   *
+   * @param name {string}
+   * @return {SchemaBuilder}
+   */
+  buildName(name: string): this
+
+  /**
+   * Set the table name.
+   *
+   * @param tableName {string}
+   * @return {SchemaBuilder}
+   */
+  buildTable(tableName: string): this
+
+  /**
+   * Convert the schema columns and relations to array and set.
+   *
+   * @param schema {any}
+   */
+  buildSchema(schema: any): this
+
+  /**
+   * Convert to array and set the columns.
+   *
+   * @param columns {any}
+   * @return {SchemaBuilder}
+   */
+  buildColumns(columns: any): this
+
+  /**
+   * Convert to array and set the columns.
+   *
+   * @param relations {any}
+   * @return {SchemaBuilder}
+   */
+  buildRelations(relations: any): this
+
+  /**
+   * Set if schema should be synchronized with database.
+   *
+   * @return {SchemaBuilder}
+   */
+  isToSynchronize(): this
+
+  /**
+   * Get all the relations that has the "isIncluded"
+   * property as true.
+   *
+   * @return {any[]}
+   */
+  getIncludedRelations(): any[]
+
+  /**
+   * Get the column dictionary reversed.
+   *
+   * @return {any}
+   */
+  getReversedColumnDictionary(): any
+
+  /**
+   * Get the reverse column name of a column name.
+   *
+   * @param columnName {string}
+   * @return {string}
+   */
+  getReversedColumnNameOf(columnName: string): string
+
+  /**
+   * Get the reverse column names of a columns.
+   *
+   * @param columns {string[]}
+   * @return {string[]}
+   */
+  getReversedColumnNamesOf(columns: string[]): string[]
+
+  /**
+   * Return an object statement with reversed keys.
+   *
+   * @param statement {any}
+   * @return {any}
+   */
+  getReversedStatementNamesOf(statement: any): any
+}
+
 export class ModelFactory {
   /**
    * Creates a new instance of ModelFactory.
@@ -856,9 +1002,9 @@ export class Model {
   /**
    * The TypeORM entity schema instance.
    *
-   * @return {EntitySchema<any>}
+   * @return {SchemaBuilder}
    */
-  static getSchema(): EntitySchema<any>
+  static getSchema(): SchemaBuilder
 
   /**
    * The TypeORM client instance.
@@ -1167,20 +1313,12 @@ export class ModelQueryBuilder {
   select(...columns: string[]): ModelQueryBuilder
 
   /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {ModelQueryBuilder}
-   */
-  addSelect(...columns: string[]): ModelQueryBuilder
-
-  /**
    * Set how many models should be skipped in your query.
    *
    * @param number {number}
    * @return {ModelQueryBuilder}
    */
-  skip(number: number): ModelQueryBuilder
+  offset(number: number): ModelQueryBuilder
 
   /**
    * Set the limit of models in your query.

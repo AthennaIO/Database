@@ -1,6 +1,6 @@
 import { Model } from '#src/Models/Model'
-import { Column } from '#src/Models/Column'
-import { Relation } from '#src/Models/Relation'
+import { Column } from '#src/Builders/Column'
+import { Relation } from '#src/Builders/Relation'
 import { UserMySql } from '#tests/Stubs/models/UserMySql'
 
 export class ProductMySql extends Model {

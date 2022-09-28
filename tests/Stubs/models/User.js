@@ -1,6 +1,6 @@
 import { Model } from '#src/Models/Model'
-import { Column } from '#src/Models/Column'
-import { Relation } from '#src/Models/Relation'
+import { Column } from '#src/Builders/Column'
+import { Relation } from '#src/Builders/Relation'
 import { Product } from '#tests/Stubs/models/Product'
 
 export class User extends Model {
@@ -33,6 +33,7 @@ export class User extends Model {
       name: Column.string('name', 200),
       email: Column.string({ isHidden: true, isUnique: true }),
       products: Relation.oneToMany('user', Product, true),
+      profile: Relation.hasOne('user'),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
       deletedAt: Column.deletedAt(this.DELETED_AT),

@@ -15,20 +15,18 @@ export class Relation {
   }
 
   /**
-   * Create a oneToOne relation schema.
+   * Create a hasOne relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('one-to-one').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('hasOne').inverseSide(inverseSide).get()
    *
    * @param inverseSide {string}
    * @param model {any}
    * @param cascade {boolean}
    * @return {any}
    */
-  static oneToOne(inverseSide, model, cascade = false) {
-    const relation = this.target(model)
-      .type('one-to-one')
-      .inverseSide(inverseSide)
+  static hasOne(inverseSide, model, cascade = false) {
+    const relation = this.target(model).type('hasOne').inverseSide(inverseSide)
 
     if (cascade) {
       relation.cascade()
@@ -38,20 +36,18 @@ export class Relation {
   }
 
   /**
-   * Create a oneToMany relation schema.
+   * Create a hasMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('one-to-many').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('hasMany').inverseSide(inverseSide).get()
    *
    * @param inverseSide {string}
    * @param model {any}
    * @param cascade {boolean}
    * @return {any}
    */
-  static oneToMany(inverseSide, model, cascade = false) {
-    const relation = this.target(model)
-      .type('one-to-many')
-      .inverseSide(inverseSide)
+  static hasMany(inverseSide, model, cascade = false) {
+    const relation = this.target(model).type('hasMany').inverseSide(inverseSide)
 
     if (cascade) {
       relation.cascade()
@@ -64,16 +60,16 @@ export class Relation {
    * Create a manyToOne relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('many-to-one').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('belongsTo').inverseSide(inverseSide).get()
    *
    * @param inverseSide {string}
    * @param model {any}
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToOne(inverseSide, model, cascade = false) {
+  static belongsTo(inverseSide, model, cascade = false) {
     const relation = this.target(model)
-      .type('many-to-one')
+      .type('belongsTo')
       .inverseSide(inverseSide)
 
     if (cascade) {
@@ -87,7 +83,7 @@ export class Relation {
    * Create a manyToMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('many-tomany').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('manyToMany').inverseSide(inverseSide).get()
    *
    * @param inverseSide {string}
    * @param model {any}
@@ -96,7 +92,7 @@ export class Relation {
    */
   static manyToMany(inverseSide, model, cascade = false) {
     const relation = this.target(model)
-      .type('many-to-many')
+      .type('manyToMany')
       .inverseSide(inverseSide)
 
     if (cascade) {
@@ -112,8 +108,8 @@ export class Relation {
    * @param model {any}
    * @return {this}
    */
-  static target(model) {
-    this.#relation.target = model.table
+  static model(model) {
+    this.#relation.model = model
 
     return this
   }
@@ -121,7 +117,7 @@ export class Relation {
   /**
    * Set the relation type.
    *
-   * @param type {"one-to-one","one-to-many","many-to-one","many-to-many"}
+   * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
    * @return {this}
    */
   static type(type) {

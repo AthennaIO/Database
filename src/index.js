@@ -16,16 +16,19 @@ export * from './Factories/ModelFactory.js'
 export * from './Factories/DriverFactory.js'
 export * from './Factories/ConnectionFactory.js'
 
-export * from './Helpers/Seeder.js'
-export * from './Helpers/Resource.js'
+export * from './Seeders/Seeder.js'
+export * from './Resources/Resource.js'
 export * from './Helpers/DatabaseLoader.js'
 
 export * from './Migrations/Migration.js'
 
 export * from './Models/Model.js'
-export * from './Models/Column.js'
-export * from './Models/Relation.js'
-export * from './Models/Criteria.js'
+
+export * from './Builders/Column.js'
+export * from './Builders/Relation.js'
+export * from './Builders/Criteria.js'
+
+export * from './Builders/Schema.js'
 
 export class DatabaseImpl {
   /**
@@ -88,7 +91,7 @@ export class DatabaseImpl {
   /**
    * Return the client of driver.
    *
-   * @return {import('typeorm').DataSource|null}
+   * @return {import('knex').Knex|null}
    */
   getClient() {
     return this.#driver.getClient()

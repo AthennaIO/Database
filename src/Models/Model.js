@@ -9,18 +9,27 @@
 
 import { String } from '@secjs/utils'
 import { Assert } from '@japa/assert'
-import { EntitySchema } from 'typeorm'
 import { faker } from '@faker-js/faker'
 
 import { Database } from '#src/index'
-import { Criteria } from '#src/Models/Criteria'
+import { Criteria } from '#src/Builders/Criteria'
 import { ModelFactory } from '#src/Factories/ModelFactory'
-import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
+import { ModelQueryBuilder } from '#src/Builders/ModelQueryBuilder'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
+import { SchemaBuilder } from '#src/Builders/Schema'
 
 export class Model {
+  /**
+   * The faker instance to create fake data.
+   *
+   * @return {import('@faker-js/faker').Faker}
+   */
+  static get faker() {
+    return faker
+  }
+
   /**
    * Set the db connection that this model instance will work with.
    *
@@ -91,13 +100,6 @@ export class Model {
   }
 
   /**
-   * The faker instance to create fake data.
-   *
-   * @type {Faker}
-   */
-  static faker = faker
-
-  /**
    * The default schema for model instances.
    *
    * @return {any}
@@ -125,46 +127,25 @@ export class Model {
   }
 
   /**
-   * The TypeORM entity schema instance.
+   * The schema instance of this model.
    *
-   * @return {EntitySchema<any>}
+   * @return {SchemaBuilder}
    */
   static getSchema() {
     const schema = this.schema()
 
-    const columns = {}
-    const relations = {}
-
-    Object.keys(schema).forEach(key => {
-      const value = schema[key]
-
-      if (value.isColumn) {
-        delete value.isColumn
-
-        columns[key] = value
-      } else {
-        delete value.isRelation
-
-        relations[key] = value
-      }
-    })
-
-    return new EntitySchema({
-      name: this.table,
-      tableName: this.table,
-      columns,
-      relations,
-      synchronize:
-        process.env.DB_SYNCHRONIZE === 'true' ||
-        process.env.DB_SYNCHRONIZE === '(true)' ||
-        false,
-    })
+    return new SchemaBuilder()
+      .buildSchema(schema)
+      .buildName(this.table)
+      .buildTable(this.table)
+      .buildConnection(this.connection)
+      .isToSynchronize()
   }
 
   /**
    * The TypeORM client instance.
    *
-   * @return {DataSource}
+   * @return {import('knex').Knex}
    */
   static getClient() {
     return Database.connection(this.connection).getClient()

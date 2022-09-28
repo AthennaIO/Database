@@ -241,20 +241,6 @@ export class QueryBuilder {
   }
 
   /**
-   * Set a where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
-   * @param [value] {any}
-   * @return {QueryBuilder}
-   */
-  buildWhere(statement, operation, value) {
-    this.#driver.buildWhere(statement, operation, value)
-
-    return this
-  }
-
-  /**
    * Set a join statement in your query.
    *
    * @param tableName {string}
@@ -278,6 +264,34 @@ export class QueryBuilder {
    */
   buildGroupBy(...columns) {
     this.#driver.buildGroupBy(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  buildWhere(statement, operation, value) {
+    this.#driver.buildWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  buildOrWhere(statement, operation, value) {
+    this.#driver.buildOrWhere(statement, operation, value)
 
     return this
   }
