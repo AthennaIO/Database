@@ -11,7 +11,7 @@ import { ModelQueryBuilder } from '#src/index'
 
 export class HasOneRelation {
   /**
-   * Get the relation options to craft the query.
+   * Get the relation options to craft the has one query.
    *
    * @param model {any}
    * @param relation {any}
@@ -27,7 +27,7 @@ export class HasOneRelation {
       query: new ModelQueryBuilder(RelationModel),
       primary: Model.primaryKey,
       foreign:
-        modelSchema[relation.inverseSide].joinColumn ||
+        modelSchema[relation.inverseSide].foreignKey ||
         `${model.constructor.name.toLowerCase()}Id`,
       property: relation.inverseSide,
     }

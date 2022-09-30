@@ -11,6 +11,29 @@ import { ModelQueryBuilder } from '#src/index'
 
 export class BelongsToRelation {
   /**
+   * Get the relation options to craft the belongs to query.
+   *
+   * @param model {any}
+   * @param relation {any}
+   * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
+   */
+  getOptions(model, relation) {
+    const Model = model.constructor
+    const RelationModel = relation.model
+
+    const modelSchema = Model.schema()
+
+    return {
+      query: new ModelQueryBuilder(RelationModel),
+      primary: RelationModel.primaryKey,
+      foreign:
+        modelSchema[relation.inverseSide].foreignKey ||
+        `${relation.inverseSide}Id`,
+      property: relation.inverseSide,
+    }
+  }
+
+  /**
    * Load a belongs to relation.
    *
    * @param model {any}
@@ -18,10 +41,10 @@ export class BelongsToRelation {
    * @return {Promise<any>}
    */
   async load(model, relation) {
-    const primaryKey = relation.primaryKey
-    const foreignKey = relation.foreignKey
-    const propertyName = relation.propertyName
-    const query = new ModelQueryBuilder(relation.model)
+    const { query, primary, foreign, property } = this.getOptions(
+      model,
+      relation,
+    )
 
     /**
      * Execute client callback if it exists.
@@ -30,9 +53,7 @@ export class BelongsToRelation {
       await relation.callback(query)
     }
 
-    model[propertyName] = await query
-      .where({ [primaryKey]: model[foreignKey] })
-      .find()
+    model[property] = await query.where({ [primary]: model[foreign] }).find()
 
     return model
   }

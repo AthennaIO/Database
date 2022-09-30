@@ -11,6 +11,29 @@ import { ModelQueryBuilder } from '#src/index'
 
 export class HasManyRelation {
   /**
+   * Get the relation options to craft the has many query.
+   *
+   * @param model {any}
+   * @param relation {any}
+   * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
+   */
+  getOptions(model, relation) {
+    const Model = model.constructor
+    const RelationModel = relation.model
+
+    const modelSchema = Model.schema()
+
+    return {
+      query: new ModelQueryBuilder(RelationModel),
+      primary: Model.primaryKey,
+      foreign:
+        modelSchema[relation.inverseSide].foreignKey ||
+        `${model.constructor.name.toLowerCase()}Id`,
+      property: relation.inverseSide,
+    }
+  }
+
+  /**
    * Load a has many relation.
    *
    * @param model {any}
@@ -18,10 +41,10 @@ export class HasManyRelation {
    * @return {Promise<any>}
    */
   async load(model, relation) {
-    const primaryKey = relation.primaryKey
-    const foreignKey = relation.foreignKey
-    const propertyName = relation.propertyName
-    const query = new ModelQueryBuilder(relation.model)
+    const { query, primary, foreign, property } = this.getOptions(
+      model,
+      relation,
+    )
 
     /**
      * Execute client callback if it exists.
@@ -30,8 +53,8 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    model[propertyName] = await query
-      .where({ [foreignKey]: model[primaryKey] })
+    model[property] = await query
+      .where({ [foreign]: model[primary] })
       .findMany()
 
     return model
