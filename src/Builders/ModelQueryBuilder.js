@@ -9,8 +9,9 @@
 
 import { Is, Json } from '@secjs/utils'
 
-import { Database } from '#src/index'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
+import { ModelGenerator } from '#src/Generators/ModelGenerator'
+import { Database } from '#src/index'
 
 export class ModelQueryBuilder {
   /**
@@ -32,7 +33,14 @@ export class ModelQueryBuilder {
    *
    * @type {import('#src/index').SchemaBuilder}
    */
-  #Schema
+  #schema
+
+  /**
+   * The model generator to create model instances and retrive relations.
+   *
+   * @type {import('#src/index').ModelGenerator}
+   */
+  #generator
 
   /**
    * Set if this instance of query builder will use criterias or not.
@@ -59,7 +67,8 @@ export class ModelQueryBuilder {
     this.#Model = model
     this.#withCriterias = withCriterias
     this.#QB = Database.connection(model.connection).buildTable(model.table)
-    this.#Schema = this.#Model.getSchema()
+    this.#schema = this.#Model.getSchema()
+    this.#generator = new ModelGenerator(this.#Model, this.#schema)
   }
 
   /**
@@ -70,7 +79,7 @@ export class ModelQueryBuilder {
   async findOrFail() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.findOrFail())
+    return this.#generator.generateOne(await this.#QB.findOrFail())
   }
 
   /**
@@ -81,7 +90,7 @@ export class ModelQueryBuilder {
   async find() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.find())
+    return this.#generator.generateOne(await this.#QB.find())
   }
 
   /**
@@ -92,7 +101,7 @@ export class ModelQueryBuilder {
   async findMany() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.findMany())
+    return this.#generator.generateMany(await this.#QB.findMany())
   }
 
   /**
@@ -105,7 +114,7 @@ export class ModelQueryBuilder {
 
     const collection = await this.#QB.collection()
 
-    return collection.map(item => this.#generateModels(item))
+    return collection.map(item => this.#generator.generateOne(item))
   }
 
   /**
@@ -140,7 +149,7 @@ export class ModelQueryBuilder {
       resourceUrl,
     )
 
-    return { data: this.#generateModels(data), meta, links }
+    return { data: await this.#generator.generateMany(data), meta, links }
   }
 
   /**
@@ -166,7 +175,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.create(data))
+    return this.#generator.generateOne(await this.#QB.create(data))
   }
 
   /**
@@ -181,7 +190,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.createMany(data))
+    return this.#generator.generateMany(await this.#QB.createMany(data))
   }
 
   /**
@@ -196,7 +205,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.createOrUpdate(data))
+    return this.#generator.generateOne(await this.#QB.createOrUpdate(data))
   }
 
   /**
@@ -212,7 +221,13 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.update(data, force))
+    const result = await this.#QB.update(data, force)
+
+    if (Is.Array(result)) {
+      return this.#generator.generateMany(result)
+    }
+
+    return this.#generator.generateOne(result)
   }
 
   /**
@@ -223,12 +238,18 @@ export class ModelQueryBuilder {
    */
   async delete(force = false) {
     if (this.#Model.isSoftDelete && !force) {
-      return this.#generateModels(
-        await this.#QB.update({ [this.#Model.DELETED_AT]: new Date() }),
-      )
+      const result = await this.#QB.update({
+        [this.#Model.DELETED_AT]: new Date(),
+      })
+
+      if (Is.Array(result)) {
+        return this.#generator.generateMany(result)
+      }
+
+      return this.#generator.generateOne(result)
     }
 
-    return this.#generateModels(await this.#QB.delete())
+    await this.#QB.delete()
   }
 
   /**
@@ -272,7 +293,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   select(...columns) {
-    columns = this.#Schema.getReversedColumnNamesOf(columns)
+    columns = this.#schema.getReversedColumnNamesOf(columns)
 
     this.#QB.buildSelect(...columns)
 
@@ -287,7 +308,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orderBy(columnName = this.#Model.primaryKey, direction = 'ASC') {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildOrderBy(columnName, direction.toLowerCase())
 
@@ -301,7 +322,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   groupBy(...columns) {
-    columns = this.#Schema.getReversedColumnNamesOf(columns)
+    columns = this.#schema.getReversedColumnNamesOf(columns)
 
     this.#QB.buildGroupBy(...columns)
 
@@ -316,7 +337,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   includes(relationName, callback) {
-    const relations = this.#Schema.relations
+    const relations = this.#schema.relations
     const relation = relations.find(r => r.name === relationName)
 
     if (!relation) {
@@ -332,7 +353,7 @@ export class ModelQueryBuilder {
     relation.isIncluded = true
     relation.callback = callback
 
-    this.#Schema.relations[index] = relation
+    this.#schema.relations[index] = relation
 
     return this
   }
@@ -347,14 +368,14 @@ export class ModelQueryBuilder {
    */
   where(statement, operation, value) {
     if (Is.Object(statement)) {
-      statement = this.#Schema.getReversedStatementNamesOf(statement)
+      statement = this.#schema.getReversedStatementNamesOf(statement)
 
       this.#QB.buildWhere(statement)
 
       return this
     }
 
-    statement = this.#Schema.getReversedColumnNameOf(statement)
+    statement = this.#schema.getReversedColumnNameOf(statement)
 
     if (!value) {
       this.#QB.buildWhere(statement, operation)
@@ -377,14 +398,14 @@ export class ModelQueryBuilder {
    */
   orWhere(statement, operation, value) {
     if (Is.Object(statement)) {
-      statement = this.#Schema.getReversedStatementNamesOf(statement)
+      statement = this.#schema.getReversedStatementNamesOf(statement)
 
       this.#QB.buildOrWhere(statement)
 
       return this
     }
 
-    statement = this.#Schema.getReversedColumnNameOf(statement)
+    statement = this.#schema.getReversedColumnNameOf(statement)
 
     if (!value) {
       this.#QB.buildOrWhere(statement, operation)
@@ -406,14 +427,14 @@ export class ModelQueryBuilder {
    */
   whereNot(statement, value) {
     if (!value) {
-      statement = this.#Schema.getReversedStatementNamesOf(statement)
+      statement = this.#schema.getReversedStatementNamesOf(statement)
 
       this.#QB.buildWhereNot(statement)
 
       return this
     }
 
-    statement = this.#Schema.getReversedColumnNameOf(statement)
+    statement = this.#schema.getReversedColumnNameOf(statement)
 
     this.#QB.buildWhereNot(statement, value)
 
@@ -429,14 +450,14 @@ export class ModelQueryBuilder {
    */
   whereLike(statement, value) {
     if (!value) {
-      statement = this.#Schema.getReversedStatementNamesOf(statement)
+      statement = this.#schema.getReversedStatementNamesOf(statement)
 
       this.#QB.buildWhereLike(statement)
 
       return this
     }
 
-    statement = this.#Schema.getReversedColumnNameOf(statement)
+    statement = this.#schema.getReversedColumnNameOf(statement)
 
     this.#QB.buildWhereLike(statement, value)
 
@@ -452,14 +473,14 @@ export class ModelQueryBuilder {
    */
   whereILike(statement, value) {
     if (!value) {
-      statement = this.#Schema.getReversedStatementNamesOf(statement)
+      statement = this.#schema.getReversedStatementNamesOf(statement)
 
       this.#QB.buildWhereILike(statement)
 
       return this
     }
 
-    statement = this.#Schema.getReversedColumnNameOf(statement)
+    statement = this.#schema.getReversedColumnNameOf(statement)
 
     this.#QB.buildWhereILike(statement, value)
 
@@ -474,7 +495,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereIn(columnName, values) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereIn(columnName, values)
 
@@ -489,7 +510,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotIn(columnName, values) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereNotIn(columnName, values)
 
@@ -504,7 +525,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereBetween(columnName, values) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereBetween(columnName, values)
 
@@ -519,7 +540,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotBetween(columnName, values) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereNotBetween(columnName, values)
 
@@ -533,7 +554,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNull(columnName) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereNull(columnName)
 
@@ -547,7 +568,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotNull(columnName) {
-    columnName = this.#Schema.getReversedColumnNameOf(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.buildWhereNotNull(columnName)
 
@@ -576,27 +597,6 @@ export class ModelQueryBuilder {
     this.#QB.buildLimit(number)
 
     return this
-  }
-
-  /**
-   * Generate model instances from data.
-   *
-   * @param {any|any[]|import('@secjs/utils').Collection} data
-   */
-  #generateModels(data) {
-    if (!data) {
-      return null
-    }
-
-    if (!Is.Array(data)) {
-      const model = new this.#Model()
-
-      Object.keys(data).forEach(key => (model[key] = data[key]))
-
-      return model
-    }
-
-    return data.map(d => this.#generateModels(d))
   }
 
   /**

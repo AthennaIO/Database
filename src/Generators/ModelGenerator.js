@@ -13,13 +13,6 @@ import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 
 export class ModelGenerator {
   /**
-   * The database query builder instance used to handle database operations.
-   *
-   * @type {import('#src/index').QueryBuilder}
-   */
-  #QB
-
-  /**
    * The model that is using this instance.
    *
    * @type {import('#src/index').Model}
@@ -31,20 +24,18 @@ export class ModelGenerator {
    *
    * @type {import('#src/index').SchemaBuilder}
    */
-  #Schema
+  #schema
 
   /**
    * Creates a new instance of ModelGenerator.
    *
-   * @param QB {import('#src/index').QueryBuilder}
    * @param Model {import('#src/index').Model}
-   * @param Schema {import('#src/index').SchemaBuilder}
+   * @param schema {import('#src/index').SchemaBuilder}
    * @return {ModelGenerator}
    */
-  constructor(QB, Model, Schema) {
-    this.#QB = QB
+  constructor(Model, schema) {
     this.#Model = Model
-    this.#Schema = Schema
+    this.#schema = schema
   }
 
   /**
@@ -55,7 +46,7 @@ export class ModelGenerator {
    */
   async generateOne(data) {
     const model = this.#instantiateOne(data)
-    const relations = this.#Schema.getIncludedRelations()
+    const relations = this.#schema.getIncludedRelations()
 
     return this.#includeRelations(model, relations)
   }
@@ -81,16 +72,6 @@ export class ModelGenerator {
   }
 
   /**
-   * Instantiate models using vanilla database data.
-   *
-   * @param data {any[]}
-   * @return {any[]}
-   */
-  #instantiateMany(data) {
-    return data.map(d => this.#instantiateOne(d))
-  }
-
-  /**
    * Populate one object data in the model instance
    * using the column dictionary to map keys.
    *
@@ -99,7 +80,7 @@ export class ModelGenerator {
    * @return {any}
    */
   #populate(object, model) {
-    const columnDictionary = this.#Schema.columnDictionary
+    const columnDictionary = this.#schema.columnDictionary
 
     Object.keys(object).forEach(key => {
       if (key === '__v') {
