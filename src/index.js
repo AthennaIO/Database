@@ -10,25 +10,20 @@
 import { QueryBuilder } from '#src/Builders/QueryBuilder'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 
-export * from './Facades/Database.js'
-
-export * from './Factories/ModelFactory.js'
-export * from './Factories/DriverFactory.js'
-export * from './Factories/ConnectionFactory.js'
-
-export * from './Seeders/Seeder.js'
-export * from './Resources/Resource.js'
-export * from './Helpers/DatabaseLoader.js'
-
-export * from './Migrations/Migration.js'
-
-export * from './Models/Model.js'
-
 export * from './Builders/Column.js'
-export * from './Builders/Relation.js'
 export * from './Builders/Criteria.js'
-
+export * from './Builders/Relation.js'
 export * from './Builders/Schema.js'
+export * from './Facades/Database.js'
+export * from './Factories/ConnectionFactory.js'
+export * from './Factories/DriverFactory.js'
+export * from './Factories/ModelFactory.js'
+export * from './Generators/ModelGenerator.js'
+export * from './Helpers/DatabaseLoader.js'
+export * from './Migrations/Migration.js'
+export * from './Models/Model.js'
+export * from './Resources/Resource.js'
+export * from './Seeders/Seeder.js'
 
 export class DatabaseImpl {
   /**

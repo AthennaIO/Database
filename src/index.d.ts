@@ -8,9 +8,9 @@
  */
 
 import { Facade } from '@athenna/ioc'
-import { DataSource } from 'typeorm'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@secjs/utils'
+import { DataSource } from 'typeorm'
 
 export const Database: Facade & DatabaseImpl
 
@@ -920,6 +920,33 @@ export class ModelFactory {
    * @return {any | any[]}
    */
   create(override?: any, asArrayOnOne?: boolean): Promise<any | any[]>
+}
+
+export class ModelGenerator {
+   /**
+    * Creates a new instance of ModelGenerator.
+    *
+    * @param Model {import('#src/index').Model}
+    * @param schema {import('#src/index').SchemaBuilder}
+    * @return {ModelGenerator}
+    */
+   constructor(Model: Model, schema: SchemaBuilder)
+ 
+   /**
+    * Generate one model instance with relations loaded.
+    *
+    * @param data {any}
+    * @return {Promise<any>}
+    */
+  generateOne(data: any): Promise<any>
+ 
+   /**
+    * Generate models instances with relations loaded.
+    *
+    * @param data {any[]}
+    * @return {Promise<any[]>}
+    */
+  generateMany(data: any[]): Promise<any[]>
 }
 
 export class Model {
