@@ -115,11 +115,12 @@ export class SchemaBuilder {
         column.name = key
       }
 
-      delete column.isColumn
-
       this.columnDictionary[key] = column.name
+
       this.columns.push(column)
     })
+
+    return this
   }
 
   /**
@@ -136,11 +137,13 @@ export class SchemaBuilder {
         return
       }
 
-      delete relation.isRelation
-
+      relation.name = key
       relation.isIncluded = false
+
       this.relations.push(relation)
     })
+
+    return this
   }
 
   /**
@@ -191,7 +194,7 @@ export class SchemaBuilder {
   getReversedColumnNameOf(columnName) {
     const reversedColumns = this.getReversedColumnDictionary()
 
-    return reversedColumns[columnName]
+    return reversedColumns[columnName] || columnName
   }
 
   /**
@@ -203,7 +206,7 @@ export class SchemaBuilder {
   getReversedColumnNamesOf(columns) {
     const reversedColumns = this.getReversedColumnDictionary()
 
-    columns = columns.map(column => reversedColumns[column])
+    columns = columns.map(column => reversedColumns[column] || column)
 
     return columns
   }

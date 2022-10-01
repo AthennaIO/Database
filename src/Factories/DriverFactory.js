@@ -7,18 +7,18 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@secjs/utils'
 import { Logger } from '@athenna/logger'
+import { Config } from '@secjs/utils'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 
-import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
+import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
+import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
-import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
-import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
+import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 
 export class DriverFactory {
   /**
@@ -65,6 +65,10 @@ export class DriverFactory {
 
     const { Driver, client } = this.#drivers.get(conConfig.driver)
 
+    if (connectionName === 'default') {
+      connectionName = Config.get('database.default')
+    }
+
     if (client) {
       return new Driver(connectionName, client)
     }
@@ -73,10 +77,6 @@ export class DriverFactory {
       Driver,
       client,
     })
-
-    if (connectionName === 'default') {
-      connectionName = Config.get('database.default')
-    }
 
     return new Driver(connectionName)
   }

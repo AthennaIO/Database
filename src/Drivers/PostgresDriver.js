@@ -9,13 +9,13 @@
 
 import { Collection, Exec, Is } from '@secjs/utils'
 
-import { Transaction } from '#src/index'
-import { DriverFactory } from '#src/Factories/DriverFactory'
-import { MigrationSource } from '#src/Migrations/MigrationSource'
-import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { PROTECTED_QUERY_METHODS } from '#src/Constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { DriverFactory } from '#src/Factories/DriverFactory'
+import { Transaction } from '#src/index'
+import { MigrationSource } from '#src/Migrations/MigrationSource'
 
 export class PostgresDriver {
   /**
@@ -333,7 +333,7 @@ export class PostgresDriver {
    * @return {Promise<void>}
    */
   async truncate(tableName) {
-    await this.raw('TRUNCATE TABLE ??', tableName)
+    await this.raw('TRUNCATE TABLE ?? CASCADE', tableName)
   }
 
   /**

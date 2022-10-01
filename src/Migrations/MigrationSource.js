@@ -1,4 +1,4 @@
-import { Config, Path, Module } from '@secjs/utils'
+import { Config, Module, Path } from '@secjs/utils'
 
 export class MigrationSource {
   #connection = null

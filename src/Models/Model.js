@@ -7,18 +7,18 @@
  * file that was distributed with this source code.
  */
 
-import { String } from '@secjs/utils'
-import { Assert } from '@japa/assert'
 import { faker } from '@faker-js/faker'
+import { Assert } from '@japa/assert'
+import { String } from '@secjs/utils'
 
-import { Database } from '#src/index'
 import { Criteria } from '#src/Builders/Criteria'
-import { ModelFactory } from '#src/Factories/ModelFactory'
 import { ModelQueryBuilder } from '#src/Builders/ModelQueryBuilder'
+import { SchemaBuilder } from '#src/Builders/SchemaBuilder'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
-import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
-import { SchemaBuilder } from '#src/Builders/Schema'
+import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
+import { ModelFactory } from '#src/Factories/ModelFactory'
+import { Database } from '#src/index'
 
 export class Model {
   /**
@@ -159,6 +159,15 @@ export class Model {
    */
   static query(withCriterias = true) {
     return new ModelQueryBuilder(this, withCriterias)
+  }
+
+  /**
+   * Truncate all data in database of this model.
+   *
+   * @return {Promise<void>}
+   */
+  static truncate() {
+    return Database.connection(this.connection).truncate(this.table)
   }
 
   /**
@@ -365,7 +374,7 @@ export class Model {
   static async assertCount(number) {
     const count = await this.count()
 
-    new Assert().deepEqual(number, count)
+    new Assert().equal(number, count)
   }
 
   /**

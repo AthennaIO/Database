@@ -25,8 +25,8 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static hasOne(inverseSide, model, cascade = false) {
-    const relation = this.target(model).type('hasOne').inverseSide(inverseSide)
+  static hasOne(model, inverseSide, cascade = false) {
+    const relation = this.model(model).type('hasOne').inverseSide(inverseSide)
 
     if (cascade) {
       relation.cascade()
@@ -46,8 +46,8 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static hasMany(inverseSide, model, cascade = false) {
-    const relation = this.target(model).type('hasMany').inverseSide(inverseSide)
+  static hasMany(model, inverseSide, cascade = false) {
+    const relation = this.model(model).type('hasMany').inverseSide(inverseSide)
 
     if (cascade) {
       relation.cascade()
@@ -67,8 +67,8 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static belongsTo(inverseSide, model, cascade = false) {
-    const relation = this.target(model)
+  static belongsTo(model, inverseSide, cascade = false) {
+    const relation = this.model(model)
       .type('belongsTo')
       .inverseSide(inverseSide)
 
@@ -90,8 +90,8 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(inverseSide, model, cascade = false) {
-    const relation = this.target(model)
+  static manyToMany(model, inverseSide, cascade = false) {
+    const relation = this.model(model)
       .type('manyToMany')
       .inverseSide(inverseSide)
 
@@ -139,17 +139,13 @@ export class Relation {
   }
 
   /**
-   * Set the column that the relation should join.
+   * Set the foreign key of the relation.
    *
    * @param column
    * @return {this}
    */
-  static joinColumn(column) {
-    if (!this.#relation.joinColumn) {
-      this.#relation.joinColumn = {}
-    }
-
-    this.#relation.joinColumn.name = column
+  static foreignKey(column) {
+    this.#relation.foreignKey = column
 
     return this
   }

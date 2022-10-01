@@ -668,7 +668,7 @@ export class Column {
    * @return {this}
    */
   static isHidden(is = true) {
-    this.#column.select = !is
+    this.#column.isHidden = is
 
     return this
   }

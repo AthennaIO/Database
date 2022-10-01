@@ -45,6 +45,10 @@ export class ModelGenerator {
    * @return {Promise<any>}
    */
   async generateOne(data) {
+    if (!data) {
+      return undefined
+    }
+
     const model = this.#instantiateOne(data)
     const relations = this.#schema.getIncludedRelations()
 
@@ -58,7 +62,11 @@ export class ModelGenerator {
    * @return {Promise<any>}
    */
   async generateMany(data) {
-    return data.map(d => this.generateOne(d))
+    if (!data.length) {
+      return []
+    }
+
+    return Promise.all(data.map(d => this.generateOne(d)))
   }
 
   /**
@@ -68,6 +76,10 @@ export class ModelGenerator {
    * @return {any}
    */
   #instantiateOne(data) {
+    if (!data) {
+      return undefined
+    }
+
     return this.#populate(data, new this.#Model())
   }
 
@@ -82,16 +94,26 @@ export class ModelGenerator {
   #populate(object, model) {
     const columnDictionary = this.#schema.columnDictionary
 
+    const columns = this.#schema.columns
+
     Object.keys(object).forEach(key => {
+      const property = columnDictionary[key]
+
+      const column = columns.find(c => c.name === columnDictionary[key])
+
+      if (column.isHidden) {
+        return
+      }
+
       if (key === '__v') {
         return
       }
 
-      if (!columnDictionary[key]) {
+      if (!property) {
         return
       }
 
-      model[columnDictionary[key]] = object[key]
+      model[property] = object[key]
     })
 
     return model
@@ -114,6 +136,8 @@ export class ModelGenerator {
         return new BelongsToRelation().load(model, relation)
       case 'manyToMany':
         return new ManyToManyRelation().load(model, relation)
+      default:
+        return model
     }
   }
 
@@ -125,6 +149,12 @@ export class ModelGenerator {
    * @return {Promise<any>}
    */
   async #includeRelations(model, relations) {
-    return relations.map(relation => this.#includeRelation(model, relation))
+    if (!relations || !relations.length) {
+      return model
+    }
+
+    await Promise.all(relations.map(r => this.#includeRelation(model, r)))
+
+    return model
   }
 }

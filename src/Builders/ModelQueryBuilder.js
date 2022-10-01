@@ -112,9 +112,23 @@ export class ModelQueryBuilder {
   async collection() {
     this.#setCriterias()
 
-    const collection = await this.#QB.collection()
+    /**
+     * Creating the first collection with flat data.
+     */
+    const firstCollection = await this.#QB.collection()
 
-    return collection.map(item => this.#generator.generateOne(item))
+    /**
+     * The second collection instance with all data parsed.
+     */
+    const collection = firstCollection.map(i => this.#generator.generateOne(i))
+
+    /**
+     * Await the resolution of all items in the collection
+     * until return.
+     */
+    collection.items = await Promise.all(collection.items)
+
+    return collection
   }
 
   /**
@@ -293,6 +307,27 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   select(...columns) {
+    if (columns.includes('*')) {
+      this.#schema.columns = this.#schema.columns.map(c => {
+        c.isHidden = false
+
+        return c
+      })
+    }
+
+    columns.forEach(column => {
+      const index = this.#schema.columns.indexOf(c => c.name === column)
+
+      if (index === -1) {
+        return
+      }
+
+      this.#schema.columns[index] = {
+        ...this.#schema.columns[index],
+        isHidden: false,
+      }
+    })
+
     columns = this.#schema.getReversedColumnNamesOf(columns)
 
     this.#QB.buildSelect(...columns)

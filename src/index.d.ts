@@ -1049,6 +1049,13 @@ export class Model {
   static query(withCriterias?: boolean): ModelQueryBuilder
 
   /**
+   * Truncate all data in database of this model.
+   *
+   * @return {Promise<void>}
+   */
+   static truncate(): Promise<void>
+
+  /**
    * Count the number of matches with where in database.
    *
    * @param {any} [where]

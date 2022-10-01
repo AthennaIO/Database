@@ -21,15 +21,11 @@ export class HasManyRelation {
     const Model = model.constructor
     const RelationModel = relation.model
 
-    const modelSchema = Model.schema()
-
     return {
       query: new ModelQueryBuilder(RelationModel),
       primary: Model.primaryKey,
-      foreign:
-        modelSchema[relation.inverseSide].foreignKey ||
-        `${model.constructor.name.toLowerCase()}Id`,
-      property: relation.inverseSide,
+      foreign: relation.foreignKey || `${relation.inverseSide}Id`,
+      property: relation.name,
     }
   }
 

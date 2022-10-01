@@ -13,23 +13,17 @@ export class BelongsToRelation {
   /**
    * Get the relation options to craft the belongs to query.
    *
-   * @param model {any}
    * @param relation {any}
    * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
    */
-  getOptions(model, relation) {
-    const Model = model.constructor
+  getOptions(relation) {
     const RelationModel = relation.model
-
-    const modelSchema = Model.schema()
 
     return {
       query: new ModelQueryBuilder(RelationModel),
       primary: RelationModel.primaryKey,
-      foreign:
-        modelSchema[relation.inverseSide].foreignKey ||
-        `${relation.inverseSide}Id`,
-      property: relation.inverseSide,
+      foreign: relation.foreignKey || `${relation.name}Id`,
+      property: relation.name,
     }
   }
 
@@ -41,10 +35,7 @@ export class BelongsToRelation {
    * @return {Promise<any>}
    */
   async load(model, relation) {
-    const { query, primary, foreign, property } = this.getOptions(
-      model,
-      relation,
-    )
+    const { query, primary, foreign, property } = this.getOptions(relation)
 
     /**
      * Execute client callback if it exists.
