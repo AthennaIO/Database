@@ -125,6 +125,7 @@ test.group('UserModelTest', group => {
   test('should be able to find user and fail', async ({ assert }) => {
     const user = await User.findOrFail()
 
+    assert.isDefined(user.id)
     assert.isUndefined(user.email)
 
     await assert.rejects(() => User.findOrFail({ id: 123459 }), NotFoundDataException)

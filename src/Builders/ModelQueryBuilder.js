@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Json } from '@secjs/utils'
+import { Is } from '@secjs/utils'
 
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { ModelGenerator } from '#src/Generators/ModelGenerator'
@@ -289,11 +289,11 @@ export class ModelQueryBuilder {
       return this.#Model.criterias
     }
 
-    const criterias = Json.copy(this.#Model.criterias)
+    const criterias = {}
 
-    Object.keys(criterias).forEach(key => {
-      if (this.#removedCriterias.includes(key)) {
-        delete criterias[key]
+    Object.keys(this.#Model.criterias).forEach(key => {
+      if (!this.#removedCriterias.includes(key)) {
+        criterias[key] = this.#Model.criterias[key]
       }
     })
 

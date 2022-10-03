@@ -321,7 +321,12 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async truncate(tableName) {
-    await this.raw('TRUNCATE TABLE ?? CASCADE', tableName)
+    try {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 0')
+      await this.raw('TRUNCATE TABLE ??', tableName)
+    } finally {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 1')
+    }
   }
 
   /**
@@ -727,12 +732,12 @@ export class MySqlDriver {
    */
   buildWhereLike(statement, value) {
     if (!value) {
-      this.#qb.whereLike(statement)
+      this.#qb.where(statement, 'like')
 
       return this
     }
 
-    this.#qb.whereLike(statement, value)
+    this.#qb.where(statement, 'like', value)
 
     return this
   }
