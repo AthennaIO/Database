@@ -424,6 +424,21 @@ export class Model {
     return this.toJSON()
   }
 
-  // TODO
-  // async save()
+  /**
+   * Update the model values that have been modified.
+   *
+   * @param [ignorePersistOnly] {boolean}
+   * @return {Promise<this>}
+   */
+  async save(ignorePersistOnly = false) {
+    const Model = this.constructor
+
+    const where = { [Model.primaryKey]: this[Model.primaryKey] }
+    const data = this.toJSON()
+    const updatedModel = await Model.update(where, data, ignorePersistOnly)
+
+    Object.keys(updatedModel).forEach(key => (this[key] = updatedModel[key]))
+
+    return this
+  }
 }

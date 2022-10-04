@@ -199,6 +199,30 @@ test.group('UserModelTest', group => {
     assert.deepEqual(users[1].name, 'João Lenon Updated')
   })
 
+  test('should be able to save user', async ({ assert }) => {
+    const user = await User.create({ name: 'João Lenon' })
+
+    const createdAt = new Date()
+
+    user.name = 'João Lenon Updated'
+    user.createdAt = createdAt
+
+    await user.save()
+
+    assert.deepEqual(user.name, 'João Lenon Updated')
+    assert.notEqual(user.createdAt, createdAt)
+
+    const users = await User.findMany()
+
+    users[0].name = 'João Lenon Array Updated'
+    users[0].createdAt = createdAt
+
+    await users[0].save()
+
+    assert.deepEqual(users[0].name, 'João Lenon Array Updated')
+    assert.notEqual(users[0].createdAt, createdAt)
+  })
+
   test('should throw a empty where exception on update without where', async ({ assert }) => {
     await assert.rejects(() => User.update({}), EmptyWhereException)
   })

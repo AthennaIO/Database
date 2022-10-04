@@ -220,6 +220,30 @@ test.group('ProductModelTest', group => {
     assert.deepEqual(productUpdated.name, 'iPhone X Updated')
   })
 
+  test('should be able to save product', async ({ assert }) => {
+    const product = await ProductMySql.create({ name: 'Macbook M1', userId })
+
+    const createdAt = new Date()
+
+    product.name = 'Macbook M2'
+    product.createdAt = createdAt
+
+    await product.save()
+
+    assert.deepEqual(product.name, 'Macbook M2')
+    assert.notEqual(product.createdAt, createdAt)
+
+    const products = await ProductMySql.findMany()
+
+    products[0].name = 'Macbook M3'
+    products[0].createdAt = createdAt
+
+    await products[0].save()
+
+    assert.deepEqual(products[0].name, 'Macbook M3')
+    assert.notEqual(products[0].createdAt, createdAt)
+  })
+
   test('should throw a empty where exception on update without where', async ({ assert }) => {
     await assert.rejects(() => ProductMySql.update({}), EmptyWhereException)
   })
