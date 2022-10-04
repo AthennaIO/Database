@@ -1,5 +1,5 @@
 /**
- * @athenna/artisan
+ * @athenna/database
  *
  * (c) João Lenon <lenon@athenna.io>
  *

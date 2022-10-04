@@ -1,5 +1,5 @@
 /**
- * @athenna/artisan
+ * @athenna/database
  *
  * (c) João Lenon <lenon@athenna.io>
  *
@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { ArtisanLoader, ConsoleKernel } from '@athenna/artisan'
 import { DatabaseLoader } from '#src/Helpers/DatabaseLoader'
+import { ArtisanLoader, ConsoleKernel } from '@athenna/artisan'
 
 export class Kernel extends ConsoleKernel {
   get commands() {

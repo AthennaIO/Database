@@ -1,5 +1,5 @@
 /**
- * @athenna/artisan
+ * @athenna/database
  *
  * (c) João Lenon <lenon@athenna.io>
  *
@@ -10,10 +10,10 @@
 import { test } from '@japa/runner'
 import { Config, File, Folder, Path } from '@secjs/utils'
 
-import { Artisan } from '@athenna/artisan'
 import { Kernel } from '#tests/Stubs/app/Console/Kernel'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
+import { Artisan } from '@athenna/artisan'
 import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 test.group('MakeModelTest', group => {
   group.each.setup(async () => {
