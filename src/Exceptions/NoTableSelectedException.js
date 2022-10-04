@@ -16,13 +16,13 @@ export class NoTableSelectedException extends Exception {
    * @return {NoTableSelectedException}
    */
   constructor() {
-    const content = `You are trying to make a query without calling the "buildTable" method.`
+    const content = `You are trying to make a query without calling the "table" method.`
 
     super(
       content,
       500,
       'E_NO_TABLE_ERROR',
-      `You can use the "database.buildTable()" method setting the database as string or class object.`,
+      `You can use the "database.table()" method setting the database as string or class object.`,
     )
   }
 }

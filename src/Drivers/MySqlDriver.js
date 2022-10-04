@@ -517,7 +517,7 @@ export class MySqlDriver {
       .clearSelect()
       .count({ count: '*' })
 
-    const data = await this.buildOffset(page).buildLimit(limit).findMany()
+    const data = await this.offset(page).limit(limit).findMany()
 
     return Exec.pagination(data, count, { page, limit, resourceUrl })
   }
@@ -557,7 +557,7 @@ export class MySqlDriver {
       data.map(d => this.#qb.insert(d).then(([id]) => ids.push(id))),
     )
 
-    return this.buildWhereIn(primaryKey, ids).findMany()
+    return this.whereIn(primaryKey, ids).findMany()
   }
 
   /**
@@ -574,7 +574,7 @@ export class MySqlDriver {
     if (hasValue) {
       await this.#qb.where(primaryKey, hasValue[primaryKey]).update(data)
 
-      return this.buildWhere(primaryKey, hasValue[primaryKey]).find()
+      return this.where(primaryKey, hasValue[primaryKey]).find()
     }
 
     return this.create(data, primaryKey)
@@ -614,7 +614,7 @@ export class MySqlDriver {
    * @param tableName {string|any}
    * @return {MySqlDriver}
    */
-  buildTable(tableName) {
+  table(tableName) {
     if (!this.#isConnected) {
       throw new NotConnectedDatabaseException()
     }
@@ -631,7 +631,7 @@ export class MySqlDriver {
    * @param columns {string}
    * @return {MySqlDriver}
    */
-  buildSelect(...columns) {
+  select(...columns) {
     this.#qb.select(...columns)
 
     return this
@@ -647,7 +647,7 @@ export class MySqlDriver {
    * @param joinType {string}
    * @return {MySqlDriver}
    */
-  buildJoin(tableName, column1, operation = '=', column2, joinType = 'join') {
+  join(tableName, column1, operation = '=', column2, joinType = 'join') {
     if (operation && !column2) {
       this.#qb[joinType](tableName, column1, operation)
 
@@ -665,7 +665,7 @@ export class MySqlDriver {
    * @param columns {string}
    * @return {MySqlDriver}
    */
-  buildGroupBy(...columns) {
+  groupBy(...columns) {
     this.#qb.groupBy(...columns)
 
     return this
@@ -679,7 +679,7 @@ export class MySqlDriver {
    * @param [value] {Record<string, any>}
    * @return {MySqlDriver}
    */
-  buildWhere(statement, operation = '=', value) {
+  where(statement, operation = '=', value) {
     if (Is.Object(statement)) {
       this.#qb.where(statement)
 
@@ -705,7 +705,7 @@ export class MySqlDriver {
    * @param [value] {Record<string, any>}
    * @return {MySqlDriver}
    */
-  buildOrWhere(statement, operation = '=', value) {
+  orWhere(statement, operation = '=', value) {
     if (Is.Object(statement)) {
       this.#qb.orWhere(statement)
 
@@ -730,7 +730,7 @@ export class MySqlDriver {
    * @param [value] {any}
    * @return {MySqlDriver}
    */
-  buildWhereLike(statement, value) {
+  whereLike(statement, value) {
     if (!value) {
       this.#qb.where(statement, 'like')
 
@@ -749,7 +749,7 @@ export class MySqlDriver {
    * @param [value] {any}
    * @return {MySqlDriver}
    */
-  buildWhereILike(statement, value) {
+  whereILike(statement, value) {
     if (!value) {
       this.#qb.whereILike(statement)
 
@@ -768,7 +768,7 @@ export class MySqlDriver {
    * @param [value] {any}
    * @return {MySqlDriver}
    */
-  buildWhereNot(statement, value) {
+  whereNot(statement, value) {
     if (!value) {
       this.#qb.whereNot(statement)
 
@@ -787,7 +787,7 @@ export class MySqlDriver {
    * @param values {any[]}
    * @return {MySqlDriver}
    */
-  buildWhereIn(columnName, values) {
+  whereIn(columnName, values) {
     this.#qb.whereIn(columnName, values)
 
     return this
@@ -800,7 +800,7 @@ export class MySqlDriver {
    * @param values {any[]}
    * @return {MySqlDriver}
    */
-  buildWhereNotIn(columnName, values) {
+  whereNotIn(columnName, values) {
     this.#qb.whereNotIn(columnName, values)
 
     return this
@@ -812,7 +812,7 @@ export class MySqlDriver {
    * @param columnName {string}
    * @return {MySqlDriver}
    */
-  buildWhereNull(columnName) {
+  whereNull(columnName) {
     this.#qb.whereNull(columnName)
 
     return this
@@ -824,7 +824,7 @@ export class MySqlDriver {
    * @param columnName {string}
    * @return {MySqlDriver}
    */
-  buildWhereNotNull(columnName) {
+  whereNotNull(columnName) {
     this.#qb.whereNotNull(columnName)
 
     return this
@@ -837,7 +837,7 @@ export class MySqlDriver {
    * @param values {[any, any]}
    * @return {MySqlDriver}
    */
-  buildWhereBetween(columnName, values) {
+  whereBetween(columnName, values) {
     this.#qb.whereBetween(columnName, values)
 
     return this
@@ -850,7 +850,7 @@ export class MySqlDriver {
    * @param values {[any, any]}
    * @return {MySqlDriver}
    */
-  buildWhereNotBetween(columnName, values) {
+  whereNotBetween(columnName, values) {
     this.#qb.whereNotBetween(columnName, values)
 
     return this
@@ -863,7 +863,7 @@ export class MySqlDriver {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {MySqlDriver}
    */
-  buildOrderBy(columnName, direction = 'ASC') {
+  orderBy(columnName, direction = 'ASC') {
     this.#qb.orderBy(columnName, direction.toUpperCase())
 
     return this
@@ -875,7 +875,7 @@ export class MySqlDriver {
    * @param number {number}
    * @return {MySqlDriver}
    */
-  buildOffset(number) {
+  offset(number) {
     this.#qb.offset(number)
 
     return this
@@ -887,7 +887,7 @@ export class MySqlDriver {
    * @param number {number}
    * @return {MySqlDriver}
    */
-  buildLimit(number) {
+  limit(number) {
     this.#qb.limit(number)
 
     return this

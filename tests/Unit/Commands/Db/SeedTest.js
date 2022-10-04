@@ -10,12 +10,12 @@
 import { test } from '@japa/runner'
 import { Config, Folder, Path } from '@secjs/utils'
 
-import { Artisan } from '@athenna/artisan'
-import { Kernel } from '#tests/Stubs/app/Console/Kernel'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
-import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { Database } from '#src/index'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { Kernel } from '#tests/Stubs/app/Console/Kernel'
+import { Artisan } from '@athenna/artisan'
+import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 test.group('DbSeedTest', group => {
   group.each.setup(async () => {
@@ -42,40 +42,40 @@ test.group('DbSeedTest', group => {
   })
 
   group.each.teardown(async () => {
+    await Database.revertMigrations()
+    await Database.close()
+
     await Folder.safeRemove(Path.app())
     await Folder.safeRemove(Path.config())
     await Folder.safeRemove(Path.database())
-
-    await Database.revertMigrations()
-    await Database.close()
   })
 
   test('should be able to run database seeders', async ({ assert }) => {
     await Database.truncate('users')
-    const data = await Database.buildTable('users').find()
+    const data = await Database.table('users').find()
 
-    assert.isNull(data)
+    assert.isUndefined(data)
 
     await Artisan.call('db:seed')
 
     await Database.connect()
 
-    const user = await Database.buildTable('users').find()
+    const user = await Database.table('users').find()
 
     assert.isDefined(user)
   }).timeout(60000)
 
   test('should be able to run only one database seeder', async ({ assert }) => {
     await Database.truncate('users')
-    const data = await Database.buildTable('users').find()
+    const data = await Database.table('users').find()
 
-    assert.isNull(data)
+    assert.isUndefined(data)
 
     await Artisan.call('db:seed --class=UserSeeder')
 
     await Database.connect()
 
-    const user = await Database.buildTable('users').find()
+    const user = await Database.table('users').find()
 
     assert.isDefined(user)
   }).timeout(60000)

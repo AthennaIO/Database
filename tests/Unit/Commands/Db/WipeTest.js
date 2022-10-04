@@ -10,13 +10,13 @@
 import { test } from '@japa/runner'
 import { Config, Folder, Path } from '@secjs/utils'
 
-import { Artisan } from '@athenna/artisan'
-import { Kernel } from '#tests/Stubs/app/Console/Kernel'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
-import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { Database } from '#src/index'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { Kernel } from '#tests/Stubs/app/Console/Kernel'
 import { User } from '#tests/Stubs/models/User'
+import { Artisan } from '@athenna/artisan'
+import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 test.group('DbWipeTest', group => {
   group.each.setup(async () => {
@@ -53,7 +53,7 @@ test.group('DbWipeTest', group => {
 
   test('should be able to wipe all database data', async ({ assert }) => {
     await User.factory().count(10).create()
-    const data = await Database.buildTable('users').find()
+    const data = await Database.table('users').find()
 
     assert.isDefined(data)
 

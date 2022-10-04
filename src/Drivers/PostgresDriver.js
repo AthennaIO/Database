@@ -524,7 +524,7 @@ export class PostgresDriver {
       .clearSelect()
       .count({ count: '*' })
 
-    const data = await this.buildOffset(page).buildLimit(limit).findMany()
+    const data = await this.offset(page).limit(limit).findMany()
 
     return Exec.pagination(data, parseInt(count), { page, limit, resourceUrl })
   }
@@ -575,7 +575,7 @@ export class PostgresDriver {
     if (hasValue) {
       await this.#qb.where(primaryKey, hasValue[primaryKey]).update(data)
 
-      return this.buildWhere(primaryKey, hasValue[primaryKey]).find()
+      return this.where(primaryKey, hasValue[primaryKey]).find()
     }
 
     return this.create(data, primaryKey)
@@ -615,7 +615,7 @@ export class PostgresDriver {
    * @param tableName {string|any}
    * @return {PostgresDriver}
    */
-  buildTable(tableName) {
+  table(tableName) {
     if (!this.#isConnected) {
       throw new NotConnectedDatabaseException()
     }
@@ -632,7 +632,7 @@ export class PostgresDriver {
    * @param columns {string}
    * @return {PostgresDriver}
    */
-  buildSelect(...columns) {
+  select(...columns) {
     this.#qb.select(...columns)
 
     return this
@@ -648,7 +648,7 @@ export class PostgresDriver {
    * @param joinType {string}
    * @return {PostgresDriver}
    */
-  buildJoin(tableName, column1, operation = '=', column2, joinType = 'join') {
+  join(tableName, column1, operation = '=', column2, joinType = 'join') {
     if (operation && !column2) {
       this.#qb[joinType](tableName, column1, operation)
 
@@ -666,7 +666,7 @@ export class PostgresDriver {
    * @param columns {string}
    * @return {PostgresDriver}
    */
-  buildGroupBy(...columns) {
+  groupBy(...columns) {
     this.#qb.groupBy(...columns)
 
     return this
@@ -680,7 +680,7 @@ export class PostgresDriver {
    * @param [value] {Record<string, any>}
    * @return {PostgresDriver}
    */
-  buildWhere(statement, operation = '=', value) {
+  where(statement, operation = '=', value) {
     if (Is.Object(statement)) {
       this.#qb.where(statement)
 
@@ -706,7 +706,7 @@ export class PostgresDriver {
    * @param [value] {Record<string, any>}
    * @return {PostgresDriver}
    */
-  buildOrWhere(statement, operation = '=', value) {
+  orWhere(statement, operation = '=', value) {
     if (Is.Object(statement)) {
       this.#qb.orWhere(statement)
 
@@ -731,7 +731,7 @@ export class PostgresDriver {
    * @param [value] {any}
    * @return {PostgresDriver}
    */
-  buildWhereLike(statement, value) {
+  whereLike(statement, value) {
     if (!value) {
       this.#qb.whereLike(statement)
 
@@ -750,7 +750,7 @@ export class PostgresDriver {
    * @param [value] {any}
    * @return {PostgresDriver}
    */
-  buildWhereILike(statement, value) {
+  whereILike(statement, value) {
     if (!value) {
       this.#qb.whereILike(statement)
 
@@ -769,7 +769,7 @@ export class PostgresDriver {
    * @param [value] {any}
    * @return {PostgresDriver}
    */
-  buildWhereNot(statement, value) {
+  whereNot(statement, value) {
     if (!value) {
       this.#qb.whereNot(statement)
 
@@ -788,7 +788,7 @@ export class PostgresDriver {
    * @param values {any[]}
    * @return {PostgresDriver}
    */
-  buildWhereIn(columnName, values) {
+  whereIn(columnName, values) {
     this.#qb.whereIn(columnName, values)
 
     return this
@@ -801,7 +801,7 @@ export class PostgresDriver {
    * @param values {any[]}
    * @return {PostgresDriver}
    */
-  buildWhereNotIn(columnName, values) {
+  whereNotIn(columnName, values) {
     this.#qb.whereNotIn(columnName, values)
 
     return this
@@ -813,7 +813,7 @@ export class PostgresDriver {
    * @param columnName {string}
    * @return {PostgresDriver}
    */
-  buildWhereNull(columnName) {
+  whereNull(columnName) {
     this.#qb.whereNull(columnName)
 
     return this
@@ -825,7 +825,7 @@ export class PostgresDriver {
    * @param columnName {string}
    * @return {PostgresDriver}
    */
-  buildWhereNotNull(columnName) {
+  whereNotNull(columnName) {
     this.#qb.whereNotNull(columnName)
 
     return this
@@ -838,7 +838,7 @@ export class PostgresDriver {
    * @param values {[any, any]}
    * @return {PostgresDriver}
    */
-  buildWhereBetween(columnName, values) {
+  whereBetween(columnName, values) {
     this.#qb.whereBetween(columnName, values)
 
     return this
@@ -851,7 +851,7 @@ export class PostgresDriver {
    * @param values {[any, any]}
    * @return {PostgresDriver}
    */
-  buildWhereNotBetween(columnName, values) {
+  whereNotBetween(columnName, values) {
     this.#qb.whereNotBetween(columnName, values)
 
     return this
@@ -864,7 +864,7 @@ export class PostgresDriver {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {PostgresDriver}
    */
-  buildOrderBy(columnName, direction = 'ASC') {
+  orderBy(columnName, direction = 'ASC') {
     this.#qb.orderBy(columnName, direction.toUpperCase())
 
     return this
@@ -876,7 +876,7 @@ export class PostgresDriver {
    * @param number {number}
    * @return {PostgresDriver}
    */
-  buildOffset(number) {
+  offset(number) {
     this.#qb.offset(number)
 
     return this
@@ -888,7 +888,7 @@ export class PostgresDriver {
    * @param number {number}
    * @return {PostgresDriver}
    */
-  buildLimit(number) {
+  limit(number) {
     this.#qb.limit(number)
 
     return this

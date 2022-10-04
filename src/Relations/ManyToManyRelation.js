@@ -63,8 +63,8 @@ export class ManyToManyRelation {
     /**
      * Using Database here because there is no PivotModel.
      */
-    const pivotTableData = await Database.buildTable(pivotTable)
-      .buildWhere({
+    const pivotTableData = await Database.table(pivotTable)
+      .where({
         [pivotLocalForeign]: model[localPrimary],
       })
       .findMany()

@@ -135,10 +135,10 @@ export class Model {
     const schema = this.schema()
 
     return new SchemaBuilder()
-      .buildSchema(schema)
-      .buildName(this.table)
-      .buildTable(this.table)
-      .buildConnection(this.connection)
+      .setSchema(schema)
+      .setName(this.table)
+      .setTable(this.table)
+      .setConnection(this.connection)
       .isToSynchronize()
   }
 
@@ -386,7 +386,7 @@ export class Model {
   static async assertExists(where) {
     const model = await this.find(where)
 
-    new Assert().isNotNull(model)
+    new Assert().isDefined(model)
   }
 
   /**
@@ -398,7 +398,7 @@ export class Model {
   static async assertNotExists(where) {
     const model = await this.find(where)
 
-    new Assert().isNull(model)
+    new Assert().isUndefined(model)
   }
 
   /**

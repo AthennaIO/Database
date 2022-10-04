@@ -7,14 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
+import { test } from '@japa/runner'
+import { Config, Folder, Path } from '@secjs/utils'
 
+import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
+import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { Database, Model } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
-import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 test.group('ModelTest', group => {
   group.setup(async () => {
@@ -46,8 +46,25 @@ test.group('ModelTest', group => {
   })
 
   test('should be able to list criterias', async ({ assert }) => {
-    const criterias = Model.query().listCriterias()
+    class SimpleSoftDeleteModel extends Model {
+      static schema() {
+        return {}
+      }
+
+      static isSoftDelete() {
+        return true
+      }
+    }
+
+    const query = SimpleSoftDeleteModel.query()
+    const criterias = query.removeCriteria('deletedAt').listCriterias()
 
     assert.isDefined(criterias)
+    assert.isUndefined(criterias.deletedAt)
+
+    const allCriterias = query.listCriterias(true)
+
+    assert.isDefined(allCriterias)
+    assert.isDefined(allCriterias.deletedAt)
   })
 })

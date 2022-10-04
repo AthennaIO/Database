@@ -10,12 +10,12 @@
 import { test } from '@japa/runner'
 import { Config, Folder, Path } from '@secjs/utils'
 
-import { Artisan } from '@athenna/artisan'
-import { Kernel } from '#tests/Stubs/app/Console/Kernel'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
-import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { Database } from '#src/index'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { Kernel } from '#tests/Stubs/app/Console/Kernel'
+import { Artisan } from '@athenna/artisan'
+import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 test.group('MigrationRevertTest', group => {
   group.each.setup(async () => {
@@ -32,6 +32,11 @@ test.group('MigrationRevertTest', group => {
     await new DatabaseProvider().boot()
 
     await Database.connect()
+
+    await Database.dropTable('migrations_lock')
+    await Database.dropTable('migrations')
+    await Database.dropTable('products')
+    await Database.dropTable('users')
 
     const kernel = new Kernel()
 

@@ -7,17 +7,18 @@
  * file that was distributed with this source code.
  */
 
-import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
+import { test } from '@japa/runner'
+import { Config, Folder, Path } from '@secjs/utils'
 
 import { Database } from '#src/index'
-import { User } from '#tests/Stubs/models/User'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { User } from '#tests/Stubs/models/User'
 
 test.group('ModelFactoryTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
+    await new Folder(Path.stubs('database')).copy(Path.database())
     await new Config().safeLoad(Path.config('database.js'))
     await new Config().safeLoad(Path.config('logging.js'))
   })
@@ -37,6 +38,7 @@ test.group('ModelFactoryTest', group => {
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
+    await Folder.safeRemove(Path.database())
   })
 
   test('should be able to make/create one user', async ({ assert }) => {
