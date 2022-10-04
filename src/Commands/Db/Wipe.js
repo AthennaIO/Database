@@ -7,11 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@secjs/utils'
-import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
+import { Command } from '@athenna/artisan'
+import { Config } from '@secjs/utils'
 
-// TODO Test
 export class DbWipe extends Command {
   /**
    * The name and signature of the console command.

@@ -7,10 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
+import { Command } from '@athenna/artisan'
 
-// TODO Test
 export class MigrationRevert extends Command {
   /**
    * The name and signature of the console command.
