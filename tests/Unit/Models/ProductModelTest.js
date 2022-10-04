@@ -285,6 +285,14 @@ test.group('ProductModelTest', group => {
       assert.deepEqual(product.user.id, userId)
       assert.deepEqual(product.deletedAt, null)
     })
+
+    products[0].user.name = 'João Lenon'
+
+    await products[0].user.save()
+
+    const user = await UserMySql.find({ name: 'João Lenon' })
+
+    assert.deepEqual(products[0].user.id, user.id)
   })
 
   test('should be able to make database assertions', async () => {
