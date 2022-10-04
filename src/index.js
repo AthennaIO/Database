@@ -246,7 +246,7 @@ export class DatabaseImpl {
    * @param tableName {string|any}
    * @return {QueryBuilder}
    */
-  buildTable(tableName) {
+  table(tableName) {
     return new QueryBuilder(this.#driver, tableName)
   }
 }
@@ -431,7 +431,7 @@ export class Transaction {
    * @param tableName {string|any}
    * @return {QueryBuilder}
    */
-  buildTable(tableName) {
+  table(tableName) {
     return new QueryBuilder(this.#driver, tableName)
   }
 }

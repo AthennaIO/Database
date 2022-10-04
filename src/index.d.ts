@@ -14,316 +14,6 @@ import { DataSource } from 'typeorm'
 
 export const Database: Facade & DatabaseImpl
 
-export class QueryBuilder {
-  /**
-   * Calculate the average of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  avg(column: string): Promise<number>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  avgDistinct(column: string): Promise<number>
-
-  /**
-   * Get the max number of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  max(column: string): Promise<number>
-
-  /**
-   * Get the min number of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  min(column: string): Promise<number>
-
-  /**
-   * Sum all numbers of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  sum(column: string): Promise<number>
-
-  /**
-   * Sum all numbers of a given column in distinct mode.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  sumDistinct(column: string): Promise<number>
-
-  /**
-   * Increment a value of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number | number[]>}
-   */
-  increment(column: string): Promise<number | number[]>
-
-  /**
-   * Decrement a value of a given column.
-   *
-   * @param {string} column
-   * @return {Promise<number | number[]>}
-   */
-  decrement(column: string): Promise<number | number[]>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  count(column?: string): Promise<number>
-
-  /**
-   * Calculate the average of a given column using distinct.
-   *
-   * @param {string} column
-   * @return {Promise<number>}
-   */
-  countDistinct(column?: string): Promise<number>
-
-  /**
-   * Find a value in database or throw exception if undefined.
-   *
-   * @return {Promise<any>}
-   */
-  findOrFail(): Promise<any>
-
-  /**
-   * Find a value in database.
-   *
-   * @return {Promise<any>}
-   */
-  find(): Promise<any>
-
-  /**
-   * Find many values in database.
-   *
-   * @return {Promise<any[]>}
-   */
-  findMany(): Promise<any[]>
-
-  /**
-   * Find many values in database and return as a Collection.
-   *
-   * @return {Promise<Collection>}
-   */
-  collection(): Promise<import('@secjs/utils').Collection>
-
-  /**
-   * Find many values in database and return as paginated response.
-   *
-   * @param [page] {boolean}
-   * @param [limit] {boolean}
-   * @param [resourceUrl] {string}
-   * @return {}
-   */
-  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
-
-  /**
-   * Create a value in database.
-   *
-   * @param {any} data
-   * @param {string} [primaryKey]
-   * @return {Promise<any>}
-   */
-  create(data: any, primaryKey?: string): Promise<any>
-
-  /**
-   * Create many values in database.
-   *
-   * @param {any[]} data
-   * @param {string} [primaryKey]
-   * @return {Promise<any[]>}
-   */
-  createMany(data: any[], primaryKey?: string): Promise<any[]>
-
-  /**
-   * Create data or update if already exists.
-   *
-   * @param {any} data
-   * @param {string} [primaryKey]
-   * @return {Promise<any | any[]>}
-   */
-  createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
-
-  /**
-   * Update a value in database.
-   *
-   * @param {any} data
-   * @param {boolean} force
-   * @return {Promise<any | any[]>}
-   */
-  update(data: any, force?: boolean): Promise<any | any[]>
-
-  /**
-   * Delete one value in database.
-   *
-   * @return {Promise<any | void>}
-   */
-  delete(): Promise<any | void>
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {QueryBuilder}
-   */
-  buildSelect(...columns: string[]): QueryBuilder
-
-  /**
-   * Set a join statement in your query.
-   *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
-   * @return {QueryBuilder}
-   */
-  buildJoin(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): QueryBuilder
-  buildJoin(tableName: string, column1: string, operation: string, column2: string): QueryBuilder
-  buildJoin(tableName: string, column1: string, column2: string): QueryBuilder
-
-  /**
-   * Set a group by statement in your query.
-   *
-   * @param columns {string}
-   * @return {QueryBuilder}
-   */
-  buildGroupBy(...columns: string[]): QueryBuilder
-
-  /**
-   * Set a where statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhere(statement: Record<string, any>): QueryBuilder
-  buildWhere(statement: string, value: any): QueryBuilder
-  buildWhere(statement: string, operation: string, value: any): QueryBuilder
-
-  /**
-   * Set a or where statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildOrWhere(statement: Record<string, any>): QueryBuilder
-  buildOrWhere(statement: string, value: any): QueryBuilder
-  buildOrWhere(statement: string, operation: string, value: any): QueryBuilder
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhereNot(statement: Record<string, any>): QueryBuilder
-  buildWhereNot(statement: string, value: any): QueryBuilder
-
-  /**
-   * Set a where like statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhereLike(statement: Record<string, any>): QueryBuilder
-  buildWhereLike(statement: string, value: any): QueryBuilder
-
-  /**
-   * Set a where ILike statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhereILike(statement: Record<string, any>): QueryBuilder
-  buildWhereILike(statement: string, value: any): QueryBuilder
-
-  /**
-   * Set a where in statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  buildWhereIn(columnName: string, values: any[]): QueryBuilder
-
-  /**
-   * Set a where not in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {QueryBuilder}
-   */
-  buildWhereNotIn(columnName: string, values: any[]): QueryBuilder
-
-  /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  buildWhereNull(columnName: string): QueryBuilder
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  buildWhereNotNull(columnName: string): QueryBuilder
-
-  /**
-   * Set a where between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {QueryBuilder}
-   */
-  buildWhereBetween(columnName: string, values: [any, any]): QueryBuilder
-
-  /**
-   * Set a where not between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {QueryBuilder}
-   */
-  buildWhereNotBetween(columnName: string, values: [any, any]): QueryBuilder
-
-  /**
-   * Set a order by statement in your query.
-   *
-   * @param columnName {string}
-   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {QueryBuilder}
-   */
-  buildOrderBy(columnName: string, direction: 'asc' | 'desc' | 'ASC' | 'DESC'): QueryBuilder
-
-  /**
-   * Set the skip number in your query.
-   *
-   * @param number {number}
-   * @return {QueryBuilder}
-   */
-  buildOffset(number: number): QueryBuilder
-
-  /**
-   * Set the limit number in your query.
-   *
-   * @param number {number}
-   * @return {QueryBuilder}
-   */
-  buildLimit(number: number): QueryBuilder
-}
-
 export class DatabaseImpl {
   /**
    * Creates a new instance of DatabaseImpl.
@@ -472,7 +162,7 @@ export class DatabaseImpl {
    * @param tableName {string|any}
    * @return {QueryBuilder}
    */
-  buildTable(tableName: string | any): QueryBuilder
+  table(tableName: string | any): QueryBuilder
 }
 
 export class Transaction {
@@ -599,154 +289,7 @@ export class Transaction {
    * @param tableName {string|any}
    * @return {QueryBuilder}
    */
-  buildTable(tableName: string | any): QueryBuilder
-}
-
-export class Criteria {
-  /**
-   * Set the table that this query will be executed.
-   *
-   * @param tableName {string|any}
-   * @return {Criteria}
-   */
-  static table(tableName: string | any): typeof Criteria
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {Criteria}
-   */
-  static select(...columns: string[]): typeof Criteria
-
-  /**
-   * Set a include statement in your query.
-   *
-   * @param relation {string|any}
-   * @param [operation] {string}
-   * @return {Criteria}
-   */
-  static includes(relation: string | any, operation?: string): typeof Criteria
-
-  /**
-   * Set a where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Criteria}
-   */
-  static where(statement: string | Record<string, any>, value?: any): typeof Criteria
-
-  /**
-   * Set a where like statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Criteria}
-   */
-  static whereLike(statement: string | Record<string, any>, value?: any): typeof Criteria
-
-  /**
-   * Set a where ILike statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Criteria}
-   */
-  static whereILike(statement: string | Record<string, any>, value?: any): typeof Criteria
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Criteria}
-   */
-  static whereNot(statement: string | Record<string, any>, value?: any): typeof Criteria
-
-  /**
-   * Set a where in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {Criteria}
-   */
-  static whereIn(columnName: string, values?: any[]): typeof Criteria
-
-  /**
-   * Set a where not in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {Criteria}
-   */
-  static whereNotIn(columnName: string, values?: any[]): typeof Criteria
-
-  /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {Criteria}
-   */
-  static whereNull(columnName: string): typeof Criteria
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {Criteria}
-   */
-  static whereNotNull(columnName: string): typeof Criteria
-
-  /**
-   * Set a where between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {Criteria}
-   */
-  static whereBetween(columnName: string, values: [any, any]): typeof Criteria
-
-  /**
-   * Set a where not between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {Criteria}
-   */
-  static whereNotBetween(columnName: string, values: [any, any]): typeof Criteria
-
-  /**
-   * Set a order by statement in your query.
-   *
-   * @param columnName {string}
-   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {Criteria}
-   */
-  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): typeof Criteria
-
-  /**
-   * Set the skip number in your query.
-   *
-   * @param number {number}
-   * @return {Criteria}
-   */
-  static skip(number: number): typeof Criteria
-
-  /**
-   * Set the limit number in your query.
-   *
-   * @param number {number}
-   * @return {Criteria}
-   */
-  static limit(number: number): typeof Criteria
-
-  /**
-   * Get the criteria map.
-   *
-   * @return {Map<string, any[]>}
-   */
-  static get(): Map<string, any[]>
+  table(tableName: string | any): QueryBuilder
 }
 
 export class SchemaBuilder {
@@ -798,7 +341,7 @@ export class SchemaBuilder {
    * @param {string} connection
    * @return {SchemaBuilder}
    */
-  buildConnection(connection: string): this
+  setConnection(connection: string): this
 
   /**
    * Set the schema name.
@@ -806,7 +349,7 @@ export class SchemaBuilder {
    * @param name {string}
    * @return {SchemaBuilder}
    */
-  buildName(name: string): this
+  setName(name: string): this
 
   /**
    * Set the table name.
@@ -814,14 +357,14 @@ export class SchemaBuilder {
    * @param tableName {string}
    * @return {SchemaBuilder}
    */
-  buildTable(tableName: string): this
+  setTable(tableName: string): this
 
   /**
    * Convert the schema columns and relations to array and set.
    *
    * @param schema {any}
    */
-  buildSchema(schema: any): this
+  setSchema(schema: any): this
 
   /**
    * Convert to array and set the columns.
@@ -829,7 +372,7 @@ export class SchemaBuilder {
    * @param columns {any}
    * @return {SchemaBuilder}
    */
-  buildColumns(columns: any): this
+  setColumns(columns: any): this
 
   /**
    * Convert to array and set the columns.
@@ -837,7 +380,7 @@ export class SchemaBuilder {
    * @param relations {any}
    * @return {SchemaBuilder}
    */
-  buildRelations(relations: any): this
+  setRelations(relations: any): this
 
   /**
    * Set if schema should be synchronized with database.
@@ -894,7 +437,7 @@ export class ModelFactory {
    * @param returning {string}
    * @return {ModelFactory}
    */
-  constructor(Model: any, returning?: string)
+  constructor(Model: Model, returning?: string)
 
   /**
    * Set the number of models to be created
@@ -1206,263 +749,6 @@ export class Model {
    * @return {any|any[]}
    */
   toJSON(): any | any[]
-}
-
-export class ModelQueryBuilder {
-  /**
-   * Creates a new instance of ModelQueryBuilder.
-   *
-   * @param model
-   * @param withCriterias
-   * @return {ModelQueryBuilder}
-   */
-  constructor(model: any, withCriterias?: boolean)
-
-  /**
-   * Find one data in database or throw exception if undefined.
-   *
-   * @return {Promise<any>}
-   */
-  findOrFail(): Promise<any>
-
-  /**
-   * Find one data in database.
-   *
-   * @return {Promise<any>}
-   */
-  find(): Promise<any>
-
-  /**
-   * Find many data in database.
-   *
-   * @return {Promise<any[]>}
-   */
-  findMany(): Promise<any[]>
-
-  /**
-   * Find many data in database and return as a Collection.
-   *
-   * @return {Promise<import('@secjs/utils').Collection>}
-   */
-  collection(): Promise<Collection>
-
-  /**
-   * Find many models in database and return as paginated response.
-   *
-   * @param [page] {boolean}
-   * @param [limit] {boolean}
-   * @param [resourceUrl] {string}
-   * @return {Promise<{
-   *   data: Model[],
-   *   meta: {
-   *     totalItems: number,
-   *     itemsPerPage: number,
-   *     totalPages: number,
-   *     currentPage: number,
-   *     itemCount: number,
-   *   },
-   *   links: {
-   *     next: string,
-   *     previous: string,
-   *     last: string,
-   *     first: string
-   *   }
-   * }>}
-   */
-  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<PaginatedResponse>
-
-  /**
-   * Count the number of models in database.
-   *
-   * @return {Promise<number>}
-   */
-  count(): Promise<number>
-
-  /**
-   * Create one model in database.
-   *
-   * @param data {any}
-   * @param {boolean} ignorePersistOnly
-   * @return {Promise<any>}
-   */
-  create(data: any, ignorePersistOnly?: boolean): Promise<any>
-
-  /**
-   * Create many models in database.
-   *
-   * @param data {any[]}
-   * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any[]>}
-   */
-  createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
-
-  /**
-   * Create data or update if already exists.
-   *
-   * @param {any} data
-   * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any | any[]>}
-   */
-  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
-
-  /**
-   * Update one or more models in database.
-   *
-   * @param data {any}
-   * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any|any[]>}
-   */
-  update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
-
-  /**
-   * Delete one or more models in database.
-   *
-   * @param [force] {boolean}
-   * @return {Promise<any|any[]|void>}
-   */
-  delete(force?: boolean): Promise<any | any[] | void>
-
-  /**
-   * Remove the criteria from query builder by name.
-   *
-   * @param name
-   * @return {ModelQueryBuilder}
-   */
-  removeCriteria(name: string): ModelQueryBuilder
-
-  /**
-   * List the criterias from query builder.
-   *
-   * @param withRemoved {boolean}
-   * @return {any}
-   */
-  listCriterias(withRemoved?: boolean): any
-
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {ModelQueryBuilder}
-   */
-  select(...columns: string[]): ModelQueryBuilder
-
-  /**
-   * Set how many models should be skipped in your query.
-   *
-   * @param number {number}
-   * @return {ModelQueryBuilder}
-   */
-  offset(number: number): ModelQueryBuilder
-
-  /**
-   * Set the limit of models in your query.
-   *
-   * @param number {number}
-   * @return {ModelQueryBuilder}
-   */
-  limit(number: number): ModelQueryBuilder
-
-  /**
-   * Set the order in your query.
-   *
-   * @param [columnName] {string}
-   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
-   * @return {ModelQueryBuilder}
-   */
-  orderBy(columnName?: boolean, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): ModelQueryBuilder
-
-  /**
-   * Include some relation in your query.
-   *
-   * @param [relationName] {string|any}
-   * @return {ModelQueryBuilder}
-   */
-  includes(relationName: string): ModelQueryBuilder
-
-  /**
-   * Set a where statement in your query.
-   *
-   * @return {ModelQueryBuilder}
-   */
-  where(statement: Record<string, any>): ModelQueryBuilder
-  where(statement: string, value: any): ModelQueryBuilder
-  where(statement: string, operation: string, value: any): ModelQueryBuilder
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @return {ModelQueryBuilder}
-   */
-  whereNot(statement: Record<string, any>): ModelQueryBuilder
-  whereNot(statement: string, value: any): ModelQueryBuilder
-
-  /**
-   * Set a where like statement in your query.
-   *
-   * @return {ModelQueryBuilder}
-   */
-  whereLike(statement: Record<string, any>): ModelQueryBuilder
-  whereLike(statement: string, value: any): ModelQueryBuilder
-
-  /**
-   * Set a where ILike statement in your query.
-   *
-   * @return {ModelQueryBuilder}
-   */
-  whereILike(statement: Record<string, any>): ModelQueryBuilder
-  whereILike(statement: string, value: any): ModelQueryBuilder
-
-  /**
-   * Set a where in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {ModelQueryBuilder}
-   */
-  whereIn(columnName: string, values: any[]): ModelQueryBuilder
-
-  /**
-   * Set a where not in statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {any[]}
-   * @return {ModelQueryBuilder}
-   */
-  whereNotIn(columnName: string, values: any[]): ModelQueryBuilder
-
-  /**
-   * Set a where between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {ModelQueryBuilder}
-   */
-  whereBetween(columnName: string, values: [any, any]): ModelQueryBuilder
-
-  /**
-   * Set a where not between statement in your query.
-   *
-   * @param columnName {string}
-   * @param values {[any, any]}
-   * @return {ModelQueryBuilder}
-   */
-  whereNotBetween(columnName: string, values: [any, any]): ModelQueryBuilder
-
-  /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {ModelQueryBuilder}
-   */
-  whereNull(columnName: string): ModelQueryBuilder
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {ModelQueryBuilder}
-   */
-  whereNotNull(columnName: string): ModelQueryBuilder
 }
 
 export class Column {
@@ -2021,56 +1307,56 @@ export class Column {
 
 export class Relation {
   /**
-   * Create a oneToOne relation schema.
+   * Create a hasOne relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('one-to-one').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('hasOne').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */
-  static oneToOne(inverseSide: string, model: any, cascade?: boolean): any
+  static hasOne(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
-   * Create a oneToMany relation schema.
+   * Create a hasMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('one-to-many').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('hasMany').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */
-  static oneToMany(inverseSide: string, model: any, cascade?: boolean): any
+   static hasMany(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
-   * Create a manyToOne relation schema.
+   * Create a belongsTo relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('many-to-one').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('belongsTo').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToOne(inverseSide: string, model: any, cascade?: boolean): any
+   static belongsTo(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
    * Create a manyToMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.target(model).type('many-tomany').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('manyToMany').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(inverseSide: string, model: any, cascade?: boolean): any
+   static manyToMany(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
    * Set the target model that your relation is pointing.
@@ -2276,4 +1562,580 @@ export class DatabaseLoader {
    * @return {Promise<any[]>}
    */
   static loadEntities(connection: string, path?: string, defaultConnection?: string): Promise<any[]>
+}
+
+/**
+ * Query Builders
+ */
+
+ export class QueryBuilder {
+  /**
+   * Calculate the average of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  avg(column: string): Promise<number>
+
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  avgDistinct(column: string): Promise<number>
+
+  /**
+   * Get the max number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  max(column: string): Promise<number>
+
+  /**
+   * Get the min number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  min(column: string): Promise<number>
+
+  /**
+   * Sum all numbers of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  sum(column: string): Promise<number>
+
+  /**
+   * Sum all numbers of a given column in distinct mode.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  sumDistinct(column: string): Promise<number>
+
+  /**
+   * Increment a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  increment(column: string): Promise<number | number[]>
+
+  /**
+   * Decrement a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  decrement(column: string): Promise<number | number[]>
+
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  count(column?: string): Promise<number>
+
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  countDistinct(column?: string): Promise<number>
+
+  /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  findOrFail(): Promise<any>
+
+  /**
+   * Find a value in database.
+   *
+   * @return {Promise<any>}
+   */
+  find(): Promise<any>
+
+  /**
+   * Find many values in database.
+   *
+   * @return {Promise<any[]>}
+   */
+  findMany(): Promise<any[]>
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  collection(): Promise<import('@secjs/utils').Collection>
+
+  /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {}
+   */
+  paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
+
+  /**
+   * Create a value in database.
+   *
+   * @param {any} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any>}
+   */
+  create(data: any, primaryKey?: string): Promise<any>
+
+  /**
+   * Create many values in database.
+   *
+   * @param {any[]} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any[]>}
+   */
+  createMany(data: any[], primaryKey?: string): Promise<any[]>
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
+
+  /**
+   * Update a value in database.
+   *
+   * @param {any} data
+   * @param {boolean} force
+   * @return {Promise<any | any[]>}
+   */
+  update(data: any, force?: boolean): Promise<any | any[]>
+
+  /**
+   * Delete one value in database.
+   *
+   * @return {Promise<any | void>}
+   */
+  delete(): Promise<any | void>
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {QueryBuilder}
+   */
+  select(...columns: string[]): QueryBuilder
+
+  /**
+   * Set a join statement in your query.
+   *
+   * @param tableName {string}
+   * @param column1 {string}
+   * @param [operation] {string}
+   * @param column2 {string}
+   * @param joinType {string}
+   * @return {QueryBuilder}
+   */
+  join(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): QueryBuilder
+  join(tableName: string, column1: string, operation: string, column2: string): QueryBuilder
+  join(tableName: string, column1: string, column2: string): QueryBuilder
+
+  /**
+   * Set a group by statement in your query.
+   *
+   * @param columns {string}
+   * @return {QueryBuilder}
+   */
+  groupBy(...columns: string[]): QueryBuilder
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  where(statement: Record<string, any>): QueryBuilder
+  where(key: string, value: any): QueryBuilder
+  where(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhere(statement: Record<string, any>): QueryBuilder
+  orWhere(key: string, value: any): QueryBuilder
+  orWhere(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereNot(statement: Record<string, any>): QueryBuilder
+  whereNot(key: string, value: any): QueryBuilder
+
+  /**
+   * Set a where like statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereLike(statement: Record<string, any>): QueryBuilder
+  whereLike(key: string, value: any): QueryBuilder
+
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereILike(statement: Record<string, any>): QueryBuilder
+  whereILike(key: string, value: any): QueryBuilder
+
+  /**
+   * Set a where in statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set a where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  whereNotIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNull(columnName: string): QueryBuilder
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNotNull(columnName: string): QueryBuilder
+
+  /**
+   * Set a where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  whereBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set a where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  whereNotBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set a order by statement in your query.
+   *
+   * @param columnName {string}
+   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
+   * @return {QueryBuilder}
+   */
+  orderBy(columnName: string, direction: 'asc' | 'desc' | 'ASC' | 'DESC'): QueryBuilder
+
+  /**
+   * Set the skip number in your query.
+   *
+   * @param number {number}
+   * @return {QueryBuilder}
+   */
+  offset(number: number): QueryBuilder
+
+  /**
+   * Set the limit number in your query.
+   *
+   * @param number {number}
+   * @return {QueryBuilder}
+   */
+  limit(number: number): QueryBuilder
+}
+
+export class Criteria {
+  /**
+   * Set the table that this query will be executed.
+   *
+   * @param tableName {string|any}
+   * @return {Criteria}
+   */
+  static table(tableName: string | any): typeof Criteria
+
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {Criteria}
+   */
+  static select(...columns: string[]): typeof Criteria
+
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {any}
+   * @return {Criteria}
+   */
+  static includes(relationName: string, callback?: (query: ModelQueryBuilder) => Promise<void>): typeof Criteria
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+   static where(statement: Record<string, any>): typeof Criteria
+   static where(key: string, value: any): typeof Criteria
+   static where(key: string, operation: string, value: any): typeof Criteria
+
+   /**
+   * Set a or where statement in your query.
+   *
+   * @return {Criteria}
+   */
+  static orWhere(statement: Record<string, any>): typeof Criteria
+  static orWhere(key: string, value: any): typeof Criteria
+  static orWhere(statement: string, operation: string, value: any): typeof Criteria
+ 
+   /**
+    * Set a where not statement in your query.
+    *
+    * @return {Criteria}
+    */
+  static whereNot(statement: Record<string, any>): typeof Criteria
+  static whereNot(key: string, value: any): typeof Criteria
+
+  /**
+   * Set a where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereLike(statement: Record<string, any>): typeof Criteria
+  static whereLike(key: string, value: any): typeof Criteria
+
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereILike(statement: Record<string, any>): typeof Criteria
+  static whereILike(key: string, value: any): typeof Criteria
+  
+  /**
+   * Set a where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {Criteria}
+   */
+  static whereIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set a where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {Criteria}
+   */
+  static whereNotIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {Criteria}
+   */
+  static whereNull(columnName: string): typeof Criteria
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {Criteria}
+   */
+  static whereNotNull(columnName: string): typeof Criteria
+
+  /**
+   * Set a where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {Criteria}
+   */
+  static whereBetween(columnName: string, values: [any, any]): typeof Criteria
+
+  /**
+   * Set a where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {Criteria}
+   */
+  static whereNotBetween(columnName: string, values: [any, any]): typeof Criteria
+
+  /**
+   * Set a join statement in your query.
+   *
+   * @param tableName {string}
+   * @param column1 {string}
+   * @param [operation] {string}
+   * @param column2 {string}
+   * @param joinType {string}
+   * @return {Criteria}
+   */
+   static join(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): typeof Criteria
+   static join(tableName: string, column1: string, operation: string, column2: string): typeof Criteria
+   static join(tableName: string, column1: string, column2: string): typeof Criteria
+
+  /**
+   * Set a order by statement in your query.
+   *
+   * @param columnName {string}
+   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
+   * @return {Criteria}
+   */
+  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): typeof Criteria
+
+  /**
+   * Set a group by statement in your query.
+   *
+   * @param columns {string}
+   * @return {Criteria}
+   */
+   static groupBy(...columns: string[]): typeof Criteria
+
+  /**
+   * Set the offset number in your query.
+   *
+   * @param number {number}
+   * @return {Criteria}
+   */
+  static offset(number: number): typeof Criteria
+
+  /**
+   * Set the limit number in your query.
+   *
+   * @param number {number}
+   * @return {Criteria}
+   */
+  static limit(number: number): typeof Criteria
+
+  /**
+   * Get the criteria map.
+   *
+   * @return {Map<string, any[]>}
+   */
+  static get(): Map<string, any[]>
+}
+
+ export class ModelQueryBuilder extends QueryBuilder {
+  /**
+   * Creates a new instance of ModelQueryBuilder.
+   *
+   * @param model
+   * @param withCriterias
+   * @return {ModelQueryBuilder}
+   */
+  constructor(model: any, withCriterias?: boolean)
+
+  /**
+   * Create one model in database.
+   *
+   * @param data {any}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any>}
+   */
+  create(data: any, ignorePersistOnly?: boolean): Promise<any>
+
+  /**
+   * Create many models in database.
+   *
+   * @param data {any[]}
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any[]>}
+   */
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
+
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+
+  /**
+   * Update one or more models in database.
+   *
+   * @param data {any}
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any|any[]>}
+   */
+  update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+
+  /**
+   * Delete one or more models in database.
+   *
+   * @param [force] {boolean}
+   * @return {Promise<any|any[]|void>}
+   */
+  delete(force?: boolean): Promise<any | any[] | void>
+
+  /**
+   * Remove the criteria from query builder by name.
+   *
+   * @param name
+   * @return {ModelQueryBuilder}
+   */
+  removeCriteria(name: string): ModelQueryBuilder
+
+  /**
+   * List the criterias from query builder.
+   *
+   * @param withRemoved {boolean}
+   * @return {any}
+   */
+  listCriterias(withRemoved?: boolean): any
+
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {any}
+   * @return {Criteria}
+   */
+  includes(relationName: string, callback?: (query: ModelQueryBuilder) => Promise<void>): ModelQueryBuilder
 }

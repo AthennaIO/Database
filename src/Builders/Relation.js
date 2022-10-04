@@ -20,8 +20,8 @@ export class Relation {
    * This method is an alias for:
    * @example Relation.model(model).type('hasOne').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */
@@ -57,13 +57,13 @@ export class Relation {
   }
 
   /**
-   * Create a manyToOne relation schema.
+   * Create a belongsTo relation schema.
    *
    * This method is an alias for:
    * @example Relation.model(model).type('belongsTo').inverseSide(inverseSide).get()
    *
-   * @param inverseSide {string}
    * @param model {any}
+   * @param inverseSide {string}
    * @param cascade {boolean}
    * @return {any}
    */

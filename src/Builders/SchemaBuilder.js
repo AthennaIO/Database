@@ -58,7 +58,7 @@ export class SchemaBuilder {
    * @param {string} connection
    * @return {SchemaBuilder}
    */
-  buildConnection(connection) {
+  setConnection(connection) {
     this.connection = connection
 
     return this
@@ -70,7 +70,7 @@ export class SchemaBuilder {
    * @param name
    * @return {SchemaBuilder}
    */
-  buildName(name) {
+  setName(name) {
     this.name = name
 
     return this
@@ -82,7 +82,7 @@ export class SchemaBuilder {
    * @param tableName
    * @return {SchemaBuilder}
    */
-  buildTable(tableName) {
+  setTable(tableName) {
     this.tableName = tableName
 
     return this
@@ -93,8 +93,8 @@ export class SchemaBuilder {
    *
    * @param schema {any}
    */
-  buildSchema(schema) {
-    return this.buildColumns(schema).buildRelations(schema)
+  setSchema(schema) {
+    return this.setColumns(schema).setRelations(schema)
   }
 
   /**
@@ -103,7 +103,7 @@ export class SchemaBuilder {
    * @param columns {any}
    * @return {SchemaBuilder}
    */
-  buildColumns(columns) {
+  setColumns(columns) {
     Object.keys(columns).forEach(key => {
       const column = columns[key]
 
@@ -129,7 +129,7 @@ export class SchemaBuilder {
    * @param relations {any}
    * @return {SchemaBuilder}
    */
-  buildRelations(relations) {
+  setRelations(relations) {
     Object.keys(relations).forEach(key => {
       const relation = relations[key]
 

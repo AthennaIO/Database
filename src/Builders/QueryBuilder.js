@@ -24,7 +24,7 @@ export class QueryBuilder {
    */
   constructor(driver, tableName) {
     this.#driver = driver
-    this.#driver.buildTable(tableName)
+    this.#driver.table(tableName)
   }
 
   /**
@@ -234,8 +234,8 @@ export class QueryBuilder {
    * @param columns {string}
    * @return {QueryBuilder}
    */
-  buildSelect(...columns) {
-    this.#driver.buildSelect(...columns)
+  select(...columns) {
+    this.#driver.select(...columns)
 
     return this
   }
@@ -250,8 +250,8 @@ export class QueryBuilder {
    * @param joinType {string}
    * @return {QueryBuilder}
    */
-  buildJoin(tableName, column1, operation = '=', column2, joinType = 'join') {
-    this.#driver.buildJoin(tableName, column1, operation, column2, joinType)
+  join(tableName, column1, operation = '=', column2, joinType = 'join') {
+    this.#driver.join(tableName, column1, operation, column2, joinType)
 
     return this
   }
@@ -262,8 +262,8 @@ export class QueryBuilder {
    * @param columns {string}
    * @return {QueryBuilder}
    */
-  buildGroupBy(...columns) {
-    this.#driver.buildGroupBy(...columns)
+  groupBy(...columns) {
+    this.#driver.groupBy(...columns)
 
     return this
   }
@@ -276,8 +276,8 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhere(statement, operation, value) {
-    this.#driver.buildWhere(statement, operation, value)
+  where(statement, operation, value) {
+    this.#driver.where(statement, operation, value)
 
     return this
   }
@@ -290,8 +290,8 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildOrWhere(statement, operation, value) {
-    this.#driver.buildOrWhere(statement, operation, value)
+  orWhere(statement, operation, value) {
+    this.#driver.orWhere(statement, operation, value)
 
     return this
   }
@@ -303,8 +303,8 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhereNot(statement, value) {
-    this.#driver.buildWhereNot(statement, value)
+  whereNot(statement, value) {
+    this.#driver.whereNot(statement, value)
 
     return this
   }
@@ -316,8 +316,8 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhereLike(statement, value) {
-    this.#driver.buildWhereLike(statement, value)
+  whereLike(statement, value) {
+    this.#driver.whereLike(statement, value)
 
     return this
   }
@@ -329,8 +329,8 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  buildWhereILike(statement, value) {
-    this.#driver.buildWhereILike(statement, value)
+  whereILike(statement, value) {
+    this.#driver.whereILike(statement, value)
 
     return this
   }
@@ -342,8 +342,8 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  buildWhereIn(columnName, values) {
-    this.#driver.buildWhereIn(columnName, values)
+  whereIn(columnName, values) {
+    this.#driver.whereIn(columnName, values)
 
     return this
   }
@@ -355,8 +355,8 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  buildWhereNotIn(columnName, values) {
-    this.#driver.buildWhereNotIn(columnName, values)
+  whereNotIn(columnName, values) {
+    this.#driver.whereNotIn(columnName, values)
 
     return this
   }
@@ -367,8 +367,8 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  buildWhereNull(columnName) {
-    this.#driver.buildWhereNull(columnName)
+  whereNull(columnName) {
+    this.#driver.whereNull(columnName)
 
     return this
   }
@@ -379,8 +379,8 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  buildWhereNotNull(columnName) {
-    this.#driver.buildWhereNotNull(columnName)
+  whereNotNull(columnName) {
+    this.#driver.whereNotNull(columnName)
 
     return this
   }
@@ -392,8 +392,8 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  buildWhereBetween(columnName, values) {
-    this.#driver.buildWhereBetween(columnName, values)
+  whereBetween(columnName, values) {
+    this.#driver.whereBetween(columnName, values)
 
     return this
   }
@@ -405,8 +405,8 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  buildWhereNotBetween(columnName, values) {
-    this.#driver.buildWhereNotBetween(columnName, values)
+  whereNotBetween(columnName, values) {
+    this.#driver.whereNotBetween(columnName, values)
 
     return this
   }
@@ -418,8 +418,8 @@ export class QueryBuilder {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {QueryBuilder}
    */
-  buildOrderBy(columnName, direction = 'ASC') {
-    this.#driver.buildOrderBy(columnName, direction)
+  orderBy(columnName, direction = 'ASC') {
+    this.#driver.orderBy(columnName, direction)
 
     return this
   }
@@ -430,8 +430,8 @@ export class QueryBuilder {
    * @param number {number}
    * @return {QueryBuilder}
    */
-  buildOffset(number) {
-    this.#driver.buildOffset(number)
+  offset(number) {
+    this.#driver.offset(number)
 
     return this
   }
@@ -442,8 +442,8 @@ export class QueryBuilder {
    * @param number {number}
    * @return {QueryBuilder}
    */
-  buildLimit(number) {
-    this.#driver.buildLimit(number)
+  limit(number) {
+    this.#driver.limit(number)
 
     return this
   }

@@ -40,11 +40,11 @@ export class Criteria {
    * Set a include statement in your query.
    *
    * @param relation {string|any}
-   * @param [operation] {string}
+   * @param [callback] {any}
    * @return {Criteria}
    */
-  static includes(relation, operation) {
-    this.#criteria.set('includes', [relation, operation])
+  static includes(relation, callback) {
+    this.#criteria.set('includes', [relation, callback])
 
     return this
   }
@@ -53,11 +53,39 @@ export class Criteria {
    * Set a where statement in your query.
    *
    * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
    * @param [value] {any}
    * @return {Criteria}
    */
-  static where(statement, value) {
-    this.#criteria.set('where', [statement, value])
+  static where(statement, operation, value) {
+    this.#criteria.set('where', [statement, operation, value])
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static orWhere(statement, operation, value) {
+    this.#criteria.set('orWhere', [statement, operation, value])
+
+    return this
+  }
+
+  /**
+   * Set a where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {Criteria}
+   */
+  static whereNot(statement, value) {
+    this.#criteria.set('whereNot', [statement, value])
 
     return this
   }
@@ -84,19 +112,6 @@ export class Criteria {
    */
   static whereILike(statement, value) {
     this.#criteria.set('whereILike', [statement, value])
-
-    return this
-  }
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {Criteria}
-   */
-  static whereNot(statement, value) {
-    this.#criteria.set('whereNot', [statement, value])
 
     return this
   }
@@ -191,13 +206,25 @@ export class Criteria {
   }
 
   /**
-   * Set the skip number in your query.
+   * Set the group by in your query.
+   *
+   * @param columns {string}
+   * @return {Criteria}
+   */
+  static groupBy(...columns) {
+    this.#criteria.set('groupBy', [columns])
+
+    return this
+  }
+
+  /**
+   * Set the offset number in your query.
    *
    * @param number {number}
    * @return {Criteria}
    */
-  static skip(number) {
-    this.#criteria.set('skip', [number])
+  static offset(number) {
+    this.#criteria.set('offset', [number])
 
     return this
   }
