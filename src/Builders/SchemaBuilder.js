@@ -8,6 +8,7 @@
  */
 
 import { Config } from '@secjs/utils'
+import { Database } from '../index.js'
 
 export class SchemaBuilder {
   /**
@@ -225,5 +226,24 @@ export class SchemaBuilder {
     })
 
     return newStatement
+  }
+
+  async sync() {
+    return Database.connection(this.connection).createTable(
+      this.table,
+      builder => {
+        this.columns.forEach(column => {
+          const build = builder[column.type](column.name, column.length)
+
+          if (column.default) build.defaultTo(column.default)
+          if (column.isUnique) build.unique()
+          if (column.isPrimary) build.primary()
+          if (column.isNullable) build.nullable()
+        })
+
+        // TODO Implement
+        this.relations.forEach(relation => {})
+      },
+    )
   }
 }

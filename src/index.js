@@ -9,6 +9,7 @@
 
 import { QueryBuilder } from '#src/Builders/QueryBuilder'
 import { DriverFactory } from '#src/Factories/DriverFactory'
+import { Synchronizer } from '#src/Models/Synchronizer'
 
 export * from './Builders/Column.js'
 export * from './Builders/Criteria.js'
@@ -58,6 +59,7 @@ export class DatabaseImpl {
    */
   connection(connection) {
     this.#driver = DriverFactory.fabricate(connection)
+    this.#connection = connection
 
     return this
   }
@@ -71,6 +73,8 @@ export class DatabaseImpl {
    */
   async connect(force = false, saveOnFactory = true) {
     await this.#driver.connect(force, saveOnFactory)
+
+    await Synchronizer.sync()
 
     return this
   }
