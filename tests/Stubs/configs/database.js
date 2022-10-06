@@ -48,7 +48,7 @@ export default {
       password: '12345',
       database: 'postgres',
       debug: false,
-      synchronize: false,
+      synchronize: true,
     },
 
     nullDriver: {

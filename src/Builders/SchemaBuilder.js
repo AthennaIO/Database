@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@secjs/utils'
+import { Config, String } from '@secjs/utils'
 import { Database } from '../index.js'
 
 export class SchemaBuilder {
@@ -84,7 +84,7 @@ export class SchemaBuilder {
    * @return {SchemaBuilder}
    */
   setTable(tableName) {
-    this.tableName = tableName
+    this.table = tableName
 
     return this
   }
@@ -153,8 +153,13 @@ export class SchemaBuilder {
    * @return {SchemaBuilder}
    */
   isToSynchronize() {
+    const connection =
+      this.connection === 'default'
+        ? Config.get('database.default')
+        : this.connection
+
     this.synchronize = Config.get(
-      `database.connections.${this.connection}.synchronize`,
+      `database.connections.${connection}.synchronize`,
       false,
     )
 
@@ -228,22 +233,42 @@ export class SchemaBuilder {
     return newStatement
   }
 
+  /**
+   * Synchronize this schema with database.
+   *
+   * @return {Promise<void>}
+   */
   async sync() {
-    return Database.connection(this.connection).createTable(
-      this.table,
-      builder => {
-        this.columns.forEach(column => {
-          const build = builder[column.type](column.name, column.length)
+    if (!this.synchronize) {
+      return
+    }
 
-          if (column.default) build.defaultTo(column.default)
-          if (column.isUnique) build.unique()
-          if (column.isPrimary) build.primary()
-          if (column.isNullable) build.nullable()
-        })
+    const DB = Database.connection(this.connection)
 
-        // TODO Implement
-        this.relations.forEach(relation => {})
-      },
-    )
+    await DB.dropTable(this.table)
+
+    return DB.createTable(this.table, builder => {
+      this.columns.forEach(column => {
+        if (column.createDate || column.updateDate) {
+          return
+        }
+
+        const build = builder[column.type](column.name, column.length)
+
+        if (column.default) build.defaultTo(column.default)
+        if (column.isUnique) build.unique()
+        if (column.isPrimary) build.primary()
+        if (column.isNullable) build.nullable()
+      })
+
+      const createDateColumn = this.columns.find(column => column.createDate)
+
+      if (createDateColumn) {
+        const isCamelCase =
+          createDateColumn.name === String.toCamelCase(createDateColumn.name)
+
+        builder.timestamps(true, true, isCamelCase)
+      }
+    })
   }
 }

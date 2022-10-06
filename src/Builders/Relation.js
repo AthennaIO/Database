@@ -25,6 +25,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
+  // TODO Test
   static hasOne(model, inverseSide, cascade = false) {
     const relation = this.model(model).type('hasOne').inverseSide(inverseSide)
 
@@ -90,6 +91,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
+  // TODO Test
   static manyToMany(model, inverseSide, cascade = false) {
     const relation = this.model(model)
       .type('manyToMany')

@@ -32,6 +32,13 @@ export class DatabaseImpl {
   connection(connection: string): DatabaseImpl
 
   /**
+   * Synchronize all the models of this database connection.
+   *
+   * @return {Promise<void>}
+   */
+  sync(path?: string): Promise<void>
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -756,7 +763,7 @@ export class Column {
    * Create an auto incremented integer primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('int').isGenerated().isPrimary().get()
+   * @example Column.type('integer').isGenerated().isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
@@ -781,7 +788,7 @@ export class Column {
    * @example Column.type('varchar').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
@@ -795,7 +802,7 @@ export class Column {
    * @param {string|number} [length]
    */
   static string(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     length?: string|number,
     default?: any,
@@ -814,7 +821,7 @@ export class Column {
    * @example Column.type('enum').enu(values).get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
@@ -828,7 +835,7 @@ export class Column {
    * @param {any} [values]
    */
   static enum(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     length?: string|number,
     default?: any,
@@ -844,10 +851,10 @@ export class Column {
    * Create an "integer" column.
    *
    * This method is an alias for:
-   * @example Column.type('int').get()
+   * @example Column.type('integer').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
@@ -860,7 +867,7 @@ export class Column {
    *  }} [optionsOrName]
    */
   static integer(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     scale?: number,
@@ -879,7 +886,7 @@ export class Column {
    * @example Column.type('float').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
@@ -893,7 +900,7 @@ export class Column {
    *  @return {any}
    */
   static float(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     scale?: number,
@@ -912,7 +919,7 @@ export class Column {
    * @example Column.type('double').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
@@ -926,7 +933,7 @@ export class Column {
    *  @return {any}
    */
   static double(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     scale?: number,
@@ -945,7 +952,7 @@ export class Column {
    * @example Column.type('numeric').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
@@ -961,7 +968,7 @@ export class Column {
    * @return {any}
    */
   static numeric(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     scale?: number,
@@ -980,7 +987,7 @@ export class Column {
    * @example Column.type('decimal').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
@@ -996,7 +1003,7 @@ export class Column {
    *  @return {any}
    */
   static decimal(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     scale?: number,
@@ -1015,7 +1022,7 @@ export class Column {
    * @example Column.type('json').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
@@ -1027,7 +1034,7 @@ export class Column {
    *  @return {any}
    */
   static json(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     isHidden?: boolean,
@@ -1044,7 +1051,7 @@ export class Column {
    * @example Column.type('jsonb').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
@@ -1056,7 +1063,7 @@ export class Column {
    *  @return {any}
    */
   static jsonb(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     isHidden?: boolean,
@@ -1073,7 +1080,7 @@ export class Column {
    * @example Column.type('date').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
@@ -1085,7 +1092,7 @@ export class Column {
    *  @return {any}
    */
   static date(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     isHidden?: boolean,
@@ -1102,7 +1109,7 @@ export class Column {
    * @example Column.type('datetime').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
@@ -1114,7 +1121,7 @@ export class Column {
    *  @return {any}
    */
   static datetime(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     isHidden?: boolean,
@@ -1131,7 +1138,7 @@ export class Column {
    * @example Column.type('timestamp').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
@@ -1143,7 +1150,7 @@ export class Column {
    *  @return {any}
    */
   static timestamp(optionsOrName?: string | {
-    type?: import('typeorm').ColumnType,
+    type?: import('knex').Knex.TableBuilder,
     name?: string,
     default?: any,
     isHidden?: boolean,
@@ -1180,10 +1187,10 @@ export class Column {
   /**
    * Set the type of your column.
    *
-   * @param {import('typeorm').ColumnType} type
+   * @param {import('knex').Knex.TableBuilder} type
    * @return {this}
    */
-  static type(type: import('typeorm').ColumnType): typeof Column
+  static type(type: import('knex').Knex.TableBuilder): typeof Column
 
   /**
    * Set the real name of your column.

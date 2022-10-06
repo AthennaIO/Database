@@ -7,9 +7,10 @@
  * file that was distributed with this source code.
  */
 
+import { Config, Module, Path } from '@secjs/utils'
+
 import { QueryBuilder } from '#src/Builders/QueryBuilder'
 import { DriverFactory } from '#src/Factories/DriverFactory'
-import { Synchronizer } from '#src/Models/Synchronizer'
 
 export * from './Builders/Column.js'
 export * from './Builders/Criteria.js'
@@ -33,7 +34,7 @@ export class DatabaseImpl {
    *
    * @type {string|null}
    */
-  #connection = 'default'
+  #connection = Config.get('database.default')
 
   /**
    * The drivers responsible for handling database operations.
@@ -65,6 +66,38 @@ export class DatabaseImpl {
   }
 
   /**
+   * Synchronize all the models of this database connection.
+   *
+   * @return {Promise<void>}
+   */
+  async sync(path = Path.app('Models')) {
+    const files = await Module.getAllJSFilesFrom(path)
+
+    const promises = files.map(file => {
+      return Module.getFrom(file.path).then(Model => {
+        let modelConnection = Model.connection
+        let databaseConnection = this.#connection
+
+        if (Model.connection === 'default') {
+          modelConnection = Config.get('database.default')
+        }
+
+        if (this.#connection === 'default') {
+          databaseConnection = Config.get('database.default')
+        }
+
+        if (modelConnection !== databaseConnection) {
+          return
+        }
+
+        return Model.getSchema().sync()
+      })
+    })
+
+    await Promise.all(promises)
+  }
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -73,8 +106,6 @@ export class DatabaseImpl {
    */
   async connect(force = false, saveOnFactory = true) {
     await this.#driver.connect(force, saveOnFactory)
-
-    await Synchronizer.sync()
 
     return this
   }

@@ -18,13 +18,13 @@ export class Column {
    * Create an auto incremented integer primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('int').isGenerated().isPrimary().get()
+   * @example Column.type('integer').isGenerated().isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
    */
   static autoIncrementedInt(name) {
-    const column = this.type('int').isGenerated().isPrimary()
+    const column = this.type('increments').isPrimary()
 
     if (name) {
       column.name(name)
@@ -42,6 +42,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
+  // TODO Test
   static autoIncrementedUuid(name) {
     const column = this.type('uuid').isGenerated().isPrimary()
 
@@ -148,7 +149,7 @@ export class Column {
    *  }} [optionsOrName]
    */
   static integer(optionsOrName) {
-    const column = this.type('int')
+    const column = this.type('integer')
 
     if (!optionsOrName) {
       return column.get()
@@ -532,7 +533,7 @@ export class Column {
    * @return {any}
    */
   static deletedAt(name) {
-    const column = this.isDeleteDate()
+    const column = this.type('datetime').isNullable().default(null)
 
     if (name) {
       column.name(name)
@@ -544,7 +545,7 @@ export class Column {
   /**
    * Set the type of your column.
    *
-   * @param {import('typeorm').ColumnType} type
+   * @param {import('knex').Knex.TableBuilder} type
    * @return {this}
    */
   static type(type) {
