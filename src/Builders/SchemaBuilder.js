@@ -245,8 +245,6 @@ export class SchemaBuilder {
 
     const DB = Database.connection(this.connection)
 
-    await DB.dropTable(this.table)
-
     return DB.createTable(this.table, builder => {
       this.columns.forEach(column => {
         if (column.createDate || column.updateDate) {
