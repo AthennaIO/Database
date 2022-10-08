@@ -99,17 +99,19 @@ export class ModelGenerator {
     Object.keys(object).forEach(key => {
       const property = columnDictionary[key]
 
-      const column = columns.find(c => c.name === columnDictionary[key])
-
-      if (column.isHidden) {
-        return
-      }
+      const column = columns.find(c => c.name === property)
 
       if (key === '__v') {
         return
       }
 
-      if (!property) {
+      if (!column) {
+        model[key] = object[key]
+
+        return
+      }
+
+      if (column.isHidden) {
         return
       }
 

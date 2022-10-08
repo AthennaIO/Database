@@ -9,6 +9,14 @@
 
 export class ModelFactory {
   /**
+   * The model that we are going to use to generate
+   * data.
+   *
+   * @type {any}
+   */
+  Model = null
+
+  /**
    * The number of models to be created.
    *
    * @type {number}
@@ -16,19 +24,11 @@ export class ModelFactory {
   #count = 1
 
   /**
-   * The model that we are going to use to generate
-   * data.
-   *
-   * @type {any}
-   */
-  #Model = null
-
-  /**
    * Set the returning key that this factory will return.
    *
    * @type {string|null}
    */
-  #returning = null
+  returning = null
 
   /**
    * Creates a new instance of ModelFactory.
@@ -38,8 +38,8 @@ export class ModelFactory {
    * @return {ModelFactory}
    */
   constructor(Model, returning = '*') {
-    this.#Model = Model
-    this.#returning = returning
+    this.Model = Model
+    this.returning = returning
   }
 
   /**
@@ -69,8 +69,8 @@ export class ModelFactory {
 
     let data = await Promise.all(promises)
 
-    if (this.#returning !== '*') {
-      data = data.map(d => d[this.#returning])
+    if (this.returning !== '*') {
+      data = data.map(d => d[this.returning])
     }
 
     if (asArrayOnOne && data.length === 1) {
@@ -93,10 +93,10 @@ export class ModelFactory {
       promises.push(this.#getDefinition(override, 'create'))
     }
 
-    let data = await this.#Model.createMany(await Promise.all(promises), true)
+    let data = await this.Model.createMany(await Promise.all(promises), true)
 
-    if (this.#returning !== '*') {
-      data = data.map(d => d[this.#returning])
+    if (this.returning !== '*') {
+      data = data.map(d => d[this.returning])
     }
 
     if (asArrayOnOne && data.length === 1) {
@@ -114,16 +114,16 @@ export class ModelFactory {
    * @return {Promise<any>}
    */
   async #getDefinition(override, method) {
-    const data = await this.#Model.definition()
+    const data = await this.Model.definition()
 
     const promises = Object.keys(data).reduce((promises, key) => {
       if ((override && override[key]) || !(data[key] instanceof ModelFactory)) {
         return promises
       }
 
-      const subFactory = data[key]
+      const SubFactory = data[key]
 
-      const result = subFactory[method]().then(r => (data[key] = r))
+      const result = SubFactory[method]().then(r => (data[key] = r))
 
       promises.push(result)
 
