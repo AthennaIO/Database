@@ -7,13 +7,13 @@
  * file that was distributed with this source code.
  */
 
-import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
+import { test } from '@japa/runner'
+import { Config, Folder, Path } from '@secjs/utils'
 
+import { NotImplementedMigrationException } from '#src/Exceptions/NotImplementedMigrationException'
 import { Database, Migration } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { NotImplementedMigrationException } from '#src/Exceptions/NotImplementedMigrationException'
 
 test.group('MigrationTest', group => {
   /** @type {import('#src/index').DatabaseImpl} */
@@ -36,6 +36,9 @@ test.group('MigrationTest', group => {
   group.each.teardown(async () => {
     await DB.dropTable('products')
     await DB.dropTable('users')
+    await DB.dropTable('students_courses')
+    await DB.dropTable('courses')
+    await DB.dropTable('students')
     await DB.dropTable('migrations')
     await DB.dropTable('migrations_lock')
     await DB.close()

@@ -42,7 +42,6 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  // TODO Test
   static autoIncrementedUuid(name) {
     const column = this.type('uuid').isPrimary()
 

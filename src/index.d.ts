@@ -453,6 +453,21 @@ export class SchemaBuilder {
 
 export class ModelFactory {
   /**
+   * The model that we are going to use to generate
+   * data.
+   *
+   * @type {any}
+   */
+   Model: Model
+ 
+   /**
+    * Set the returning key that this factory will return.
+    *
+    * @type {string|null}
+    */
+   returning: string
+
+  /**
    * Creates a new instance of ModelFactory.
    *
    * @param Model {any}
