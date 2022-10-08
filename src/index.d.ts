@@ -12,6 +12,7 @@ import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@secjs/utils'
 import { DataSource } from 'typeorm'
 
+export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
 
 export class DatabaseImpl {
