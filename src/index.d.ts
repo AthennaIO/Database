@@ -845,6 +845,37 @@ export class Column {
   }, length?: number): any
 
   /**
+   * Create a "uuid" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('uuid').get()
+   *
+   * @param {string|{
+   *  type?: import('knex').Knex.TableBuilder,
+   *  name?: string,
+   *  length?: string|number,
+   *  default?: any,
+   *  enu?: any,
+   *  isHidden?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {string|number} [length]
+   */
+  static uuid(optionsOrName?: string | {
+    type?: import('knex').Knex.TableBuilder,
+    name?: string,
+    length?: string|number,
+    default?: any,
+    enu?: any,
+    isHidden?: boolean,
+    isPrimary?: boolean,
+    isUnique?: boolean,
+    isNullable?: boolean,
+  }, length?: number): any
+
+  /**
    * Create an "enum" column.
    *
    * This method is an alias for:

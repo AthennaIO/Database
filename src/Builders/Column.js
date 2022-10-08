@@ -93,6 +93,45 @@ export class Column {
   }
 
   /**
+   * Create a "uuid" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('uuid').get()
+   *
+   * @param {string|{
+   *  type?: import('knex').Knex.TableBuilder,
+   *  name?: string,
+   *  length?: string|number,
+   *  default?: any,
+   *  enu?: any,
+   *  isHidden?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {string|number} [length]
+   */
+  static uuid(optionsOrName, length) {
+    const column = this.type('uuid')
+
+    if (!optionsOrName) {
+      return column.get()
+    }
+
+    if (Is.Object(optionsOrName)) {
+      Object.keys(optionsOrName).forEach(key => column[key](optionsOrName[key]))
+    } else {
+      column.name(optionsOrName)
+
+      if (length) {
+        column.length(length)
+      }
+    }
+
+    return column.get()
+  }
+
+  /**
    * Create an "enum" column.
    *
    * This method is an alias for:
