@@ -166,10 +166,10 @@ export class DatabaseImpl {
   /**
    * Creates a new instance of QueryBuilder for this table.
    *
-   * @param tableName {string|any}
+   * @param tableName {string}
    * @return {QueryBuilder}
    */
-  table(tableName: string | any): QueryBuilder
+  table(tableName: string): QueryBuilder
 }
 
 export class Transaction {
@@ -322,6 +322,13 @@ export class SchemaBuilder {
   connection: string
 
   /**
+   * Set if schema should be synchronized with database.
+   *
+   * @return {boolean}
+   */
+   synchronize: boolean
+
+  /**
    * All the model columns mapped
    *
    * @type {any[]}
@@ -434,6 +441,13 @@ export class SchemaBuilder {
    * @return {any}
    */
   getReversedStatementNamesOf(statement: any): any
+
+  /**
+   * Synchronize this schema with database.
+   *
+   * @return {Promise<void>}
+   */
+  sync(): Promise<void>
 }
 
 export class ModelFactory {
@@ -543,12 +557,6 @@ export class Model {
   static get DELETED_AT(): string
 
   /**
-   * Return the criterias set to this model.
-   *
-   * @return {any}
-   */
-  static get criterias(): any
-  /**
    * The faker instance to create fake data.
    *
    * @type {Faker}
@@ -568,6 +576,13 @@ export class Model {
    * @return {any}
    */
   static definition(): any
+
+  /**
+   * Return the criterias set to this model.
+   *
+   * @return {any}
+   */
+   static criterias(): any
 
   /**
    * Create the factory object to generate data.
@@ -756,6 +771,22 @@ export class Model {
    * @return {any|any[]}
    */
   toJSON(): any | any[]
+
+  /**
+   * Return the model resource.
+   *
+   * @param [criterias] {any}
+   * @return {any|any[]}
+   */
+   toResource(criterias?: any): any | any[]
+
+  /**
+   * Update the model values that have been modified.
+   *
+   * @param [ignorePersistOnly] {boolean}
+   * @return {Promise<this>}
+   */
+  save(ignorePersistOnly?: boolean): Promise<this>
 }
 
 export class Column {
@@ -763,7 +794,7 @@ export class Column {
    * Create an auto incremented integer primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('integer').isGenerated().isPrimary().get()
+   * @example Column.type('integer').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
@@ -774,7 +805,7 @@ export class Column {
    * Create an auto incremented uuid primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('uuid').isGenerated().isPrimary().get()
+   * @example Column.type('uuid').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
@@ -794,7 +825,6 @@ export class Column {
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -808,7 +838,6 @@ export class Column {
     default?: any,
     enu?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -827,7 +856,6 @@ export class Column {
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -841,7 +869,6 @@ export class Column {
     default?: any,
     enu?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -860,7 +887,6 @@ export class Column {
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -873,7 +899,6 @@ export class Column {
     scale?: number,
     precision?: number,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -892,7 +917,6 @@ export class Column {
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -906,7 +930,6 @@ export class Column {
     scale?: number,
     precision?: number,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -925,7 +948,6 @@ export class Column {
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -939,7 +961,6 @@ export class Column {
     scale?: number,
     precision?: number,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -958,7 +979,6 @@ export class Column {
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -974,7 +994,6 @@ export class Column {
     scale?: number,
     precision?: number,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -993,7 +1012,6 @@ export class Column {
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1009,7 +1027,6 @@ export class Column {
     scale?: number,
     precision?: number,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1026,7 +1043,6 @@ export class Column {
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1038,7 +1054,6 @@ export class Column {
     name?: string,
     default?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1055,7 +1070,6 @@ export class Column {
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1067,7 +1081,6 @@ export class Column {
     name?: string,
     default?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1084,7 +1097,6 @@ export class Column {
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1096,7 +1108,6 @@ export class Column {
     name?: string,
     default?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1113,7 +1124,6 @@ export class Column {
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1125,7 +1135,6 @@ export class Column {
     name?: string,
     default?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1142,7 +1151,6 @@ export class Column {
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -1154,7 +1162,6 @@ export class Column {
     name?: string,
     default?: any,
     isHidden?: boolean,
-    isGenerated?: boolean,
     isPrimary?: boolean,
     isUnique?: boolean,
     isNullable?: boolean,
@@ -1273,14 +1280,6 @@ export class Column {
   static isHidden(is?: boolean): typeof Column
 
   /**
-   * Set if your column is auto generated.
-   *
-   * @param {boolean} [is]
-   * @return {this}
-   */
-  static isGenerated(is?: boolean): typeof Column
-
-  /**
    * Set if your column is primary.
    *
    * @param {boolean} [is]
@@ -1368,18 +1367,18 @@ export class Relation {
   /**
    * Set the target model that your relation is pointing.
    *
-   * @param model {any}
+   * @param model {typeof Model}
    * @return {Relation}
    */
-  static target(model: any): typeof Relation
+  static model(model: typeof Model): typeof Relation
 
   /**
    * Set the relation type.
    *
-   * @param type {"one-to-one","one-to-many","many-to-one","many-to-many"}
+   * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
    * @return {Relation}
    */
-  static type(type: "one-to-one" | "one-to-many" | "many-to-one" | "many-to-many"): typeof Relation
+  static type(type: "hasOne" | "hasMany" | "belongsTo" | "manyToMany"): typeof Relation
 
   /**
    * Set the inverse side of your model schema.
@@ -1390,12 +1389,12 @@ export class Relation {
   static inverseSide(name: string): typeof Relation
 
   /**
-   * Set the column that the relation should join.
+   * Set the foreign key of the relation.
    *
-   * @param column
-   * @return {Relation}
+   * @param column {string}
+   * @return {this}
    */
-  static joinColumn(column: any): typeof Relation
+   static foreignKey(column: string): typeof Relation
 
   /**
    * Set if relation should be cascaded on delete/update.
@@ -1479,35 +1478,21 @@ export class Migration {
    *
    * @return {string}
    */
-  static get tableName(): string
-
-  /**
-   * Create a table instance.
-   *
-   * @return {string}
-   */
   static get connection(): string
-
-  /**
-   * Return a new database instance using the migration connection.
-   *
-   * @return {DatabaseImpl}
-   */
-  static get DB(): DatabaseImpl
 
   /**
    * Run the migrations.
    *
    * @return {Promise<void>}
    */
-  up(): Promise<void>
+  up(knex: import('knex').Knex): Promise<void>
 
   /**
    * Reverse the migrations.
    *
    * @return {Promise<void>}
    */
-  down(): Promise<void>
+  down(knex: import('knex').Knex): Promise<void>
 }
 
 export class Seeder {
@@ -1559,16 +1544,6 @@ export class DatabaseLoader {
    * @return {any[]}
    */
   static loadTemplates(): any[]
-
-  /**
-   * Get the schema of all models with same connection.
-   *
-   * @param connection {string}
-   * @param [path] {string}
-   * @param [defaultConnection] {string}
-   * @return {Promise<any[]>}
-   */
-  static loadEntities(connection: string, path?: string, defaultConnection?: string): Promise<any[]>
 }
 
 /**
@@ -2075,7 +2050,7 @@ export class Criteria {
    * @param withCriterias
    * @return {ModelQueryBuilder}
    */
-  constructor(model: any, withCriterias?: boolean)
+  constructor(model: Model, withCriterias?: boolean)
 
   /**
    * Create one model in database.

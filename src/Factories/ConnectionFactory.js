@@ -49,6 +49,7 @@ export class ConnectionFactory {
     delete configs.pool
     delete configs.driver
     delete configs.debug
+    delete configs.synchronize
     delete configs.useNullAsDefault
 
     return knex({

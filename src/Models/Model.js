@@ -89,7 +89,7 @@ export class Model {
    *
    * @return {any}
    */
-  static get criterias() {
+  static criterias() {
     if (this.isSoftDelete) {
       return {
         deletedAt: Criteria.whereNull(this.DELETED_AT).get(),

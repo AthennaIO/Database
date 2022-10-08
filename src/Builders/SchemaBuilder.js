@@ -33,6 +33,13 @@ export class SchemaBuilder {
   connection = 'default'
 
   /**
+   * Set if schema should be synchronized with database.
+   *
+   * @return {boolean}
+   */
+  synchronize = false
+
+  /**
    * All the model columns mapped
    *
    * @type {any[]}

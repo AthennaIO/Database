@@ -18,7 +18,7 @@ export class Column {
    * Create an auto incremented integer primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('integer').isGenerated().isPrimary().get()
+   * @example Column.type('increments').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
@@ -37,14 +37,14 @@ export class Column {
    * Create an auto incremented uuid primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('uuid').isGenerated().isPrimary().get()
+   * @example Column.type('uuid').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
    */
   // TODO Test
   static autoIncrementedUuid(name) {
-    const column = this.type('uuid').isGenerated().isPrimary()
+    const column = this.type('uuid').isPrimary()
 
     if (name) {
       column.name(name)
@@ -60,13 +60,12 @@ export class Column {
    * @example Column.type('varchar').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -100,13 +99,12 @@ export class Column {
    * @example Column.type('enum').enu(values).get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -133,16 +131,15 @@ export class Column {
    * Create an "integer" column.
    *
    * This method is an alias for:
-   * @example Column.type('int').get()
+   * @example Column.type('integer').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -171,13 +168,12 @@ export class Column {
    * @example Column.type('float').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -206,13 +202,12 @@ export class Column {
    * @example Column.type('double').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -241,13 +236,12 @@ export class Column {
    * @example Column.type('numeric').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -286,13 +280,12 @@ export class Column {
    * @example Column.type('decimal').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -331,11 +324,10 @@ export class Column {
    * @example Column.type('json').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -365,11 +357,10 @@ export class Column {
    * @example Column.type('jsonb').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -399,11 +390,10 @@ export class Column {
    * @example Column.type('date').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -433,11 +423,10 @@ export class Column {
    * @example Column.type('datetime').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -467,11 +456,10 @@ export class Column {
    * @example Column.type('timestamp').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -670,18 +658,6 @@ export class Column {
    */
   static isHidden(is = true) {
     this.#column.isHidden = is
-
-    return this
-  }
-
-  /**
-   * Set if your column is auto generated.
-   *
-   * @param {boolean} [is]
-   * @return {this}
-   */
-  static isGenerated(is = true) {
-    this.#column.generated = is
 
     return this
   }

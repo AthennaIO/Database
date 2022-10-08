@@ -285,19 +285,21 @@ export class ModelQueryBuilder {
    * @return {any}
    */
   listCriterias(withRemoved = false) {
+    const criterias = this.#Model.criterias()
+
     if (withRemoved) {
-      return this.#Model.criterias
+      return criterias
     }
 
-    const criterias = {}
+    const activeCriterias = {}
 
-    Object.keys(this.#Model.criterias).forEach(key => {
+    Object.keys(criterias).forEach(key => {
       if (!this.#removedCriterias.includes(key)) {
-        criterias[key] = this.#Model.criterias[key]
+        activeCriterias[key] = criterias[key]
       }
     })
 
-    return criterias
+    return activeCriterias
   }
 
   /**
@@ -672,12 +674,14 @@ export class ModelQueryBuilder {
       return
     }
 
-    Object.keys(this.#Model.criterias).forEach(k => {
-      if (this.#removedCriterias.includes(k)) {
+    const criterias = this.#Model.criterias()
+
+    Object.keys(criterias).forEach(criteriaName => {
+      if (this.#removedCriterias.includes(criteriaName)) {
         return
       }
 
-      const criteria = this.#Model.criterias[k]
+      const criteria = criterias[criteriaName]
 
       for (const [key, value] of criteria.entries()) {
         this[key](...value)
