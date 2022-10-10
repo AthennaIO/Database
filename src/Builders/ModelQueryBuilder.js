@@ -230,7 +230,6 @@ export class ModelQueryBuilder {
    * @param {boolean} force
    * @return {Promise<any|any[]>}
    */
-  // TODO Verify if exists relation schemas in data
   async update(data, ignorePersistOnly = false, force = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)

@@ -430,6 +430,7 @@ export class Model {
    * @param [ignorePersistOnly] {boolean}
    * @return {Promise<this>}
    */
+  // TODO Verify if exists relation schemas in data
   async save(ignorePersistOnly = false) {
     const Model = this.constructor
 
