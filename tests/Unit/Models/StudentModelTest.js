@@ -7,13 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
 import { Config, Folder, Path } from '@secjs/utils'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { DB } from '#src/index'
+import { Course } from '#tests/Stubs/models/Course'
+import { Student } from '#tests/Stubs/models/Student'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { Capital } from '#tests/Stubs/models/Capital'
 
 test.group('StudentModelTest', group => {
   group.setup(async () => {
@@ -30,7 +31,8 @@ test.group('StudentModelTest', group => {
     await DB.connection('mysql').connect()
     await DB.connection('mysql').runMigrations()
 
-    await Capital.factory().count(10).create()
+    await Course.factory().count(10).create()
+    await Student.factory().count(10).create()
   })
 
   group.each.teardown(async () => {
@@ -42,6 +44,15 @@ test.group('StudentModelTest', group => {
     await Folder.safeRemove(Path.config())
     await Folder.safeRemove(Path.database())
   })
+
+  test('should be able to enroll many to many relations', async ({ assert }) => {
+    const student = await Student.find()
+    const course = await Course.find()
+
+    student.courses = [course]
+
+    await student.save()
+  }).pin()
 
   // TODO Implement
   test('should be able to load courses relation of student', async ({ assert }) => {})

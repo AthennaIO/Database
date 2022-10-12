@@ -9,7 +9,7 @@
 
 import { faker } from '@faker-js/faker'
 import { Assert } from '@japa/assert'
-import { String } from '@secjs/utils'
+import { Is, String } from '@secjs/utils'
 
 import { Criteria } from '#src/Builders/Criteria'
 import { ModelQueryBuilder } from '#src/Builders/ModelQueryBuilder'
@@ -435,12 +435,17 @@ export class Model {
     const Model = this.constructor
     const schema = Model.schema()
 
+    const data = this.toJSON()
+    const where = { [Model.primaryKey]: this[Model.primaryKey] }
+
     const promises = Object.keys(this).map(key => {
       const relationSchema = schema[key]
 
       if (!relationSchema && !relationSchema.isRelation) {
         return null
       }
+
+      delete data[key]
 
       const relation = this[key]
 
@@ -457,23 +462,27 @@ export class Model {
 
       const localTable = Model.table
       const localPrimary = Model.primaryKey
-      const localForeign = relationSchema.foreignKey
+      const localForeign = `${Model.name.toLowerCase()}Id`
 
       const relationTable = relationSchema.model.table
       const relationPrimary = relationSchema.model.primaryKey
-      const relationForeign = relationSchema.model.foreignKey
+      const relationForeign = `${relationSchema.model.name.toLowerCase()}Id`
 
-      return Database.table(`${localTable}_${relationTable}`).create({
-        [localForeign]: this[localPrimary],
-        [relationForeign]: relation[relationPrimary],
-      })
+      // TODO use createOrUpdate
+      return Database.connection(Model.connection)
+        .table(`${localTable}_${relationTable}`)
+        .create({
+          [localForeign]: this[localPrimary],
+          [relationForeign]: relation[relationPrimary],
+        })
     })
 
     await Promise.all(promises)
 
-    const where = { [Model.primaryKey]: this[Model.primaryKey] }
-    // TODO Remove relations schema from data
-    const data = this.toJSON()
+    if (Is.Empty(data)) {
+      return this
+    }
+
     const updatedModel = await Model.update(where, data, ignorePersistOnly)
 
     Object.keys(updatedModel).forEach(key => (this[key] = updatedModel[key]))

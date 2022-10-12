@@ -44,7 +44,6 @@ export class Student extends Model {
     return {
       id: this.faker.datatype.uuid(),
       name: this.faker.name.fullName(),
-      courses: Course.factory().count(2),
     }
   }
 }
