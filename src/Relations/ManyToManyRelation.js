@@ -22,21 +22,19 @@ export class ManyToManyRelation {
     const Model = model.constructor
     const RelationModel = relation.model
 
-    const modelSchema = Model.schema()
-
     const singularLocalTable = String.singularize(Model.table)
     const singularRelationTable = String.singularize(RelationModel.table)
 
     return {
       query: new ModelQueryBuilder(RelationModel),
+      connection: Model.connection,
       primary: Model.primaryKey,
       foreign:
-        modelSchema[relation.inverseSide].foreignKey ||
-        `${model.constructor.name.toLowerCase()}Id`,
-      property: relation.inverseSide,
+        relation.foreignKey || `${model.constructor.name.toLowerCase()}Id`,
+      property: relation.name,
       localPrimary: Model.primaryKey,
-      pivotLocalPrimary: `${singularLocalTable}Id`,
-      pivotTable: `${singularLocalTable}_${singularRelationTable}`,
+      pivotLocalForeign: `${singularLocalTable}Id`,
+      pivotTable: `${Model.table}_${RelationModel.table}`,
       relationPrimary: RelationModel.primaryKey,
       pivotRelationForeign: `${singularRelationTable}Id`,
     }
@@ -52,7 +50,8 @@ export class ManyToManyRelation {
   async load(model, relation) {
     const {
       query,
-      propertyName,
+      connection,
+      property,
       localPrimary,
       relationPrimary,
       pivotTable,
@@ -63,10 +62,9 @@ export class ManyToManyRelation {
     /**
      * Using Database here because there is no PivotModel.
      */
-    const pivotTableData = await Database.table(pivotTable)
-      .where({
-        [pivotLocalForeign]: model[localPrimary],
-      })
+    const pivotTableData = await Database.connection(connection)
+      .table(pivotTable)
+      .where(pivotLocalForeign, model[localPrimary])
       .findMany()
 
     model.$extras = pivotTableData
@@ -80,10 +78,41 @@ export class ManyToManyRelation {
       await relation.callback(query)
     }
 
-    model[propertyName] = await query
+    model[property] = await query
       .whereIn(relationPrimary, relationIds)
       .findMany()
 
     return model
+  }
+
+  /**
+   * Save all many to many relations of model.
+   *
+   * @param model {any}
+   * @param relations {any}
+   * @param RelationModel {any}
+   * @return {Promise<any[]>}
+   */
+  static async saveAll(model, relations, RelationModel) {
+    const Model = model.constructor
+
+    const localTable = Model.table
+    const localPrimary = Model.primaryKey
+    const localForeign = `${Model.name.toLowerCase()}Id`
+
+    const relationTable = RelationModel.table
+    const relationPrimary = RelationModel.primaryKey
+    const relationForeign = `${RelationModel.name.toLowerCase()}Id`
+
+    const promises = relations.map(relation => {
+      return Database.connection(Model.connection)
+        .table(`${localTable}_${relationTable}`)
+        .createOrUpdate({
+          [localForeign]: model[localPrimary],
+          [relationForeign]: relation[relationPrimary],
+        })
+    })
+
+    return Promise.all(promises)
   }
 }

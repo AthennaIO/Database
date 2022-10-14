@@ -19,6 +19,7 @@ import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplemente
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { ModelFactory } from '#src/Factories/ModelFactory'
 import { Database } from '#src/index'
+import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 
 export class Model {
   /**
@@ -430,54 +431,11 @@ export class Model {
    * @param [ignorePersistOnly] {boolean}
    * @return {Promise<this>}
    */
-  // TODO Verify if exists relation schemas in data
   async save(ignorePersistOnly = false) {
     const Model = this.constructor
-    const schema = Model.schema()
 
-    const data = this.toJSON()
+    const data = await this.#saveSubSchemas()
     const where = { [Model.primaryKey]: this[Model.primaryKey] }
-
-    const promises = Object.keys(this).map(key => {
-      const relationSchema = schema[key]
-
-      if (!relationSchema && !relationSchema.isRelation) {
-        return null
-      }
-
-      delete data[key]
-
-      const relation = this[key]
-
-      // TODO Save sub schemas
-      // if (Is.Array(relation)) {
-      //   relation.forEach(r => r.save())
-      // } else {
-      //   relation.save()
-      // }
-
-      if (relationSchema.type !== 'manyToMany') {
-        return null
-      }
-
-      const localTable = Model.table
-      const localPrimary = Model.primaryKey
-      const localForeign = `${Model.name.toLowerCase()}Id`
-
-      const relationTable = relationSchema.model.table
-      const relationPrimary = relationSchema.model.primaryKey
-      const relationForeign = `${relationSchema.model.name.toLowerCase()}Id`
-
-      // TODO use createOrUpdate
-      return Database.connection(Model.connection)
-        .table(`${localTable}_${relationTable}`)
-        .create({
-          [localForeign]: this[localPrimary],
-          [relationForeign]: relation[relationPrimary],
-        })
-    })
-
-    await Promise.all(promises)
 
     if (Is.Empty(data)) {
       return this
@@ -488,5 +446,50 @@ export class Model {
     Object.keys(updatedModel).forEach(key => (this[key] = updatedModel[key]))
 
     return this
+  }
+
+  /**
+   * Save all sub schema models inside instance and
+   * return the json data without this schemas.
+   *
+   * @return {Promise<any>}
+   */
+  async #saveSubSchemas() {
+    const Model = this.constructor
+    const schema = Model.schema()
+    const data = this.toJSON()
+
+    const promises = []
+
+    Object.keys(this).forEach(key => {
+      const relationSchema = schema[key]
+
+      if (!relationSchema && !relationSchema.isRelation) {
+        return null
+      }
+
+      /**
+       * Delete relation schema from json data.
+       */
+      delete data[key]
+
+      if (relationSchema.type === 'manyToMany') {
+        const relations = this[key]
+
+        const subPromises = ManyToManyRelation.saveAll(
+          this,
+          relations,
+          relationSchema.model,
+        )
+
+        subPromises.then(extras => (this.$extras = extras))
+
+        promises.push(subPromises)
+      }
+    })
+
+    await Promise.all(promises)
+
+    return data
   }
 }

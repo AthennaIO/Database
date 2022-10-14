@@ -52,11 +52,47 @@ test.group('StudentModelTest', group => {
     student.courses = [course]
 
     await student.save()
-  }).pin()
+
+    assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
+  })
 
   // TODO Implement
-  test('should be able to load courses relation of student', async ({ assert }) => {})
+  test('should be able to load courses relation of student', async ({ assert }) => {
+    const student = await Student.find()
+    const course = await Course.find()
+
+    student.courses = [course]
+
+    await student.save()
+
+    const studentWithCourses = await Student.query().where('id', student.id).includes('courses').find()
+
+    assert.isDefined(studentWithCourses.$extras[0].id)
+    assert.equal(studentWithCourses.$extras[0].studentId, student.id)
+    assert.equal(studentWithCourses.$extras[0].courseId, course.id)
+  })
 
   // TODO Implement
-  test('should be able to make sub queries on relations', async ({ assert }) => {})
+  test('should be able to make sub queries on relations', async ({ assert }) => {
+    const student = await Student.find()
+    const course = await Course.find()
+    const otherCourse = await Course.find()
+
+    student.courses = [course, otherCourse]
+
+    await student.save()
+
+    const studentWithCourses = await Student.query()
+      .where('id', student.id)
+      .includes('courses', query => query.where('id', course.id))
+      .find()
+
+    assert.isDefined(studentWithCourses.$extras[0].id)
+    assert.equal(studentWithCourses.courses[0].id, course.id)
+    assert.equal(studentWithCourses.$extras[0].courseId, course.id)
+    assert.equal(studentWithCourses.$extras[0].studentId, student.id)
+
+    assert.lengthOf(studentWithCourses.$extras, 2)
+    assert.lengthOf(studentWithCourses.courses, 1)
+  })
 })
