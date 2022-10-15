@@ -87,16 +87,21 @@ export class Relation {
    *
    * @param inverseSide {string}
    * @param model {any}
+   * @param pivotTable {string}
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(model, inverseSide, cascade = false) {
+  static manyToMany(model, inverseSide, pivotTable, cascade = false) {
     const relation = this.model(model)
       .type('manyToMany')
       .inverseSide(inverseSide)
 
     if (cascade) {
       relation.cascade()
+    }
+
+    if (pivotTable) {
+      relation.pivotTable(pivotTable)
     }
 
     return relation.get()
@@ -139,9 +144,45 @@ export class Relation {
   }
 
   /**
+   * Set the pivot table of the relation.
+   *
+   * @param tableName {string}
+   * @return {this}
+   */
+  static pivotTable(tableName) {
+    this.#relation.pivotTable = tableName
+
+    return this
+  }
+
+  /**
+   * Set the pivot local foreign key of the relation.
+   *
+   * @param foreignKey {string}
+   * @return {this}
+   */
+  static pivotLocalForeignKey(foreignKey) {
+    this.#relation.pivotLocalForeignKey = foreignKey
+
+    return this
+  }
+
+  /**
+   * Set the pivot relation foreign key of the relation.
+   *
+   * @param foreignKey {string}
+   * @return {this}
+   */
+  static pivotRelationForeignKey(foreignKey) {
+    this.#relation.pivotRelationForeignKey = foreignKey
+
+    return this
+  }
+
+  /**
    * Set the foreign key of the relation.
    *
-   * @param column
+   * @param column {string}
    * @return {this}
    */
   static foreignKey(column) {

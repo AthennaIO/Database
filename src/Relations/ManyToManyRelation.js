@@ -22,9 +22,6 @@ export class ManyToManyRelation {
     const Model = model.constructor
     const RelationModel = relation.model
 
-    const singularLocalTable = String.singularize(Model.table)
-    const singularRelationTable = String.singularize(RelationModel.table)
-
     return {
       query: new ModelQueryBuilder(RelationModel),
       connection: Model.connection,
@@ -33,10 +30,14 @@ export class ManyToManyRelation {
         relation.foreignKey || `${model.constructor.name.toLowerCase()}Id`,
       property: relation.name,
       localPrimary: Model.primaryKey,
-      pivotLocalForeign: `${singularLocalTable}Id`,
-      pivotTable: `${Model.table}_${RelationModel.table}`,
+      pivotLocalForeign:
+        relation.pivotLocalForeignKey || `${String.singularize(Model.table)}Id`,
+      pivotTable:
+        relation.pivotTable || `${Model.table}_${RelationModel.table}`,
       relationPrimary: RelationModel.primaryKey,
-      pivotRelationForeign: `${singularRelationTable}Id`,
+      pivotRelationForeign:
+        relation.pivotRelationForeignKey ||
+        `${String.singularize(RelationModel.table)}Id`,
     }
   }
 

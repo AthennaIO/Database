@@ -1406,10 +1406,11 @@ export class Relation {
    *
    * @param model {any}
    * @param inverseSide {string}
+   * @param pivotTable {string}
    * @param cascade {boolean}
    * @return {any}
    */
-   static manyToMany(model: Model, inverseSide: string, cascade?: boolean): any
+   static manyToMany(model: Model, inverseSide: string, pivotTable?: string, cascade?: boolean): any
 
   /**
    * Set the target model that your relation is pointing.
@@ -1434,6 +1435,30 @@ export class Relation {
    * @return {Relation}
    */
   static inverseSide(name: string): typeof Relation
+
+  /**
+  * Set the pivot table of the relation.
+  *
+  * @param tableName {string}
+  * @return {this}
+  */
+  static pivotTable(tableName: string): typeof Relation
+
+  /**
+  * Set the pivot local foreign key of the relation.
+  *
+  * @param foreignKey {string}
+  * @return {this}
+  */
+  static pivotLocalForeignKey(foreignKey: string): typeof Relation
+
+  /**
+  * Set the pivot relation foreign key of the relation.
+  *
+  * @param foreignKey {string}
+  * @return {this}
+  */
+  static pivotRelationForeignKey(foreignKey: string): typeof Relation
 
   /**
    * Set the foreign key of the relation.
