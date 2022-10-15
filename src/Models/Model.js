@@ -461,10 +461,10 @@ export class Model {
 
     const promises = []
 
-    Object.keys(this).forEach(key => {
+    Object.keys(data).forEach(key => {
       const relationSchema = schema[key]
 
-      if (!relationSchema && !relationSchema.isRelation) {
+      if (!relationSchema || !relationSchema.isRelation) {
         return null
       }
 

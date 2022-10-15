@@ -177,6 +177,7 @@ test.group('ProductModelTest', group => {
       .removeCriteria('deletedAt')
       .whereBetween('createdAt', [createdAt, new Date()])
       .findMany()
+    // TODO Understand why sometimes lenght is 0
     assert.lengthOf(oldIphones, 5)
 
     const newIphones = await ProductMySql.query()
