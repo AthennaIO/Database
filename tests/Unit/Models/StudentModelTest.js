@@ -55,8 +55,7 @@ test.group('StudentModelTest', group => {
 
     assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
   })
-
-  // TODO Implement
+  
   test('should be able to load courses relation of student', async ({ assert }) => {
     const student = await Student.find()
     const course = await Course.find()
@@ -71,8 +70,7 @@ test.group('StudentModelTest', group => {
     assert.equal(studentWithCourses.$extras[0].studentId, student.id)
     assert.equal(studentWithCourses.$extras[0].courseId, course.id)
   })
-
-  // TODO Implement
+  
   test('should be able to make sub queries on relations', async ({ assert }) => {
     const student = await Student.find()
     const course = await Course.find()
