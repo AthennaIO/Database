@@ -105,10 +105,21 @@ export class ManyToManyRelation {
     const relationPrimary = RelationModel.primaryKey
     const relationForeign = `${RelationModel.name.toLowerCase()}Id`
 
+    const query = Database.connection(Model.connection).table(
+      `${localTable}_${relationTable}`,
+    )
+
+    await query
+      .whereIn(
+        relationForeign,
+        relations.map(r => r[relationPrimary]),
+      )
+      .delete()
+
     const promises = relations.map(relation => {
       return Database.connection(Model.connection)
         .table(`${localTable}_${relationTable}`)
-        .createOrUpdate({
+        .create({
           [localForeign]: model[localPrimary],
           [relationForeign]: relation[relationPrimary],
         })
