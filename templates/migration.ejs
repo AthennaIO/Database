@@ -1,42 +1,35 @@
-import { Table } from 'typeorm'
+import { Migration } from '@athenna/database'
 
-export class <%= namePascalTimestamp %> {
-    /**
-     * Return the table name.
-     *
-     * @return {string}
-     */
-    get tableName() {
-        return '<%= nameCamel %>'
-    }
+export class <%= nameMigrationClass %> extends Migration {
+     /**
+      * Define the database connection to run the migration.
+      *
+      * @return {string}
+      */
+     static get connection() {
+        return 'default'
+     }
 
     /**
-     * Run migration.
+     * Run the migration.
      *
-     * @param queryRunner {import('typeorm').QueryRunner}
+     * @param {import('knex').Knex} knex
      * @return {Promise<void>}
      */
-    async up(queryRunner) {
-        const table = new Table({ name: this.tableName })
-
-        table.addColumn({
-            name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment',
+    async up({ schema }) {
+        return schema.createTable('<%= nameMigrationTable %>', table => {
+          table.increments('id')
+          table.timestamps(true, true, true)
         })
-
-        await queryRunner.createTable(table)
     }
 
     /**
-     * Rollback migration.
+     * Reverse the migration.
      *
-     * @param queryRunner {import('typeorm').QueryRunner}
+     * @param {import('knex').Knex} knex
      * @return {Promise<void>}
      */
-    async down(queryRunner) {
-        await queryRunner.dropTable(this.tableName)
+    async down({ schema }) {
+         return schema.dropTableIfExists('<%= nameMigrationTable %>')
     }
 }

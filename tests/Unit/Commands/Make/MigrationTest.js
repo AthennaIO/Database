@@ -46,7 +46,7 @@ test.group('MakeMigrationTest', group => {
     const path = Path.migrations()
     const folder = await new Folder(path).load()
 
-    assert.isDefined(folder.files.find(file => file.name.includes('User')))
+    assert.isDefined(folder.files.find(file => file.name.includes('create_users_table')))
   }).timeout(60000)
 
   test('should throw an error when the file already exists', async ({ assert }) => {

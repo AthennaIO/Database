@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Path } from '@secjs/utils'
-import { Command } from '@athenna/artisan'
+import { Path, String } from '@secjs/utils'
+import { Command, TemplateHelper } from '@athenna/artisan'
 
 export class MakeMigration extends Command {
   /**
@@ -52,10 +52,31 @@ export class MakeMigration extends Command {
    * @return {Promise<void>}
    */
   async handle(name, options) {
+    const date = new Date()
+
+    const [month, day, partialYear] = date.toLocaleString().split('/')
+
+    const year = partialYear.split(',')[0]
+
+    const [hour, minutes, seconds] = partialYear
+      .replace(`${year}, `, '')
+      .replace('AM', '')
+      .replace('PM', '')
+      .replace(' ', '')
+      .split(':')
+
+    const time = `${year}_${day}_${month}_${hour}${minutes}${seconds}`
+
+    const tableName = String.pluralize(
+      name.replace('Migrations', '').replace('Migration', '').toLowerCase(),
+    )
     const resource = 'Migration'
-    const path = Path.migrations(`${name}.js`)
+    const path = Path.migrations(`${time}_create_${tableName}_table.js`)
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
+
+    TemplateHelper.addProperty('nameMigrationTable', tableName)
+    TemplateHelper.addProperty('nameMigrationClass', String.toPascalCase(name))
 
     const file = await this.makeFile(path, 'migration', options.lint)
 

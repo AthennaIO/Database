@@ -1546,7 +1546,7 @@ export class DriverFactory {
 
 export class Migration {
   /**
-   * Create a table instance.
+   * Define the database connection to run the migration.
    *
    * @return {string}
    */
