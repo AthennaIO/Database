@@ -7,14 +7,14 @@
  * file that was distributed with this source code.
  */
 
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
 import { Config, Folder, Path } from '@secjs/utils'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { DB } from '#src/index'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { Course } from '#tests/Stubs/models/Course'
 import { Student } from '#tests/Stubs/models/Student'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 
 test.group('StudentModelTest', group => {
   group.setup(async () => {
@@ -52,6 +52,9 @@ test.group('StudentModelTest', group => {
     student.courses = [course]
 
     await student.save()
+
+    console.log(student.$extras)
+    console.log(await DB.connection('mysql').table('students_courses').findMany())
 
     assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
   })
