@@ -1785,6 +1785,13 @@ export class DatabaseLoader {
   delete(): Promise<any | void>
 
   /**
+   * Log in console the actual query built.
+   *
+   * @return {QueryBuilder}
+   */
+   dump(): QueryBuilder
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}

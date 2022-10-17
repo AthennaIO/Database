@@ -626,6 +626,17 @@ export class MySqlDriver {
   }
 
   /**
+   * Log in console the actual query built.
+   *
+   * @return {MySqlDriver}
+   */
+  dump() {
+    console.log(this.#qb.toSQL().toNative())
+
+    return this
+  }
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
