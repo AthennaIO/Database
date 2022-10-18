@@ -572,7 +572,7 @@ export class Column {
    * Set the type of your column.
    *
    * @param {import('knex').Knex.TableBuilder} type
-   * @return {this}
+   * @return {typeof Column}
    */
   static type(type) {
     this.#column.type = type
@@ -584,7 +584,7 @@ export class Column {
    * Set the real name of your column.
    *
    * @param {string} name
-   * @return {this}
+   * @return {typeof Column}
    */
   static name(name) {
     this.#column.name = name
@@ -596,7 +596,7 @@ export class Column {
    * Set the default value of your column.
    *
    * @param {any} value
-   * @return {this}
+   * @return {typeof Column}
    */
   static default(value) {
     this.#column.default = value
@@ -608,7 +608,7 @@ export class Column {
    * Set the length of your column.
    *
    * @param {string|number} length
-   * @return {this}
+   * @return {typeof Column}
    */
   static length(length) {
     this.#column.length = length
@@ -620,7 +620,7 @@ export class Column {
    * Set the enum of your column.
    *
    * @param {any} enu
-   * @return {this}
+   * @return {typeof Column}
    */
   static enu(enu) {
     this.#column.enum = enu
@@ -632,7 +632,7 @@ export class Column {
    * Set the scale of your column.
    *
    * @param {number} scale
-   * @return {this}
+   * @return {typeof Column}
    */
   static scale(scale) {
     this.#column.scale = scale
@@ -644,7 +644,7 @@ export class Column {
    * Set the precision of your column.
    *
    * @param {number} precision
-   * @return {this}
+   * @return {typeof Column}
    */
   static precision(precision) {
     this.#column.precision = precision
@@ -656,7 +656,7 @@ export class Column {
    * Set if this column should be created date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isCreateDate(is = true) {
     this.#column.createDate = is
@@ -668,7 +668,7 @@ export class Column {
    * Set if this column should be updated date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isUpdateDate(is = true) {
     this.#column.updateDate = is
@@ -680,7 +680,7 @@ export class Column {
    * Set if this column should be deleted date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isDeleteDate(is = true) {
     this.#column.deleteDate = is
@@ -692,7 +692,7 @@ export class Column {
    * Set if this column should be hided.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isHidden(is = true) {
     this.#column.isHidden = is
@@ -704,7 +704,7 @@ export class Column {
    * Set if your column is primary.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isPrimary(is = true) {
     this.#column.primary = is
@@ -716,7 +716,7 @@ export class Column {
    * Set if your column is unique.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isUnique(is = true) {
     this.#column.unique = is
@@ -728,7 +728,7 @@ export class Column {
    * Set if your column is nullable.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isNullable(is = true) {
     this.#column.nullable = is

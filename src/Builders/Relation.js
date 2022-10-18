@@ -111,7 +111,7 @@ export class Relation {
    * Set the target model that your relation is pointing.
    *
    * @param model {any}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static model(model) {
     this.#relation.model = model
@@ -123,7 +123,7 @@ export class Relation {
    * Set the relation type.
    *
    * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static type(type) {
     this.#relation.type = type
@@ -135,7 +135,7 @@ export class Relation {
    * Set the inverse side of your model schema.
    *
    * @param name
-   * @return {this}
+   * @return {typeof Relation}
    */
   static inverseSide(name) {
     this.#relation.inverseSide = name
@@ -147,7 +147,7 @@ export class Relation {
    * Set the pivot table of the relation.
    *
    * @param tableName {string}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static pivotTable(tableName) {
     this.#relation.pivotTable = tableName
@@ -159,7 +159,7 @@ export class Relation {
    * Set the pivot local foreign key of the relation.
    *
    * @param foreignKey {string}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static pivotLocalForeignKey(foreignKey) {
     this.#relation.pivotLocalForeignKey = foreignKey
@@ -171,7 +171,7 @@ export class Relation {
    * Set the pivot relation foreign key of the relation.
    *
    * @param foreignKey {string}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static pivotRelationForeignKey(foreignKey) {
     this.#relation.pivotRelationForeignKey = foreignKey
@@ -183,7 +183,7 @@ export class Relation {
    * Set the foreign key of the relation.
    *
    * @param column {string}
-   * @return {this}
+   * @return {typeof Relation}
    */
   static foreignKey(column) {
     this.#relation.foreignKey = column
@@ -194,7 +194,7 @@ export class Relation {
   /**
    * Set if relation should be cascaded on delete/update.
    *
-   * @return {this}
+   * @return {typeof Relation}
    */
   static cascade() {
     this.#relation.cascade = true
