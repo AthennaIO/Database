@@ -91,13 +91,13 @@ export class Model {
    * @return {any}
    */
   static criterias() {
+    const criterias = {}
+
     if (this.isSoftDelete) {
-      return {
-        deletedAt: Criteria.whereNull(this.DELETED_AT).get(),
-      }
+      criterias.deletedAt = Criteria.whereNull(this.DELETED_AT).get()
     }
 
-    return {}
+    return criterias
   }
 
   /**
