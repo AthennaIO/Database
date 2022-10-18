@@ -173,16 +173,18 @@ test.group('ProductModelTest', group => {
     const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
     assert.lengthOf(deletedIphones, 0)
 
+    const createdAtMinusOneSecond = new Date(createdAt.getTime() - 1000)
+
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereBetween('createdAt', [createdAt, new Date()])
+      .whereBetween('createdAt', [createdAtMinusOneSecond, new Date()])
       .findMany()
-    // TODO Understand why sometimes lenght is 0
+
     assert.lengthOf(oldIphones, 5)
 
     const newIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereNotBetween('createdAt', [createdAt, new Date()])
+      .whereNotBetween('createdAt', [createdAtMinusOneSecond, new Date()])
       .findMany()
     assert.lengthOf(newIphones, 1)
   })
