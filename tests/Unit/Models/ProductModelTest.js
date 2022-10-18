@@ -180,6 +180,8 @@ test.group('ProductModelTest', group => {
 
     const createdAtOlder = new Date(createdAt.getTime() - 500)
 
+    console.log(createdAtOlder, new Date())
+
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
       .whereBetween('createdAt', [createdAtOlder, new Date()])
