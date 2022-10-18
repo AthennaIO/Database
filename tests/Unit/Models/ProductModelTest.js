@@ -173,7 +173,7 @@ test.group('ProductModelTest', group => {
     const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
     assert.lengthOf(deletedIphones, 0)
 
-    const createdAtMinusOneSecond = new Date(createdAt.getTime() - 1000)
+    const createdAtMinusOneSecond = new Date(createdAt.getTime() - 500)
 
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
