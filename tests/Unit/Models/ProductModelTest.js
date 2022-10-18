@@ -143,7 +143,7 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to find products using query builder', async ({ assert }) => {
-    await Database.connection('mysql').truncate('products')
+    await ProductMySql.truncate()
 
     const createdAt = new Date(Date.now() - 100000)
 
@@ -184,6 +184,8 @@ test.group('ProductModelTest', group => {
       .removeCriteria('deletedAt')
       .whereBetween('createdAt', [createdAtOlder, new Date()])
       .findMany()
+
+    console.log('old iphones', oldIphones)
 
     assert.lengthOf(oldIphones, 5)
 
