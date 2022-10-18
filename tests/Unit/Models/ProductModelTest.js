@@ -145,14 +145,16 @@ test.group('ProductModelTest', group => {
   test('should be able to find products using query builder', async ({ assert }) => {
     await ProductMySql.truncate()
 
-    const createdAt = new Date(Date.now() - 100000)
+    let createdAt = new Date(Date.now() - 200000)
 
     await ProductMySql.create({ name: 'iPhone 10', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 11', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 11 Pro', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 12', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iphone 12', userId, createdAt }, true)
-    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: Date.now() + 100000 })
+    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: new Date(Date.now() + 200000) })
+
+    createdAt = new Date(createdAt.getTime() - 500)
 
     const iphone12 = await ProductMySql.query().whereLike('name', 'iPhone 12%').findMany()
     assert.lengthOf(iphone12, 3)
@@ -176,19 +178,15 @@ test.group('ProductModelTest', group => {
     const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
     assert.lengthOf(deletedIphones, 0)
 
-    const createdAtOlder = new Date(createdAt.getTime() - 500)
-
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereNotNull('deletedAt')
-      .whereBetween('createdAt', [createdAtOlder, new Date()])
+      .whereBetween('createdAt', [createdAt, new Date()])
       .findMany()
-
     assert.lengthOf(oldIphones, 5)
 
     const newIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereNotBetween('createdAt', [createdAtOlder, new Date()])
+      .whereNotBetween('createdAt', [createdAt, new Date()])
       .findMany()
     assert.lengthOf(newIphones, 1)
   })
