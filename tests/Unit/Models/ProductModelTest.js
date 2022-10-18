@@ -180,6 +180,7 @@ test.group('ProductModelTest', group => {
 
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
+      .whereNotNull('deletedAt')
       .whereBetween('createdAt', [createdAt, new Date()])
       .findMany()
     assert.lengthOf(oldIphones, 5)

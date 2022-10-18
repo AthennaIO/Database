@@ -53,9 +53,6 @@ test.group('StudentModelTest', group => {
 
     await student.save()
 
-    console.log(student.$extras)
-    console.log(await DB.connection('mysql').table('students_courses').findMany())
-
     assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
   })
 
