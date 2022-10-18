@@ -168,26 +168,28 @@ test.group('ProductModelTest', group => {
     const allIphonesWithout11 = await ProductMySql.query().whereNotIn('name', ['iPhone 11', 'iPhone 11 Pro']).findMany()
     assert.lengthOf(allIphonesWithout11, 4)
 
-    await ProductMySql.query()
+    const res = await ProductMySql.query()
       .whereILike('name', 'iphone%')
       .whereNot('name', 'iPhone 12 Pro')
       .update({ deletedAt: new Date() }, true)
 
+    console.log(res)
+
     const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
     assert.lengthOf(deletedIphones, 0)
 
-    const createdAtMinusOneSecond = new Date(createdAt.getTime() - 500)
+    const createdAtOlder = new Date(createdAt.getTime() - 500)
 
     const oldIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereBetween('createdAt', [createdAtMinusOneSecond, new Date()])
+      .whereBetween('createdAt', [createdAtOlder, new Date()])
       .findMany()
 
     assert.lengthOf(oldIphones, 5)
 
     const newIphones = await ProductMySql.query()
       .removeCriteria('deletedAt')
-      .whereNotBetween('createdAt', [createdAtMinusOneSecond, new Date()])
+      .whereNotBetween('createdAt', [createdAtOlder, new Date()])
       .findMany()
     assert.lengthOf(newIphones, 1)
   })
