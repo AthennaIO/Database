@@ -152,7 +152,7 @@ test.group('ProductModelTest', group => {
     await ProductMySql.create({ name: 'iPhone 11 Pro', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 12', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iphone 12', userId, createdAt }, true)
-    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: new Date(Date.now() + 200000) })
+    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: new Date(Date.now() + 9000000) })
 
     createdAt = new Date(createdAt.getTime() - 500)
 
