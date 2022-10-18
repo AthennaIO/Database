@@ -132,7 +132,7 @@ test.group('UserModelTest', group => {
   })
 
   test('should be able to find user using query builder', async ({ assert }) => {
-    await Database.truncate('users')
+    await User.truncate()
 
     const createdAt = new Date(Date.now() - 100000)
 
