@@ -152,7 +152,7 @@ test.group('ProductModelTest', group => {
     await ProductMySql.create({ name: 'iPhone 11 Pro', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 12', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iphone 12', userId, createdAt }, true)
-    await ProductMySql.create({ name: 'iPhone 12 Pro', userId })
+    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: Date.now() + 100000 })
 
     const iphone12 = await ProductMySql.query().whereLike('name', 'iPhone 12%').findMany()
     assert.lengthOf(iphone12, 3)
