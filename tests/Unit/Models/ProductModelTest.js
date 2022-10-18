@@ -170,7 +170,7 @@ test.group('ProductModelTest', group => {
 
     await ProductMySql.query()
       .whereILike('name', 'iphone%')
-      .where('createdAt', createdAt)
+      .whereNot('name', 'iPhone 12 Pro')
       .update({ deletedAt: new Date() }, true)
 
     const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
