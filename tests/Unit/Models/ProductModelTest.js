@@ -145,51 +145,34 @@ test.group('ProductModelTest', group => {
   test('should be able to find products using query builder', async ({ assert }) => {
     await ProductMySql.truncate()
 
-    let createdAt = new Date(Date.now() - 200000)
+    let createdAt = new Date(Date.now() - 100000)
 
     await ProductMySql.create({ name: 'iPhone 10', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 11', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 11 Pro', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 12', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iphone 12', userId, createdAt }, true)
-    await ProductMySql.create({ name: 'iPhone 12 Pro', userId, createdAt: new Date(Date.now() + 9000000) })
+    await ProductMySql.create({ name: 'iPhone 12 Pro', userId })
 
     createdAt = new Date(createdAt.getTime() - 500)
 
-    const iphone12 = await ProductMySql.query().whereLike('name', 'iPhone 12%').findMany()
-    assert.lengthOf(iphone12, 3)
-
-    const iphone12ILike = await ProductMySql.query().whereILike('name', 'iPhone 12%').findMany()
-    assert.lengthOf(iphone12ILike, 3)
-
-    iphone12ILike.forEach(iphone => assert.isTrue(iphone.name.includes('12')))
-
-    const allIphonesWithout10 = await ProductMySql.query().whereNot('name', 'iPhone 10').findMany()
-    assert.lengthOf(allIphonesWithout10, 5)
-
-    const allIphonesWithout11 = await ProductMySql.query().whereNotIn('name', ['iPhone 11', 'iPhone 11 Pro']).findMany()
-    assert.lengthOf(allIphonesWithout11, 4)
+    assert.lengthOf(await ProductMySql.query().whereLike('name', 'iPhone 12%').findMany(), 3)
+    assert.lengthOf(await ProductMySql.query().whereILike('name', 'iPhone 12%').findMany(), 3)
+    assert.lengthOf(await ProductMySql.query().whereNot('name', 'iPhone 10').findMany(), 5)
+    assert.lengthOf(await ProductMySql.query().whereNotIn('name', ['iPhone 11', 'iPhone 11 Pro']).findMany(), 4)
 
     await ProductMySql.query()
       .whereILike('name', 'iphone%')
       .whereNot('name', 'iPhone 12 Pro')
       .update({ deletedAt: new Date() }, true)
 
-    const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
-    assert.lengthOf(deletedIphones, 0)
+    assert.lengthOf(await ProductMySql.query().whereNotNull('deletedAt').findMany(), 0)
 
-    const oldIphones = await ProductMySql.query()
-      .removeCriteria('deletedAt')
-      .whereNotNull('deletedAt')
-      .whereBetween('createdAt', [createdAt, new Date()])
-      .findMany()
-    assert.lengthOf(oldIphones, 5)
+    const query = ProductMySql.query().removeCriteria('deletedAt')
 
-    const newIphones = await ProductMySql.query()
-      .removeCriteria('deletedAt')
-      .whereNotBetween('createdAt', [createdAt, new Date()])
-      .findMany()
-    assert.lengthOf(newIphones, 1)
+    assert.lengthOf(await query.whereNotNull('deletedAt').findMany(), 5)
+    assert.lengthOf(await query.whereBetween('createdAt', [createdAt, new Date()]).findMany(), 5)
+    assert.lengthOf(await query.whereNotBetween('createdAt', [createdAt, new Date()]).findMany(), 1)
   })
 
   test('should be able to get paginate products', async ({ assert }) => {
