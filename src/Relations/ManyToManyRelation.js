@@ -87,27 +87,33 @@ export class ManyToManyRelation {
   }
 
   /**
-   * Save all many to many relations of model.
+   * Save all many-to-many relations of model.
    *
    * @param model {any}
    * @param relations {any}
-   * @param RelationModel {any}
+   * @param relationSchema {any}
    * @return {Promise<any[]>}
    */
-  static async saveAll(model, relations, RelationModel) {
+  static async saveAll(model, relations, relationSchema) {
     const Model = model.constructor
+    const modelSchema = Model.schema()
+    const RelationModel = relationSchema.model
 
     const localTable = Model.table
     const localPrimary = Model.primaryKey
-    const localForeign = `${Model.name.toLowerCase()}Id`
+    const localForeign =
+      modelSchema.pivotLocalForeignKey || `${Model.name.toLowerCase()}Id`
 
     const relationTable = RelationModel.table
     const relationPrimary = RelationModel.primaryKey
-    const relationForeign = `${RelationModel.name.toLowerCase()}Id`
+    const relationForeign =
+      modelSchema.pivotRelationForeignKey ||
+      `${RelationModel.name.toLowerCase()}Id`
 
-    const query = Database.connection(Model.connection).table(
-      `${localTable}_${relationTable}`,
-    )
+    const pivotTable =
+      relationSchema.pivotTable || `${localTable}_${relationTable}`
+
+    const query = Database.connection(Model.connection).table(pivotTable)
 
     await query
       .whereIn(
@@ -117,12 +123,21 @@ export class ManyToManyRelation {
       .delete()
 
     const promises = relations.map(relation => {
-      return Database.connection(Model.connection)
-        .table(`${localTable}_${relationTable}`)
-        .create({
-          [localForeign]: model[localPrimary],
-          [relationForeign]: relation[relationPrimary],
-        })
+      const data = {
+        [localForeign]: model[localPrimary],
+        [relationForeign]: relation[relationPrimary],
+      }
+
+      const createdPromise = query.create(data)
+
+      if (
+        Model.connection === 'mysql' &&
+        modelSchema[localPrimary] !== 'increments'
+      ) {
+        return createdPromise.then(() => query.where(data).find())
+      }
+
+      return createdPromise
     })
 
     return Promise.all(promises)

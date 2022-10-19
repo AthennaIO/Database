@@ -553,9 +553,13 @@ export class MySqlDriver {
 
     const ids = []
 
-    await Promise.all(
-      data.map(d => this.#qb.insert(d).then(([id]) => ids.push(id))),
-    )
+    const promises = data.map(data => {
+      return this.#qb
+        .insert(data)
+        .then(([id]) => ids.push(data[primaryKey] || id))
+    })
+
+    await Promise.all(promises)
 
     return this.whereIn(primaryKey, ids).findMany()
   }

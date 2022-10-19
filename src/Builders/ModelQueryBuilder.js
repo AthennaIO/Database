@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Is } from '@secjs/utils'
+import { Is, Uuid } from '@secjs/utils'
 
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { ModelGenerator } from '#src/Generators/ModelGenerator'
@@ -187,6 +187,18 @@ export class ModelQueryBuilder {
   async create(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
+    }
+
+    const primaryKey = this.#Model.primaryKey
+
+    if (!data[primaryKey]) {
+      const column = this.#schema.columns.find(
+        column => column.name === primaryKey,
+      )
+
+      if (column.type === 'uuid') {
+        data[primaryKey] = Uuid.generate()
+      }
     }
 
     return this.#generator.generateOne(await this.#QB.create(data))

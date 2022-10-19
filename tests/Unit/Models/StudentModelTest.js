@@ -54,7 +54,7 @@ test.group('StudentModelTest', group => {
     await student.save()
 
     assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
-  })
+  }).pin()
 
   test('should be able to load courses relation of student', async ({ assert }) => {
     const student = await Student.find()

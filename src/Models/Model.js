@@ -479,15 +479,10 @@ export class Model {
         const subPromises = ManyToManyRelation.saveAll(
           this,
           relations,
-          relationSchema.model,
+          relationSchema,
         )
 
-        subPromises
-          .then(extras => {
-            this.$extras = extras
-            console.log('extra values:', extras)
-          })
-          .catch(err => console.log('err:', err))
+        subPromises.then(extras => (this.$extras = extras))
 
         promises.push(subPromises)
       }
