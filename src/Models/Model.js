@@ -450,7 +450,7 @@ export class Model {
 
   /**
    * Save all sub schema models inside instance and
-   * return the json data without this schemas.
+   * return the json data without these schemas.
    *
    * @return {Promise<any>}
    */
@@ -482,7 +482,12 @@ export class Model {
           relationSchema.model,
         )
 
-        subPromises.then(extras => (this.$extras = extras))
+        subPromises
+          .then(extras => {
+            this.$extras = extras
+            console.log('extra values:', extras)
+          })
+          .catch(err => console.log('err:', err))
 
         promises.push(subPromises)
       }
