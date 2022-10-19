@@ -53,6 +53,7 @@ test.group('StudentModelTest', group => {
 
     await student.save()
 
+    assert.isDefined(student.$extras.id)
     assert.equal(course.id, student.$extras[0].courseId)
     assert.equal(student.id, student.$extras[0].studentId)
     assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
