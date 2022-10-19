@@ -14,6 +14,322 @@ import { Collection, PaginatedResponse } from '@secjs/utils'
 export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
 
+export class MySqlDatabaseImpl {
+  /**
+   * Creates a new instance of DatabaseImpl.
+   *
+   * @param {any} configs
+   * @return {MySqlDatabaseImpl}
+   */
+  constructor(configs?: any)
+
+  /**
+   * Change the database connection.
+   *
+   * @param {string} connection
+   * @return {DatabaseImpl}
+   */
+  connection(connection: string): DatabaseImpl
+
+  /**
+   * Synchronize all the models of this database connection.
+   *
+   * @return {Promise<void>}
+   */
+  sync(path?: string): Promise<void>
+
+  /**
+   * Connect to database.
+   *
+   * @param {boolean} force
+   * @param {boolean} saveOnFactory
+   * @return {Promise<this>}
+   */
+  connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Close the connection with database in this instance.
+   *
+   * @return {Promise<void>}
+   */
+  close(): Promise<void>
+
+  /**
+   * Return the client of driver.
+   *
+   * @return {import('knex').Knex | null}
+   */
+  getClient(): import('knex').Knex
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  startTransaction(): Promise<Transaction>
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  runMigrations(): Promise<void>
+
+  /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  revertMigrations(): Promise<void>
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {boolean}
+   */
+  hasDatabase(database: string): Promise<boolean>
+
+  /**
+   * Create a new database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  createDatabase(databaseName: string): Promise<void>
+
+  /**
+   * Drop some database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  dropDatabase(databaseName: string): Promise<void>
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getTables(): Promise<string[]>
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  getCurrentDatabase(): Promise<string | undefined>
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {boolean}
+   */
+  hasTable(table: string): Promise<boolean>
+
+  /**
+   * Create a new table in database.
+   *
+   * @param {string} tableName
+   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
+   * @return {Promise<void>}
+   */
+  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
+
+  /**
+   * Drop a table in database.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  dropTable(tableName: string): Promise<void>
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  truncate(tableName: string): Promise<void>
+
+  /**
+   * Make a raw query in database.
+   *
+   * @param {string} raw
+   * @param {any[]} [queryValues]
+   * @return {Promise<any>}
+   */
+  raw(raw: string, queryValues: any[]): Promise<any>
+
+  /**
+   * Creates a new instance of QueryBuilder for this table.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName: string): QueryBuilder
+}
+
+export class PostgresDatabaseImpl {
+  /**
+   * Creates a new instance of DatabaseImpl.
+   *
+   * @param {any} configs
+   * @return {PostgresDatabaseImpl}
+   */
+  constructor(configs?: any)
+
+  /**
+   * Change the database connection.
+   *
+   * @param {string} connection
+   * @return {DatabaseImpl}
+   */
+  connection(connection: string): DatabaseImpl
+
+  /**
+   * Synchronize all the models of this database connection.
+   *
+   * @return {Promise<void>}
+   */
+  sync(path?: string): Promise<void>
+
+  /**
+   * Connect to database.
+   *
+   * @param {boolean} force
+   * @param {boolean} saveOnFactory
+   * @return {Promise<this>}
+   */
+  connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Close the connection with database in this instance.
+   *
+   * @return {Promise<void>}
+   */
+  close(): Promise<void>
+
+  /**
+   * Return the client of driver.
+   *
+   * @return {import('knex').Knex | null}
+   */
+  getClient(): import('knex').Knex
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  startTransaction(): Promise<Transaction>
+
+  /**
+   * Run database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  runMigrations(): Promise<void>
+
+  /**
+   * Revert database migrations.
+   *
+   * @return {Promise<void>}
+   */
+  revertMigrations(): Promise<void>
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {boolean}
+   */
+  hasDatabase(database: string): Promise<boolean>
+
+  /**
+   * Create a new database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  createDatabase(databaseName: string): Promise<void>
+
+  /**
+   * Drop some database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  dropDatabase(databaseName: string): Promise<void>
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getTables(): Promise<string[]>
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  getCurrentDatabase(): Promise<string | undefined>
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {boolean}
+   */
+  hasTable(table: string): Promise<boolean>
+
+  /**
+   * Create a new table in database.
+   *
+   * @param {string} tableName
+   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
+   * @return {Promise<void>}
+   */
+  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
+
+  /**
+   * Drop a table in database.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  dropTable(tableName: string): Promise<void>
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  truncate(tableName: string): Promise<void>
+
+  /**
+   * Make a raw query in database.
+   *
+   * @param {string} raw
+   * @param {any[]} [queryValues]
+   * @return {Promise<any>}
+   */
+  raw(raw: string, queryValues: any[]): Promise<any>
+
+  /**
+   * Creates a new instance of QueryBuilder for this table.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName: string): QueryBuilder
+}
+
 export class DatabaseImpl {
   /**
    * Creates a new instance of DatabaseImpl.
@@ -27,9 +343,10 @@ export class DatabaseImpl {
    * Change the database connection.
    *
    * @param {string} connection
-   * @return {DatabaseImpl}
+   * @return {MySqlDatabaseImpl|PostgresDatabaseImpl}
    */
-  connection(connection: string): DatabaseImpl
+  connection(connection: 'mysql'): MySqlDatabaseImpl
+  connection(connection: 'postgres'): PostgresDatabaseImpl
 
   /**
    * Synchronize all the models of this database connection.
