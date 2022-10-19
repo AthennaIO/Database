@@ -80,8 +80,11 @@
       "src/**/*.js"
     ],
     "exclude": [
-      "src/Models/Column.js",
-      "src/Models/Criteria.js",
+      "src/Seeders/Seeder.js",
+      "src/Resources/Resource.js",
+      "src/Providers/DatabaseProvider.js",
+      "src/Builders/Column.js",
+      "src/Builders/Criteria.js",
       "src/index.js"
     ],
     "reporter": [
