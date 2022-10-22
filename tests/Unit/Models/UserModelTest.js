@@ -7,25 +7,26 @@
  * file that was distributed with this source code.
  */
 
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
-import { Config, Folder, Path } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
+import { Database } from '#src/index'
+import { User } from '#tests/Stubs/models/User'
+import { Product } from '#tests/Stubs/models/Product'
+import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
-import { Database } from '#src/index'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
-import { Product } from '#tests/Stubs/models/Product'
-import { User } from '#tests/Stubs/models/User'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Folder(Path.stubs('database')).copy(Path.database())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {

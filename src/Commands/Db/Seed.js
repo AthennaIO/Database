@@ -9,7 +9,7 @@
 
 import { Command } from '@athenna/artisan'
 import { Database } from '#src/Facades/Database'
-import { Module, Path } from '@secjs/utils'
+import { Module, Path } from '@athenna/common'
 
 export class DbSeed extends Command {
   /**

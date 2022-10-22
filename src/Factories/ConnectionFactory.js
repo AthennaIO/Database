@@ -9,7 +9,8 @@
 
 import knex from 'knex'
 
-import { Config, Json } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Json } from '@athenna/common'
 
 export class ConnectionFactory {
   /**

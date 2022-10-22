@@ -7,8 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Config, String } from '@secjs/utils'
-import { Database } from '../index.js'
+import { Config } from '@athenna/config'
+import { String } from '@athenna/common'
+import { Database } from '#src/index'
 
 export class SchemaBuilder {
   /**

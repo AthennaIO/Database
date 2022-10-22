@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Json } from '@secjs/utils'
+import { Json } from '@athenna/common'
 
 export class Criteria {
   static #criteria = new Map()

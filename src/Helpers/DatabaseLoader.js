@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Folder, Module } from '@secjs/utils'
+import { Folder, Module } from '@athenna/common'
 import { join } from 'node:path'
 
 export class DatabaseLoader {
@@ -38,6 +38,6 @@ export class DatabaseLoader {
     const dirname = Module.createDirname(import.meta.url)
     const templatesPath = join(dirname, '..', '..', 'templates')
 
-    return new Folder(templatesPath).loadSync().getFilesByPattern('**/*.ejs')
+    return new Folder(templatesPath).loadSync().getFilesByPattern('**/*.edge')
   }
 }

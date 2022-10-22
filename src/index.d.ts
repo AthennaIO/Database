@@ -9,7 +9,7 @@
 
 import { Facade } from '@athenna/ioc'
 import { Faker } from '@faker-js/faker'
-import { Collection, PaginatedResponse } from '@secjs/utils'
+import { Collection, PaginatedResponse } from '@athenna/common'
 
 export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
@@ -135,7 +135,12 @@ export class MySqlDatabaseImpl {
    * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
    * @return {Promise<void>}
    */
-  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
+  createTable(
+    tableName: string,
+    callback: (
+      builder: import('knex').Knex.TableBuilder,
+    ) => void | Promise<void>,
+  ): Promise<void>
 
   /**
    * Drop a table in database.
@@ -293,7 +298,12 @@ export class PostgresDatabaseImpl {
    * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
    * @return {Promise<void>}
    */
-  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
+  createTable(
+    tableName: string,
+    callback: (
+      builder: import('knex').Knex.TableBuilder,
+    ) => void | Promise<void>,
+  ): Promise<void>
 
   /**
    * Drop a table in database.
@@ -452,7 +462,12 @@ export class DatabaseImpl {
    * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
    * @return {Promise<void>}
    */
-  createTable(tableName: string, callback: (builder: import('knex').Knex.TableBuilder) => void | Promise<void>): Promise<void>
+  createTable(
+    tableName: string,
+    callback: (
+      builder: import('knex').Knex.TableBuilder,
+    ) => void | Promise<void>,
+  ): Promise<void>
 
   /**
    * Drop a table in database.
@@ -579,7 +594,10 @@ export class Transaction {
    * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
-  createTable(tableName: string, options: import('typeorm').TableOptions): Promise<void>
+  createTable(
+    tableName: string,
+    options: import('typeorm').TableOptions,
+  ): Promise<void>
 
   /**
    * Drop a table in database.
@@ -643,7 +661,7 @@ export class SchemaBuilder {
    *
    * @return {boolean}
    */
-   synchronize: boolean
+  synchronize: boolean
 
   /**
    * All the model columns mapped
@@ -774,14 +792,14 @@ export class ModelFactory {
    *
    * @type {any}
    */
-   Model: Model
+  Model: Model
 
-   /**
-    * Set the returning key that this factory will return.
-    *
-    * @type {string|null}
-    */
-   returning: string
+  /**
+   * Set the returning key that this factory will return.
+   *
+   * @type {string|null}
+   */
+  returning: string
 
   /**
    * Creates a new instance of ModelFactory.
@@ -819,29 +837,29 @@ export class ModelFactory {
 }
 
 export class ModelGenerator {
-   /**
-    * Creates a new instance of ModelGenerator.
-    *
-    * @param Model {import('#src/index').Model}
-    * @param schema {import('#src/index').SchemaBuilder}
-    * @return {ModelGenerator}
-    */
-   constructor(Model: Model, schema: SchemaBuilder)
+  /**
+   * Creates a new instance of ModelGenerator.
+   *
+   * @param Model {import('#src/index').Model}
+   * @param schema {import('#src/index').SchemaBuilder}
+   * @return {ModelGenerator}
+   */
+  constructor(Model: Model, schema: SchemaBuilder)
 
-   /**
-    * Generate one model instance with relations loaded.
-    *
-    * @param data {any}
-    * @return {Promise<any>}
-    */
+  /**
+   * Generate one model instance with relations loaded.
+   *
+   * @param data {any}
+   * @return {Promise<any>}
+   */
   generateOne(data: any): Promise<any>
 
-   /**
-    * Generate models instances with relations loaded.
-    *
-    * @param data {any[]}
-    * @return {Promise<any[]>}
-    */
+  /**
+   * Generate models instances with relations loaded.
+   *
+   * @param data {any[]}
+   * @return {Promise<any[]>}
+   */
   generateMany(data: any[]): Promise<any[]>
 }
 
@@ -914,7 +932,7 @@ export class Model {
    *
    * @return {any}
    */
-   static criterias(): any
+  static criterias(): any
 
   /**
    * Create the factory object to generate data.
@@ -950,7 +968,7 @@ export class Model {
    *
    * @return {Promise<void>}
    */
-   static truncate(): Promise<void>
+  static truncate(): Promise<void>
 
   /**
    * Count the number of matches with where in database.
@@ -967,7 +985,10 @@ export class Model {
    * @param {any} [where]
    * @return {Promise<InstanceType<this>>}
    */
-  static findOrFail<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+  static findOrFail<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+  ): Promise<InstanceType<Class>>
 
   /**
    * Get one data in DB and return as a subclass instance.
@@ -975,7 +996,10 @@ export class Model {
    * @param {any} [where]
    * @return {Promise<InstanceType<this>>}
    */
-  static find<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+  static find<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+  ): Promise<InstanceType<Class>>
 
   /**
    * Get many data in DB and return as an array of subclass instance.
@@ -983,7 +1007,10 @@ export class Model {
    * @param {any} [where]
    * @return {Promise<InstanceType<this>[]>}
    */
-  static findMany<Class extends typeof Model>(this: Class, where?: any): Promise<InstanceType<Class>>
+  static findMany<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+  ): Promise<InstanceType<Class>>
 
   /**
    * Get many data in DB and return as a collection of subclass instance.
@@ -991,7 +1018,10 @@ export class Model {
    * @param {any} [where]
    * @return {Promise<Collection<InstanceType<Class>>>}
    */
-  static collection<Class extends typeof Model>(this: Class, where?: any): Promise<Collection<InstanceType<Class>>>
+  static collection<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+  ): Promise<Collection<InstanceType<Class>>>
 
   /**
    * Find many models in database and return as paginated response.
@@ -1016,7 +1046,12 @@ export class Model {
    *   }
    * }>}
    */
-  static paginate<Class extends typeof Model>(this: Class, page?: number, limit?: number, resourceUrl?: string): Promise<PaginatedResponse>
+  static paginate<Class extends typeof Model>(
+    this: Class,
+    page?: number,
+    limit?: number,
+    resourceUrl?: string,
+  ): Promise<PaginatedResponse>
 
   /**
    * Create a new model in DB and return as a subclass instance.
@@ -1025,7 +1060,11 @@ export class Model {
    * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>>}
    */
-  static create<Class extends typeof Model>(this: Class, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class>>
+  static create<Class extends typeof Model>(
+    this: Class,
+    data?: any,
+    ignorePersistOnly?: boolean,
+  ): Promise<InstanceType<Class>>
 
   /**
    * Create many models in DB and return as subclass instances.
@@ -1034,7 +1073,11 @@ export class Model {
    * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>[]>}
    */
-  static createMany<Class extends typeof Model>(this: Class, data?: any[], ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+  static createMany<Class extends typeof Model>(
+    this: Class,
+    data?: any[],
+    ignorePersistOnly?: boolean,
+  ): Promise<InstanceType<Class> | InstanceType<Class>[]>
 
   /**
    * Create or update models in DB and return as subclass instances.
@@ -1044,7 +1087,12 @@ export class Model {
    * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this> | InstanceType<this>[]>}
    */
-  static createOrUpdate<Class extends typeof Model>(this: Class, where?: any, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+  static createOrUpdate<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+    data?: any,
+    ignorePersistOnly?: boolean,
+  ): Promise<InstanceType<Class> | InstanceType<Class>[]>
 
   /**
    * Update a model in DB and return as a subclass instance.
@@ -1054,7 +1102,12 @@ export class Model {
    * @param {boolean} ignorePersistOnly
    * @return {Promise<InstanceType<this>|InstanceType<this>[]>}
    */
-  static update<Class extends typeof Model>(this: Class, where: any, data?: any, ignorePersistOnly?: boolean): Promise<InstanceType<Class> | InstanceType<Class>[]>
+  static update<Class extends typeof Model>(
+    this: Class,
+    where: any,
+    data?: any,
+    ignorePersistOnly?: boolean,
+  ): Promise<InstanceType<Class> | InstanceType<Class>[]>
 
   /**
    * Delete a model in DB and return as a subclass instance or void.
@@ -1063,7 +1116,11 @@ export class Model {
    * @param {boolean} force
    * @return {Promise<InstanceType<this>|void>}
    */
-  static delete<Class extends typeof Model>(this: Class, where: any, force?: boolean): Promise<InstanceType<Class> | void>
+  static delete<Class extends typeof Model>(
+    this: Class,
+    where: any,
+    force?: boolean,
+  ): Promise<InstanceType<Class> | void>
 
   /**
    * Assert that the model has been softly deleted.
@@ -1110,7 +1167,7 @@ export class Model {
    * @param [criterias] {any}
    * @return {any|any[]}
    */
-   toResource(criterias?: any): any | any[]
+  toResource(criterias?: any): any | any[]
 
   /**
    * Update the model values that have been modified.
@@ -1163,17 +1220,22 @@ export class Column {
    *  }} [optionsOrName]
    * @param {string|number} [length]
    */
-  static string(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    length?: string|number,
-    default?: any,
-    enu?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }, length?: number): any
+  static string(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          length?: string | number
+          default?: any
+          enu?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+    length?: number,
+  ): any
 
   /**
    * Create a "uuid" column.
@@ -1194,17 +1256,22 @@ export class Column {
    *  }} [optionsOrName]
    * @param {string|number} [length]
    */
-  static uuid(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    length?: string|number,
-    default?: any,
-    enu?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }, length?: number): any
+  static uuid(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          length?: string | number
+          default?: any
+          enu?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+    length?: number,
+  ): any
 
   /**
    * Create an "enum" column.
@@ -1225,17 +1292,22 @@ export class Column {
    *  }} [optionsOrName]
    * @param {any} [values]
    */
-  static enum(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    length?: string|number,
-    default?: any,
-    enu?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }, values?: any): any
+  static enum(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          length?: string | number
+          default?: any
+          enu?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+    values?: any,
+  ): any
 
   /**
    * Create an "integer" column.
@@ -1255,17 +1327,21 @@ export class Column {
    *  isNullable?: boolean,
    *  }} [optionsOrName]
    */
-  static integer(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    scale?: number,
-    precision?: number,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static integer(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          scale?: number
+          precision?: number
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "float" column.
@@ -1286,17 +1362,21 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static float(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    scale?: number,
-    precision?: number,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static float(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          scale?: number
+          precision?: number
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "double" column.
@@ -1317,17 +1397,21 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static double(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    scale?: number,
-    precision?: number,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static double(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          scale?: number
+          precision?: number
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "numeric" column.
@@ -1350,17 +1434,23 @@ export class Column {
    * @param {number} [precision]
    * @return {any}
    */
-  static numeric(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
+  static numeric(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          scale?: number
+          precision?: number
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
     scale?: number,
     precision?: number,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }, scale?: number, precision?: number): any
+  ): any
 
   /**
    * Create a "decimal" column.
@@ -1383,17 +1473,23 @@ export class Column {
    *  @param {number} [precision]
    *  @return {any}
    */
-  static decimal(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
+  static decimal(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          scale?: number
+          precision?: number
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
     scale?: number,
     precision?: number,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }, scale?: number, precision?: number): any
+  ): any
 
   /**
    * Create a "json" column.
@@ -1412,15 +1508,19 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static json(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static json(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "jsonb" column.
@@ -1439,15 +1539,19 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static jsonb(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static jsonb(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "date" column.
@@ -1466,15 +1570,19 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static date(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static date(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "datetime" column.
@@ -1493,15 +1601,19 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static datetime(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static datetime(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "timestamp" column.
@@ -1520,15 +1632,19 @@ export class Column {
    *  }} [optionsOrName]
    *  @return {any}
    */
-  static timestamp(optionsOrName?: string | {
-    type?: import('knex').Knex.TableBuilder,
-    name?: string,
-    default?: any,
-    isHidden?: boolean,
-    isPrimary?: boolean,
-    isUnique?: boolean,
-    isNullable?: boolean,
-  }): any
+  static timestamp(
+    optionsOrName?:
+      | string
+      | {
+          type?: import('knex').Knex.TableBuilder
+          name?: string
+          default?: any
+          isHidden?: boolean
+          isPrimary?: boolean
+          isUnique?: boolean
+          isNullable?: boolean
+        },
+  ): any
 
   /**
    * Create a "createdAt" column.
@@ -1699,7 +1815,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-   static hasMany(model: Model, inverseSide: string, cascade?: boolean): any
+  static hasMany(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
    * Create a belongsTo relation schema.
@@ -1712,7 +1828,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-   static belongsTo(model: Model, inverseSide: string, cascade?: boolean): any
+  static belongsTo(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
    * Create a manyToMany relation schema.
@@ -1726,7 +1842,12 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-   static manyToMany(model: Model, inverseSide: string, pivotTable?: string, cascade?: boolean): any
+  static manyToMany(
+    model: Model,
+    inverseSide: string,
+    pivotTable?: string,
+    cascade?: boolean,
+  ): any
 
   /**
    * Set the target model that your relation is pointing.
@@ -1742,7 +1863,9 @@ export class Relation {
    * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
    * @return {typeof Relation}
    */
-  static type(type: "hasOne" | "hasMany" | "belongsTo" | "manyToMany"): typeof Relation
+  static type(
+    type: 'hasOne' | 'hasMany' | 'belongsTo' | 'manyToMany',
+  ): typeof Relation
 
   /**
    * Set the inverse side of your model schema.
@@ -1753,27 +1876,27 @@ export class Relation {
   static inverseSide(name: string): typeof Relation
 
   /**
-  * Set the pivot table of the relation.
-  *
-  * @param tableName {string}
-  * @return {typeof Relation}
-  */
+   * Set the pivot table of the relation.
+   *
+   * @param tableName {string}
+   * @return {typeof Relation}
+   */
   static pivotTable(tableName: string): typeof Relation
 
   /**
-  * Set the pivot local foreign key of the relation.
-  *
-  * @param foreignKey {string}
-  * @return {typeof Relation}
-  */
+   * Set the pivot local foreign key of the relation.
+   *
+   * @param foreignKey {string}
+   * @return {typeof Relation}
+   */
   static pivotLocalForeignKey(foreignKey: string): typeof Relation
 
   /**
-  * Set the pivot relation foreign key of the relation.
-  *
-  * @param foreignKey {string}
-  * @return {typeof Relation}
-  */
+   * Set the pivot relation foreign key of the relation.
+   *
+   * @param foreignKey {string}
+   * @return {typeof Relation}
+   */
   static pivotRelationForeignKey(foreignKey: string): typeof Relation
 
   /**
@@ -1782,7 +1905,7 @@ export class Relation {
    * @param column {string}
    * @return {typeof Relation}
    */
-   static foreignKey(column: string): typeof Relation
+  static foreignKey(column: string): typeof Relation
 
   /**
    * Set if relation should be cascaded on delete/update.
@@ -1814,7 +1937,10 @@ export class DriverFactory {
    * @param {string} connectionName
    * @return {{ Driver: any, clientConnection?: any }}
    */
-  static fabricate(connectionName: string): { Driver: any, clientConnection?: any }
+  static fabricate(connectionName: string): {
+    Driver: any
+    clientConnection?: any
+  }
 
   /**
    * Create a new driver implementation.
@@ -1832,7 +1958,11 @@ export class DriverFactory {
    * @param {boolean} [saveOnDriver]
    * @return {Promise<any>}
    */
-  static createConnectionByDriver(driverName: string, conName?: string, saveOnDriver?: boolean): Promise<any>
+  static createConnectionByDriver(
+    driverName: string,
+    conName?: string,
+    saveOnDriver?: boolean,
+  ): Promise<any>
 
   /**
    * Close the connection with database by driver name.
@@ -1849,7 +1979,10 @@ export class DriverFactory {
    * @param {boolean} [saveOnDriver]
    * @return {Promise<any>}
    */
-  static createConnectionByName(conName?: string, saveOnDriver?: boolean): Promise<any>
+  static createConnectionByName(
+    conName?: string,
+    saveOnDriver?: boolean,
+  ): Promise<any>
 
   /**
    * Close the connection with database by connection name.
@@ -1939,320 +2072,347 @@ export class DatabaseLoader {
  */
 
 export class QueryBuilder {
-/**
- * Calculate the average of a given column.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-avg(column: string): Promise<number>
+  /**
+   * Calculate the average of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  avg(column: string): Promise<number>
 
-/**
- * Calculate the average of a given column using distinct.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-avgDistinct(column: string): Promise<number>
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  avgDistinct(column: string): Promise<number>
 
-/**
- * Get the max number of a given column.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-max(column: string): Promise<number>
+  /**
+   * Get the max number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  max(column: string): Promise<number>
 
-/**
- * Get the min number of a given column.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-min(column: string): Promise<number>
+  /**
+   * Get the min number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  min(column: string): Promise<number>
 
-/**
- * Sum all numbers of a given column.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-sum(column: string): Promise<number>
+  /**
+   * Sum all numbers of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  sum(column: string): Promise<number>
 
-/**
- * Sum all numbers of a given column in distinct mode.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-sumDistinct(column: string): Promise<number>
+  /**
+   * Sum all numbers of a given column in distinct mode.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  sumDistinct(column: string): Promise<number>
 
-/**
- * Increment a value of a given column.
- *
- * @param {string} column
- * @return {Promise<number | number[]>}
- */
-increment(column: string): Promise<number | number[]>
+  /**
+   * Increment a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  increment(column: string): Promise<number | number[]>
 
-/**
- * Decrement a value of a given column.
- *
- * @param {string} column
- * @return {Promise<number | number[]>}
- */
-decrement(column: string): Promise<number | number[]>
+  /**
+   * Decrement a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  decrement(column: string): Promise<number | number[]>
 
-/**
- * Calculate the average of a given column using distinct.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-count(column?: string): Promise<number>
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  count(column?: string): Promise<number>
 
-/**
- * Calculate the average of a given column using distinct.
- *
- * @param {string} column
- * @return {Promise<number>}
- */
-countDistinct(column?: string): Promise<number>
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  countDistinct(column?: string): Promise<number>
 
-/**
- * Find a value in database or throw exception if undefined.
- *
- * @return {Promise<any>}
- */
-findOrFail(): Promise<any>
+  /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<any>}
+   */
+  findOrFail(): Promise<any>
 
-/**
- * Find a value in database.
- *
- * @return {Promise<any>}
- */
-find(): Promise<any>
+  /**
+   * Find a value in database.
+   *
+   * @return {Promise<any>}
+   */
+  find(): Promise<any>
 
-/**
- * Find many values in database.
- *
- * @return {Promise<any[]>}
- */
-findMany(): Promise<any[]>
+  /**
+   * Find many values in database.
+   *
+   * @return {Promise<any[]>}
+   */
+  findMany(): Promise<any[]>
 
-/**
- * Find many values in database and return as a Collection.
- *
- * @return {Promise<Collection>}
- */
-collection(): Promise<import('@secjs/utils').Collection>
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection>}
+   */
+  collection(): Promise<import('@athenna/common').Collection>
 
-/**
- * Find many values in database and return as paginated response.
- *
- * @param [page] {boolean}
- * @param [limit] {boolean}
- * @param [resourceUrl] {string}
- * @return {}
- */
-paginate(page?: number, limit?: number, resourceUrl?: string): Promise<import('@secjs/utils').PaginatedResponse>
+  /**
+   * Find many values in database and return as paginated response.
+   *
+   * @param [page] {boolean}
+   * @param [limit] {boolean}
+   * @param [resourceUrl] {string}
+   * @return {}
+   */
+  paginate(
+    page?: number,
+    limit?: number,
+    resourceUrl?: string,
+  ): Promise<import('@athenna/common').PaginatedResponse>
 
-/**
- * Create a value in database.
- *
- * @param {any} data
- * @param {string} [primaryKey]
- * @return {Promise<any>}
- */
-create(data: any, primaryKey?: string): Promise<any>
+  /**
+   * Create a value in database.
+   *
+   * @param {any} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any>}
+   */
+  create(data: any, primaryKey?: string): Promise<any>
 
-/**
- * Create many values in database.
- *
- * @param {any[]} data
- * @param {string} [primaryKey]
- * @return {Promise<any[]>}
- */
-createMany(data: any[], primaryKey?: string): Promise<any[]>
+  /**
+   * Create many values in database.
+   *
+   * @param {any[]} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any[]>}
+   */
+  createMany(data: any[], primaryKey?: string): Promise<any[]>
 
-/**
- * Create data or update if already exists.
- *
- * @param {any} data
- * @param {string} [primaryKey]
- * @return {Promise<any | any[]>}
- */
-createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @param {string} [primaryKey]
+   * @return {Promise<any | any[]>}
+   */
+  createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
 
-/**
- * Update a value in database.
- *
- * @param {any} data
- * @param {boolean} force
- * @return {Promise<any | any[]>}
- */
-update(data: any, force?: boolean): Promise<any | any[]>
+  /**
+   * Update a value in database.
+   *
+   * @param {any} data
+   * @param {boolean} force
+   * @return {Promise<any | any[]>}
+   */
+  update(data: any, force?: boolean): Promise<any | any[]>
 
-/**
- * Delete one value in database.
- *
- * @return {Promise<any | void>}
- */
-delete(): Promise<any | void>
+  /**
+   * Delete one value in database.
+   *
+   * @return {Promise<any | void>}
+   */
+  delete(): Promise<any | void>
 
-/**
- * Log in console the actual query built.
- *
- * @return {QueryBuilder}
- */
- dump(): QueryBuilder
+  /**
+   * Log in console the actual query built.
+   *
+   * @return {QueryBuilder}
+   */
+  dump(): QueryBuilder
 
-/**
- * Set the columns that should be selected on query.
- *
- * @param columns {string}
- * @return {QueryBuilder}
- */
-select(...columns: string[]): QueryBuilder
+  /**
+   * Set the columns that should be selected on query.
+   *
+   * @param columns {string}
+   * @return {QueryBuilder}
+   */
+  select(...columns: string[]): QueryBuilder
 
-/**
- * Set a join statement in your query.
- *
- * @param tableName {string}
- * @param column1 {string}
- * @param [operation] {string}
- * @param column2 {string}
- * @param joinType {string}
- * @return {QueryBuilder}
- */
-join(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): QueryBuilder
-join(tableName: string, column1: string, operation: string, column2: string): QueryBuilder
-join(tableName: string, column1: string, column2: string): QueryBuilder
+  /**
+   * Set a join statement in your query.
+   *
+   * @param tableName {string}
+   * @param column1 {string}
+   * @param [operation] {string}
+   * @param column2 {string}
+   * @param joinType {string}
+   * @return {QueryBuilder}
+   */
+  join(
+    tableName: string,
+    column1: string,
+    operation: string,
+    column2: string,
+    joinType?:
+      | 'join'
+      | 'innerJoin'
+      | 'crossJoin'
+      | 'leftJoin'
+      | 'rightJoin'
+      | 'outerJoin'
+      | 'fullOuterJoin'
+      | 'leftOuterJoin'
+      | 'rightOuterJoin',
+  ): QueryBuilder
+  join(
+    tableName: string,
+    column1: string,
+    operation: string,
+    column2: string,
+  ): QueryBuilder
+  join(tableName: string, column1: string, column2: string): QueryBuilder
 
-/**
- * Set a group by statement in your query.
- *
- * @param columns {string}
- * @return {QueryBuilder}
- */
-groupBy(...columns: string[]): QueryBuilder
+  /**
+   * Set a group by statement in your query.
+   *
+   * @param columns {string}
+   * @return {QueryBuilder}
+   */
+  groupBy(...columns: string[]): QueryBuilder
 
-/**
- * Set a where statement in your query.
- *
- * @return {QueryBuilder}
- */
-where(statement: Record<string, any>): QueryBuilder
-where(key: string, value: any): QueryBuilder
-where(statement: string, operation: string, value: any): QueryBuilder
+  /**
+   * Set a where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  where(statement: Record<string, any>): QueryBuilder
+  where(key: string, value: any): QueryBuilder
+  where(statement: string, operation: string, value: any): QueryBuilder
 
-/**
- * Set a or where statement in your query.
- *
- * @return {QueryBuilder}
- */
-orWhere(statement: Record<string, any>): QueryBuilder
-orWhere(key: string, value: any): QueryBuilder
-orWhere(statement: string, operation: string, value: any): QueryBuilder
+  /**
+   * Set a or where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhere(statement: Record<string, any>): QueryBuilder
+  orWhere(key: string, value: any): QueryBuilder
+  orWhere(statement: string, operation: string, value: any): QueryBuilder
 
-/**
- * Set a where not statement in your query.
- *
- * @return {QueryBuilder}
- */
-whereNot(statement: Record<string, any>): QueryBuilder
-whereNot(key: string, value: any): QueryBuilder
+  /**
+   * Set a where not statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereNot(statement: Record<string, any>): QueryBuilder
+  whereNot(key: string, value: any): QueryBuilder
 
-/**
- * Set a where like statement in your query.
- *
- * @return {QueryBuilder}
- */
-whereLike(statement: Record<string, any>): QueryBuilder
-whereLike(key: string, value: any): QueryBuilder
+  /**
+   * Set a where like statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereLike(statement: Record<string, any>): QueryBuilder
+  whereLike(key: string, value: any): QueryBuilder
 
-/**
- * Set a where ILike statement in your query.
- *
- * @return {QueryBuilder}
- */
-whereILike(statement: Record<string, any>): QueryBuilder
-whereILike(key: string, value: any): QueryBuilder
+  /**
+   * Set a where ILike statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereILike(statement: Record<string, any>): QueryBuilder
+  whereILike(key: string, value: any): QueryBuilder
 
-/**
- * Set a where in statement in your query.
- *
- * @return {QueryBuilder}
- */
-whereIn(columnName: string, values: any[]): QueryBuilder
+  /**
+   * Set a where in statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  whereIn(columnName: string, values: any[]): QueryBuilder
 
-/**
- * Set a where not in statement in your query.
- *
- * @param columnName {string}
- * @param values {any[]}
- * @return {QueryBuilder}
- */
-whereNotIn(columnName: string, values: any[]): QueryBuilder
+  /**
+   * Set a where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  whereNotIn(columnName: string, values: any[]): QueryBuilder
 
-/**
- * Set a where null statement in your query.
- *
- * @param columnName {string}
- * @return {QueryBuilder}
- */
-whereNull(columnName: string): QueryBuilder
+  /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNull(columnName: string): QueryBuilder
 
-/**
- * Set a where not null statement in your query.
- *
- * @param columnName {string}
- * @return {QueryBuilder}
- */
-whereNotNull(columnName: string): QueryBuilder
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNotNull(columnName: string): QueryBuilder
 
-/**
- * Set a where between statement in your query.
- *
- * @param columnName {string}
- * @param values {[any, any]}
- * @return {QueryBuilder}
- */
-whereBetween(columnName: string, values: [any, any]): QueryBuilder
+  /**
+   * Set a where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  whereBetween(columnName: string, values: [any, any]): QueryBuilder
 
-/**
- * Set a where not between statement in your query.
- *
- * @param columnName {string}
- * @param values {[any, any]}
- * @return {QueryBuilder}
- */
-whereNotBetween(columnName: string, values: [any, any]): QueryBuilder
+  /**
+   * Set a where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  whereNotBetween(columnName: string, values: [any, any]): QueryBuilder
 
-/**
- * Set a order by statement in your query.
- *
- * @param columnName {string}
- * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
- * @return {QueryBuilder}
- */
-orderBy(columnName: string, direction: 'asc' | 'desc' | 'ASC' | 'DESC'): QueryBuilder
+  /**
+   * Set a order by statement in your query.
+   *
+   * @param columnName {string}
+   * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
+   * @return {QueryBuilder}
+   */
+  orderBy(
+    columnName: string,
+    direction: 'asc' | 'desc' | 'ASC' | 'DESC',
+  ): QueryBuilder
 
-/**
- * Set the skip number in your query.
- *
- * @param number {number}
- * @return {QueryBuilder}
- */
-offset(number: number): QueryBuilder
+  /**
+   * Set the skip number in your query.
+   *
+   * @param number {number}
+   * @return {QueryBuilder}
+   */
+  offset(number: number): QueryBuilder
 
-/**
- * Set the limit number in your query.
- *
- * @param number {number}
- * @return {QueryBuilder}
- */
-limit(number: number): QueryBuilder
+  /**
+   * Set the limit number in your query.
+   *
+   * @param number {number}
+   * @return {QueryBuilder}
+   */
+  limit(number: number): QueryBuilder
 }
 
 export class Criteria {
@@ -2279,7 +2439,10 @@ export class Criteria {
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  static includes(relationName: string, callback?: (query: ModelQueryBuilder) => Promise<void>): typeof Criteria
+  static includes(
+    relationName: string,
+    callback?: (query: ModelQueryBuilder) => Promise<void>,
+  ): typeof Criteria
 
   /**
    * Set a where statement in your query.
@@ -2289,24 +2452,28 @@ export class Criteria {
    * @param [value] {any}
    * @return {typeof Criteria}
    */
-   static where(statement: Record<string, any>): typeof Criteria
-   static where(key: string, value: any): typeof Criteria
-   static where(key: string, operation: string, value: any): typeof Criteria
+  static where(statement: Record<string, any>): typeof Criteria
+  static where(key: string, value: any): typeof Criteria
+  static where(key: string, operation: string, value: any): typeof Criteria
 
-   /**
+  /**
    * Set a or where statement in your query.
    *
    * @return {typeof Criteria}
    */
   static orWhere(statement: Record<string, any>): typeof Criteria
   static orWhere(key: string, value: any): typeof Criteria
-  static orWhere(statement: string, operation: string, value: any): typeof Criteria
+  static orWhere(
+    statement: string,
+    operation: string,
+    value: any,
+  ): typeof Criteria
 
-   /**
-    * Set a where not statement in your query.
-    *
-    * @return {typeof Criteria}
-    */
+  /**
+   * Set a where not statement in your query.
+   *
+   * @return {typeof Criteria}
+   */
   static whereNot(statement: Record<string, any>): typeof Criteria
   static whereNot(key: string, value: any): typeof Criteria
 
@@ -2380,7 +2547,10 @@ export class Criteria {
    * @param values {[any, any]}
    * @return {typeof Criteria}
    */
-  static whereNotBetween(columnName: string, values: [any, any]): typeof Criteria
+  static whereNotBetween(
+    columnName: string,
+    values: [any, any],
+  ): typeof Criteria
 
   /**
    * Set a join statement in your query.
@@ -2392,9 +2562,33 @@ export class Criteria {
    * @param joinType {string}
    * @return {typeof Criteria}
    */
-   static join(tableName: string, column1: string, operation: string, column2: string, joinType?: 'join' | 'innerJoin' | 'crossJoin' | 'leftJoin' | 'rightJoin' | 'outerJoin' | 'fullOuterJoin' | 'leftOuterJoin' | 'rightOuterJoin'): typeof Criteria
-   static join(tableName: string, column1: string, operation: string, column2: string): typeof Criteria
-   static join(tableName: string, column1: string, column2: string): typeof Criteria
+  static join(
+    tableName: string,
+    column1: string,
+    operation: string,
+    column2: string,
+    joinType?:
+      | 'join'
+      | 'innerJoin'
+      | 'crossJoin'
+      | 'leftJoin'
+      | 'rightJoin'
+      | 'outerJoin'
+      | 'fullOuterJoin'
+      | 'leftOuterJoin'
+      | 'rightOuterJoin',
+  ): typeof Criteria
+  static join(
+    tableName: string,
+    column1: string,
+    operation: string,
+    column2: string,
+  ): typeof Criteria
+  static join(
+    tableName: string,
+    column1: string,
+    column2: string,
+  ): typeof Criteria
 
   /**
    * Set a order by statement in your query.
@@ -2403,7 +2597,10 @@ export class Criteria {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {typeof Criteria}
    */
-  static orderBy(columnName: string, direction?: 'asc' | 'desc' | 'ASC' | 'DESC'): typeof Criteria
+  static orderBy(
+    columnName: string,
+    direction?: 'asc' | 'desc' | 'ASC' | 'DESC',
+  ): typeof Criteria
 
   /**
    * Set a group by statement in your query.
@@ -2411,7 +2608,7 @@ export class Criteria {
    * @param columns {string}
    * @return {typeof Criteria}
    */
-   static groupBy(...columns: string[]): typeof Criteria
+  static groupBy(...columns: string[]): typeof Criteria
 
   /**
    * Set the offset number in your query.
@@ -2438,84 +2635,87 @@ export class Criteria {
 }
 
 export class ModelQueryBuilder extends QueryBuilder {
-/**
- * Creates a new instance of ModelQueryBuilder.
- *
- * @param model
- * @param withCriterias
- * @return {ModelQueryBuilder}
- */
-constructor(model: Model, withCriterias?: boolean)
+  /**
+   * Creates a new instance of ModelQueryBuilder.
+   *
+   * @param model
+   * @param withCriterias
+   * @return {ModelQueryBuilder}
+   */
+  constructor(model: Model, withCriterias?: boolean)
 
- /**
- * Create one model in database.
- *
- * @param data {any}
- * @param {boolean} ignorePersistOnly
- * @return {Promise<any>}
- */
- // @ts-ignore
- create(data: any, ignorePersistOnly?: boolean): Promise<any>
+  /**
+   * Create one model in database.
+   *
+   * @param data {any}
+   * @param {boolean} ignorePersistOnly
+   * @return {Promise<any>}
+   */
+  // @ts-ignore
+  create(data: any, ignorePersistOnly?: boolean): Promise<any>
 
-/**
- * Create many models in database.
- *
- * @param data {any[]}
- * @param {boolean} [ignorePersistOnly]
- * @return {Promise<any[]>}
- */
-// @ts-ignore
-createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
+  /**
+   * Create many models in database.
+   *
+   * @param data {any[]}
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any[]>}
+   */
+  // @ts-ignore
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
 
-/**
- * Create data or update if already exists.
- *
- * @param {any} data
- * @param {boolean} [ignorePersistOnly]
- * @return {Promise<any | any[]>}
- */
-// @ts-ignore
-createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+  /**
+   * Create data or update if already exists.
+   *
+   * @param {any} data
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any | any[]>}
+   */
+  // @ts-ignore
+  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
 
-/**
- * Update one or more models in database.
- *
- * @param data {any}
- * @param {boolean} [ignorePersistOnly]
- * @return {Promise<any|any[]>}
- */
-update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+  /**
+   * Update one or more models in database.
+   *
+   * @param data {any}
+   * @param {boolean} [ignorePersistOnly]
+   * @return {Promise<any|any[]>}
+   */
+  update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
 
-/**
- * Delete one or more models in database.
- *
- * @param [force] {boolean}
- * @return {Promise<any|any[]|void>}
- */
-delete(force?: boolean): Promise<any | any[] | void>
+  /**
+   * Delete one or more models in database.
+   *
+   * @param [force] {boolean}
+   * @return {Promise<any|any[]|void>}
+   */
+  delete(force?: boolean): Promise<any | any[] | void>
 
-/**
- * Remove the criteria from query builder by name.
- *
- * @param name
- * @return {ModelQueryBuilder}
- */
-removeCriteria(name: string): ModelQueryBuilder
+  /**
+   * Remove the criteria from query builder by name.
+   *
+   * @param name
+   * @return {ModelQueryBuilder}
+   */
+  removeCriteria(name: string): ModelQueryBuilder
 
-/**
- * List the criterias from query builder.
- *
- * @param withRemoved {boolean}
- * @return {any}
- */
-listCriterias(withRemoved?: boolean): any
+  /**
+   * List the criterias from query builder.
+   *
+   * @param withRemoved {boolean}
+   * @return {any}
+   */
+  listCriterias(withRemoved?: boolean): any
 
-/**
- * Set a include statement in your query.
- *
- * @param relationName {string}
- * @param [callback] {any}
- * @return {typeof Criteria}
- */
-includes(relationName: string, callback?: (query: ModelQueryBuilder) => Promise<void>): ModelQueryBuilder
+  /**
+   * Set a include statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {any}
+   * @return {typeof Criteria}
+   */
+  includes(
+    relationName: string,
+    callback?: (query: ModelQueryBuilder) => Promise<void>,
+  ): ModelQueryBuilder
 }

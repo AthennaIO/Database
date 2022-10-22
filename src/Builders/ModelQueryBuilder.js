@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Uuid } from '@secjs/utils'
+import { Is, Uuid } from '@athenna/common'
 
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { ModelGenerator } from '#src/Generators/ModelGenerator'

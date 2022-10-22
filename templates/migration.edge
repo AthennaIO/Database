@@ -1,6 +1,6 @@
 import { Migration } from '@athenna/database'
 
-export class <%= nameMigrationClass %> extends Migration {
+export class {{ nameMigrationClass }} extends Migration {
      /**
       * Define the database connection to run the migration.
       *
@@ -17,7 +17,7 @@ export class <%= nameMigrationClass %> extends Migration {
      * @return {Promise<void>}
      */
     async up({ schema }) {
-        return schema.createTable('<%= nameMigrationTable %>', table => {
+        return schema.createTable('{{ nameMigrationTable }}', table => {
           table.increments('id')
           table.timestamps(true, true, true)
         })
@@ -30,6 +30,6 @@ export class <%= nameMigrationClass %> extends Migration {
      * @return {Promise<void>}
      */
     async down({ schema }) {
-         return schema.dropTableIfExists('<%= nameMigrationTable %>')
+         return schema.dropTableIfExists('{{ nameMigrationTable }}')
     }
 }

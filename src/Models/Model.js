@@ -9,7 +9,7 @@
 
 import { faker } from '@faker-js/faker'
 import { Assert } from '@japa/assert'
-import { Is, String } from '@secjs/utils'
+import { Is, String } from '@athenna/common'
 
 import { Criteria } from '#src/Builders/Criteria'
 import { ModelQueryBuilder } from '#src/Builders/ModelQueryBuilder'

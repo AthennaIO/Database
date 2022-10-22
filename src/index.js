@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Config, Module, Path } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Module, Path } from '@athenna/common'
 
 import { QueryBuilder } from '#src/Builders/QueryBuilder'
 import { DriverFactory } from '#src/Factories/DriverFactory'

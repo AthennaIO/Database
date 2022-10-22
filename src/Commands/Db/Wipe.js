@@ -9,7 +9,7 @@
 
 import { Database } from '#src/Facades/Database'
 import { Command } from '@athenna/artisan'
-import { Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
 
 export class DbWipe extends Command {
   /**

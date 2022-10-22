@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Json } from '@secjs/utils'
+import { Is, Json } from '@athenna/common'
 
 export class Column {
   static #column = {

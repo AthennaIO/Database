@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Path, String } from '@secjs/utils'
-import { Command, TemplateHelper } from '@athenna/artisan'
+import { Path, String } from '@athenna/common'
+import { Command, Template } from '@athenna/artisan'
 
 export class MakeMigration extends Command {
   /**
@@ -75,8 +75,8 @@ export class MakeMigration extends Command {
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
 
-    TemplateHelper.addProperty('nameMigrationTable', tableName)
-    TemplateHelper.addProperty('nameMigrationClass', String.toPascalCase(name))
+    Template.addProperty('nameMigrationTable', tableName)
+    Template.addProperty('nameMigrationClass', String.toPascalCase(name))
 
     const file = await this.makeFile(path, 'migration', options.lint)
 

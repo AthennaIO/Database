@@ -7,20 +7,21 @@
  * file that was distributed with this source code.
  */
 
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
-import { Config, Folder, Path } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
-import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { Database, Model } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
+import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 test.group('ModelTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {

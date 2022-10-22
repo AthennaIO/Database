@@ -9,7 +9,8 @@
 
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
-import { Config, Folder, Path } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
 
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
@@ -18,14 +19,14 @@ import { Database } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 
 test.group('MySqlDriverTest', group => {
-  /** @type {DatabaseImpl} */
+  /** @type {MySqlDatabaseImpl} */
   let DB = null
 
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
     await new Folder(Path.stubs('database')).copy(Path.database())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {

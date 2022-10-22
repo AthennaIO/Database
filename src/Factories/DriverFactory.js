@@ -8,7 +8,7 @@
  */
 
 import { Logger } from '@athenna/logger'
-import { Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'

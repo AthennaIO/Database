@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Collection, Exec, Is } from '@secjs/utils'
+import { Collection, Exec, Is } from '@athenna/common'
 
 import { PROTECTED_QUERY_METHODS } from '#src/Constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
@@ -508,7 +508,7 @@ export class MySqlDriver {
    * @param [page] {boolean}
    * @param [limit] {boolean}
    * @param [resourceUrl] {string}
-   * @return {Promise<import('@secjs/utils').PaginatedResponse>}
+   * @return {Promise<import('@athenna/common').PaginatedResponse>}
    */
   async paginate(page = 0, limit = 10, resourceUrl = '/') {
     const [{ count }] = await this.#qb

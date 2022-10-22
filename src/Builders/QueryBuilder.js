@@ -169,7 +169,7 @@ export class QueryBuilder {
    * @param [page] {boolean}
    * @param [limit] {boolean}
    * @param [resourceUrl] {string}
-   * @return {Promise<import('@secjs/utils').PaginatedResponse>}
+   * @return {Promise<import('@athenna/common').PaginatedResponse>}
    */
   async paginate(page = 0, limit = 10, resourceUrl = '/') {
     return this.#driver.paginate(page, limit, resourceUrl)

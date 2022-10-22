@@ -8,47 +8,14 @@
  */
 
 import { test } from '@japa/runner'
-import { Config, Folder, Path } from '@secjs/utils'
 
 import { Database } from '#src/index'
-import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
-import { Kernel } from '#tests/Stubs/app/Console/Kernel'
 import { Artisan } from '@athenna/artisan'
-import { ArtisanProvider } from '@athenna/artisan/providers/ArtisanProvider'
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
+import { TestHooks } from '#tests/Helpers/TestHooks'
 
 test.group('DbSeedTest', group => {
-  group.each.setup(async () => {
-    await new Folder(Path.stubs('app')).copy(Path.app())
-    await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Folder(Path.stubs('database')).copy(Path.database())
-
-    await new Config().safeLoad(Path.config('app.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
-    await new Config().safeLoad(Path.config('database.js'))
-
-    new LoggerProvider().register()
-    new ArtisanProvider().register()
-    await new DatabaseProvider().boot()
-
-    await Database.connect()
-    await Database.runMigrations()
-
-    const kernel = new Kernel()
-
-    await kernel.registerCommands()
-    await kernel.registerErrorHandler()
-    await kernel.registerTemplates()
-  })
-
-  group.each.teardown(async () => {
-    await Database.revertMigrations()
-    await Database.close()
-
-    await Folder.safeRemove(Path.app())
-    await Folder.safeRemove(Path.config())
-    await Folder.safeRemove(Path.database())
-  })
+  group.each.setup(TestHooks.commandWithDbMigrations.setup)
+  group.each.teardown(TestHooks.commandWithDbMigrations.teardown)
 
   test('should be able to run database seeders', async ({ assert }) => {
     await Database.truncate('users')

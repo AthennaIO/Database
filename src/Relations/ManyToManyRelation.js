@@ -8,7 +8,7 @@
  */
 
 import { Database, ModelQueryBuilder } from '#src/index'
-import { String } from '@secjs/utils'
+import { String } from '@athenna/common'
 
 export class ManyToManyRelation {
   /**
