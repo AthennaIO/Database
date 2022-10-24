@@ -7,19 +7,19 @@
  * file that was distributed with this source code.
  */
 
-import { faker } from '@faker-js/faker'
 import { Assert } from '@japa/assert'
+import { faker } from '@faker-js/faker'
 import { Is, String } from '@athenna/common'
 
-import { Criteria } from '#src/Builders/Criteria'
-import { ModelQueryBuilder } from '#src/Builders/ModelQueryBuilder'
-import { SchemaBuilder } from '#src/Builders/SchemaBuilder'
-import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
-import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
-import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
-import { ModelFactory } from '#src/Factories/ModelFactory'
 import { Database } from '#src/index'
+import { Criteria } from '#src/Models/Criteria'
+import { ModelFactory } from '#src/Models/ModelFactory'
+import { SchemaBuilder } from '#src/Models/SchemaBuilder'
+import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
 import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
+import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
+import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 export class Model {
   /**

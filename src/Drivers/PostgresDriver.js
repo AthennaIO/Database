@@ -9,9 +9,9 @@
 
 import { Collection, Exec, Is } from '@athenna/common'
 
-import { Transaction } from '#src/Transactions/Transaction'
+import { Transaction } from '#src/Database/Transactions/Transaction'
 import { DriverFactory } from '#src/Factories/DriverFactory'
-import { MigrationSource } from '#src/Migrations/MigrationSource'
+import { MigrationSource } from '#src/Database/Migrations/MigrationSource'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { PROTECTED_QUERY_METHODS } from '#src/Constants/ProtectedQueryMethods'

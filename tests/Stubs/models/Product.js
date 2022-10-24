@@ -1,5 +1,5 @@
-import { Column } from '#src/Builders/Column'
-import { Relation } from '#src/Builders/Relation'
+import { Column } from '#src/Models/Column'
+import { Relation } from '#src/Relations/Relation'
 import { Model } from '#src/Models/Model'
 import { User } from '#tests/Stubs/models/User'
 

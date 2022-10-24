@@ -9,9 +9,9 @@
 
 import { Is, Uuid } from '@athenna/common'
 
-import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
-import { ModelGenerator } from '#src/Generators/ModelGenerator'
 import { Database } from '#src/index'
+import { ModelGenerator } from '#src/Models/ModelGenerator'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 export class ModelQueryBuilder {
   /**

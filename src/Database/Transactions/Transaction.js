@@ -1,4 +1,4 @@
-import { QueryBuilder } from '#src/Builders/QueryBuilder'
+import { QueryBuilder } from '#src/Database/Builders/QueryBuilder'
 
 export class Transaction {
   /**
