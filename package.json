@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -40,7 +40,7 @@
     "#tests/*": "./tests/*.js"
   },
   "dependencies": {
-    "@athenna/artisan": "1.5.5",
+    "@athenna/artisan": "1.5.6",
     "@athenna/common": "1.0.0",
     "@athenna/config": "1.1.8",
     "@athenna/ioc": "1.2.7",
