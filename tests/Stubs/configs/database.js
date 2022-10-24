@@ -1,7 +1,3 @@
-import { Path } from '@secjs/utils'
-
-import { DatabaseLoader } from '#src/index'
-
 export default {
   /*
   |--------------------------------------------------------------------------
@@ -30,8 +26,6 @@ export default {
     sqlite: {
       driver: 'sqlite',
       database: ':memory:',
-      entities: await DatabaseLoader.loadEntities('sqlite', Path.stubs('models')),
-      migrations: [Path.stubs('migrations/**/*.js')],
       synchronize: false,
     },
 
@@ -39,12 +33,10 @@ export default {
       driver: 'mysql',
       host: '127.0.0.1',
       port: 3307,
-      database: 'athenna',
-      username: 'root',
+      user: 'root',
       password: '12345',
-      logging: ['error', 'warn'],
-      entities: await DatabaseLoader.loadEntities('mysql', Path.stubs('models')),
-      migrations: [Path.stubs('database/migrations/**/*.js')],
+      database: 'athenna',
+      debug: false,
       synchronize: false,
     },
 
@@ -52,13 +44,11 @@ export default {
       driver: 'postgres',
       host: 'localhost',
       port: 5433,
-      database: 'postgres',
-      username: 'postgres',
+      user: 'postgres',
       password: '12345',
-      logging: ['error', 'warn'],
-      entities: await DatabaseLoader.loadEntities('postgres', Path.stubs('models')),
-      migrations: [Path.stubs('database/migrations/**/*.js')],
-      synchronize: false,
+      database: 'postgres',
+      debug: false,
+      synchronize: true,
     },
 
     nullDriver: {
@@ -69,9 +59,9 @@ export default {
       driver: 'sqlserver',
       host: '127.0.0.1',
       port: 1433,
-      database: 'sqlserver',
-      username: 'sqlserver',
+      user: 'sqlserver',
       password: '12345',
+      database: 'sqlserver',
     },
 
     mongo: {

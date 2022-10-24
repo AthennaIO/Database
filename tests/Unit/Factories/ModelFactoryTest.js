@@ -8,7 +8,9 @@
  */
 
 import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
+
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
@@ -18,8 +20,9 @@ import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 test.group('ModelFactoryTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await new Folder(Path.stubs('database')).copy(Path.database())
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
@@ -37,6 +40,7 @@ test.group('ModelFactoryTest', group => {
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
+    await Folder.safeRemove(Path.database())
   })
 
   test('should be able to make/create one user', async ({ assert }) => {

@@ -8,7 +8,8 @@
  */
 
 import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database, Model } from '#src/index'
@@ -19,8 +20,8 @@ import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplemente
 test.group('ModelTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
@@ -46,8 +47,25 @@ test.group('ModelTest', group => {
   })
 
   test('should be able to list criterias', async ({ assert }) => {
-    const criterias = Model.query().listCriterias()
+    class SimpleSoftDeleteModel extends Model {
+      static schema() {
+        return {}
+      }
+
+      static isSoftDelete() {
+        return true
+      }
+    }
+
+    const query = SimpleSoftDeleteModel.query()
+    const criterias = query.removeCriteria('deletedAt').listCriterias()
 
     assert.isDefined(criterias)
+    assert.isUndefined(criterias.deletedAt)
+
+    const allCriterias = query.listCriterias(true)
+
+    assert.isDefined(allCriterias)
+    assert.isDefined(allCriterias.deletedAt)
   })
 })

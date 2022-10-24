@@ -8,7 +8,8 @@
  */
 
 import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Database } from '#src/index'
@@ -16,16 +17,17 @@ import { UserMySql } from '#tests/Stubs/models/UserMySql'
 import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
-import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 test.group('ProductModelTest', group => {
   let userId = null
 
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await new Folder(Path.stubs('database')).copy(Path.database())
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
@@ -35,11 +37,11 @@ test.group('ProductModelTest', group => {
     await Database.connection('mysql').connect()
     await Database.connection('mysql').runMigrations()
 
-    const [user] = await UserMySql.factory().count(10).create({ id: null })
+    const [id] = await UserMySql.factory('id').count(10).create()
 
-    userId = user.id
+    userId = id
 
-    await ProductMySql.factory().count(10).create({ id: null, userId })
+    await ProductMySql.factory().count(10).create({ userId })
   })
 
   group.each.teardown(async () => {
@@ -49,6 +51,7 @@ test.group('ProductModelTest', group => {
 
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
+    await Folder.safeRemove(Path.database())
   })
 
   test('should be able to create product and products', async ({ assert }) => {
@@ -96,56 +99,54 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to find product and products', async ({ assert }) => {
-    const product = await ProductMySql.find({ id: 1 })
+    const product = await ProductMySql.find()
 
-    assert.deepEqual(product.id, 1)
+    assert.deepEqual(product.userId, userId)
 
-    const products = await ProductMySql.query().addSelect('name').whereIn('id', [1, 2]).orderBy('id', 'DESC').findMany()
+    const products = await ProductMySql.query()
+      .select('id', 'name')
+      .whereIn('id', [product.id])
+      .orderBy('id', 'DESC')
+      .findMany()
 
-    assert.lengthOf(products, 2)
+    assert.lengthOf(products, 1)
     assert.isDefined(products[0].name)
-    assert.isDefined(products[1].name)
-    assert.deepEqual(products[0].id, 2)
-    assert.deepEqual(products[1].id, 1)
+    assert.deepEqual(products[0].id, product.id)
 
-    const allProductMySqls = await ProductMySql.findMany({ id: 1 })
+    const allProductMySqls = await ProductMySql.findMany()
 
-    assert.lengthOf(allProductMySqls, 1)
+    assert.lengthOf(allProductMySqls, 10)
   })
 
   test('should be able to get products as a collection', async ({ assert }) => {
-    const collection = await ProductMySql.query()
-      .addSelect('name')
-      .whereIn('id', [1, 2])
-      .orderBy('id', 'DESC')
-      .collection()
+    const collection = await ProductMySql.query().orderBy('id', 'DESC').collection()
 
     const products = collection.all()
 
-    assert.lengthOf(products, 2)
+    assert.lengthOf(products, 10)
     assert.isDefined(products[0].name)
     assert.isDefined(products[1].name)
-    assert.deepEqual(products[0].id, 2)
-    assert.deepEqual(products[1].id, 1)
+    assert.deepEqual(products[0].userId, userId)
+    assert.deepEqual(products[1].userId, userId)
 
-    const collectionMySql = await ProductMySql.collection({ id: 1 })
-    const allProductsMySql = collectionMySql.all()
+    const otherCollection = await ProductMySql.collection()
+    const allProducts = otherCollection.all()
 
-    assert.lengthOf(allProductsMySql, 1)
+    assert.lengthOf(allProducts, 10)
   })
 
   test('should be able to find product and fail', async ({ assert }) => {
-    const product = await ProductMySql.findOrFail({ id: 1 })
+    const product = await ProductMySql.findOrFail()
 
-    assert.deepEqual(product.id, 1)
+    assert.isDefined(product.id)
 
     await assert.rejects(() => ProductMySql.findOrFail({ id: 123459 }), NotFoundDataException)
   })
 
   test('should be able to find products using query builder', async ({ assert }) => {
-    await Database.connection('mysql').truncate('products')
+    await ProductMySql.truncate()
 
-    const createdAt = new Date(Date.now() - 100000)
+    let createdAt = new Date(Date.now() - 100000)
 
     await ProductMySql.create({ name: 'iPhone 10', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 11', userId, createdAt }, true)
@@ -154,45 +155,35 @@ test.group('ProductModelTest', group => {
     await ProductMySql.create({ name: 'iphone 12', userId, createdAt }, true)
     await ProductMySql.create({ name: 'iPhone 12 Pro', userId })
 
-    const iphone12 = await ProductMySql.query().whereLike('name', 'iPhone 12').findMany()
-    assert.lengthOf(iphone12, 3)
+    createdAt = new Date(createdAt.getTime() - 500)
 
-    const iphone12ILike = await ProductMySql.query().whereILike('name', 'iPhone 12').findMany()
-    assert.lengthOf(iphone12ILike, 3)
+    assert.lengthOf(await ProductMySql.query().whereLike('name', 'iPhone 12%').findMany(), 3)
+    assert.lengthOf(await ProductMySql.query().whereILike('name', 'iPhone 12%').findMany(), 3)
+    assert.lengthOf(await ProductMySql.query().whereNot('name', 'iPhone 10').findMany(), 5)
+    assert.lengthOf(await ProductMySql.query().whereNotIn('name', ['iPhone 11', 'iPhone 11 Pro']).findMany(), 4)
 
-    iphone12ILike.forEach(iphone => assert.isTrue(iphone.name.includes('12')))
+    await ProductMySql.query()
+      .whereILike('name', 'iphone%')
+      .whereNot('name', 'iPhone 12 Pro')
+      .update({ deletedAt: new Date() }, true)
 
-    const allIphonesWithout10 = await ProductMySql.query().whereNot('name', 'iPhone 10').findMany()
-    assert.lengthOf(allIphonesWithout10, 5)
+    assert.lengthOf(await ProductMySql.query().whereNotNull('deletedAt').findMany(), 0)
 
-    const allIphonesWithout11 = await ProductMySql.query().whereNotIn('name', ['iPhone 11', 'iPhone 11 Pro']).findMany()
-    assert.lengthOf(allIphonesWithout11, 4)
+    const query = ProductMySql.query().removeCriteria('deletedAt')
 
-    await ProductMySql.query().whereILike('name', 'iphone%').update({ deletedAt: new Date() }, true)
+    assert.lengthOf(await query.whereNotNull('deletedAt').findMany(), 5)
 
-    const deletedIphones = await ProductMySql.query().whereNotNull('deletedAt').findMany()
-    assert.lengthOf(deletedIphones, 0)
-
-    // TODO Why length is 0?
-    // const oldIphones = await ProductMySql.query()
-    //   .removeCriteria('deletedAt')
-    //   .whereBetween('createdAt', [createdAt, new Date()])
-    //   .findMany()
-    // assert.lengthOf(oldIphones, 5)
-    //
-    // const newIphones = await ProductMySql.query()
-    //   .removeCriteria('deletedAt')
-    //   .whereNotBetween('createdAt', [createdAt, new Date()])
-    //   .findMany()
-    // assert.lengthOf(newIphones, 1)
+    // FIXME For some reason this two tests are now working in the CI pipeline.
+    // assert.lengthOf(await query.whereBetween('createdAt', [createdAt, new Date()]).findMany(), 5)
+    // assert.lengthOf(await query.whereNotBetween('createdAt', [createdAt, new Date()]).findMany(), 1)
   })
 
   test('should be able to get paginate products', async ({ assert }) => {
-    const { data, meta, links } = await ProductMySql.paginate(0, 10, '/', { id: 1 })
+    const { data, meta, links } = await ProductMySql.paginate(0, 10, '/')
 
-    assert.lengthOf(data, 1)
-    assert.deepEqual(meta.itemCount, 1)
-    assert.deepEqual(meta.totalItems, 1)
+    assert.lengthOf(data, 10)
+    assert.deepEqual(meta.itemCount, 10)
+    assert.deepEqual(meta.totalItems, 10)
     assert.deepEqual(meta.totalPages, 1)
     assert.deepEqual(meta.currentPage, 0)
     assert.deepEqual(meta.itemsPerPage, 10)
@@ -204,26 +195,45 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to update product and products', async ({ assert }) => {
-    const { createdAt } = await ProductMySql.find({ id: 1 })
+    const { id, createdAt } = await ProductMySql.find()
 
-    const product = await ProductMySql.update({ id: 1 }, { name: 'iPhone X Updated', createdAt: new Date() })
+    const product = await ProductMySql.update({ id }, { name: 'iPhone X Updated', createdAt: new Date() })
 
     assert.deepEqual(product.createdAt, createdAt)
-    assert.deepEqual(product.id, 1)
     assert.deepEqual(product.name, 'iPhone X Updated')
 
-    const productDates = await ProductMySql.query().whereIn('id', [1, 2]).findMany()
-    const products = await ProductMySql.query()
-      .whereIn('id', [1, 2])
+    const productDates = await ProductMySql.query().whereIn('id', [id]).findMany()
+    const productUpdated = await ProductMySql.query()
+      .whereIn('id', [id])
       .update({ name: 'iPhone X Updated', createdAt: new Date() })
 
-    assert.deepEqual(products[0].createdAt, productDates[0].createdAt)
-    assert.deepEqual(products[1].createdAt, productDates[1].createdAt)
-    assert.lengthOf(products, 2)
-    assert.deepEqual(products[0].id, 1)
-    assert.deepEqual(products[0].name, 'iPhone X Updated')
-    assert.deepEqual(products[1].id, 2)
-    assert.deepEqual(products[1].name, 'iPhone X Updated')
+    assert.deepEqual(product.createdAt, productDates[0].createdAt)
+    assert.deepEqual(productUpdated.id, id)
+    assert.deepEqual(productUpdated.name, 'iPhone X Updated')
+  })
+
+  test('should be able to save product', async ({ assert }) => {
+    const product = await ProductMySql.create({ name: 'Macbook M1', userId })
+
+    const createdAt = new Date()
+
+    product.name = 'Macbook M2'
+    product.createdAt = createdAt
+
+    await product.save()
+
+    assert.deepEqual(product.name, 'Macbook M2')
+    assert.notEqual(product.createdAt, createdAt)
+
+    const products = await ProductMySql.findMany()
+
+    products[0].name = 'Macbook M3'
+    products[0].createdAt = createdAt
+
+    await products[0].save()
+
+    assert.deepEqual(products[0].name, 'Macbook M3')
+    assert.notEqual(products[0].createdAt, createdAt)
   })
 
   test('should throw a empty where exception on update without where', async ({ assert }) => {
@@ -231,23 +241,22 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to delete/softDelete product and products', async ({ assert }) => {
-    await ProductMySql.delete({ id: 3 }, true)
+    const { id } = await ProductMySql.find()
+    await ProductMySql.delete({ id }, true)
 
-    const notFoundProductMySql = await ProductMySql.find({ id: 3 })
+    const notFoundProductMySql = await ProductMySql.find({ id })
 
-    assert.isNull(notFoundProductMySql)
+    assert.isUndefined(notFoundProductMySql)
 
-    await ProductMySql.query().whereIn('id', [1, 2]).delete()
+    const { id: otherId } = await ProductMySql.find()
+    await ProductMySql.query().whereIn('id', [otherId]).delete()
 
-    const products = await ProductMySql.query().removeCriteria('deletedAt').whereIn('id', [1, 2]).findMany()
+    const products = await ProductMySql.query().removeCriteria('deletedAt').whereIn('id', [otherId]).findMany()
 
-    assert.lengthOf(products, 2)
+    assert.lengthOf(products, 1)
 
-    assert.deepEqual(products[0].id, 1)
+    assert.deepEqual(products[0].id, otherId)
     assert.isDefined(products[0].deletedAt)
-
-    assert.deepEqual(products[1].id, 2)
-    assert.isDefined(products[1].deletedAt)
   })
 
   test('should throw a empty where exception on update without where', async ({ assert }) => {
@@ -258,18 +267,24 @@ test.group('ProductModelTest', group => {
     await ProductMySql.factory().count(5).create({ userId, deletedAt: new Date() })
 
     const products = await ProductMySql.query()
+      .select('id', 'name', 'userId', 'deletedAt')
       .where('userId', userId)
-      .includes('user')
-      .whereNull('products.deletedAt')
-      .select('user.id', 'user.name')
-      .select('products.id', 'products.name', 'products.deletedAt')
-      .orderBy('products.id', 'DESC')
+      .includes('user', query => query.select('id', 'name'))
+      .whereNull('deletedAt')
       .findMany()
 
     products.forEach(product => {
       assert.deepEqual(product.user.id, userId)
       assert.deepEqual(product.deletedAt, null)
     })
+
+    products[0].user.name = 'João Lenon'
+
+    await products[0].user.save()
+
+    const user = await UserMySql.find({ name: 'João Lenon' })
+
+    assert.deepEqual(products[0].user.id, user.id)
   })
 
   test('should be able to make database assertions', async () => {

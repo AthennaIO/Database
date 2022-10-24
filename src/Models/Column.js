@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Json } from '@secjs/utils'
+import { Is, Json } from '@athenna/common'
 
 export class Column {
   static #column = {
@@ -18,13 +18,13 @@ export class Column {
    * Create an auto incremented integer primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('int').isGenerated().isPrimary().get()
+   * @example Column.type('increments').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
    */
   static autoIncrementedInt(name) {
-    const column = this.type('int').isGenerated().isPrimary()
+    const column = this.type('increments').isPrimary()
 
     if (name) {
       column.name(name)
@@ -37,13 +37,13 @@ export class Column {
    * Create an auto incremented uuid primary key. Usefully for id's.
    *
    * This method is an alias for:
-   * @example Column.type('uuid').isGenerated().isPrimary().get()
+   * @example Column.type('uuid').isPrimary().get()
    *
    * @param [name] {string}
    * @return {any}
    */
   static autoIncrementedUuid(name) {
-    const column = this.type('uuid').isGenerated().isPrimary()
+    const column = this.type('uuid').isPrimary()
 
     if (name) {
       column.name(name)
@@ -59,13 +59,12 @@ export class Column {
    * @example Column.type('varchar').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -93,19 +92,57 @@ export class Column {
   }
 
   /**
+   * Create a "uuid" column.
+   *
+   * This method is an alias for:
+   * @example Column.type('uuid').get()
+   *
+   * @param {string|{
+   *  type?: import('knex').Knex.TableBuilder,
+   *  name?: string,
+   *  length?: string|number,
+   *  default?: any,
+   *  enu?: any,
+   *  isHidden?: boolean,
+   *  isPrimary?: boolean,
+   *  isUnique?: boolean,
+   *  isNullable?: boolean,
+   *  }} [optionsOrName]
+   * @param {string|number} [length]
+   */
+  static uuid(optionsOrName, length) {
+    const column = this.type('uuid')
+
+    if (!optionsOrName) {
+      return column.get()
+    }
+
+    if (Is.Object(optionsOrName)) {
+      Object.keys(optionsOrName).forEach(key => column[key](optionsOrName[key]))
+    } else {
+      column.name(optionsOrName)
+
+      if (length) {
+        column.length(length)
+      }
+    }
+
+    return column.get()
+  }
+
+  /**
    * Create an "enum" column.
    *
    * This method is an alias for:
    * @example Column.type('enum').enu(values).get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  length?: string|number,
    *  default?: any,
    *  enu?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -132,23 +169,22 @@ export class Column {
    * Create an "integer" column.
    *
    * This method is an alias for:
-   * @example Column.type('int').get()
+   * @example Column.type('integer').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
    *  }} [optionsOrName]
    */
   static integer(optionsOrName) {
-    const column = this.type('int')
+    const column = this.type('integer')
 
     if (!optionsOrName) {
       return column.get()
@@ -170,13 +206,12 @@ export class Column {
    * @example Column.type('float').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -205,13 +240,12 @@ export class Column {
    * @example Column.type('double').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -240,13 +274,12 @@ export class Column {
    * @example Column.type('numeric').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -285,13 +318,12 @@ export class Column {
    * @example Column.type('decimal').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  scale?: number,
    *  precision?: number,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -330,11 +362,10 @@ export class Column {
    * @example Column.type('json').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -364,11 +395,10 @@ export class Column {
    * @example Column.type('jsonb').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -398,11 +428,10 @@ export class Column {
    * @example Column.type('date').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -432,11 +461,10 @@ export class Column {
    * @example Column.type('datetime').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -466,11 +494,10 @@ export class Column {
    * @example Column.type('timestamp').get()
    *
    * @param {string|{
-   *  type?: import('typeorm').ColumnType,
+   *  type?: import('knex').Knex.TableBuilder,
    *  name?: string,
    *  default?: any,
    *  isHidden?: boolean,
-   *  isGenerated?: boolean,
    *  isPrimary?: boolean,
    *  isUnique?: boolean,
    *  isNullable?: boolean,
@@ -532,7 +559,7 @@ export class Column {
    * @return {any}
    */
   static deletedAt(name) {
-    const column = this.isDeleteDate()
+    const column = this.type('datetime').isNullable().default(null)
 
     if (name) {
       column.name(name)
@@ -544,8 +571,8 @@ export class Column {
   /**
    * Set the type of your column.
    *
-   * @param {import('typeorm').ColumnType} type
-   * @return {this}
+   * @param {import('knex').Knex.TableBuilder} type
+   * @return {typeof Column}
    */
   static type(type) {
     this.#column.type = type
@@ -557,7 +584,7 @@ export class Column {
    * Set the real name of your column.
    *
    * @param {string} name
-   * @return {this}
+   * @return {typeof Column}
    */
   static name(name) {
     this.#column.name = name
@@ -569,7 +596,7 @@ export class Column {
    * Set the default value of your column.
    *
    * @param {any} value
-   * @return {this}
+   * @return {typeof Column}
    */
   static default(value) {
     this.#column.default = value
@@ -581,7 +608,7 @@ export class Column {
    * Set the length of your column.
    *
    * @param {string|number} length
-   * @return {this}
+   * @return {typeof Column}
    */
   static length(length) {
     this.#column.length = length
@@ -593,7 +620,7 @@ export class Column {
    * Set the enum of your column.
    *
    * @param {any} enu
-   * @return {this}
+   * @return {typeof Column}
    */
   static enu(enu) {
     this.#column.enum = enu
@@ -605,7 +632,7 @@ export class Column {
    * Set the scale of your column.
    *
    * @param {number} scale
-   * @return {this}
+   * @return {typeof Column}
    */
   static scale(scale) {
     this.#column.scale = scale
@@ -617,7 +644,7 @@ export class Column {
    * Set the precision of your column.
    *
    * @param {number} precision
-   * @return {this}
+   * @return {typeof Column}
    */
   static precision(precision) {
     this.#column.precision = precision
@@ -629,7 +656,7 @@ export class Column {
    * Set if this column should be created date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isCreateDate(is = true) {
     this.#column.createDate = is
@@ -641,7 +668,7 @@ export class Column {
    * Set if this column should be updated date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isUpdateDate(is = true) {
     this.#column.updateDate = is
@@ -653,7 +680,7 @@ export class Column {
    * Set if this column should be deleted date.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isDeleteDate(is = true) {
     this.#column.deleteDate = is
@@ -665,22 +692,10 @@ export class Column {
    * Set if this column should be hided.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isHidden(is = true) {
-    this.#column.select = !is
-
-    return this
-  }
-
-  /**
-   * Set if your column is auto generated.
-   *
-   * @param {boolean} [is]
-   * @return {this}
-   */
-  static isGenerated(is = true) {
-    this.#column.generated = is
+    this.#column.isHidden = is
 
     return this
   }
@@ -689,7 +704,7 @@ export class Column {
    * Set if your column is primary.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isPrimary(is = true) {
     this.#column.primary = is
@@ -701,7 +716,7 @@ export class Column {
    * Set if your column is unique.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isUnique(is = true) {
     this.#column.unique = is
@@ -713,7 +728,7 @@ export class Column {
    * Set if your column is nullable.
    *
    * @param {boolean} [is]
-   * @return {this}
+   * @return {typeof Column}
    */
   static isNullable(is = true) {
     this.#column.nullable = is

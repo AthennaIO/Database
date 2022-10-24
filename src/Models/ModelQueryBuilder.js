@@ -7,25 +7,40 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Json } from '@secjs/utils'
+import { Is, Uuid } from '@athenna/common'
 
 import { Database } from '#src/index'
+import { ModelGenerator } from '#src/Models/ModelGenerator'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 export class ModelQueryBuilder {
-  /**
-   * The model that is using this instance.
-   *
-   * @type {any}
-   */
-  #Model
-
   /**
    * The database query builder instance used to handle database operations.
    *
    * @type {import('#src/index').QueryBuilder}
    */
   #QB
+
+  /**
+   * The model that is using this instance.
+   *
+   * @type {import('#src/index').Model}
+   */
+  #Model
+
+  /**
+   * The model schema used to map database operations.
+   *
+   * @type {import('#src/index').SchemaBuilder}
+   */
+  #schema
+
+  /**
+   * The model generator to create model instances and retrive relations.
+   *
+   * @type {import('#src/index').ModelGenerator}
+   */
+  #generator
 
   /**
    * Set if this instance of query builder will use criterias or not.
@@ -51,7 +66,9 @@ export class ModelQueryBuilder {
   constructor(model, withCriterias) {
     this.#Model = model
     this.#withCriterias = withCriterias
-    this.#QB = Database.connection(model.connection).buildTable(model.table)
+    this.#QB = Database.connection(model.connection).table(model.table)
+    this.#schema = this.#Model.getSchema()
+    this.#generator = new ModelGenerator(this.#Model, this.#schema)
   }
 
   /**
@@ -62,7 +79,7 @@ export class ModelQueryBuilder {
   async findOrFail() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.findOrFail())
+    return this.#generator.generateOne(await this.#QB.findOrFail())
   }
 
   /**
@@ -73,7 +90,7 @@ export class ModelQueryBuilder {
   async find() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.find())
+    return this.#generator.generateOne(await this.#QB.find())
   }
 
   /**
@@ -84,7 +101,7 @@ export class ModelQueryBuilder {
   async findMany() {
     this.#setCriterias()
 
-    return this.#generateModels(await this.#QB.findMany())
+    return this.#generator.generateMany(await this.#QB.findMany())
   }
 
   /**
@@ -95,9 +112,23 @@ export class ModelQueryBuilder {
   async collection() {
     this.#setCriterias()
 
-    const collection = await this.#QB.collection()
+    /**
+     * Creating the first collection with flat data.
+     */
+    const firstCollection = await this.#QB.collection()
 
-    return collection.map(item => this.#generateModels(item))
+    /**
+     * The second collection instance with all data parsed.
+     */
+    const collection = firstCollection.map(i => this.#generator.generateOne(i))
+
+    /**
+     * Await the resolution of all items in the collection
+     * until return.
+     */
+    collection.items = await Promise.all(collection.items)
+
+    return collection
   }
 
   /**
@@ -132,7 +163,7 @@ export class ModelQueryBuilder {
       resourceUrl,
     )
 
-    return { data: this.#generateModels(data), meta, links }
+    return { data: await this.#generator.generateMany(data), meta, links }
   }
 
   /**
@@ -158,7 +189,19 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.create(data))
+    const primaryKey = this.#Model.primaryKey
+
+    if (!data[primaryKey]) {
+      const column = this.#schema.columns.find(
+        column => column.name === primaryKey,
+      )
+
+      if (column.type === 'uuid') {
+        data[primaryKey] = Uuid.generate()
+      }
+    }
+
+    return this.#generator.generateOne(await this.#QB.create(data))
   }
 
   /**
@@ -173,7 +216,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.createMany(data))
+    return this.#generator.generateMany(await this.#QB.createMany(data))
   }
 
   /**
@@ -188,7 +231,7 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.createOrUpdate(data))
+    return this.#generator.generateOne(await this.#QB.createOrUpdate(data))
   }
 
   /**
@@ -204,7 +247,13 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generateModels(await this.#QB.update(data, force))
+    const result = await this.#QB.update(data, force)
+
+    if (Is.Array(result)) {
+      return this.#generator.generateMany(result)
+    }
+
+    return this.#generator.generateOne(result)
   }
 
   /**
@@ -215,12 +264,18 @@ export class ModelQueryBuilder {
    */
   async delete(force = false) {
     if (this.#Model.isSoftDelete && !force) {
-      return this.#generateModels(
-        await this.#QB.update({ [this.#Model.DELETED_AT]: new Date() }),
-      )
+      const result = await this.#QB.update({
+        [this.#Model.DELETED_AT]: new Date(),
+      })
+
+      if (Is.Array(result)) {
+        return this.#generator.generateMany(result)
+      }
+
+      return this.#generator.generateOne(result)
     }
 
-    return this.#generateModels(await this.#QB.delete())
+    await this.#QB.delete()
   }
 
   /**
@@ -242,19 +297,32 @@ export class ModelQueryBuilder {
    * @return {any}
    */
   listCriterias(withRemoved = false) {
+    const criterias = this.#Model.criterias()
+
     if (withRemoved) {
-      return this.#Model.criterias
+      return criterias
     }
 
-    const criterias = Json.copy(this.#Model.criterias)
+    const activeCriterias = {}
 
     Object.keys(criterias).forEach(key => {
-      if (this.#removedCriterias.includes(key)) {
-        delete criterias[key]
+      if (!this.#removedCriterias.includes(key)) {
+        activeCriterias[key] = criterias[key]
       }
     })
 
-    return criterias
+    return activeCriterias
+  }
+
+  /**
+   * Log in console the actual query built.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  dump() {
+    this.#QB.dump()
+
+    return this
   }
 
   /**
@@ -264,43 +332,30 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   select(...columns) {
-    this.#QB.buildSelect(...columns)
+    if (columns.includes('*')) {
+      this.#schema.columns = this.#schema.columns.map(c => {
+        c.isHidden = false
 
-    return this
-  }
+        return c
+      })
+    }
 
-  /**
-   * Set the columns that should be selected on query.
-   *
-   * @param columns {string}
-   * @return {ModelQueryBuilder}
-   */
-  addSelect(...columns) {
-    this.#QB.buildAddSelect(...columns)
+    columns.forEach(column => {
+      const index = this.#schema.columns.indexOf(c => c.name === column)
 
-    return this
-  }
+      if (index === -1) {
+        return
+      }
 
-  /**
-   * Set how many models should be skipped in your query.
-   *
-   * @param number {number}
-   * @return {ModelQueryBuilder}
-   */
-  skip(number) {
-    this.#QB.buildSkip(number)
+      this.#schema.columns[index] = {
+        ...this.#schema.columns[index],
+        isHidden: false,
+      }
+    })
 
-    return this
-  }
+    columns = this.#schema.getReversedColumnNamesOf(columns)
 
-  /**
-   * Set the limit of models in your query.
-   *
-   * @param number {number}
-   * @return {ModelQueryBuilder}
-   */
-  limit(number) {
-    this.#QB.buildLimit(number)
+    this.#QB.select(...columns)
 
     return this
   }
@@ -313,7 +368,23 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orderBy(columnName = this.#Model.primaryKey, direction = 'ASC') {
-    this.#QB.buildOrderBy(columnName, direction)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orderBy(columnName, direction.toLowerCase())
+
+    return this
+  }
+
+  /**
+   * Set the group by in your query.
+   *
+   * @param columns {string}
+   * @return {ModelQueryBuilder}
+   */
+  groupBy(...columns) {
+    columns = this.#schema.getReversedColumnNamesOf(columns)
+
+    this.#QB.groupBy(...columns)
 
     return this
   }
@@ -321,22 +392,15 @@ export class ModelQueryBuilder {
   /**
    * Include some relation in your query.
    *
-   * @param [relationName] {string|any}
+   * @param relationName {string|any}
+   * @param [callback] {any}
    * @return {ModelQueryBuilder}
    */
-  includes(relationName) {
-    const relations = []
-    const schema = this.#Model.schema()
+  includes(relationName, callback) {
+    const relations = this.#schema.relations
+    const relation = relations.find(r => r.name === relationName)
 
-    Object.keys(schema).forEach(key => {
-      const relation = schema[key]
-
-      if (relation.isRelation) {
-        relations.push(key)
-      }
-    })
-
-    if (!relations.includes(relationName)) {
+    if (!relation) {
       throw new NotImplementedRelationException(
         relationName,
         this.#Model.name,
@@ -344,7 +408,12 @@ export class ModelQueryBuilder {
       )
     }
 
-    this.#QB.buildIncludes(relationName)
+    const index = relations.indexOf(relation)
+
+    relation.isIncluded = true
+    relation.callback = callback
+
+    this.#schema.relations[index] = relation
 
     return this
   }
@@ -358,7 +427,53 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   where(statement, operation, value) {
-    this.#QB.buildWhere(statement, operation, value)
+    if (Is.Object(statement)) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.where(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    if (!value) {
+      this.#QB.where(statement, operation)
+
+      return this
+    }
+
+    this.#QB.where(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orWhere(statement, operation, value) {
+    if (Is.Object(statement)) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.orWhere(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    if (!value) {
+      this.#QB.orWhere(statement, operation)
+
+      return this
+    }
+
+    this.#QB.orWhere(statement, operation, value)
 
     return this
   }
@@ -371,7 +486,17 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNot(statement, value) {
-    this.#QB.buildWhereNot(statement, value)
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.whereNot(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.whereNot(statement, value)
 
     return this
   }
@@ -384,7 +509,17 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereLike(statement, value) {
-    this.#QB.buildWhereLike(statement, value)
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.whereLike(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.whereLike(statement, value)
 
     return this
   }
@@ -397,7 +532,17 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereILike(statement, value) {
-    this.#QB.buildWhereILike(statement, value)
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.whereILike(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.whereILike(statement, value)
 
     return this
   }
@@ -410,7 +555,9 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereIn(columnName, values) {
-    this.#QB.buildWhereIn(columnName, values)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereIn(columnName, values)
 
     return this
   }
@@ -423,7 +570,9 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotIn(columnName, values) {
-    this.#QB.buildWhereNotIn(columnName, values)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereNotIn(columnName, values)
 
     return this
   }
@@ -436,7 +585,9 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereBetween(columnName, values) {
-    this.#QB.buildWhereBetween(columnName, values)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereBetween(columnName, values)
 
     return this
   }
@@ -449,7 +600,9 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotBetween(columnName, values) {
-    this.#QB.buildWhereNotBetween(columnName, values)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereNotBetween(columnName, values)
 
     return this
   }
@@ -461,7 +614,9 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNull(columnName) {
-    this.#QB.buildWhereNull(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereNull(columnName)
 
     return this
   }
@@ -473,30 +628,35 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotNull(columnName) {
-    this.#QB.buildWhereNotNull(columnName)
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.whereNotNull(columnName)
 
     return this
   }
 
   /**
-   * Generate model instances from data.
+   * Set how many models should be skipped in your query.
    *
-   * @param {any|any[]|import('@secjs/utils').Collection} data
+   * @param number {number}
+   * @return {ModelQueryBuilder}
    */
-  #generateModels(data) {
-    if (!data) {
-      return null
-    }
+  offset(number) {
+    this.#QB.offset(number)
 
-    if (!Is.Array(data)) {
-      const model = new this.#Model()
+    return this
+  }
 
-      Object.keys(data).forEach(key => (model[key] = data[key]))
+  /**
+   * Set the limit of models in your query.
+   *
+   * @param number {number}
+   * @return {ModelQueryBuilder}
+   */
+  limit(number) {
+    this.#QB.limit(number)
 
-      return model
-    }
-
-    return data.map(d => this.#generateModels(d))
+    return this
   }
 
   /**
@@ -537,12 +697,14 @@ export class ModelQueryBuilder {
       return
     }
 
-    Object.keys(this.#Model.criterias).forEach(k => {
-      if (this.#removedCriterias.includes(k)) {
+    const criterias = this.#Model.criterias()
+
+    Object.keys(criterias).forEach(criteriaName => {
+      if (this.#removedCriterias.includes(criteriaName)) {
         return
       }
 
-      const criteria = this.#Model.criterias[k]
+      const criteria = criterias[criteriaName]
 
       for (const [key, value] of criteria.entries()) {
         this[key](...value)

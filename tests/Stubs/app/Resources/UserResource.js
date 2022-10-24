@@ -1,4 +1,4 @@
-import { Resource } from '#src/Helpers/Resource'
+import { Resource } from '#src/Models/Resource'
 
 export class UserResource extends Resource {
   /**

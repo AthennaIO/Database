@@ -1,4 +1,13 @@
-import { Folder, Module, Path } from '@secjs/utils'
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import { Folder, Module } from '@athenna/common'
 import { join } from 'node:path'
 
 export class DatabaseLoader {
@@ -29,38 +38,6 @@ export class DatabaseLoader {
     const dirname = Module.createDirname(import.meta.url)
     const templatesPath = join(dirname, '..', '..', 'templates')
 
-    return new Folder(templatesPath).loadSync().getFilesByPattern('**/*.ejs')
-  }
-
-  /**
-   * Get the schema of all models with same connection.
-   *
-   * @param connection {string}
-   * @param [path] {string}
-   * @param [defaultConnection] {string}
-   * @return {Promise<any[]>}
-   */
-  static async loadEntities(
-    connection,
-    path = Path.app('Models'),
-    defaultConnection = process.env.DB_CONNECTION,
-  ) {
-    const schemas = []
-
-    const Models = await Module.getAllFrom(path)
-
-    Models.forEach(Model => {
-      const modelConnection = Model.connection
-
-      if (modelConnection === 'default' && connection === defaultConnection) {
-        schemas.push(Model.getSchema())
-      }
-
-      if (modelConnection === connection) {
-        schemas.push(Model.getSchema())
-      }
-    })
-
-    return schemas
+    return new Folder(templatesPath).loadSync().getFilesByPattern('**/*.edge')
   }
 }

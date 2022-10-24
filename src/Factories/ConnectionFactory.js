@@ -7,8 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { DataSource } from 'typeorm'
-import { Config, Json } from '@secjs/utils'
+import knex from 'knex'
+
+import { Config } from '@athenna/config'
+import { Json } from '@athenna/common'
 
 export class ConnectionFactory {
   /**
@@ -18,7 +20,7 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async mysql(conName) {
-    return this.#typeorm(conName, 'mysql')
+    return this.#knex(conName, 'mysql2')
   }
 
   /**
@@ -28,47 +30,42 @@ export class ConnectionFactory {
    * @return {Promise<any>}
    */
   static async postgres(conName) {
-    return this.#typeorm(conName, 'postgres')
+    return this.#knex(conName, 'pg')
   }
 
-  // /**
-  //  * Create the connection with a sqlite database.
-  //  *
-  //  * @param {string} conName
-  //  * @return {Promise<any>}
-  //  */
-  // static async sqlite(conName) {
-  //   return this.#typeorm(conName, 'better-sqlite3')
-  // }
-  //
-  // /**
-  //  * Create the connection with a sqlserver database.
-  //  *
-  //  * @param {string} conName
-  //  * @return {Promise<any>}
-  //  */
-  // static async sqlserver(conName) {
-  //   return this.#typeorm(conName, 'mssql')
-  // }
-
   /**
-   * Create a database connection using typeorm.
+   * Create a database connection using knex.
    *
    * @param {string} conName
-   * @param {string} type
+   * @param {string} client
    * @return {Promise<import('typeorm').DataSource>}
    */
-  static async #typeorm(conName, type) {
+  static async #knex(conName, client) {
     const configs = Json.copy(Config.get(`database.connections.${conName}`))
 
+    const poolConfig = Json.copy(configs.pool)
+    const debugConfig = Json.copy(configs.debug)
+    const useNullAsDefaultConfig = Json.copy(configs.useNullAsDefault)
+
+    delete configs.pool
     delete configs.driver
+    delete configs.debug
+    delete configs.synchronize
+    delete configs.useNullAsDefault
 
-    const dataSource = new DataSource({
-      type,
-      migrationsTableName: Config.get('database.migrations'),
-      ...configs,
+    return knex({
+      client,
+      connection: configs,
+      migrations: {
+        tableName: Config.get('database.migrations'),
+      },
+      pool: poolConfig || {
+        min: 2,
+        max: 20,
+        acquireTimeoutMillis: 60 * 1000,
+      },
+      debug: debugConfig || false,
+      useNullAsDefault: useNullAsDefaultConfig || false,
     })
-
-    return dataSource.initialize()
   }
 }

@@ -8,7 +8,8 @@
  */
 
 import { test } from '@japa/runner'
-import { Path, Folder, Config } from '@secjs/utils'
+import { Config } from '@athenna/config'
+import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { DriverFactory } from '#src/Factories/DriverFactory'
@@ -20,8 +21,8 @@ import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedCon
 test.group('DriverFactoryTest', group => {
   group.setup(async () => {
     await new Folder(Path.stubs('configs')).copy(Path.config())
-    await new Config().safeLoad(Path.config('database.js'))
-    await new Config().safeLoad(Path.config('logging.js'))
+    await Config.safeLoad(Path.config('database.js'))
+    await Config.safeLoad(Path.config('logging.js'))
   })
 
   group.each.setup(async () => {
