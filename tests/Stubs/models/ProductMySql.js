@@ -1,6 +1,6 @@
-import { Model } from '#src/Models/Model'
 import { Column } from '#src/Models/Column'
-import { Relation } from '#src/Models/Relation'
+import { Relation } from '#src/Relations/Relation'
+import { Model } from '#src/Models/Model'
 import { UserMySql } from '#tests/Stubs/models/UserMySql'
 
 export class ProductMySql extends Model {
@@ -51,7 +51,7 @@ export class ProductMySql extends Model {
       name: Column.string('name', 200),
       price: Column.integer({ default: 0 }),
       userId: Column.integer(),
-      user: Relation.manyToOne('products', UserMySql),
+      user: Relation.belongsTo(UserMySql, 'products'),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
       deletedAt: Column.deletedAt(this.DELETED_AT),

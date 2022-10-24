@@ -1,4 +1,4 @@
-import { Seeder } from '#src/Helpers/Seeder'
+import { Seeder } from '#src/Database/Seeders/Seeder'
 import { User } from '#tests/Stubs/models/User'
 
 export class UserSeeder extends Seeder {

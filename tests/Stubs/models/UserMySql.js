@@ -1,6 +1,6 @@
-import { Model } from '#src/Models/Model'
 import { Column } from '#src/Models/Column'
-import { Relation } from '#src/Models/Relation'
+import { Relation } from '#src/Relations/Relation'
+import { Model } from '#src/Models/Model'
 import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 
 export class UserMySql extends Model {
@@ -50,7 +50,7 @@ export class UserMySql extends Model {
       id: Column.autoIncrementedInt(),
       name: Column.string('name', 200),
       email: Column.string({ isHidden: true, isUnique: true }),
-      products: Relation.oneToMany('user', ProductMySql, true),
+      products: Relation.hasMany(ProductMySql, 'user', true),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
       deletedAt: Column.deletedAt(this.DELETED_AT),

@@ -1,7 +1,15 @@
-import { Command } from '@athenna/artisan'
-import { Database } from '#src/Facades/Database'
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-// TODO Test
+import { Database } from '#src/Facades/Database'
+import { Command } from '@athenna/artisan'
+
 export class MigrationRevert extends Command {
   /**
    * The name and signature of the console command.

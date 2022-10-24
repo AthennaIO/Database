@@ -1,0 +1,35 @@
+import { Migration } from '@athenna/database'
+
+export class {{ nameMigrationClass }} extends Migration {
+     /**
+      * Define the database connection to run the migration.
+      *
+      * @return {string}
+      */
+     static get connection() {
+        return 'default'
+     }
+
+    /**
+     * Run the migration.
+     *
+     * @param {import('knex').Knex} knex
+     * @return {Promise<void>}
+     */
+    async up({ schema }) {
+        return schema.createTable('{{ nameMigrationTable }}', table => {
+          table.increments('id')
+          table.timestamps(true, true, true)
+        })
+    }
+
+    /**
+     * Reverse the migration.
+     *
+     * @param {import('knex').Knex} knex
+     * @return {Promise<void>}
+     */
+    async down({ schema }) {
+         return schema.dropTableIfExists('{{ nameMigrationTable }}')
+    }
+}

@@ -7,24 +7,24 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@secjs/utils'
 import { Logger } from '@athenna/logger'
+import { Config } from '@athenna/config'
 
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 
-import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
+import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
+import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
-import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
-import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
+import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 
 export class DriverFactory {
   /**
    * All athenna drivers connection configuration.
    *
-   * @type {Map<string, { Driver: any, clientConnection?: any }>}
+   * @type {Map<string, { Driver: any, client?: any }>}
    */
   static #drivers = new Map()
     .set('mysql', { Driver: MySqlDriver })
@@ -41,7 +41,7 @@ export class DriverFactory {
 
     for (const [key, value] of this.#drivers.entries()) {
       if (onlyConnected) {
-        if (!value.clientConnection) continue
+        if (!value.client) continue
 
         availableDrivers.push(key)
 
@@ -58,20 +58,24 @@ export class DriverFactory {
    * Fabricate a new connection with some database driver.
    *
    * @param {string} connectionName
-   * @return {{ Driver: any, clientConnection?: any }}
+   * @return {{ Driver: any, client?: any }}
    */
   static fabricate(connectionName) {
     const conConfig = this.#getConnectionConfig(connectionName)
 
-    const { Driver, clientConnection } = this.#drivers.get(conConfig.driver)
+    const { Driver, client } = this.#drivers.get(conConfig.driver)
 
-    if (clientConnection) {
-      return new Driver(connectionName, clientConnection)
+    if (connectionName === 'default') {
+      connectionName = Config.get('database.default')
+    }
+
+    if (client) {
+      return new Driver(connectionName, client)
     }
 
     this.#drivers.set(conConfig.driver, {
       Driver,
-      clientConnection,
+      client,
     })
 
     return new Driver(connectionName)
@@ -110,27 +114,22 @@ export class DriverFactory {
       conName = Config.get('database.default')
     }
 
-    let client = null
-
     try {
-      client = await ConnectionFactory[driverName](conName)
+      const client = await ConnectionFactory[driverName](conName)
 
       this.getLogger().success(
         `Successfully connected to ${conName} database connection`,
       )
 
-      const dataSource = client
-      const runner = client.createQueryRunner()
-
       if (!saveOnDriver) {
-        return { runner, dataSource }
+        return client
       }
 
-      driverObject.clientConnection = { runner, dataSource }
+      driverObject.client = client
 
       this.#drivers.set(driverName, driverObject)
 
-      return { runner, dataSource }
+      return client
     } catch (error) {
       throw new ConnectionFailedException(conName, driverName, error)
     }
@@ -145,17 +144,16 @@ export class DriverFactory {
   static async closeConnectionByDriver(driverName) {
     const driverObject = this.#getDriver(driverName)
 
-    const client = driverObject.clientConnection
+    const client = driverObject.client
 
-    if (!client || !client.dataSource.isInitialized) {
+    if (!client) {
       return
     }
 
     try {
-      await client.runner.release()
-      await client.dataSource.destroy()
+      await client.destroy()
 
-      driverObject.clientConnection = null
+      driverObject.client = null
 
       this.#drivers.set(driverName, driverObject)
     } catch (error) {
@@ -196,7 +194,7 @@ export class DriverFactory {
    * Safe get the driver verifying if it exists.
    *
    * @param {string} driverName
-   * @return {{ Driver: any, clientConnection?: any }}
+   * @return {{ Driver: any, client?: any }}
    */
   static #getDriver(driverName) {
     if (!this.#drivers.has(driverName)) {

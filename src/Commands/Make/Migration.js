@@ -1,5 +1,14 @@
-import { Path } from '@secjs/utils'
-import { Command } from '@athenna/artisan'
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import { Path, String } from '@athenna/common'
+import { Command, Template } from '@athenna/artisan'
 
 export class MakeMigration extends Command {
   /**
@@ -43,10 +52,31 @@ export class MakeMigration extends Command {
    * @return {Promise<void>}
    */
   async handle(name, options) {
+    const date = new Date()
+
+    const [month, day, partialYear] = date.toLocaleString().split('/')
+
+    const year = partialYear.split(',')[0]
+
+    const [hour, minutes, seconds] = partialYear
+      .replace(`${year}, `, '')
+      .replace('AM', '')
+      .replace('PM', '')
+      .replace(' ', '')
+      .split(':')
+
+    const time = `${year}_${day}_${month}_${hour}${minutes}${seconds}`
+
+    const tableName = String.pluralize(
+      name.replace('Migrations', '').replace('Migration', '').toLowerCase(),
+    )
     const resource = 'Migration'
-    const path = Path.migrations(`${name}.js`)
+    const path = Path.migrations(`${time}_create_${tableName}_table.js`)
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
+
+    Template.addProperty('nameMigrationTable', tableName)
+    Template.addProperty('nameMigrationClass', String.toPascalCase(name))
 
     const file = await this.makeFile(path, 'migration', options.lint)
 

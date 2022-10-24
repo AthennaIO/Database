@@ -7,20 +7,30 @@
  * file that was distributed with this source code.
  */
 
-import { String } from '@secjs/utils'
 import { Assert } from '@japa/assert'
-import { EntitySchema } from 'typeorm'
 import { faker } from '@faker-js/faker'
+import { Is, String } from '@athenna/common'
 
 import { Database } from '#src/index'
 import { Criteria } from '#src/Models/Criteria'
-import { ModelFactory } from '#src/Factories/ModelFactory'
+import { ModelFactory } from '#src/Models/ModelFactory'
+import { SchemaBuilder } from '#src/Models/SchemaBuilder'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
+import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 export class Model {
+  /**
+   * The faker instance to create fake data.
+   *
+   * @return {import('@faker-js/faker').Faker}
+   */
+  static get faker() {
+    return faker
+  }
+
   /**
    * Set the db connection that this model instance will work with.
    *
@@ -80,22 +90,15 @@ export class Model {
    *
    * @return {any}
    */
-  static get criterias() {
+  static criterias() {
+    const criterias = {}
+
     if (this.isSoftDelete) {
-      return {
-        deletedAt: Criteria.whereNull(this.DELETED_AT).get(),
-      }
+      criterias.deletedAt = Criteria.whereNull(this.DELETED_AT).get()
     }
 
-    return {}
+    return criterias
   }
-
-  /**
-   * The faker instance to create fake data.
-   *
-   * @type {Faker}
-   */
-  static faker = faker
 
   /**
    * The default schema for model instances.
@@ -125,46 +128,24 @@ export class Model {
   }
 
   /**
-   * The TypeORM entity schema instance.
+   * The schema instance of this model.
    *
-   * @return {EntitySchema<any>}
+   * @return {SchemaBuilder}
    */
   static getSchema() {
     const schema = this.schema()
 
-    const columns = {}
-    const relations = {}
-
-    Object.keys(schema).forEach(key => {
-      const value = schema[key]
-
-      if (value.isColumn) {
-        delete value.isColumn
-
-        columns[key] = value
-      } else {
-        delete value.isRelation
-
-        relations[key] = value
-      }
-    })
-
-    return new EntitySchema({
-      name: this.table,
-      tableName: this.table,
-      columns,
-      relations,
-      synchronize:
-        process.env.DB_SYNCHRONIZE === 'true' ||
-        process.env.DB_SYNCHRONIZE === '(true)' ||
-        false,
-    })
+    return new SchemaBuilder()
+      .setSchema(schema)
+      .setName(this.table)
+      .setTable(this.table)
+      .setConnection(this.connection)
   }
 
   /**
    * The TypeORM client instance.
    *
-   * @return {DataSource}
+   * @return {import('knex').Knex}
    */
   static getClient() {
     return Database.connection(this.connection).getClient()
@@ -178,6 +159,15 @@ export class Model {
    */
   static query(withCriterias = true) {
     return new ModelQueryBuilder(this, withCriterias)
+  }
+
+  /**
+   * Truncate all data in database of this model.
+   *
+   * @return {Promise<void>}
+   */
+  static truncate() {
+    return Database.connection(this.connection).truncate(this.table)
   }
 
   /**
@@ -384,7 +374,7 @@ export class Model {
   static async assertCount(number) {
     const count = await this.count()
 
-    new Assert().deepEqual(number, count)
+    new Assert().equal(number, count)
   }
 
   /**
@@ -396,7 +386,7 @@ export class Model {
   static async assertExists(where) {
     const model = await this.find(where)
 
-    new Assert().isNotNull(model)
+    new Assert().isDefined(model)
   }
 
   /**
@@ -408,7 +398,7 @@ export class Model {
   static async assertNotExists(where) {
     const model = await this.find(where)
 
-    new Assert().isNull(model)
+    new Assert().isUndefined(model)
   }
 
   /**
@@ -434,6 +424,71 @@ export class Model {
     return this.toJSON()
   }
 
-  // TODO
-  // async save()
+  /**
+   * Update the model values that have been modified.
+   *
+   * @param [ignorePersistOnly] {boolean}
+   * @return {Promise<this>}
+   */
+  async save(ignorePersistOnly = false) {
+    const Model = this.constructor
+
+    const data = await this.#saveSubSchemas()
+    const where = { [Model.primaryKey]: this[Model.primaryKey] }
+
+    if (Is.Empty(data)) {
+      return this
+    }
+
+    const updatedModel = await Model.update(where, data, ignorePersistOnly)
+
+    Object.keys(updatedModel).forEach(key => (this[key] = updatedModel[key]))
+
+    return this
+  }
+
+  /**
+   * Save all sub schema models inside instance and
+   * return the json data without these schemas.
+   *
+   * @return {Promise<any>}
+   */
+  async #saveSubSchemas() {
+    const Model = this.constructor
+    const schema = Model.schema()
+    const data = this.toJSON()
+
+    const promises = []
+
+    Object.keys(data).forEach(key => {
+      const relationSchema = schema[key]
+
+      if (!relationSchema || !relationSchema.isRelation) {
+        return null
+      }
+
+      /**
+       * Delete relation schema from json data.
+       */
+      delete data[key]
+
+      if (relationSchema.type === 'manyToMany') {
+        const relations = this[key]
+
+        const subPromises = ManyToManyRelation.saveAll(
+          this,
+          relations,
+          relationSchema,
+        )
+
+        subPromises.then(extras => (this.$extras = extras))
+
+        promises.push(subPromises)
+      }
+    })
+
+    await Promise.all(promises)
+
+    return data
+  }
 }
