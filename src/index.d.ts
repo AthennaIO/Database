@@ -591,12 +591,12 @@ export class Transaction {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {import('typeorm').TableOptions} options
+   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} builder
    * @return {Promise<void>}
    */
   createTable(
     tableName: string,
-    options: import('typeorm').TableOptions,
+    builder: (table: import('knex').Knex.TableBuilder) => void | Promise<void>,
   ): Promise<void>
 
   /**
@@ -732,13 +732,6 @@ export class SchemaBuilder {
   setRelations(relations: any): this
 
   /**
-   * Set if schema should be synchronized with database.
-   *
-   * @return {SchemaBuilder}
-   */
-  isToSynchronize(): this
-
-  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
@@ -776,13 +769,6 @@ export class SchemaBuilder {
    * @return {any}
    */
   getReversedStatementNamesOf(statement: any): any
-
-  /**
-   * Synchronize this schema with database.
-   *
-   * @return {Promise<void>}
-   */
-  sync(): Promise<void>
 }
 
 export class ModelFactory {
@@ -865,6 +851,13 @@ export class ModelGenerator {
 
 export class Model {
   /**
+   * The faker instance to create fake data.
+   *
+   * @type {Faker}
+   */
+  static faker: Faker
+
+  /**
    * Set the db connection that this model instance will work with.
    *
    * @return {string}
@@ -905,13 +898,6 @@ export class Model {
    *  @return {string}
    */
   static get DELETED_AT(): string
-
-  /**
-   * The faker instance to create fake data.
-   *
-   * @type {Faker}
-   */
-  static faker: Faker
 
   /**
    * The default schema for model instances.

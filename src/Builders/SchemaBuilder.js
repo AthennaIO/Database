@@ -7,10 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@athenna/config'
-import { String } from '@athenna/common'
-import { Database } from '#src/index'
-
 export class SchemaBuilder {
   /**
    * Set the table name of this schema instance.
@@ -32,13 +28,6 @@ export class SchemaBuilder {
    * @return {string}
    */
   connection = 'default'
-
-  /**
-   * Set if schema should be synchronized with database.
-   *
-   * @return {boolean}
-   */
-  synchronize = false
 
   /**
    * All the model columns mapped
@@ -156,25 +145,6 @@ export class SchemaBuilder {
   }
 
   /**
-   * Set if schema should be synchronized with database.
-   *
-   * @return {SchemaBuilder}
-   */
-  isToSynchronize() {
-    const connection =
-      this.connection === 'default'
-        ? Config.get('database.default')
-        : this.connection
-
-    this.synchronize = Config.get(
-      `database.connections.${connection}.synchronize`,
-      false,
-    )
-
-    return this
-  }
-
-  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
@@ -239,42 +209,5 @@ export class SchemaBuilder {
     })
 
     return newStatement
-  }
-
-  /**
-   * Synchronize this schema with database.
-   *
-   * @return {Promise<void>}
-   */
-  async sync() {
-    if (!this.synchronize) {
-      return
-    }
-
-    const DB = Database.connection(this.connection)
-
-    return DB.createTable(this.table, builder => {
-      this.columns.forEach(column => {
-        if (column.createDate || column.updateDate) {
-          return
-        }
-
-        const build = builder[column.type](column.name, column.length)
-
-        if (column.default) build.defaultTo(column.default)
-        if (column.isUnique) build.unique()
-        if (column.isPrimary) build.primary()
-        if (column.isNullable) build.nullable()
-      })
-
-      const createDateColumn = this.columns.find(column => column.createDate)
-
-      if (createDateColumn) {
-        const isCamelCase =
-          createDateColumn.name === String.toCamelCase(createDateColumn.name)
-
-        builder.timestamps(true, true, isCamelCase)
-      }
-    })
   }
 }

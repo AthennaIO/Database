@@ -9,13 +9,13 @@
 
 import { Collection, Exec, Is } from '@athenna/common'
 
+import { Transaction } from '#src/Transactions/Transaction'
+import { DriverFactory } from '#src/Factories/DriverFactory'
+import { MigrationSource } from '#src/Migrations/MigrationSource'
+import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { PROTECTED_QUERY_METHODS } from '#src/Constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
-import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
-import { DriverFactory } from '#src/Factories/DriverFactory'
-import { Transaction } from '#src/index'
-import { MigrationSource } from '#src/Migrations/MigrationSource'
 
 export class MySqlDriver {
   /**

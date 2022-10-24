@@ -1,43 +1,6 @@
-/**
- * @athenna/database
- *
- * (c) João Lenon <lenon@athenna.io>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
-import { Config } from '@athenna/config'
-
 import { QueryBuilder } from '#src/Builders/QueryBuilder'
-import { DriverFactory } from '#src/Factories/DriverFactory'
 
-export * from './Builders/Column.js'
-export * from './Builders/Criteria.js'
-export * from './Builders/ModelQueryBuilder.js'
-export * from './Builders/Relation.js'
-export * from './Builders/SchemaBuilder.js'
-export * from './Facades/Database.js'
-export * from './Facades/DB.js'
-export * from './Factories/ConnectionFactory.js'
-export * from './Factories/DriverFactory.js'
-export * from './Factories/ModelFactory.js'
-export * from './Generators/ModelGenerator.js'
-export * from './Helpers/DatabaseLoader.js'
-export * from './Migrations/Migration.js'
-export * from './Models/Model.js'
-export * from './Resources/Resource.js'
-export * from './Seeders/Seeder.js'
-export * from './Transactions/Transaction.js'
-
-export class DatabaseImpl {
-  /**
-   * The connection name used for this instance.
-   *
-   * @type {string|null}
-   */
-  #connection = Config.get('database.default')
-
+export class Transaction {
   /**
    * The drivers responsible for handling database operations.
    *
@@ -46,65 +9,40 @@ export class DatabaseImpl {
   #driver = null
 
   /**
-   * Creates a new instance of DatabaseImpl.
+   * Creates a new instance of transaction.
    *
-   * @return {DatabaseImpl}
+   * @param {any} driver
+   * @return {Transaction}
    */
-  constructor() {
-    this.#driver = DriverFactory.fabricate(this.#connection)
-  }
-
-  /**
-   * Change the database connection.
-   *
-   * @param {string} connection
-   * @return {DatabaseImpl}
-   */
-  connection(connection) {
-    this.#driver = DriverFactory.fabricate(connection)
-    this.#connection = connection
-
-    return this
-  }
-
-  /**
-   * Connect to database.
-   *
-   * @param {boolean} force
-   * @param {boolean} saveOnFactory
-   * @return {Promise<this>}
-   */
-  async connect(force = false, saveOnFactory = true) {
-    await this.#driver.connect(force, saveOnFactory)
-
-    return this
-  }
-
-  /**
-   * Close the connection with database in this instance.
-   *
-   * @return {Promise<void>}
-   */
-  async close() {
-    return this.#driver.close()
+  constructor(driver) {
+    this.#driver = driver
   }
 
   /**
    * Return the client of driver.
    *
-   * @return {import('knex').Knex|null}
+   * @return {import('typeorm').DataSource|null}
    */
   getClient() {
     return this.#driver.getClient()
   }
 
   /**
-   * Create a new transaction.
+   * Commit the transaction.
    *
-   * @return {Promise<Transaction>}
+   * @return {Promise<void>}
    */
-  async startTransaction() {
-    return this.#driver.startTransaction()
+  async commitTransaction() {
+    return this.#driver.commitTransaction()
+  }
+
+  /**
+   * Rollback the transaction.
+   *
+   * @return {Promise<void>}
+   */
+  async rollbackTransaction() {
+    return this.#driver.rollbackTransaction()
   }
 
   /**
@@ -114,15 +52,6 @@ export class DatabaseImpl {
    */
   async runMigrations() {
     await this.#driver.runMigrations()
-  }
-
-  /**
-   * Revert database migrations.
-   *
-   * @return {Promise<void>}
-   */
-  async revertMigrations() {
-    await this.#driver.revertMigrations()
   }
 
   /**
@@ -206,11 +135,11 @@ export class DatabaseImpl {
    * Create a new table in database.
    *
    * @param {string} tableName
-   * @param {(builder: import('knex').Knex.TableBuilder) => void|Promise<void>} callback
+   * @param {import('typeorm').TableOptions} options
    * @return {Promise<void>}
    */
-  async createTable(tableName, callback) {
-    return this.#driver.createTable(tableName, callback)
+  async createTable(tableName, options = {}) {
+    return this.#driver.createTable(tableName, options)
   }
 
   /**

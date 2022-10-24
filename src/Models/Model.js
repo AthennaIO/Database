@@ -140,7 +140,6 @@ export class Model {
       .setName(this.table)
       .setTable(this.table)
       .setConnection(this.connection)
-      .isToSynchronize()
   }
 
   /**
