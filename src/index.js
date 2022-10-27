@@ -90,6 +90,15 @@ export class DatabaseImpl {
   }
 
   /**
+   * Close all the connections with all databases.
+   *
+   * @return {Promise<void>}
+   */
+  async closeAll() {
+    await DriverFactory.closeAllConnections()
+  }
+
+  /**
    * Return the client of driver.
    *
    * @return {import('knex').Knex|null}

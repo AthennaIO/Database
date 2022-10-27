@@ -131,6 +131,7 @@ export class DriverFactory {
 
       return client
     } catch (error) {
+      console.log(error)
       throw new ConnectionFailedException(conName, driverName, error)
     }
   }
@@ -159,6 +160,21 @@ export class DriverFactory {
     } catch (error) {
       throw new CloseConnectionFailedException(driverName, error)
     }
+  }
+
+  /**
+   * Close all opened connections of DriverFactory.
+   *
+   * @return {Promise<void>}
+   */
+  static async closeAllConnections() {
+    const availableDrivers = this.availableDrivers(true)
+
+    const promises = availableDrivers.map(
+      this.closeConnectionByDriver.bind(this),
+    )
+
+    await Promise.all(promises)
   }
 
   /**
@@ -236,7 +252,7 @@ export class DriverFactory {
   static getLogger() {
     const logger = new Logger()
 
-    return process.env.NODE_ENV === 'test' || process.env.BOOT_LOGS === 'false'
+    return Env('NODE_ENV') === 'test' || !Env('BOOT_LOGS')
       ? logger.channel('discard')
       : logger.channel('application')
   }

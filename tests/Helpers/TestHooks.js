@@ -75,7 +75,7 @@ export class TestHooks {
         await Folder.safeRemove(Path.config())
         await Folder.safeRemove(Path.database())
 
-        await Database.close()
+        await Database.closeAll()
       },
     }
   }
@@ -107,7 +107,7 @@ export class TestHooks {
       },
       teardown: async () => {
         await Database.revertMigrations()
-        await Database.close()
+        await Database.closeAll()
 
         await Folder.safeRemove(Path.app())
         await Folder.safeRemove(Path.config())

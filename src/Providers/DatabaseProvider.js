@@ -9,7 +9,7 @@
 
 import { ServiceProvider } from '@athenna/ioc'
 
-import { Database, DatabaseImpl } from '#src/index'
+import { DatabaseImpl } from '#src/index'
 
 export class DatabaseProvider extends ServiceProvider {
   /**
@@ -18,22 +18,27 @@ export class DatabaseProvider extends ServiceProvider {
    * @return {Promise<void>}
    */
   async boot() {
-    this.container.bind('Athenna/Core/Database', DatabaseImpl)
+    const Database = this.container
+      .bind('Athenna/Core/Database', DatabaseImpl)
+      .use('Athenna/Core/Database')
 
-    const isToAutoConnect =
-      process.env.DB_AUTO_CONNECT &&
-      (process.env.DB_AUTO_CONNECT === true ||
-        process.env.DB_AUTO_CONNECT === 'true' ||
-        process.env.DB_AUTO_CONNECT === '(true)')
-
-    const isArtisanApp =
-      process.env.IS_ARTISAN &&
-      (process.env.IS_ARTISAN === true ||
-        process.env.IS_ARTISAN === 'true' ||
-        process.env.IS_ARTISAN === '(true)')
-
-    if (isToAutoConnect && !isArtisanApp) {
+    if (Env('DB_AUTO_CONNECT', true) && !Env('IS_ARTISAN', true)) {
       await Database.connect()
     }
+  }
+
+  /**
+   * Shutdown any application services.
+   *
+   * @return {void|Promise<void>}
+   */
+  async shutdown() {
+    const Database = this.container.use('Athenna/Core/Database')
+
+    if (!Database) {
+      return
+    }
+
+    await Database.closeAll()
   }
 }
