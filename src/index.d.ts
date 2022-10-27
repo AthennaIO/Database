@@ -55,6 +55,13 @@ export class MySqlDatabaseImpl {
   close(): Promise<void>
 
   /**
+   * Close all the connections with all databases.
+   *
+   * @return {Promise<void>}
+   */
+  closeAll(): Promise<void>
+
+  /**
    * Return the client of driver.
    *
    * @return {import('knex').Knex | null}

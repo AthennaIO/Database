@@ -34,7 +34,7 @@ test.group('ModelTest', group => {
 
   group.each.teardown(async () => {
     await Database.revertMigrations()
-    await Database.close()
+    await Database.closeAll()
   })
 
   group.teardown(async () => {

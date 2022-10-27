@@ -31,6 +31,9 @@ export default {
       driver: 'null',
       formatter: 'simple',
     },
+    discard: {
+      driver: 'null',
+    },
     console: {
       driver: 'null',
       formatter: 'cli',
