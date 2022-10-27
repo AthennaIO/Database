@@ -9,7 +9,18 @@
   "homepage": "https://github.com/AthennaIO/Database#readme",
   "keywords": [
     "esm",
-    "athenna"
+    "orm",
+    "nodejs",
+    "athenna",
+    "database",
+    "migrations",
+    "factories",
+    "seeders",
+    "mysql",
+    "mongodb",
+    "postgresql",
+    "sql",
+    "nosql"
   ],
   "scripts": {
     "lint:fix": "eslint \"{src,tests}/**/*.js\" --fix",
