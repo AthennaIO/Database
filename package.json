@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -9,7 +9,18 @@
   "homepage": "https://github.com/AthennaIO/Database#readme",
   "keywords": [
     "esm",
-    "athenna"
+    "orm",
+    "nodejs",
+    "athenna",
+    "database",
+    "migrations",
+    "factories",
+    "seeders",
+    "mysql",
+    "mongodb",
+    "postgresql",
+    "sql",
+    "nosql"
   ],
   "scripts": {
     "lint:fix": "eslint \"{src,tests}/**/*.js\" --fix",

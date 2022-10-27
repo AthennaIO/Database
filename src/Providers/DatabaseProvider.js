@@ -22,7 +22,7 @@ export class DatabaseProvider extends ServiceProvider {
       .bind('Athenna/Core/Database', DatabaseImpl)
       .use('Athenna/Core/Database')
 
-    if (Env('DB_AUTO_CONNECT', true) && !Env('IS_ARTISAN', true)) {
+    if (Env('DB_AUTO_CONNECT', true)) {
       await Database.connect()
     }
   }
