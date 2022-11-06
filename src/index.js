@@ -108,6 +108,15 @@ export class DatabaseImpl {
   }
 
   /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder|null}
+   */
+  getQueryBuilder() {
+    return this.#driver.getQueryBuilder()
+  }
+
+  /**
    * Create a new transaction.
    *
    * @return {Promise<Transaction>}

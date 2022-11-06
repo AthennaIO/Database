@@ -72,6 +72,24 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Return the client of driver.
+   *
+   * @return {import('knex').Knex}
+   */
+  getClient() {
+    return this.#QB.getClient()
+  }
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder}
+   */
+  getQueryBuilder() {
+    return this.#QB.getQueryBuilder()
+  }
+
+  /**
    * Find one data in database or throw exception if undefined.
    *
    * @return {Promise<any>}
@@ -390,6 +408,274 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Set a having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  having(column, operation, value) {
+    column = this.#schema.getReversedColumnNameOf(column)
+
+    if (!value) {
+      this.#QB.having(column, '=', operation)
+
+      return this
+    }
+
+    this.#QB.having(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  havingExists(builder) {
+    this.#QB.havingExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  havingNotExists(builder) {
+    this.#QB.havingNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  havingIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  havingNotIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  havingBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  havingNotBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  havingNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  havingNotNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.havingNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orHaving(column, operation, value) {
+    column = this.#schema.getReversedColumnNameOf(column)
+
+    if (!value) {
+      this.#QB.orHaving(column, '=', operation)
+
+      return this
+    }
+
+    this.#QB.orHaving(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingExists(builder) {
+    this.#QB.orHavingExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingNotExists(builder) {
+    this.#QB.orHavingNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingNotIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingNotBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  orHavingNotNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orHavingNotNull(columnName)
+
+    return this
+  }
+
+  /**
    * Include some relation in your query.
    *
    * @param relationName {string|any}
@@ -449,36 +735,6 @@ export class ModelQueryBuilder {
   }
 
   /**
-   * Set a or where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
-   * @param [value] {any}
-   * @return {ModelQueryBuilder}
-   */
-  orWhere(statement, operation, value) {
-    if (Is.Object(statement)) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.orWhere(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    if (!value) {
-      this.#QB.orWhere(statement, operation)
-
-      return this
-    }
-
-    this.#QB.orWhere(statement, operation, value)
-
-    return this
-  }
-
-  /**
    * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
@@ -497,6 +753,30 @@ export class ModelQueryBuilder {
     statement = this.#schema.getReversedColumnNameOf(statement)
 
     this.#QB.whereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  whereExists(builder) {
+    this.#QB.whereExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  whereNotExists(builder) {
+    this.#QB.whereNotExists(builder)
 
     return this
   }
@@ -631,6 +911,217 @@ export class ModelQueryBuilder {
     columnName = this.#schema.getReversedColumnNameOf(columnName)
 
     this.#QB.whereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orWhere(statement, operation, value) {
+    if (Is.Object(statement)) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.orWhere(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    if (!value) {
+      this.#QB.orWhere(statement, operation)
+
+      return this
+    }
+
+    this.#QB.orWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNot(statement, value) {
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.orWhereNot(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.orWhereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereExists(builder) {
+    this.#QB.orWhereExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNotExists(builder) {
+    this.#QB.orWhereNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereLike(statement, value) {
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.orWhereLike(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.orWhereLike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereILike(statement, value) {
+    if (!value) {
+      statement = this.#schema.getReversedStatementNamesOf(statement)
+
+      this.#QB.orWhereILike(statement)
+
+      return this
+    }
+
+    statement = this.#schema.getReversedColumnNameOf(statement)
+
+    this.#QB.orWhereILike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNotIn(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNotBetween(columnName, values) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {ModelQueryBuilder}
+   */
+  orWhereNotNull(columnName) {
+    columnName = this.#schema.getReversedColumnNameOf(columnName)
+
+    this.#QB.orWhereNotNull(columnName)
 
     return this
   }

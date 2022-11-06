@@ -28,6 +28,24 @@ export class QueryBuilder {
   }
 
   /**
+   * Return the client of driver.
+   *
+   * @return {import('knex').Knex}
+   */
+  getClient() {
+    return this.#driver.getClient()
+  }
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder}
+   */
+  getQueryBuilder() {
+    return this.#driver.getQueryBuilder()
+  }
+
+  /**
    * Calculate the average of a given column.
    *
    * @param {string} column
@@ -268,6 +286,19 @@ export class QueryBuilder {
   }
 
   /**
+   * Set a join raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  joinRaw(sql, bindings) {
+    this.#driver.joinRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
    * Set a group by statement in your query.
    *
    * @param columns {string}
@@ -280,29 +311,282 @@ export class QueryBuilder {
   }
 
   /**
-   * Set a where statement in your query.
+   * Set a group by raw statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
-   * @param [value] {any}
+   * @param sql {string}
+   * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  where(statement, operation, value) {
-    this.#driver.where(statement, operation, value)
+  groupByRaw(sql, bindings) {
+    this.#driver.groupByRaw(sql, bindings)
 
     return this
   }
 
   /**
-   * Set a or where statement in your query.
+   * Set a having statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
+   * @param column {string}
+   * @param [operation] {string|any}
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  orWhere(statement, operation, value) {
-    this.#driver.orWhere(statement, operation, value)
+  having(column, operation = '=', value) {
+    this.#driver.having(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  havingRaw(sql, bindings) {
+    this.#driver.havingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  havingExists(builder) {
+    this.#driver.havingExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  havingNotExists(builder) {
+    this.#driver.havingNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  havingIn(columnName, values) {
+    this.#driver.havingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  havingNotIn(columnName, values) {
+    this.#driver.havingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  havingBetween(columnName, values) {
+    this.#driver.havingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  havingNotBetween(columnName, values) {
+    this.#driver.havingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  havingNull(columnName) {
+    this.#driver.havingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  havingNotNull(columnName) {
+    this.#driver.havingNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  orHaving(column, operation = '=', value) {
+    this.#driver.orHaving(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  orHavingRaw(sql, bindings) {
+    this.#driver.orHavingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orHavingExists(builder) {
+    this.#driver.orHavingExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orHavingNotExists(builder) {
+    this.#driver.orHavingNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orHavingIn(columnName, values) {
+    this.#driver.orHavingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orHavingNotIn(columnName, values) {
+    this.#driver.orHavingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orHavingBetween(columnName, values) {
+    this.#driver.orHavingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orHavingNotBetween(columnName, values) {
+    this.#driver.orHavingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orHavingNull(columnName) {
+    this.#driver.orHavingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orHavingNotNull(columnName) {
+    this.#driver.orHavingNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {QueryBuilder}
+   */
+  where(statement, operation = '=', value) {
+    this.#driver.where(statement, operation, value)
 
     return this
   }
@@ -316,6 +600,43 @@ export class QueryBuilder {
    */
   whereNot(statement, value) {
     this.#driver.whereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  whereRaw(sql, bindings) {
+    this.#driver.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  whereExists(builder) {
+    this.#driver.whereExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  whereNotExists(builder) {
+    this.#driver.whereNotExists(builder)
 
     return this
   }
@@ -373,30 +694,6 @@ export class QueryBuilder {
   }
 
   /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  whereNull(columnName) {
-    this.#driver.whereNull(columnName)
-
-    return this
-  }
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  whereNotNull(columnName) {
-    this.#driver.whereNotNull(columnName)
-
-    return this
-  }
-
-  /**
    * Set a where between statement in your query.
    *
    * @param columnName {string}
@@ -423,14 +720,217 @@ export class QueryBuilder {
   }
 
   /**
-   * Set a order by statement in your query.
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNull(columnName) {
+    this.#driver.whereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNotNull(columnName) {
+    this.#driver.whereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {QueryBuilder}
+   */
+  orWhere(statement, operation = '=', value) {
+    this.#driver.orWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  orWhereNot(statement, value) {
+    this.#driver.orWhereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  orWhereRaw(sql, bindings) {
+    this.#driver.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orWhereExists(builder) {
+    this.#driver.orWhereExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orWhereNotExists(builder) {
+    this.#driver.orWhereNotExists(builder)
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  orWhereLike(statement, value) {
+    this.#driver.orWhereLike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  orWhereILike(statement, value) {
+    this.#driver.orWhereILike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orWhereIn(columnName, values) {
+    this.#driver.orWhereIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orWhereNotIn(columnName, values) {
+    this.#driver.orWhereNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orWhereBetween(columnName, values) {
+    this.#driver.orWhereBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orWhereNotBetween(columnName, values) {
+    this.#driver.orWhereNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orWhereNull(columnName) {
+    this.#driver.orWhereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orWhereNotNull(columnName) {
+    this.#driver.orWhereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an order by statement in your query.
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {QueryBuilder}
    */
   orderBy(columnName, direction = 'ASC') {
-    this.#driver.orderBy(columnName, direction)
+    this.#driver.orderBy(columnName, direction.toUpperCase())
+
+    return this
+  }
+
+  /**
+   * Set an order by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  orderByRaw(sql, bindings) {
+    this.#driver.orderByRaw(sql, bindings)
 
     return this
   }

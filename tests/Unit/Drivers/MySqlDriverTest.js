@@ -67,10 +67,12 @@ test.group('MySqlDriverTest', group => {
     await DB.connect()
   })
 
-  test('should be able to get the driver client from the connections', async ({ assert }) => {
+  test('should be able to get the driver client and query builder from the connections', async ({ assert }) => {
     const client = DB.getClient()
+    const queryBuilder = DB.getQueryBuilder()
 
     assert.isDefined(client)
+    assert.isDefined(queryBuilder)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
@@ -197,6 +199,7 @@ test.group('MySqlDriverTest', group => {
       .select('products.id as products_id')
       .where('users.id', 1)
       .orWhere('users.id', 2)
+      .whereExists(Database.table('products').where('id', 1).orWhere('id', 2))
       .join('products', 'users.id', 'products.userId')
       .find()
 
@@ -211,6 +214,7 @@ test.group('MySqlDriverTest', group => {
       .orderBy('users.id', 'DESC')
       .offset(0)
       .limit(10)
+      .whereNotExists(Database.table('products').where('id', 1).orWhere('id', 2))
       .join('products', 'users.id', 'products.userId')
       .findMany()
 
@@ -218,6 +222,19 @@ test.group('MySqlDriverTest', group => {
     assert.deepEqual(users[0].users_id, users[1].users_id)
     assert.deepEqual(users[0].products_id, 1)
     assert.deepEqual(users[1].products_id, 2)
+  })
+
+  test('should be able to find user and users grouped', async ({ assert }) => {
+    const users = await DB.table('users')
+      .select('id', 'name', 'deletedAt')
+      .groupBy('id', 'name')
+      .havingBetween('id', [0, 3])
+      .havingNotBetween('id', [9, 99])
+      .orHavingBetween('id', [4, 7])
+      .havingNull('deletedAt')
+      .findMany()
+
+    assert.lengthOf(users, 2)
   })
 
   test('should be able to find users as a Collection', async ({ assert }) => {

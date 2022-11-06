@@ -69,6 +69,13 @@ export class MySqlDatabaseImpl {
   getClient(): import('knex').Knex
 
   /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder | null}
+   */
+  getQueryBuilder(): import('knex').Knex.QueryBuilder
+
+  /**
    * Create a new transaction.
    *
    * @return {Promise<Transaction>}
@@ -230,6 +237,13 @@ export class PostgresDatabaseImpl {
    * @return {import('knex').Knex | null}
    */
   getClient(): import('knex').Knex
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder | null}
+   */
+  getQueryBuilder(): import('knex').Knex.QueryBuilder
 
   /**
    * Create a new transaction.
@@ -394,6 +408,13 @@ export class DatabaseImpl {
    * @return {import('knex').Knex | null}
    */
   getClient(): import('knex').Knex
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder | null}
+   */
+  getQueryBuilder(): import('knex').Knex.QueryBuilder
 
   /**
    * Create a new transaction.
@@ -942,11 +963,18 @@ export class Model {
   static getSchema(): SchemaBuilder
 
   /**
-   * The TypeORM client instance.
+   * Return the client of driver.
    *
    * @return {import('knex').Knex}
    */
   static getClient(): import('knex').Knex
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder}
+   */
+  static getQueryBuilder(): import('knex').Knex.QueryBuilder
 
   /**
    * Create a new model query builder.
@@ -2066,6 +2094,20 @@ export class DatabaseLoader {
 
 export class QueryBuilder {
   /**
+   * Return the client of driver.
+   *
+   * @return {import('knex').Knex}
+   */
+  getClient(): import('knex').Knex
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder}
+   */
+  getQueryBuilder(): import('knex').Knex.QueryBuilder
+
+  /**
    * Calculate the average of a given column.
    *
    * @param {string} column
@@ -2280,12 +2322,214 @@ export class QueryBuilder {
   join(tableName: string, column1: string, column2: string): QueryBuilder
 
   /**
+   * Set a join raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  joinRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
    * Set a group by statement in your query.
    *
    * @param columns {string}
    * @return {QueryBuilder}
    */
   groupBy(...columns: string[]): QueryBuilder
+
+  /**
+   * Set a group by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  groupByRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
+   * Set a having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  having(column: string, value: any): QueryBuilder
+  having(
+    column: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | 'like' | 'ilike',
+    value: any,
+  ): QueryBuilder
+
+  /**
+   * Set a having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  havingRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  havingExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  havingNotExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  havingIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  havingNotIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  havingBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  havingNotBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  havingNull(columnName: string): QueryBuilder
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  havingNotNull(columnName: string): QueryBuilder
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {QueryBuilder}
+   */
+  orHaving(column: string, value: any): QueryBuilder
+  orHaving(
+    column: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | 'like' | 'ilike',
+    value: any,
+  ): QueryBuilder
+
+  /**
+   * Set an or having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  orHavingRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orHavingExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orHavingNotExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orHavingIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orHavingNotIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orHavingBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orHavingNotBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orHavingNull(columnName: string): QueryBuilder
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orHavingNotNull(columnName: string): QueryBuilder
 
   /**
    * Set a where statement in your query.
@@ -2297,21 +2541,37 @@ export class QueryBuilder {
   where(statement: string, operation: string, value: any): QueryBuilder
 
   /**
-   * Set a or where statement in your query.
-   *
-   * @return {QueryBuilder}
-   */
-  orWhere(statement: Record<string, any>): QueryBuilder
-  orWhere(key: string, value: any): QueryBuilder
-  orWhere(statement: string, operation: string, value: any): QueryBuilder
-
-  /**
    * Set a where not statement in your query.
    *
    * @return {QueryBuilder}
    */
   whereNot(statement: Record<string, any>): QueryBuilder
   whereNot(key: string, value: any): QueryBuilder
+
+  /**
+   * Set a where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  whereRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  whereExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  whereNotExists(builder: QueryBuilder): QueryBuilder
 
   /**
    * Set a where like statement in your query.
@@ -2346,22 +2606,6 @@ export class QueryBuilder {
   whereNotIn(columnName: string, values: any[]): QueryBuilder
 
   /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  whereNull(columnName: string): QueryBuilder
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {QueryBuilder}
-   */
-  whereNotNull(columnName: string): QueryBuilder
-
-  /**
    * Set a where between statement in your query.
    *
    * @param columnName {string}
@@ -2380,6 +2624,130 @@ export class QueryBuilder {
   whereNotBetween(columnName: string, values: [any, any]): QueryBuilder
 
   /**
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNull(columnName: string): QueryBuilder
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  whereNotNull(columnName: string): QueryBuilder
+
+  /**
+   * Set an or where statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhere(statement: Record<string, any>): QueryBuilder
+  orWhere(key: string, value: any): QueryBuilder
+  orWhere(statement: string, operation: string, value: any): QueryBuilder
+
+  /**
+   * Set a or where not statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhereNot(statement: Record<string, any>): QueryBuilder
+  orWhereNot(key: string, value: any): QueryBuilder
+
+  /**
+   * Set an or where statement in your query.
+   *
+   * @param sql {string}
+   * @param bindings {any}
+   * @return {QueryBuilder}
+   */
+  orWhereRaw(sql: string, bindings?: any): QueryBuilder
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orWhereExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {QueryBuilder}
+   * @return {QueryBuilder}
+   */
+  orWhereNotExists(builder: QueryBuilder): QueryBuilder
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhereLike(statement: Record<string, any>): QueryBuilder
+  orWhereLike(key: string, value: any): QueryBuilder
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhereILike(statement: Record<string, any>): QueryBuilder
+  orWhereILike(key: string, value: any): QueryBuilder
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @return {QueryBuilder}
+   */
+  orWhereIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {QueryBuilder}
+   */
+  orWhereNotIn(columnName: string, values: any[]): QueryBuilder
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orWhereBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {QueryBuilder}
+   */
+  orWhereNotBetween(columnName: string, values: [any, any]): QueryBuilder
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orWhereNull(columnName: string): QueryBuilder
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {QueryBuilder}
+   */
+  orWhereNotNull(columnName: string): QueryBuilder
+
+  /**
    * Set a order by statement in your query.
    *
    * @param columnName {string}
@@ -2390,6 +2758,15 @@ export class QueryBuilder {
     columnName: string,
     direction: 'asc' | 'desc' | 'ASC' | 'DESC',
   ): QueryBuilder
+
+  /**
+   * Set an order by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {QueryBuilder}
+   */
+  orderByRaw(sql: string, bindings?: any): QueryBuilder
 
   /**
    * Set the skip number in your query.
@@ -2450,25 +2827,28 @@ export class Criteria {
   static where(key: string, operation: string, value: any): typeof Criteria
 
   /**
-   * Set a or where statement in your query.
-   *
-   * @return {typeof Criteria}
-   */
-  static orWhere(statement: Record<string, any>): typeof Criteria
-  static orWhere(key: string, value: any): typeof Criteria
-  static orWhere(
-    statement: string,
-    operation: string,
-    value: any,
-  ): typeof Criteria
-
-  /**
    * Set a where not statement in your query.
    *
    * @return {typeof Criteria}
    */
   static whereNot(statement: Record<string, any>): typeof Criteria
   static whereNot(key: string, value: any): typeof Criteria
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static whereExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static whereNotExists(builder: ModelQueryBuilder): typeof Criteria
 
   /**
    * Set a where like statement in your query.
@@ -2546,42 +2926,41 @@ export class Criteria {
   ): typeof Criteria
 
   /**
-   * Set a join statement in your query.
+   * Set a or where statement in your query.
    *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
    * @return {typeof Criteria}
    */
-  static join(
-    tableName: string,
-    column1: string,
+  static orWhere(statement: Record<string, any>): typeof Criteria
+  static orWhere(key: string, value: any): typeof Criteria
+  static orWhere(
+    statement: string,
     operation: string,
-    column2: string,
-    joinType?:
-      | 'join'
-      | 'innerJoin'
-      | 'crossJoin'
-      | 'leftJoin'
-      | 'rightJoin'
-      | 'outerJoin'
-      | 'fullOuterJoin'
-      | 'leftOuterJoin'
-      | 'rightOuterJoin',
+    value: any,
   ): typeof Criteria
-  static join(
-    tableName: string,
-    column1: string,
-    operation: string,
-    column2: string,
-  ): typeof Criteria
-  static join(
-    tableName: string,
-    column1: string,
-    column2: string,
-  ): typeof Criteria
+
+  /**
+   * Set a or where not statement in your query.
+   *
+   * @return {typeof Criteria}
+   */
+  static orWhereNot(statement: Record<string, any>): typeof Criteria
+  static orWhereNot(key: string, value: any): typeof Criteria
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orWhereExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orWhereNotExists(builder: ModelQueryBuilder): typeof Criteria
 
   /**
    * Set a order by statement in your query.
@@ -2602,6 +2981,177 @@ export class Criteria {
    * @return {typeof Criteria}
    */
   static groupBy(...columns: string[]): typeof Criteria
+
+  /**
+   * Set a having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static having(column: string, value: any): typeof Criteria
+  static having(column: string, operation: string, value: any): typeof Criteria
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static havingExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static havingNotExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static havingIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static havingNotIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static havingNull(columnName: string): typeof Criteria
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static havingNotNull(columnName: string): typeof Criteria
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static havingBetween(columnName: string, values: [any, any]): typeof Criteria
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static havingNotBetween(
+    columnName: string,
+    values: [any, any],
+  ): typeof Criteria
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static orHaving(column: string, value: any): typeof Criteria
+  static orHaving(
+    column: string,
+    operation: string,
+    value: any,
+  ): typeof Criteria
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orHavingExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotExists(builder: ModelQueryBuilder): typeof Criteria
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orHavingIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotIn(columnName: string, values?: any[]): typeof Criteria
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orHavingNull(columnName: string): typeof Criteria
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotNull(columnName: string): typeof Criteria
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orHavingBetween(
+    columnName: string,
+    values: [any, any],
+  ): typeof Criteria
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotBetween(
+    columnName: string,
+    values: [any, any],
+  ): typeof Criteria
 
   /**
    * Set the offset number in your query.

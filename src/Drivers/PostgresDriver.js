@@ -87,6 +87,15 @@ export class PostgresDriver {
   }
 
   /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder|null}
+   */
+  getQueryBuilder() {
+    return this.#qb
+  }
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -672,6 +681,19 @@ export class PostgresDriver {
   }
 
   /**
+   * Set a join raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  joinRaw(sql, bindings) {
+    this.#qb.joinRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
    * Set a group by statement in your query.
    *
    * @param columns {string}
@@ -679,6 +701,285 @@ export class PostgresDriver {
    */
   groupBy(...columns) {
     this.#qb.groupBy(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a group by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  groupByRaw(sql, bindings) {
+    this.#qb.groupByRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {PostgresDriver}
+   */
+  having(column, operation = '=', value) {
+    if (!value) {
+      this.#qb.having(column, '=', operation)
+
+      return this
+    }
+
+    this.#qb.having(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  havingRaw(sql, bindings) {
+    this.#qb.havingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  havingExists(builder) {
+    this.#qb.havingExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  havingNotExists(builder) {
+    this.#qb.havingNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  havingIn(columnName, values) {
+    this.#qb.havingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  havingNotIn(columnName, values) {
+    this.#qb.havingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  havingBetween(columnName, values) {
+    this.#qb.havingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  havingNotBetween(columnName, values) {
+    this.#qb.havingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  havingNull(columnName) {
+    this.#qb.havingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  havingNotNull(columnName) {
+    this.#qb.havingNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {PostgresDriver}
+   */
+  orHaving(column, operation = '=', value) {
+    if (!value) {
+      this.#qb.orHaving(column, '=', operation)
+
+      return this
+    }
+
+    this.#qb.orHaving(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  orHavingRaw(sql, bindings) {
+    this.#qb.orHavingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  orHavingExists(builder) {
+    this.#qb.orHavingExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  orHavingNotExists(builder) {
+    this.#qb.orHavingNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  orHavingIn(columnName, values) {
+    this.#qb.orHavingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  orHavingNotIn(columnName, values) {
+    this.#qb.orHavingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  orHavingBetween(columnName, values) {
+    this.#qb.orHavingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  orHavingNotBetween(columnName, values) {
+    this.#qb.orHavingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  orHavingNull(columnName) {
+    this.#qb.orHavingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  orHavingNotNull(columnName) {
+    this.#qb.orHavingNotNull(columnName)
 
     return this
   }
@@ -710,27 +1011,57 @@ export class PostgresDriver {
   }
 
   /**
-   * Set a or where statement in your query.
+   * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
-   * @param [operation] {string|Record<string, any>}
-   * @param [value] {Record<string, any>}
+   * @param [value] {any}
    * @return {PostgresDriver}
    */
-  orWhere(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
-      this.#qb.orWhere(statement)
-
-      return this
-    }
-
+  whereNot(statement, value) {
     if (!value) {
-      this.#qb.orWhere(statement, operation)
+      this.#qb.whereNot(statement)
 
       return this
     }
 
-    this.#qb.orWhere(statement, operation, value)
+    this.#qb.whereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  whereRaw(sql, bindings) {
+    this.#qb.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  whereExists(builder) {
+    this.#qb.whereExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  whereNotExists(builder) {
+    this.#qb.whereNotExists(builder.getQueryBuilder())
 
     return this
   }
@@ -744,12 +1075,12 @@ export class PostgresDriver {
    */
   whereLike(statement, value) {
     if (!value) {
-      this.#qb.whereLike(statement)
+      this.#qb.where(statement, 'like')
 
       return this
     }
 
-    this.#qb.whereLike(statement, value)
+    this.#qb.where(statement, 'like', value)
 
     return this
   }
@@ -769,25 +1100,6 @@ export class PostgresDriver {
     }
 
     this.#qb.whereILike(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {PostgresDriver}
-   */
-  whereNot(statement, value) {
-    if (!value) {
-      this.#qb.whereNot(statement)
-
-      return this
-    }
-
-    this.#qb.whereNot(statement, value)
 
     return this
   }
@@ -819,30 +1131,6 @@ export class PostgresDriver {
   }
 
   /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {PostgresDriver}
-   */
-  whereNull(columnName) {
-    this.#qb.whereNull(columnName)
-
-    return this
-  }
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {PostgresDriver}
-   */
-  whereNotNull(columnName) {
-    this.#qb.whereNotNull(columnName)
-
-    return this
-  }
-
-  /**
    * Set a where between statement in your query.
    *
    * @param columnName {string}
@@ -869,7 +1157,227 @@ export class PostgresDriver {
   }
 
   /**
-   * Set a order by statement in your query.
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  whereNull(columnName) {
+    this.#qb.whereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  whereNotNull(columnName) {
+    this.#qb.whereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {PostgresDriver}
+   */
+  orWhere(statement, operation = '=', value) {
+    if (Is.Object(statement)) {
+      this.#qb.orWhere(statement)
+
+      return this
+    }
+
+    if (!value) {
+      this.#qb.orWhere(statement, operation)
+
+      return this
+    }
+
+    this.#qb.orWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {PostgresDriver}
+   */
+  orWhereNot(statement, value) {
+    if (!value) {
+      this.#qb.orWhereNot(statement)
+
+      return this
+    }
+
+    this.#qb.orWhereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  orWhereRaw(sql, bindings) {
+    this.#qb.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  orWhereExists(builder) {
+    this.#qb.orWhereExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {PostgresDriver}
+   */
+  orWhereNotExists(builder) {
+    this.#qb.orWhereNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {PostgresDriver}
+   */
+  orWhereLike(statement, value) {
+    if (!value) {
+      this.#qb.orWhere(statement, 'like')
+
+      return this
+    }
+
+    this.#qb.orWhere(statement, 'like', value)
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {PostgresDriver}
+   */
+  orWhereILike(statement, value) {
+    if (!value) {
+      this.#qb.orWhereILike(statement)
+
+      return this
+    }
+
+    this.#qb.orWhereILike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  orWhereIn(columnName, values) {
+    this.#qb.orWhereIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {PostgresDriver}
+   */
+  orWhereNotIn(columnName, values) {
+    this.#qb.orWhereNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  orWhereBetween(columnName, values) {
+    this.#qb.orWhereBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {PostgresDriver}
+   */
+  orWhereNotBetween(columnName, values) {
+    this.#qb.orWhereNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  orWhereNull(columnName) {
+    this.#qb.orWhereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {PostgresDriver}
+   */
+  orWhereNotNull(columnName) {
+    this.#qb.orWhereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an order by statement in your query.
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
@@ -877,6 +1385,19 @@ export class PostgresDriver {
    */
   orderBy(columnName, direction = 'ASC') {
     this.#qb.orderBy(columnName, direction.toUpperCase())
+
+    return this
+  }
+
+  /**
+   * Set an order by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {PostgresDriver}
+   */
+  orderByRaw(sql, bindings) {
+    this.#qb.orderByRaw(sql, bindings)
 
     return this
   }

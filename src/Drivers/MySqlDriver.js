@@ -9,8 +9,8 @@
 
 import { Collection, Exec, Is } from '@athenna/common'
 
-import { Transaction } from '#src/Database/Transactions/Transaction'
 import { DriverFactory } from '#src/Factories/DriverFactory'
+import { Transaction } from '#src/Database/Transactions/Transaction'
 import { MigrationSource } from '#src/Database/Migrations/MigrationSource'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
@@ -84,6 +84,15 @@ export class MySqlDriver {
    */
   getClient() {
     return this.#client
+  }
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder|null}
+   */
+  getQueryBuilder() {
+    return this.#qb
   }
 
   /**
@@ -675,6 +684,19 @@ export class MySqlDriver {
   }
 
   /**
+   * Set a join raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  joinRaw(sql, bindings) {
+    this.#qb.joinRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
    * Set a group by statement in your query.
    *
    * @param columns {string}
@@ -682,6 +704,285 @@ export class MySqlDriver {
    */
   groupBy(...columns) {
     this.#qb.groupBy(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a group by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  groupByRaw(sql, bindings) {
+    this.#qb.groupByRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {MySqlDriver}
+   */
+  having(column, operation = '=', value) {
+    if (!value) {
+      this.#qb.having(column, '=', operation)
+
+      return this
+    }
+
+    this.#qb.having(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  havingRaw(sql, bindings) {
+    this.#qb.havingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  havingExists(builder) {
+    this.#qb.havingExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  havingNotExists(builder) {
+    this.#qb.havingNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  havingIn(columnName, values) {
+    this.#qb.havingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  havingNotIn(columnName, values) {
+    this.#qb.havingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  havingBetween(columnName, values) {
+    this.#qb.havingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  havingNotBetween(columnName, values) {
+    this.#qb.havingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  havingNull(columnName) {
+    this.#qb.havingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  havingNotNull(columnName) {
+    this.#qb.havingNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having statement in your query.
+   *
+   * @param column {string}
+   * @param [operation] {string|any}
+   * @param [value] {any}
+   * @return {MySqlDriver}
+   */
+  orHaving(column, operation = '=', value) {
+    if (!value) {
+      this.#qb.orHaving(column, '=', operation)
+
+      return this
+    }
+
+    this.#qb.orHaving(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or having raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  orHavingRaw(sql, bindings) {
+    this.#qb.orHavingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  orHavingExists(builder) {
+    this.#qb.orHavingExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  orHavingNotExists(builder) {
+    this.#qb.orHavingNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  orHavingIn(columnName, values) {
+    this.#qb.orHavingIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  orHavingNotIn(columnName, values) {
+    this.#qb.orHavingNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  orHavingBetween(columnName, values) {
+    this.#qb.orHavingBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  orHavingNotBetween(columnName, values) {
+    this.#qb.orHavingNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  orHavingNull(columnName) {
+    this.#qb.orHavingNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  orHavingNotNull(columnName) {
+    this.#qb.orHavingNotNull(columnName)
 
     return this
   }
@@ -713,27 +1014,57 @@ export class MySqlDriver {
   }
 
   /**
-   * Set a or where statement in your query.
+   * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
-   * @param [operation] {string|Record<string, any>}
-   * @param [value] {Record<string, any>}
+   * @param [value] {any}
    * @return {MySqlDriver}
    */
-  orWhere(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
-      this.#qb.orWhere(statement)
-
-      return this
-    }
-
+  whereNot(statement, value) {
     if (!value) {
-      this.#qb.orWhere(statement, operation)
+      this.#qb.whereNot(statement)
 
       return this
     }
 
-    this.#qb.orWhere(statement, operation, value)
+    this.#qb.whereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  whereRaw(sql, bindings) {
+    this.#qb.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  whereExists(builder) {
+    this.#qb.whereExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  whereNotExists(builder) {
+    this.#qb.whereNotExists(builder.getQueryBuilder())
 
     return this
   }
@@ -777,25 +1108,6 @@ export class MySqlDriver {
   }
 
   /**
-   * Set a where not statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
-   * @return {MySqlDriver}
-   */
-  whereNot(statement, value) {
-    if (!value) {
-      this.#qb.whereNot(statement)
-
-      return this
-    }
-
-    this.#qb.whereNot(statement, value)
-
-    return this
-  }
-
-  /**
    * Set a where in statement in your query.
    *
    * @param columnName {string}
@@ -817,30 +1129,6 @@ export class MySqlDriver {
    */
   whereNotIn(columnName, values) {
     this.#qb.whereNotIn(columnName, values)
-
-    return this
-  }
-
-  /**
-   * Set a where null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {MySqlDriver}
-   */
-  whereNull(columnName) {
-    this.#qb.whereNull(columnName)
-
-    return this
-  }
-
-  /**
-   * Set a where not null statement in your query.
-   *
-   * @param columnName {string}
-   * @return {MySqlDriver}
-   */
-  whereNotNull(columnName) {
-    this.#qb.whereNotNull(columnName)
 
     return this
   }
@@ -872,7 +1160,227 @@ export class MySqlDriver {
   }
 
   /**
-   * Set a order by statement in your query.
+   * Set a where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  whereNull(columnName) {
+    this.#qb.whereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  whereNotNull(columnName) {
+    this.#qb.whereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string|Record<string, any>}
+   * @param [value] {Record<string, any>}
+   * @return {MySqlDriver}
+   */
+  orWhere(statement, operation = '=', value) {
+    if (Is.Object(statement)) {
+      this.#qb.orWhere(statement)
+
+      return this
+    }
+
+    if (!value) {
+      this.#qb.orWhere(statement, operation)
+
+      return this
+    }
+
+    this.#qb.orWhere(statement, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where not statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {MySqlDriver}
+   */
+  orWhereNot(statement, value) {
+    if (!value) {
+      this.#qb.orWhereNot(statement)
+
+      return this
+    }
+
+    this.#qb.orWhereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  orWhereRaw(sql, bindings) {
+    this.#qb.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  orWhereExists(builder) {
+    this.#qb.orWhereExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @return {MySqlDriver}
+   */
+  orWhereNotExists(builder) {
+    this.#qb.orWhereNotExists(builder.getQueryBuilder())
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {MySqlDriver}
+   */
+  orWhereLike(statement, value) {
+    if (!value) {
+      this.#qb.orWhere(statement, 'like')
+
+      return this
+    }
+
+    this.#qb.orWhere(statement, 'like', value)
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {MySqlDriver}
+   */
+  orWhereILike(statement, value) {
+    if (!value) {
+      this.#qb.orWhereILike(statement)
+
+      return this
+    }
+
+    this.#qb.orWhereILike(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  orWhereIn(columnName, values) {
+    this.#qb.orWhereIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {MySqlDriver}
+   */
+  orWhereNotIn(columnName, values) {
+    this.#qb.orWhereNotIn(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  orWhereBetween(columnName, values) {
+    this.#qb.orWhereBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {MySqlDriver}
+   */
+  orWhereNotBetween(columnName, values) {
+    this.#qb.orWhereNotBetween(columnName, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  orWhereNull(columnName) {
+    this.#qb.orWhereNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {MySqlDriver}
+   */
+  orWhereNotNull(columnName) {
+    this.#qb.orWhereNotNull(columnName)
+
+    return this
+  }
+
+  /**
+   * Set an order by statement in your query.
    *
    * @param columnName {string}
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
@@ -880,6 +1388,19 @@ export class MySqlDriver {
    */
   orderBy(columnName, direction = 'ASC') {
     this.#qb.orderBy(columnName, direction.toUpperCase())
+
+    return this
+  }
+
+  /**
+   * Set an order by raw statement in your query.
+   *
+   * @param sql {string}
+   * @param [bindings] {any}
+   * @return {MySqlDriver}
+   */
+  orderByRaw(sql, bindings) {
+    this.#qb.orderByRaw(sql, bindings)
 
     return this
   }
