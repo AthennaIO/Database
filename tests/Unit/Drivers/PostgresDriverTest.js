@@ -437,4 +437,18 @@ test.group('PostgresDriverTest', group => {
 
     assert.lengthOf(groupByUsers, 2)
   })
+
+  test('should be able to execute raw methods of query builder', async ({ assert }) => {
+    const usersJoinProducts = await DB.table('users')
+      .joinRaw('inner join "products" on "users"."id" = "products"."userId"')
+      .whereRaw('"users"."deletedAt" is null')
+      .orWhereRaw(`"users"."name" = 'João Lenon'`)
+      .orderByRaw('"users"."id" DESC')
+      .groupByRaw('"users"."id", "products"."id"')
+      .havingRaw('"products"."deletedAt" is null')
+      .orHavingRaw(`"products"."name" = 'iPhone 14'`)
+      .findMany()
+
+    assert.lengthOf(usersJoinProducts, 2)
+  })
 })
