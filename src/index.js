@@ -255,12 +255,12 @@ export class DatabaseImpl {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {string} sql
+   * @param {any} [bindings]
    * @return {Promise<any>}
    */
-  async raw(raw, queryValues) {
-    return this.#driver.raw(raw, queryValues)
+  raw(sql, bindings) {
+    return this.#driver.raw(sql, bindings)
   }
 
   /**

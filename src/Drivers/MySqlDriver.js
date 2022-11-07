@@ -341,12 +341,12 @@ export class MySqlDriver {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any} [queryValues]
-   * @return {Promise<any>}
+   * @param {string} sql
+   * @param {any} [bindings]
+   * @return {any | Promise<any>}
    */
-  async raw(raw, ...queryValues) {
-    return this.#client.raw(raw, ...queryValues)
+  raw(sql, bindings) {
+    return this.#client.raw(sql, bindings)
   }
 
   /**
@@ -676,6 +676,17 @@ export class MySqlDriver {
     this.#qb.select(...columns)
 
     return this
+  }
+
+  /**
+   * Set the columns that should be selected on query raw.
+   *
+   * @param sql {string}
+   * @param bindings {any}
+   * @return {MySqlDriver}
+   */
+  selectRaw(sql, bindings) {
+    return this.select(this.raw(sql, bindings))
   }
 
   /**

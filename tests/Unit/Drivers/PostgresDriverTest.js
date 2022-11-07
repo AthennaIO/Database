@@ -451,4 +451,15 @@ test.group('PostgresDriverTest', group => {
 
     assert.lengthOf(usersJoinProducts, 2)
   })
+
+  test('should be able to use select raw to count data', async ({ assert }) => {
+    const report = await DB.table('users')
+      .selectRaw('count("id") as "number_of_users", "deletedAt"')
+      .groupBy('id', 'deletedAt')
+      .havingBetween('id', [0, 10])
+      .findMany()
+
+    assert.deepEqual(report[0].deletedAt, null)
+    assert.deepEqual(report[0].number_of_users, '1')
+  })
 })

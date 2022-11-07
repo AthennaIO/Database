@@ -456,4 +456,15 @@ test.group('MySqlDriverTest', group => {
 
     assert.lengthOf(usersJoinProducts, 4)
   })
+
+  test('should be able to use select raw to count data', async ({ assert }) => {
+    const report = await DB.table('users')
+      .selectRaw('count(id) as number_of_users, deletedAt')
+      .groupBy('deletedAt')
+      .havingBetween('number_of_users', [0, 10])
+      .findMany()
+
+    assert.deepEqual(report[0].deletedAt, null)
+    assert.deepEqual(report[0].number_of_users, 2)
+  })
 })

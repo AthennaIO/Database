@@ -176,11 +176,11 @@ export class MySqlDatabaseImpl {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
-   * @return {Promise<any>}
+   * @param {string} sql
+   * @param {any} [bindings]
+   * @return {any | Promise<any>}
    */
-  raw(raw: string, queryValues: any[]): Promise<any>
+  raw(sql: string, bindings?: any): any | Promise<any>
 
   /**
    * Creates a new instance of QueryBuilder for this table.
@@ -346,11 +346,11 @@ export class PostgresDatabaseImpl {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {string} sql
+   * @param {any} [bindings]
    * @return {Promise<any>}
    */
-  raw(raw: string, queryValues: any[]): Promise<any>
+  raw(sql: string, bindings?: any): any | Promise<any>
 
   /**
    * Creates a new instance of QueryBuilder for this table.
@@ -517,11 +517,11 @@ export class DatabaseImpl {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {string} sql
+   * @param {any} [bindings]
    * @return {Promise<any>}
    */
-  raw(raw: string, queryValues: any[]): Promise<any>
+  raw(sql: string, bindings?: any): any | Promise<any>
 
   /**
    * Creates a new instance of QueryBuilder for this table.
@@ -647,11 +647,11 @@ export class Transaction {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {string} sql
+   * @param {any} [bindings]
    * @return {Promise<any>}
    */
-  raw(raw: string, queryValues: any[]): Promise<any>
+  raw(sql: string, bindings?: any): any | Promise<any>
 
   /**
    * Creates a new instance of QueryBuilder for this table.
@@ -2273,6 +2273,15 @@ export class QueryBuilder {
   delete(): Promise<any | void>
 
   /**
+   * Make a raw query in database.
+   *
+   * @param {string} sql
+   * @param {any} [bindings]
+   * @return {any | Promise<any>}
+   */
+  raw(sql: string, bindings?: any): any | Promise<any>
+
+  /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
@@ -2297,6 +2306,15 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   select(...columns: string[]): QueryBuilder
+
+  /**
+   * Set the columns that should be selected on query raw.
+   *
+   * @param sql {string}
+   * @param bindings {any}
+   * @return {QueryBuilder}
+   */
+  selectRaw(sql: string, bindings?: any): QueryBuilder
 
   /**
    * Set a join statement in your query.

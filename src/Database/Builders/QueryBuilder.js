@@ -247,6 +247,17 @@ export class QueryBuilder {
   }
 
   /**
+   * Make a raw query in database.
+   *
+   * @param {string} sql
+   * @param {any} [bindings]
+   * @return {any | Promise<any>}
+   */
+  raw(sql, bindings) {
+    return this.#driver.raw(sql, bindings)
+  }
+
+  /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
@@ -277,6 +288,19 @@ export class QueryBuilder {
    */
   select(...columns) {
     this.#driver.select(...columns)
+
+    return this
+  }
+
+  /**
+   * Set the columns that should be selected on query raw.
+   *
+   * @param sql {string}
+   * @param bindings {any}
+   * @return {QueryBuilder}
+   */
+  selectRaw(sql, bindings) {
+    this.#driver.selectRaw(sql, bindings)
 
     return this
   }

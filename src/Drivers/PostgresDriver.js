@@ -9,8 +9,8 @@
 
 import { Collection, Exec, Is } from '@athenna/common'
 
-import { Transaction } from '#src/Database/Transactions/Transaction'
 import { DriverFactory } from '#src/Factories/DriverFactory'
+import { Transaction } from '#src/Database/Transactions/Transaction'
 import { MigrationSource } from '#src/Database/Migrations/MigrationSource'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
@@ -348,12 +348,12 @@ export class PostgresDriver {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any} [queryValues]
-   * @return {Promise<any>}
+   * @param {string} sql
+   * @param {any} [bindings]
+   * @return {any | Promise<any>}
    */
-  async raw(raw, ...queryValues) {
-    return this.#client.raw(raw, ...queryValues)
+  raw(sql, bindings) {
+    return this.#client.raw(sql, bindings)
   }
 
   /**
@@ -673,6 +673,17 @@ export class PostgresDriver {
     this.#qb.select(...columns)
 
     return this
+  }
+
+  /**
+   * Set the columns that should be selected on query raw.
+   *
+   * @param sql {string}
+   * @param bindings {any}
+   * @return {PostgresDriver}
+   */
+  selectRaw(sql, bindings) {
+    return this.select(this.raw(sql, bindings))
   }
 
   /**
