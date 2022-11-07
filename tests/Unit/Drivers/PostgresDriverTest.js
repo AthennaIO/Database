@@ -37,14 +37,19 @@ test.group('PostgresDriverTest', group => {
 
     await DB.runMigrations()
 
-    const [{ id }] = await DB.table('users').createMany([
-      { name: 'João Lenon', email: 'lenon@athenna.io' },
-      { name: 'Victor Tesoura', email: 'txsoura@athenna.io' },
-    ])
+    const { id } = await DB.table('users').create({ name: 'João Lenon', email: 'lenon@athenna.io' })
+
     await DB.table('products').createMany([
       { userId: id, name: 'iPhone 13', price: 1000 },
       { userId: id, name: 'iPhone 14', price: 2000 },
     ])
+
+    await DB.table('users').create({
+      name: 'Victor Tesoura',
+      email: 'txsoura@athenna.io',
+      createdAt: new Date(Date.now() + 100000),
+      updatedAt: new Date(Date.now() + 100000),
+    })
   })
 
   group.each.teardown(async () => {
@@ -354,16 +359,16 @@ test.group('PostgresDriverTest', group => {
     await otherDB.close()
   })
 
-  test('should be able to find products ordering by latest and oldest', async ({ assert }) => {
-    const oldestCreatedAt = await DB.table('products').oldest().find()
-    const latestCreatedAt = await DB.table('products').latest().find()
+  test('should be able to find users ordering by latest and oldest', async ({ assert }) => {
+    const oldestCreatedAt = await DB.table('users').oldest().find()
+    const latestCreatedAt = await DB.table('users').latest().find()
 
     assert.isTrue(oldestCreatedAt.createdAt < latestCreatedAt.createdAt)
   })
 
-  test('should be able to find products ordering by latest and oldest with different columns', async ({ assert }) => {
-    const oldestUpdatedAt = await DB.table('products').oldest('updatedAt').find()
-    const latestUpdatedAt = await DB.table('products').latest('updatedAt').find()
+  test('should be able to find users ordering by latest and oldest with different columns', async ({ assert }) => {
+    const oldestUpdatedAt = await DB.table('users').oldest('updatedAt').find()
+    const latestUpdatedAt = await DB.table('users').latest('updatedAt').find()
 
     assert.isTrue(oldestUpdatedAt.updatedAt < latestUpdatedAt.updatedAt)
   })
@@ -406,7 +411,7 @@ test.group('PostgresDriverTest', group => {
       .orWhereNotExists(Database.table('products').where('id', 2))
       .findMany()
 
-    assert.lengthOf(whereUsers, 10)
+    assert.lengthOf(whereUsers, 2)
   })
 
   test('should be able to get products using GROUP BY and HAVING queries', async ({ assert }) => {
@@ -430,6 +435,6 @@ test.group('PostgresDriverTest', group => {
       .orHavingNotExists(Database.table('products').where('id', 2))
       .findMany()
 
-    assert.lengthOf(groupByUsers, 10)
+    assert.lengthOf(groupByUsers, 2)
   })
 })
