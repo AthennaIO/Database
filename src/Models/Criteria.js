@@ -64,20 +64,6 @@ export class Criteria {
   }
 
   /**
-   * Set a or where statement in your query.
-   *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
-   * @param [value] {any}
-   * @return {typeof Criteria}
-   */
-  static orWhere(statement, operation, value) {
-    this.#criteria.set('orWhere', [statement, operation, value])
-
-    return this
-  }
-
-  /**
    * Set a where not statement in your query.
    *
    * @param statement {string|Record<string, any>}
@@ -86,6 +72,30 @@ export class Criteria {
    */
   static whereNot(statement, value) {
     this.#criteria.set('whereNot', [statement, value])
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static whereExists(builder) {
+    this.#criteria.set('whereExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static whereNotExists(builder) {
+    this.#criteria.set('whereNotExists', [builder])
 
     return this
   }
@@ -193,6 +203,146 @@ export class Criteria {
   }
 
   /**
+   * Set a or where statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [operation] {string}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static orWhere(statement, operation, value) {
+    this.#criteria.set('orWhere', [statement, operation, value])
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orWhereExists(builder) {
+    this.#criteria.set('orWhereExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   *
+   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @return {typeof Criteria}
+   */
+  static orWhereNotExists(builder) {
+    this.#criteria.set('orWhereNotExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static orWhereLike(statement, value) {
+    this.#criteria.set('orWhereLike', [statement, value])
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   *
+   * @param statement {string|Record<string, any>}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static orWhereILike(statement, value) {
+    this.#criteria.set('orWhereILike', [statement, value])
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orWhereIn(columnName, values) {
+    this.#criteria.set('orWhereIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orWhereNotIn(columnName, values) {
+    this.#criteria.set('orWhereNotIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orWhereNull(columnName) {
+    this.#criteria.set('orWhereNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orWhereNotNull(columnName) {
+    this.#criteria.set('orWhereNotNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orWhereBetween(columnName, values) {
+    this.#criteria.set('orWhereBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orWhereNotBetween(columnName, values) {
+    this.#criteria.set('orWhereNotBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
    * Set a order by statement in your query.
    *
    * @param columnName {string}
@@ -213,6 +363,234 @@ export class Criteria {
    */
   static groupBy(...columns) {
     this.#criteria.set('groupBy', [columns])
+
+    return this
+  }
+
+  /**
+   * Set having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static having(column, operation, value) {
+    this.#criteria.set('having', [column, operation, value])
+
+    return this
+  }
+
+  /**
+   * Set a having exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  static havingExists(builder) {
+    this.#criteria.set('havingExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set a having not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  static havingNotExists(builder) {
+    this.#criteria.set('havingNotExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static havingIn(columnName, values) {
+    this.#criteria.set('havingIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static havingNotIn(columnName, values) {
+    this.#criteria.set('havingNotIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static havingNull(columnName) {
+    this.#criteria.set('havingNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static havingNotNull(columnName) {
+    this.#criteria.set('havingNotNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static havingBetween(columnName, values) {
+    this.#criteria.set('havingBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static havingNotBetween(columnName, values) {
+    this.#criteria.set('havingNotBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set or having statement in your query.
+   *
+   * @param column {string}
+   * @param operation {string}
+   * @param [value] {any}
+   * @return {typeof Criteria}
+   */
+  static orHaving(column, operation, value) {
+    this.#criteria.set('orHaving', [column, operation, value])
+
+    return this
+  }
+
+  /**
+   * Set an or having exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  static orHavingExists(builder) {
+    this.#criteria.set('orHavingExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set an or having not exists statement in your query.
+   *
+   * @param builder {ModelQueryBuilder}
+   * @return {ModelQueryBuilder}
+   */
+  static orHavingNotExists(builder) {
+    this.#criteria.set('orHavingNotExists', [builder])
+
+    return this
+  }
+
+  /**
+   * Set an or having in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orHavingIn(columnName, values) {
+    this.#criteria.set('orHavingIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {any[]}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotIn(columnName, values) {
+    this.#criteria.set('orHavingNotIn', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orHavingNull(columnName) {
+    this.#criteria.set('orHavingNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   *
+   * @param columnName {string}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotNull(columnName) {
+    this.#criteria.set('orHavingNotNull', [columnName])
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orHavingBetween(columnName, values) {
+    this.#criteria.set('orHavingBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   *
+   * @param columnName {string}
+   * @param values {[any, any]}
+   * @return {typeof Criteria}
+   */
+  static orHavingNotBetween(columnName, values) {
+    this.#criteria.set('orHavingNotBetween', [columnName, values])
 
     return this
   }

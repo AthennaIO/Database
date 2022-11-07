@@ -46,6 +46,14 @@ test.group('ModelTest', group => {
     await assert.rejects(() => Model.definition(), NotImplementedDefinitionException)
   })
 
+  test('should be able to get the driver client and query builder from the connections', async ({ assert }) => {
+    const client = Model.getClient()
+    const queryBuilder = Model.getQueryBuilder()
+
+    assert.isDefined(client)
+    assert.isDefined(queryBuilder)
+  })
+
   test('should be able to list criterias', async ({ assert }) => {
     class SimpleSoftDeleteModel extends Model {
       static schema() {

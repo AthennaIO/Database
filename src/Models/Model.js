@@ -143,12 +143,21 @@ export class Model {
   }
 
   /**
-   * The TypeORM client instance.
+   * Return the client of driver.
    *
    * @return {import('knex').Knex}
    */
   static getClient() {
     return Database.connection(this.connection).getClient()
+  }
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder}
+   */
+  static getQueryBuilder() {
+    return Database.connection(this.connection).getQueryBuilder()
   }
 
   /**

@@ -108,6 +108,19 @@ test.group('UserModelTest', group => {
     assert.lengthOf(allUsers, 10)
   })
 
+  test('should be able to find user and users grouped', async ({ assert }) => {
+    const users = await User.query()
+      .select('id', 'name', 'deletedAt')
+      .groupBy('id', 'name')
+      .havingBetween('id', [0, 5000000])
+      .havingNotBetween('id', [5000001, 9999999])
+      .orHavingBetween('id', [4, 7])
+      .havingNull('deletedAt')
+      .findMany()
+
+    assert.lengthOf(users, 10)
+  })
+
   test('should be able to get users as a collection', async ({ assert }) => {
     const collection = await User.query().orderBy('id', 'DESC').collection()
 
@@ -325,5 +338,84 @@ test.group('UserModelTest', group => {
 
   test('should throw a not implemented relation exception', async ({ assert }) => {
     assert.throws(() => User.query().includes('notImplemented'), NotImplementedRelationException)
+  })
+
+  test('should be able to find users ordering by latest and oldest', async ({ assert }) => {
+    const oldestCreatedAt = await User.query().oldest().find()
+    const latestCreatedAt = await User.query().latest().find()
+
+    assert.isTrue(oldestCreatedAt.createdAt < latestCreatedAt.createdAt)
+  })
+
+  test('should be able to find users ordering by latest and oldest with different columns', async ({ assert }) => {
+    const oldestUpdatedAt = await User.query().oldest('updatedAt').find()
+    const latestUpdatedAt = await User.query().latest('updatedAt').find()
+
+    assert.isTrue(oldestUpdatedAt.updatedAt < latestUpdatedAt.updatedAt)
+  })
+
+  test('should be able to find users if value is true', async ({ assert }) => {
+    const trueValue = true
+
+    const found = await User.query()
+      .where('id', 0)
+      .when(trueValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isDefined(found)
+
+    const falseValue = false
+
+    const notFound = await User.query()
+      .where('id', 0)
+      .when(falseValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isUndefined(notFound)
+  })
+
+  test('should be able to get users using OR queries', async ({ assert }) => {
+    const whereUsers = await User.query()
+      .whereNot('id', 0)
+      .where('id', 1)
+      .orWhere('id', 2)
+      .orWhereNot('id', 9)
+      .orWhereIn('id', [1, 2, 3])
+      .orWhereNotIn('id', [4, 5, 6])
+      .orWhereNull('deletedAt')
+      .orWhereNotNull('name')
+      .orWhereBetween('id', [1, 10])
+      .orWhereNotBetween('id', [11, 20])
+      .orWhereLike('name', '%testing%')
+      .orWhereILike('name', '%testing%')
+      .orWhereExists(User.query().where('id', 1))
+      .orWhereNotExists(User.query().where('id', 2))
+      .findMany()
+
+    assert.lengthOf(whereUsers, 10)
+  })
+
+  test('should be able to get users using GROUP BY and HAVING queries', async ({ assert }) => {
+    const groupByUsers = await User.query()
+      .groupBy('id', 'name')
+      .having('id', 1)
+      .havingIn('id', [1, 2, 3])
+      .havingNotIn('id', [4, 5, 6])
+      .havingNull('deletedAt')
+      .havingNotNull('name')
+      .havingBetween('id', [1, 10])
+      .havingNotBetween('id', [11, 20])
+      .orHaving('id', 2)
+      .orHavingIn('id', [1, 2, 3])
+      .orHavingNotIn('id', [4, 5, 6])
+      .orHavingNull('deletedAt')
+      .orHavingNotNull('name')
+      .orHavingBetween('id', [1, 10])
+      .orHavingNotBetween('id', [11, 20])
+      .orHavingExists(User.query().where('id', 1))
+      .orHavingNotExists(User.query().where('id', 2))
+      .findMany()
+
+    assert.lengthOf(groupByUsers, 10)
   })
 })

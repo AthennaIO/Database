@@ -118,6 +118,19 @@ test.group('ProductModelTest', group => {
     assert.lengthOf(allProductMySqls, 10)
   })
 
+  test('should be able to find product and products grouped', async ({ assert }) => {
+    const products = await ProductMySql.query()
+      .select('id', 'name', 'deletedAt')
+      .groupBy('id', 'name')
+      .havingBetween('id', [0, 5000000])
+      .havingNotBetween('id', [5000000, 9999999])
+      .orHavingBetween('id', [4, 7])
+      .havingNull('deletedAt')
+      .findMany()
+
+    assert.lengthOf(products, 10)
+  })
+
   test('should be able to get products as a collection', async ({ assert }) => {
     const collection = await ProductMySql.query().orderBy('id', 'DESC').collection()
 
@@ -305,5 +318,84 @@ test.group('ProductModelTest', group => {
 
   test('should throw a not implemented relation exception', async ({ assert }) => {
     assert.throws(() => ProductMySql.query().includes('notImplemented'), NotImplementedRelationException)
+  })
+
+  test('should be able to find products ordering by latest and oldest', async ({ assert }) => {
+    const oldestCreatedAt = await ProductMySql.query().oldest().find()
+    const latestCreatedAt = await ProductMySql.query().latest().find()
+
+    assert.isTrue(oldestCreatedAt.createdAt < latestCreatedAt.createdAt)
+  })
+
+  test('should be able to find products ordering by latest and oldest with different columns', async ({ assert }) => {
+    const oldestUpdatedAt = await ProductMySql.query().oldest('updatedAt').find()
+    const latestUpdatedAt = await ProductMySql.query().latest('updatedAt').find()
+
+    assert.isTrue(oldestUpdatedAt.updatedAt < latestUpdatedAt.updatedAt)
+  })
+
+  test('should be able to find products if value is true', async ({ assert }) => {
+    const trueValue = true
+
+    const found = await ProductMySql.query()
+      .where('id', 0)
+      .when(trueValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isDefined(found)
+
+    const falseValue = false
+
+    const notFound = await ProductMySql.query()
+      .where('id', 0)
+      .when(falseValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isUndefined(notFound)
+  })
+
+  test('should be able to get products using OR queries', async ({ assert }) => {
+    const whereProducts = await ProductMySql.query()
+      .whereNot('id', 0)
+      .where('id', 1)
+      .orWhere('id', 2)
+      .orWhereNot('id', 9)
+      .orWhereIn('id', [1, 2, 3])
+      .orWhereNotIn('id', [4, 5, 6])
+      .orWhereNull('deletedAt')
+      .orWhereNotNull('name')
+      .orWhereBetween('id', [1, 10])
+      .orWhereNotBetween('id', [11, 20])
+      .orWhereLike('name', '%testing%')
+      .orWhereILike('name', '%testing%')
+      .orWhereExists(ProductMySql.query().where('id', 1))
+      .orWhereNotExists(ProductMySql.query().where('id', 2))
+      .findMany()
+
+    assert.lengthOf(whereProducts, 10)
+  })
+
+  test('should be able to get products using GROUP BY and HAVING queries', async ({ assert }) => {
+    const groupByProducts = await ProductMySql.query()
+      .groupBy('id', 'name')
+      .having('id', 1)
+      .havingIn('id', [1, 2, 3])
+      .havingNotIn('id', [4, 5, 6])
+      .havingNull('deletedAt')
+      .havingNotNull('name')
+      .havingBetween('id', [1, 10])
+      .havingNotBetween('id', [11, 20])
+      .orHaving('id', 2)
+      .orHavingIn('id', [1, 2, 3])
+      .orHavingNotIn('id', [4, 5, 6])
+      .orHavingNull('deletedAt')
+      .orHavingNotNull('name')
+      .orHavingBetween('id', [1, 10])
+      .orHavingNotBetween('id', [11, 20])
+      .orHavingExists(ProductMySql.query().where('id', 1))
+      .orHavingNotExists(ProductMySql.query().where('id', 2))
+      .findMany()
+
+    assert.lengthOf(groupByProducts, 10)
   })
 })

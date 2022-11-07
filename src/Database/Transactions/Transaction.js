@@ -21,10 +21,19 @@ export class Transaction {
   /**
    * Return the client of driver.
    *
-   * @return {import('typeorm').DataSource|null}
+   * @return {import('knex').Knex|null}
    */
   getClient() {
     return this.#driver.getClient()
+  }
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder|null}
+   */
+  getQueryBuilder() {
+    return this.#driver.getQueryBuilder()
   }
 
   /**

@@ -108,6 +108,15 @@ export class DatabaseImpl {
   }
 
   /**
+   * Return the query builder of driver.
+   *
+   * @return {import('knex').Knex.QueryBuilder|null}
+   */
+  getQueryBuilder() {
+    return this.#driver.getQueryBuilder()
+  }
+
+  /**
    * Create a new transaction.
    *
    * @return {Promise<Transaction>}
@@ -246,12 +255,12 @@ export class DatabaseImpl {
   /**
    * Make a raw query in database.
    *
-   * @param {string} raw
-   * @param {any[]} [queryValues]
+   * @param {string} sql
+   * @param {any} [bindings]
    * @return {Promise<any>}
    */
-  async raw(raw, queryValues) {
-    return this.#driver.raw(raw, queryValues)
+  raw(sql, bindings) {
+    return this.#driver.raw(sql, bindings)
   }
 
   /**

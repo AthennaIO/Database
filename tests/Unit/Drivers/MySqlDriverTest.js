@@ -7,16 +7,16 @@
  * file that was distributed with this source code.
  */
 
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
 import { Config } from '@athenna/config'
 import { Folder, Path } from '@athenna/common'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
-import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { Database } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 test.group('MySqlDriverTest', group => {
   /** @type {MySqlDatabaseImpl} */
@@ -37,14 +37,22 @@ test.group('MySqlDriverTest', group => {
 
     await DB.runMigrations()
 
-    const [{ id }] = await DB.table('users').createMany([
-      { name: 'João Lenon', email: 'lenon@athenna.io' },
-      { name: 'Victor Tesoura', email: 'txsoura@athenna.io' },
-    ])
+    const { id } = await DB.table('users').create({
+      name: 'João Lenon',
+      email: 'lenon@athenna.io',
+    })
+
     await DB.table('products').createMany([
       { userId: id, name: 'iPhone 13', price: 1000 },
       { userId: id, name: 'iPhone 14', price: 2000 },
     ])
+
+    await DB.table('users').create({
+      name: 'Victor Tesoura',
+      email: 'txsoura@athenna.io',
+      createdAt: new Date(Date.now() + 100000),
+      updatedAt: new Date(Date.now() + 100000),
+    })
   })
 
   group.each.teardown(async () => {
@@ -67,10 +75,17 @@ test.group('MySqlDriverTest', group => {
     await DB.connect()
   })
 
-  test('should be able to get the driver client from the connections', async ({ assert }) => {
-    const client = DB.getClient()
+  test('should be able to get the driver client and query builder from the connections', async ({ assert }) => {
+    const dbClient = DB.getClient()
+    const queryBuilderClient = DB.table('users').getClient()
 
-    assert.isDefined(client)
+    const dbQueryBuilder = DB.getQueryBuilder()
+    const queryBuilderQueryBuilder = DB.table('users').getQueryBuilder()
+
+    assert.isDefined(dbClient)
+    assert.isDefined(queryBuilderClient)
+    assert.isDefined(dbQueryBuilder)
+    assert.isDefined(queryBuilderQueryBuilder)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
@@ -197,6 +212,7 @@ test.group('MySqlDriverTest', group => {
       .select('products.id as products_id')
       .where('users.id', 1)
       .orWhere('users.id', 2)
+      .whereExists(Database.table('products').where('id', 1).orWhere('id', 2))
       .join('products', 'users.id', 'products.userId')
       .find()
 
@@ -211,6 +227,7 @@ test.group('MySqlDriverTest', group => {
       .orderBy('users.id', 'DESC')
       .offset(0)
       .limit(10)
+      .whereNotExists(Database.table('products').where('id', 1).orWhere('id', 2))
       .join('products', 'users.id', 'products.userId')
       .findMany()
 
@@ -218,6 +235,19 @@ test.group('MySqlDriverTest', group => {
     assert.deepEqual(users[0].users_id, users[1].users_id)
     assert.deepEqual(users[0].products_id, 1)
     assert.deepEqual(users[1].products_id, 2)
+  })
+
+  test('should be able to find user and users grouped', async ({ assert }) => {
+    const users = await DB.table('users')
+      .select('id', 'name', 'deletedAt')
+      .groupBy('id', 'name')
+      .havingBetween('id', [0, 3])
+      .havingNotBetween('id', [9, 99])
+      .orHavingBetween('id', [4, 7])
+      .havingNull('deletedAt')
+      .findMany()
+
+    assert.lengthOf(users, 2)
   })
 
   test('should be able to find users as a Collection', async ({ assert }) => {
@@ -332,5 +362,109 @@ test.group('MySqlDriverTest', group => {
     assert.deepEqual(user.id, 1)
 
     await otherDB.close()
+  })
+
+  test('should be able to find users ordering by latest and oldest', async ({ assert }) => {
+    const oldestCreatedAt = await DB.table('users').oldest().find()
+    const latestCreatedAt = await DB.table('users').latest().find()
+
+    assert.isTrue(oldestCreatedAt.createdAt < latestCreatedAt.createdAt)
+  })
+
+  test('should be able to find users ordering by latest and oldest with different columns', async ({ assert }) => {
+    const oldestUpdatedAt = await DB.table('users').oldest('updatedAt').find()
+    const latestUpdatedAt = await DB.table('users').latest('updatedAt').find()
+
+    assert.isTrue(oldestUpdatedAt.updatedAt < latestUpdatedAt.updatedAt)
+  })
+
+  test('should be able to find users if value is true', async ({ assert }) => {
+    const trueValue = true
+
+    const found = await DB.table('users')
+      .where('id', 0)
+      .when(trueValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isDefined(found)
+
+    const falseValue = false
+
+    const notFound = await DB.table('users')
+      .where('id', 0)
+      .when(falseValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isUndefined(notFound)
+  })
+
+  test('should be able to get users using OR queries', async ({ assert }) => {
+    const whereUsers = await DB.table('users')
+      .whereNot('id', 0)
+      .where('id', 1)
+      .orWhere('id', 2)
+      .orWhereNot('id', 9)
+      .orWhereIn('id', [1, 2, 3])
+      .orWhereNotIn('id', [4, 5, 6])
+      .orWhereNull('deletedAt')
+      .orWhereNotNull('name')
+      .orWhereBetween('id', [1, 10])
+      .orWhereNotBetween('id', [11, 20])
+      .orWhereLike('name', '%testing%')
+      .orWhereILike('name', '%testing%')
+      .orWhereExists(Database.table('users').where('id', 1))
+      .orWhereNotExists(Database.table('users').where('id', 2))
+      .findMany()
+
+    assert.lengthOf(whereUsers, 2)
+  })
+
+  test('should be able to get users using GROUP BY and HAVING queries', async ({ assert }) => {
+    const groupByUsers = await DB.table('users')
+      .groupBy('id', 'name')
+      .having('id', 1)
+      .havingIn('id', [1, 2, 3])
+      .havingNotIn('id', [4, 5, 6])
+      .havingNull('deletedAt')
+      .havingNotNull('name')
+      .havingBetween('id', [1, 10])
+      .havingNotBetween('id', [11, 20])
+      .orHaving('id', 2)
+      .orHavingIn('id', [1, 2, 3])
+      .orHavingNotIn('id', [4, 5, 6])
+      .orHavingNull('deletedAt')
+      .orHavingNotNull('name')
+      .orHavingBetween('id', [1, 10])
+      .orHavingNotBetween('id', [11, 20])
+      .orHavingExists(Database.table('users').where('id', 1))
+      .orHavingNotExists(Database.table('users').where('id', 2))
+      .findMany()
+
+    assert.lengthOf(groupByUsers, 2)
+  })
+
+  test('should be able to execute raw methods of query builder', async ({ assert }) => {
+    const usersJoinProducts = await DB.table('users')
+      .joinRaw('inner join products')
+      .whereRaw('`users`.`deletedAt` is null')
+      .orWhereRaw("`users`.`name` = 'João Lenon'")
+      .orderByRaw('`users`.`id` DESC')
+      .groupByRaw('`users`.`id`, `products`.`id`')
+      .havingRaw('`products`.`deletedAt` is null')
+      .orHavingRaw("`products`.`name` = 'iPhone 14'")
+      .findMany()
+
+    assert.lengthOf(usersJoinProducts, 4)
+  })
+
+  test('should be able to use select raw to count data', async ({ assert }) => {
+    const report = await DB.table('users')
+      .selectRaw('count(id) as number_of_users, deletedAt')
+      .groupBy('deletedAt')
+      .havingBetween('number_of_users', [0, 10])
+      .findMany()
+
+    assert.deepEqual(report[0].deletedAt, null)
+    assert.deepEqual(report[0].number_of_users, 2)
   })
 })
