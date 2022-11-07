@@ -647,6 +647,23 @@ export class PostgresDriver {
   }
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: PostgresDriver, criteriaValue: any) => void}
+   */
+  when(criteria, callback) {
+    if (!criteria) {
+      return this
+    }
+
+    // eslint-disable-next-line n/no-callback-literal
+    callback(this, criteria)
+
+    return this
+  }
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
@@ -726,8 +743,8 @@ export class PostgresDriver {
    * @param [value] {any}
    * @return {PostgresDriver}
    */
-  having(column, operation = '=', value) {
-    if (!value) {
+  having(column, operation, value) {
+    if (value === undefined) {
       this.#qb.having(column, '=', operation)
 
       return this
@@ -859,8 +876,8 @@ export class PostgresDriver {
    * @param [value] {any}
    * @return {PostgresDriver}
    */
-  orHaving(column, operation = '=', value) {
-    if (!value) {
+  orHaving(column, operation, value) {
+    if (value === undefined) {
       this.#qb.orHaving(column, '=', operation)
 
       return this
@@ -992,14 +1009,14 @@ export class PostgresDriver {
    * @param [value] {Record<string, any>}
    * @return {PostgresDriver}
    */
-  where(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
+  where(statement, operation, value) {
+    if (operation === undefined) {
       this.#qb.where(statement)
 
       return this
     }
 
-    if (!value) {
+    if (value === undefined) {
       this.#qb.where(statement, operation)
 
       return this
@@ -1018,7 +1035,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   whereNot(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.whereNot(statement)
 
       return this
@@ -1074,13 +1091,13 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   whereLike(statement, value) {
-    if (!value) {
-      this.#qb.where(statement, 'like')
+    if (value === undefined) {
+      this.#qb.whereLike(statement)
 
       return this
     }
 
-    this.#qb.where(statement, 'like', value)
+    this.#qb.whereLike(statement, value)
 
     return this
   }
@@ -1093,7 +1110,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   whereILike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.whereILike(statement)
 
       return this
@@ -1188,14 +1205,14 @@ export class PostgresDriver {
    * @param [value] {Record<string, any>}
    * @return {PostgresDriver}
    */
-  orWhere(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
+  orWhere(statement, operation, value) {
+    if (operation === undefined) {
       this.#qb.orWhere(statement)
 
       return this
     }
 
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhere(statement, operation)
 
       return this
@@ -1214,7 +1231,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   orWhereNot(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhereNot(statement)
 
       return this
@@ -1270,13 +1287,13 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   orWhereLike(statement, value) {
-    if (!value) {
-      this.#qb.orWhere(statement, 'like')
+    if (value === undefined) {
+      this.#qb.orWhereLike(statement)
 
       return this
     }
 
-    this.#qb.orWhere(statement, 'like', value)
+    this.#qb.orWhereLike(statement, value)
 
     return this
   }
@@ -1289,7 +1306,7 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   orWhereILike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhereILike(statement)
 
       return this
@@ -1400,6 +1417,28 @@ export class PostgresDriver {
     this.#qb.orderByRaw(sql, bindings)
 
     return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {PostgresDriver}
+   */
+  latest(columnName = 'createdAt') {
+    return this.orderBy(columnName, 'DESC')
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {PostgresDriver}
+   */
+  oldest(columnName = 'createdAt') {
+    return this.orderBy(columnName, 'ASC')
   }
 
   /**

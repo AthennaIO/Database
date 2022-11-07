@@ -650,6 +650,23 @@ export class MySqlDriver {
   }
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: MySqlDriver, criteriaValue: any) => void}
+   */
+  when(criteria, callback) {
+    if (!criteria) {
+      return this
+    }
+
+    // eslint-disable-next-line n/no-callback-literal
+    callback(this, criteria)
+
+    return this
+  }
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
@@ -729,8 +746,8 @@ export class MySqlDriver {
    * @param [value] {any}
    * @return {MySqlDriver}
    */
-  having(column, operation = '=', value) {
-    if (!value) {
+  having(column, operation, value) {
+    if (value === undefined) {
       this.#qb.having(column, '=', operation)
 
       return this
@@ -862,8 +879,8 @@ export class MySqlDriver {
    * @param [value] {any}
    * @return {MySqlDriver}
    */
-  orHaving(column, operation = '=', value) {
-    if (!value) {
+  orHaving(column, operation, value) {
+    if (value === undefined) {
       this.#qb.orHaving(column, '=', operation)
 
       return this
@@ -995,14 +1012,14 @@ export class MySqlDriver {
    * @param [value] {Record<string, any>}
    * @return {MySqlDriver}
    */
-  where(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
+  where(statement, operation, value) {
+    if (operation === undefined) {
       this.#qb.where(statement)
 
       return this
     }
 
-    if (!value) {
+    if (value === undefined) {
       this.#qb.where(statement, operation)
 
       return this
@@ -1021,7 +1038,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   whereNot(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.whereNot(statement)
 
       return this
@@ -1077,7 +1094,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   whereLike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.where(statement, 'like')
 
       return this
@@ -1096,7 +1113,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   whereILike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.whereILike(statement)
 
       return this
@@ -1191,14 +1208,14 @@ export class MySqlDriver {
    * @param [value] {Record<string, any>}
    * @return {MySqlDriver}
    */
-  orWhere(statement, operation = '=', value) {
-    if (Is.Object(statement)) {
+  orWhere(statement, operation, value) {
+    if (operation === undefined) {
       this.#qb.orWhere(statement)
 
       return this
     }
 
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhere(statement, operation)
 
       return this
@@ -1217,7 +1234,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   orWhereNot(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhereNot(statement)
 
       return this
@@ -1273,7 +1290,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   orWhereLike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhere(statement, 'like')
 
       return this
@@ -1292,7 +1309,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   orWhereILike(statement, value) {
-    if (!value) {
+    if (value === undefined) {
       this.#qb.orWhereILike(statement)
 
       return this
@@ -1403,6 +1420,28 @@ export class MySqlDriver {
     this.#qb.orderByRaw(sql, bindings)
 
     return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {MySqlDriver}
+   */
+  latest(columnName = 'createdAt') {
+    return this.orderBy(columnName, 'DESC')
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {MySqlDriver}
+   */
+  oldest(columnName = 'createdAt') {
+    return this.orderBy(columnName, 'ASC')
   }
 
   /**

@@ -247,6 +247,18 @@ export class QueryBuilder {
   }
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: QueryBuilder, criteriaValue: any) => void}
+   */
+  when(criteria, callback) {
+    this.#driver.when(criteria, callback)
+
+    return this
+  }
+
+  /**
    * Log in console the actual query built.
    *
    * @return {QueryBuilder}
@@ -331,7 +343,7 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  having(column, operation = '=', value) {
+  having(column, operation, value) {
     this.#driver.having(column, operation, value)
 
     return this
@@ -458,7 +470,7 @@ export class QueryBuilder {
    * @param [value] {any}
    * @return {QueryBuilder}
    */
-  orHaving(column, operation = '=', value) {
+  orHaving(column, operation, value) {
     this.#driver.orHaving(column, operation, value)
 
     return this
@@ -585,7 +597,7 @@ export class QueryBuilder {
    * @param [value] {Record<string, any>}
    * @return {QueryBuilder}
    */
-  where(statement, operation = '=', value) {
+  where(statement, operation, value) {
     this.#driver.where(statement, operation, value)
 
     return this
@@ -751,7 +763,7 @@ export class QueryBuilder {
    * @param [value] {Record<string, any>}
    * @return {QueryBuilder}
    */
-  orWhere(statement, operation = '=', value) {
+  orWhere(statement, operation, value) {
     this.#driver.orWhere(statement, operation, value)
 
     return this
@@ -931,6 +943,32 @@ export class QueryBuilder {
    */
   orderByRaw(sql, bindings) {
     this.#driver.orderByRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {QueryBuilder}
+   */
+  latest(columnName = 'createdAt') {
+    this.#driver.latest(columnName)
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {QueryBuilder}
+   */
+  oldest(columnName = 'createdAt') {
+    this.#driver.oldest(columnName)
 
     return this
   }

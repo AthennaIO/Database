@@ -7,16 +7,16 @@
  * file that was distributed with this source code.
  */
 
-import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 import { test } from '@japa/runner'
 import { Config } from '@athenna/config'
 import { Folder, Path } from '@athenna/common'
+import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
-import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
-import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { Database } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
+import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
+import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 
 test.group('PostgresDriverTest', group => {
   /** @type {DatabaseImpl} */
@@ -68,11 +68,16 @@ test.group('PostgresDriverTest', group => {
   })
 
   test('should be able to get the driver client and query builder from the connections', async ({ assert }) => {
-    const client = DB.getClient()
-    const queryBuilder = DB.getQueryBuilder()
+    const dbClient = DB.getClient()
+    const queryBuilderClient = DB.table('users').getClient()
 
-    assert.isDefined(client)
-    assert.isDefined(queryBuilder)
+    const dbQueryBuilder = DB.getQueryBuilder()
+    const queryBuilderQueryBuilder = DB.table('users').getQueryBuilder()
+
+    assert.isDefined(dbClient)
+    assert.isDefined(queryBuilderClient)
+    assert.isDefined(dbQueryBuilder)
+    assert.isDefined(queryBuilderQueryBuilder)
   })
 
   test('should be able to create and list tables/databases', async ({ assert }) => {
@@ -347,5 +352,84 @@ test.group('PostgresDriverTest', group => {
     assert.deepEqual(user.id, 1)
 
     await otherDB.close()
+  })
+
+  test('should be able to find products ordering by latest and oldest', async ({ assert }) => {
+    const oldestCreatedAt = await DB.table('products').oldest().find()
+    const latestCreatedAt = await DB.table('products').latest().find()
+
+    assert.isTrue(oldestCreatedAt.createdAt < latestCreatedAt.createdAt)
+  })
+
+  test('should be able to find products ordering by latest and oldest with different columns', async ({ assert }) => {
+    const oldestUpdatedAt = await DB.table('products').oldest('updatedAt').find()
+    const latestUpdatedAt = await DB.table('products').latest('updatedAt').find()
+
+    assert.isTrue(oldestUpdatedAt.updatedAt < latestUpdatedAt.updatedAt)
+  })
+
+  test('should be able to find products if value is true', async ({ assert }) => {
+    const trueValue = true
+
+    const found = await DB.table('products')
+      .where('id', 0)
+      .when(trueValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isDefined(found)
+
+    const falseValue = false
+
+    const notFound = await DB.table('products')
+      .where('id', 0)
+      .when(falseValue, query => query.orWhereNull('deletedAt'))
+      .find()
+
+    assert.isUndefined(notFound)
+  })
+
+  test('should be able to get products using OR queries', async ({ assert }) => {
+    const whereUsers = await DB.table('products')
+      .whereNot('id', 0)
+      .where('id', 1)
+      .orWhere('id', 2)
+      .orWhereNot('id', 9)
+      .orWhereIn('id', [1, 2, 3])
+      .orWhereNotIn('id', [4, 5, 6])
+      .orWhereNull('deletedAt')
+      .orWhereNotNull('name')
+      .orWhereBetween('id', [1, 10])
+      .orWhereNotBetween('id', [11, 20])
+      .orWhereLike('name', '%testing%')
+      .orWhereILike('name', '%testing%')
+      .orWhereExists(Database.table('products').where('id', 1))
+      .orWhereNotExists(Database.table('products').where('id', 2))
+      .findMany()
+
+    assert.lengthOf(whereUsers, 10)
+  })
+
+  test('should be able to get products using GROUP BY and HAVING queries', async ({ assert }) => {
+    const groupByUsers = await DB.table('products')
+      .groupBy('id', 'name')
+      .having('id', 1)
+      .havingIn('id', [1, 2, 3])
+      .havingNotIn('id', [4, 5, 6])
+      .havingNull('deletedAt')
+      .havingNotNull('name')
+      .havingBetween('id', [1, 10])
+      .havingNotBetween('id', [11, 20])
+      .orHaving('id', 2)
+      .orHavingIn('id', [1, 2, 3])
+      .orHavingNotIn('id', [4, 5, 6])
+      .orHavingNull('deletedAt')
+      .orHavingNotNull('name')
+      .orHavingBetween('id', [1, 10])
+      .orHavingNotBetween('id', [11, 20])
+      .orHavingExists(Database.table('products').where('id', 1))
+      .orHavingNotExists(Database.table('products').where('id', 2))
+      .findMany()
+
+    assert.lengthOf(groupByUsers, 10)
   })
 })

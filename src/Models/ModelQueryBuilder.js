@@ -333,6 +333,18 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: ModelQueryBuilder, criteriaValue: any) => void}
+   */
+  when(criteria, callback) {
+    this.#QB.when(criteria, callback)
+
+    return this
+  }
+
+  /**
    * Log in console the actual query built.
    *
    * @return {ModelQueryBuilder}
@@ -373,7 +385,7 @@ export class ModelQueryBuilder {
 
     columns = this.#schema.getReversedColumnNamesOf(columns)
 
-    this.#QB.select(...columns)
+    this.#QB.select(...this.#parseNames(columns))
 
     return this
   }
@@ -386,9 +398,33 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orderBy(columnName = this.#Model.primaryKey, direction = 'ASC') {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
+    this.#QB.orderBy(this.#parseNames(columnName), direction.toLowerCase())
 
-    this.#QB.orderBy(columnName, direction.toLowerCase())
+    return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {ModelQueryBuilder}
+   */
+  latest(columnName = 'createdAt') {
+    this.#QB.latest(this.#parseNames(columnName))
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {ModelQueryBuilder}
+   */
+  oldest(columnName = 'createdAt') {
+    this.#QB.oldest(this.#parseNames(columnName))
 
     return this
   }
@@ -400,9 +436,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   groupBy(...columns) {
-    columns = this.#schema.getReversedColumnNamesOf(columns)
-
-    this.#QB.groupBy(...columns)
+    this.#QB.groupBy(...this.#parseNames(columns))
 
     return this
   }
@@ -416,15 +450,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   having(column, operation, value) {
-    column = this.#schema.getReversedColumnNameOf(column)
-
-    if (!value) {
-      this.#QB.having(column, '=', operation)
-
-      return this
-    }
-
-    this.#QB.having(column, operation, value)
+    this.#QB.having(this.#parseNames(column), operation, value)
 
     return this
   }
@@ -461,9 +487,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingIn(columnName, values)
+    this.#QB.havingIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -476,9 +500,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingNotIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingNotIn(columnName, values)
+    this.#QB.havingNotIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -491,9 +513,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingBetween(columnName, values)
+    this.#QB.havingBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -506,9 +526,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingNotBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingNotBetween(columnName, values)
+    this.#QB.havingNotBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -520,9 +538,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingNull(columnName)
+    this.#QB.havingNull(this.#parseNames(columnName))
 
     return this
   }
@@ -534,9 +550,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   havingNotNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.havingNotNull(columnName)
+    this.#QB.havingNotNull(this.#parseNames(columnName))
 
     return this
   }
@@ -550,15 +564,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHaving(column, operation, value) {
-    column = this.#schema.getReversedColumnNameOf(column)
-
-    if (!value) {
-      this.#QB.orHaving(column, '=', operation)
-
-      return this
-    }
-
-    this.#QB.orHaving(column, operation, value)
+    this.#QB.orHaving(this.#parseNames(column), operation, value)
 
     return this
   }
@@ -595,9 +601,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingIn(columnName, values)
+    this.#QB.orHavingIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -610,9 +614,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingNotIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingNotIn(columnName, values)
+    this.#QB.orHavingNotIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -625,9 +627,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingBetween(columnName, values)
+    this.#QB.orHavingBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -640,9 +640,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingNotBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingNotBetween(columnName, values)
+    this.#QB.orHavingNotBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -654,9 +652,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingNull(columnName)
+    this.#QB.orHavingNull(this.#parseNames(columnName))
 
     return this
   }
@@ -668,9 +664,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orHavingNotNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orHavingNotNull(columnName)
+    this.#QB.orHavingNotNull(this.#parseNames(columnName))
 
     return this
   }
@@ -713,23 +707,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   where(statement, operation, value) {
-    if (Is.Object(statement)) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.where(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    if (!value) {
-      this.#QB.where(statement, operation)
-
-      return this
-    }
-
-    this.#QB.where(statement, operation, value)
+    this.#QB.where(this.#parseNames(statement), operation, value)
 
     return this
   }
@@ -742,17 +720,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNot(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.whereNot(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.whereNot(statement, value)
+    this.#QB.whereNot(this.#parseNames(statement), value)
 
     return this
   }
@@ -789,17 +757,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereLike(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.whereLike(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.whereLike(statement, value)
+    this.#QB.whereLike(this.#parseNames(statement), value)
 
     return this
   }
@@ -812,17 +770,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereILike(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.whereILike(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.whereILike(statement, value)
+    this.#QB.whereILike(this.#parseNames(statement), value)
 
     return this
   }
@@ -835,9 +783,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereIn(columnName, values)
+    this.#QB.whereIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -850,9 +796,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereNotIn(columnName, values)
+    this.#QB.whereNotIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -865,9 +809,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereBetween(columnName, values)
+    this.#QB.whereBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -880,9 +822,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereNotBetween(columnName, values)
+    this.#QB.whereNotBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -894,9 +834,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereNull(columnName)
+    this.#QB.whereNull(this.#parseNames(columnName))
 
     return this
   }
@@ -908,9 +846,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   whereNotNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.whereNotNull(columnName)
+    this.#QB.whereNotNull(this.#parseNames(columnName))
 
     return this
   }
@@ -924,23 +860,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhere(statement, operation, value) {
-    if (Is.Object(statement)) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.orWhere(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    if (!value) {
-      this.#QB.orWhere(statement, operation)
-
-      return this
-    }
-
-    this.#QB.orWhere(statement, operation, value)
+    this.#QB.orWhere(this.#parseNames(statement), operation, value)
 
     return this
   }
@@ -953,17 +873,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereNot(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.orWhereNot(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.orWhereNot(statement, value)
+    this.#QB.orWhereNot(this.#parseNames(statement), value)
 
     return this
   }
@@ -1000,17 +910,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereLike(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.orWhereLike(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.orWhereLike(statement, value)
+    this.#QB.orWhereLike(this.#parseNames(statement), value)
 
     return this
   }
@@ -1023,17 +923,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereILike(statement, value) {
-    if (!value) {
-      statement = this.#schema.getReversedStatementNamesOf(statement)
-
-      this.#QB.orWhereILike(statement)
-
-      return this
-    }
-
-    statement = this.#schema.getReversedColumnNameOf(statement)
-
-    this.#QB.orWhereILike(statement, value)
+    this.#QB.orWhereILike(this.#parseNames(statement), value)
 
     return this
   }
@@ -1046,9 +936,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereIn(columnName, values)
+    this.#QB.orWhereIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -1061,9 +949,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereNotIn(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereNotIn(columnName, values)
+    this.#QB.orWhereNotIn(this.#parseNames(columnName), values)
 
     return this
   }
@@ -1076,9 +962,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereBetween(columnName, values)
+    this.#QB.orWhereBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -1091,9 +975,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereNotBetween(columnName, values) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereNotBetween(columnName, values)
+    this.#QB.orWhereNotBetween(this.#parseNames(columnName), values)
 
     return this
   }
@@ -1105,9 +987,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereNull(columnName)
+    this.#QB.orWhereNull(this.#parseNames(columnName))
 
     return this
   }
@@ -1119,9 +999,7 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   orWhereNotNull(columnName) {
-    columnName = this.#schema.getReversedColumnNameOf(columnName)
-
-    this.#QB.orWhereNotNull(columnName)
+    this.#QB.orWhereNotNull(this.#parseNames(columnName))
 
     return this
   }
@@ -1148,6 +1026,24 @@ export class ModelQueryBuilder {
     this.#QB.limit(number)
 
     return this
+  }
+
+  /**
+   * Parse names using the schema builder.
+   *
+   * @param {string|string[]|Record<string, any>} statement
+   * @return {any}
+   */
+  #parseNames(statement) {
+    if (Is.Object(statement)) {
+      return this.#schema.getReversedStatementNamesOf(statement)
+    }
+
+    if (Is.Array(statement)) {
+      return this.#schema.getReversedColumnNamesOf(statement)
+    }
+
+    return this.#schema.getReversedColumnNameOf(statement)
   }
 
   /**

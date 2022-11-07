@@ -1,6 +1,4 @@
-import { Column } from '#src/Models/Column'
-import { Relation } from '#src/Relations/Relation'
-import { Model } from '#src/Models/Model'
+import { Model, Column, Relation } from '#src/index'
 import { Course } from '#tests/Stubs/models/Course'
 
 export class Student extends Model {

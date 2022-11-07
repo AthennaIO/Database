@@ -1673,7 +1673,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static createdAt(name: string): any
+  static createdAt(name?: string): any
 
   /**
    * Create a "updatedAt" column.
@@ -1681,7 +1681,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static updatedAt(name: string): any
+  static updatedAt(name?: string): any
 
   /**
    * Create a "deletedAt" column.
@@ -1689,7 +1689,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static deletedAt(name: string): any
+  static deletedAt(name?: string): any
 
   /**
    * Set the type of your column.
@@ -1923,10 +1923,10 @@ export class Relation {
   /**
    * Set the foreign key of the relation.
    *
-   * @param column {string}
+   * @param columnName {string}
    * @return {typeof Relation}
    */
-  static foreignKey(column: string): typeof Relation
+  static foreignKey(columnName: string): typeof Relation
 
   /**
    * Set if relation should be cascaded on delete/update.
@@ -2110,82 +2110,82 @@ export class QueryBuilder {
   /**
    * Calculate the average of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  avg(column: string): Promise<number>
+  avg(columnName: string): Promise<number>
 
   /**
    * Calculate the average of a given column using distinct.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  avgDistinct(column: string): Promise<number>
+  avgDistinct(columnName: string): Promise<number>
 
   /**
    * Get the max number of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  max(column: string): Promise<number>
+  max(columnName: string): Promise<number>
 
   /**
    * Get the min number of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  min(column: string): Promise<number>
+  min(columnName: string): Promise<number>
 
   /**
    * Sum all numbers of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  sum(column: string): Promise<number>
+  sum(columnName: string): Promise<number>
 
   /**
    * Sum all numbers of a given column in distinct mode.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number>}
    */
-  sumDistinct(column: string): Promise<number>
+  sumDistinct(columnName: string): Promise<number>
 
   /**
    * Increment a value of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number | number[]>}
    */
-  increment(column: string): Promise<number | number[]>
+  increment(columnName: string): Promise<number | number[]>
 
   /**
    * Decrement a value of a given column.
    *
-   * @param {string} column
+   * @param {string} columnName
    * @return {Promise<number | number[]>}
    */
-  decrement(column: string): Promise<number | number[]>
+  decrement(columnName: string): Promise<number | number[]>
 
   /**
    * Calculate the average of a given column using distinct.
    *
-   * @param {string} column
+   * @param {string} [columnName]
    * @return {Promise<number>}
    */
-  count(column?: string): Promise<number>
+  count(columnName?: string): Promise<number>
 
   /**
    * Calculate the average of a given column using distinct.
    *
-   * @param {string} column
+   * @param {string} [columnName]
    * @return {Promise<number>}
    */
-  countDistinct(column?: string): Promise<number>
+  countDistinct(columnName?: string): Promise<number>
 
   /**
    * Find a value in database or throw exception if undefined.
@@ -2273,6 +2273,17 @@ export class QueryBuilder {
   delete(): Promise<any | void>
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: QueryBuilder, criteriaValue: any) => void}
+   */
+  when(
+    criteria: any,
+    callback: (query: QueryBuilder, criteriaValue: any) => void,
+  ): QueryBuilder
+
+  /**
    * Log in console the actual query built.
    *
    * @return {QueryBuilder}
@@ -2300,7 +2311,7 @@ export class QueryBuilder {
   join(
     tableName: string,
     column1: string,
-    operation: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
     joinType?:
       | 'join'
@@ -2316,7 +2327,7 @@ export class QueryBuilder {
   join(
     tableName: string,
     column1: string,
-    operation: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
   ): QueryBuilder
   join(tableName: string, column1: string, column2: string): QueryBuilder
@@ -2350,15 +2361,12 @@ export class QueryBuilder {
   /**
    * Set a having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
-   * @param [value] {any}
    * @return {QueryBuilder}
    */
-  having(column: string, value: any): QueryBuilder
+  having(columnName: string, value: any): QueryBuilder
   having(
-    column: string,
-    operation: '=' | '>' | '>=' | '<' | '<=' | 'like' | 'ilike',
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
   ): QueryBuilder
 
@@ -2442,15 +2450,12 @@ export class QueryBuilder {
   /**
    * Set an or having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
-   * @param [value] {any}
    * @return {QueryBuilder}
    */
-  orHaving(column: string, value: any): QueryBuilder
+  orHaving(columnName: string, value: any): QueryBuilder
   orHaving(
-    column: string,
-    operation: '=' | '>' | '>=' | '<' | '<=' | 'like' | 'ilike',
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
   ): QueryBuilder
 
@@ -2537,8 +2542,12 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   where(statement: Record<string, any>): QueryBuilder
-  where(key: string, value: any): QueryBuilder
-  where(statement: string, operation: string, value: any): QueryBuilder
+  where(columnName: string, value: any): QueryBuilder
+  where(
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    value: any,
+  ): QueryBuilder
 
   /**
    * Set a where not statement in your query.
@@ -2546,7 +2555,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   whereNot(statement: Record<string, any>): QueryBuilder
-  whereNot(key: string, value: any): QueryBuilder
+  whereNot(columnName: string, value: any): QueryBuilder
 
   /**
    * Set a where raw statement in your query.
@@ -2579,7 +2588,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   whereLike(statement: Record<string, any>): QueryBuilder
-  whereLike(key: string, value: any): QueryBuilder
+  whereLike(columnName: string, value: any): QueryBuilder
 
   /**
    * Set a where ILike statement in your query.
@@ -2587,7 +2596,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   whereILike(statement: Record<string, any>): QueryBuilder
-  whereILike(key: string, value: any): QueryBuilder
+  whereILike(columnName: string, value: any): QueryBuilder
 
   /**
    * Set a where in statement in your query.
@@ -2645,8 +2654,12 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   orWhere(statement: Record<string, any>): QueryBuilder
-  orWhere(key: string, value: any): QueryBuilder
-  orWhere(statement: string, operation: string, value: any): QueryBuilder
+  orWhere(columnName: string, value: any): QueryBuilder
+  orWhere(
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    value: any,
+  ): QueryBuilder
 
   /**
    * Set a or where not statement in your query.
@@ -2654,7 +2667,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   orWhereNot(statement: Record<string, any>): QueryBuilder
-  orWhereNot(key: string, value: any): QueryBuilder
+  orWhereNot(columnName: string, value: any): QueryBuilder
 
   /**
    * Set an or where statement in your query.
@@ -2687,7 +2700,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   orWhereLike(statement: Record<string, any>): QueryBuilder
-  orWhereLike(key: string, value: any): QueryBuilder
+  orWhereLike(columnName: string, value: any): QueryBuilder
 
   /**
    * Set an or where ILike statement in your query.
@@ -2695,7 +2708,7 @@ export class QueryBuilder {
    * @return {QueryBuilder}
    */
   orWhereILike(statement: Record<string, any>): QueryBuilder
-  orWhereILike(key: string, value: any): QueryBuilder
+  orWhereILike(columnName: string, value: any): QueryBuilder
 
   /**
    * Set an or where in statement in your query.
@@ -2769,6 +2782,24 @@ export class QueryBuilder {
   orderByRaw(sql: string, bindings?: any): QueryBuilder
 
   /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {QueryBuilder}
+   */
+  latest(columnName?: string): QueryBuilder
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {QueryBuilder}
+   */
+  oldest(columnName?: string): QueryBuilder
+
+  /**
    * Set the skip number in your query.
    *
    * @param number {number}
@@ -2795,6 +2826,17 @@ export class Criteria {
   static table(tableName: string | any): typeof Criteria
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: QueryBuilder, criteriaValue: any) => void}
+   */
+  static when(
+    criteria: any,
+    callback: (query: QueryBuilder, criteriaValue: any) => void,
+  ): typeof Criteria
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
@@ -2817,14 +2859,15 @@ export class Criteria {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string}
-   * @param [value] {any}
    * @return {typeof Criteria}
    */
   static where(statement: Record<string, any>): typeof Criteria
-  static where(key: string, value: any): typeof Criteria
-  static where(key: string, operation: string, value: any): typeof Criteria
+  static where(columnName: string, value: any): typeof Criteria
+  static where(
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    value: any,
+  ): typeof Criteria
 
   /**
    * Set a where not statement in your query.
@@ -2832,7 +2875,7 @@ export class Criteria {
    * @return {typeof Criteria}
    */
   static whereNot(statement: Record<string, any>): typeof Criteria
-  static whereNot(key: string, value: any): typeof Criteria
+  static whereNot(columnName: string, value: any): typeof Criteria
 
   /**
    * Set a where exists statement in your query.
@@ -2853,22 +2896,18 @@ export class Criteria {
   /**
    * Set a where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {typeof Criteria}
    */
   static whereLike(statement: Record<string, any>): typeof Criteria
-  static whereLike(key: string, value: any): typeof Criteria
+  static whereLike(columnName: string, value: any): typeof Criteria
 
   /**
    * Set a where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [value] {any}
    * @return {typeof Criteria}
    */
   static whereILike(statement: Record<string, any>): typeof Criteria
-  static whereILike(key: string, value: any): typeof Criteria
+  static whereILike(columnName: string, value: any): typeof Criteria
 
   /**
    * Set a where in statement in your query.
@@ -2931,10 +2970,10 @@ export class Criteria {
    * @return {typeof Criteria}
    */
   static orWhere(statement: Record<string, any>): typeof Criteria
-  static orWhere(key: string, value: any): typeof Criteria
+  static orWhere(columnName: string, value: any): typeof Criteria
   static orWhere(
-    statement: string,
-    operation: string,
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
   ): typeof Criteria
 
@@ -2944,7 +2983,7 @@ export class Criteria {
    * @return {typeof Criteria}
    */
   static orWhereNot(statement: Record<string, any>): typeof Criteria
-  static orWhereNot(key: string, value: any): typeof Criteria
+  static orWhereNot(columnName: string, value: any): typeof Criteria
 
   /**
    * Set an or where exists statement in your query.
@@ -2975,6 +3014,24 @@ export class Criteria {
   ): typeof Criteria
 
   /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static latest(columnName?: string): typeof Criteria
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static oldest(columnName?: string): typeof Criteria
+
+  /**
    * Set a group by statement in your query.
    *
    * @param columns {string}
@@ -2985,13 +3042,14 @@ export class Criteria {
   /**
    * Set a having statement in your query.
    *
-   * @param column {string}
-   * @param operation {string}
-   * @param [value] {any}
    * @return {typeof Criteria}
    */
-  static having(column: string, value: any): typeof Criteria
-  static having(column: string, operation: string, value: any): typeof Criteria
+  static having(columnName: string, value: any): typeof Criteria
+  static having(
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    value: any,
+  ): typeof Criteria
 
   /**
    * Set a having exists statement in your query.
@@ -3067,15 +3125,12 @@ export class Criteria {
   /**
    * Set an or having statement in your query.
    *
-   * @param column {string}
-   * @param operation {string}
-   * @param [value] {any}
    * @return {typeof Criteria}
    */
-  static orHaving(column: string, value: any): typeof Criteria
+  static orHaving(columnName: string, value: any): typeof Criteria
   static orHaving(
-    column: string,
-    operation: string,
+    columnName: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
   ): typeof Criteria
 
