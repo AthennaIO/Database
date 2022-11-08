@@ -258,6 +258,18 @@ export class QueryBuilder {
   }
 
   /**
+   * Set a new table to work with in query builder.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName) {
+    this.#driver.table(tableName)
+
+    return this
+  }
+
+  /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
@@ -308,15 +320,104 @@ export class QueryBuilder {
   /**
    * Set a join statement in your query.
    *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
    * @return {QueryBuilder}
    */
-  join(tableName, column1, operation = '=', column2, joinType = 'join') {
-    this.#driver.join(tableName, column1, operation, column2, joinType)
+  join(tableName, column1, operation, column2) {
+    this.#driver.join(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a left join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  leftJoin(tableName, column1, operation, column2) {
+    this.#driver.leftJoin(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a right join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  rightJoin(tableName, column1, operation, column2) {
+    this.#driver.rightJoin(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a cross join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  crossJoin(tableName, column1, operation, column2) {
+    this.#driver.crossJoin(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a full outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  fullOuterJoin(tableName, column1, operation, column2) {
+    this.#driver.fullOuterJoin(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a left outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  leftOuterJoin(tableName, column1, operation, column2) {
+    this.#driver.leftOuterJoin(tableName, column1, operation, column2)
+
+    return this
+  }
+
+  /**
+   * Set a right outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  rightOuterJoin(tableName, column1, operation, column2) {
+    this.#driver.rightOuterJoin(tableName, column1, operation, column2)
 
     return this
   }

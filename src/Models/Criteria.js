@@ -25,6 +25,18 @@ export class Criteria {
   }
 
   /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: ModelQueryBuilder, criteriaValue: any) => void}
+   */
+  static when(criteria, callback) {
+    this.#criteria.set('when', [criteria, callback])
+
+    return this
+  }
+
+  /**
    * Set the columns that should be selected on query.
    *
    * @param columns {string}
@@ -79,11 +91,11 @@ export class Criteria {
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @param clause {any}
    * @return {typeof Criteria}
    */
-  static whereExists(builder) {
-    this.#criteria.set('whereExists', [builder])
+  static whereExists(clause) {
+    this.#criteria.set('whereExists', [clause])
 
     return this
   }
@@ -91,11 +103,11 @@ export class Criteria {
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @param clause {any}
    * @return {typeof Criteria}
    */
-  static whereNotExists(builder) {
-    this.#criteria.set('whereNotExists', [builder])
+  static whereNotExists(clause) {
+    this.#criteria.set('whereNotExists', [clause])
 
     return this
   }
@@ -219,11 +231,11 @@ export class Criteria {
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @param clause {any}
    * @return {typeof Criteria}
    */
-  static orWhereExists(builder) {
-    this.#criteria.set('orWhereExists', [builder])
+  static orWhereExists(clause) {
+    this.#criteria.set('orWhereExists', [clause])
 
     return this
   }
@@ -231,11 +243,11 @@ export class Criteria {
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
+   * @param clause {any}
    * @return {typeof Criteria}
    */
-  static orWhereNotExists(builder) {
-    this.#criteria.set('orWhereNotExists', [builder])
+  static orWhereNotExists(clause) {
+    this.#criteria.set('orWhereNotExists', [clause])
 
     return this
   }
@@ -384,11 +396,11 @@ export class Criteria {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
-   * @return {ModelQueryBuilder}
+   * @param clause {any}
+   * @return {typeof Criteria}
    */
-  static havingExists(builder) {
-    this.#criteria.set('havingExists', [builder])
+  static havingExists(clause) {
+    this.#criteria.set('havingExists', [clause])
 
     return this
   }
@@ -396,11 +408,11 @@ export class Criteria {
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
-   * @return {ModelQueryBuilder}
+   * @param clause {any}
+   * @return {typeof Criteria}
    */
-  static havingNotExists(builder) {
-    this.#criteria.set('havingNotExists', [builder])
+  static havingNotExists(clause) {
+    this.#criteria.set('havingNotExists', [clause])
 
     return this
   }
@@ -498,11 +510,11 @@ export class Criteria {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
-   * @return {ModelQueryBuilder}
+   * @param clause {any}
+   * @return {typeof Criteria}
    */
-  static orHavingExists(builder) {
-    this.#criteria.set('orHavingExists', [builder])
+  static orHavingExists(clause) {
+    this.#criteria.set('orHavingExists', [clause])
 
     return this
   }
@@ -510,11 +522,11 @@ export class Criteria {
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
-   * @return {ModelQueryBuilder}
+   * @param clause {any}
+   * @return {typeof Criteria}
    */
-  static orHavingNotExists(builder) {
-    this.#criteria.set('orHavingNotExists', [builder])
+  static orHavingNotExists(clause) {
+    this.#criteria.set('orHavingNotExists', [clause])
 
     return this
   }
@@ -591,6 +603,32 @@ export class Criteria {
    */
   static orHavingNotBetween(columnName, values) {
     this.#criteria.set('orHavingNotBetween', [columnName, values])
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static latest(columnName = 'createdAt') {
+    this.#criteria.set('latest', [columnName])
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static oldest(columnName = 'createdAt') {
+    this.#criteria.set('oldest', [columnName])
 
     return this
   }

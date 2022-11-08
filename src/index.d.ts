@@ -2108,6 +2108,14 @@ export class QueryBuilder {
   getQueryBuilder(): import('knex').Knex.QueryBuilder
 
   /**
+   * Set a query builder in driver.
+   *
+   * @param {any} queryBuilder
+   * @return {QueryBuilder}
+   */
+  setQueryBuilder(queryBuilder: any): QueryBuilder
+
+  /**
    * Calculate the average of a given column.
    *
    * @param {string} columnName
@@ -2282,6 +2290,14 @@ export class QueryBuilder {
   raw(sql: string, bindings?: any): any | Promise<any>
 
   /**
+   * Set a new table to work with in query builder.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName: string): QueryBuilder
+
+  /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
@@ -2319,11 +2335,10 @@ export class QueryBuilder {
   /**
    * Set a join statement in your query.
    *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
    * @return {QueryBuilder}
    */
   join(
@@ -2331,24 +2346,152 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-    joinType?:
-      | 'join'
-      | 'innerJoin'
-      | 'crossJoin'
-      | 'leftJoin'
-      | 'rightJoin'
-      | 'outerJoin'
-      | 'fullOuterJoin'
-      | 'leftOuterJoin'
-      | 'rightOuterJoin',
   ): QueryBuilder
+  join(tableName: string, column1: string, column2: string): QueryBuilder
   join(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+  join(tableName: string): QueryBuilder
+
+  /**
+   * Set a left join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  leftJoin(
     tableName: string,
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
   ): QueryBuilder
-  join(tableName: string, column1: string, column2: string): QueryBuilder
+  leftJoin(tableName: string, column1: string, column2: string): QueryBuilder
+  leftJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+
+  /**
+   * Set a right join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  rightJoin(
+    tableName: string,
+    column1: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    column2: string,
+  ): QueryBuilder
+  rightJoin(tableName: string, column1: string, column2: string): QueryBuilder
+  rightJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+
+  /**
+   * Set a cross join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  crossJoin(
+    tableName: string,
+    column1: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    column2: string,
+  ): QueryBuilder
+  crossJoin(tableName: string, column1: string, column2: string): QueryBuilder
+  crossJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+  crossJoin(tableName: string): QueryBuilder
+
+  /**
+   * Set a full outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  fullOuterJoin(
+    tableName: string,
+    column1: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    column2: string,
+  ): QueryBuilder
+  fullOuterJoin(
+    tableName: string,
+    column1: string,
+    column2: string,
+  ): QueryBuilder
+  fullOuterJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+
+  /**
+   * Set a left outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  leftOuterJoin(
+    tableName: string,
+    column1: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    column2: string,
+  ): QueryBuilder
+  leftOuterJoin(
+    tableName: string,
+    column1: string,
+    column2: string,
+  ): QueryBuilder
+  leftOuterJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
+
+  /**
+   * Set a right outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {QueryBuilder}
+   */
+  rightOuterJoin(
+    tableName: string,
+    column1: string,
+    operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
+    column2: string,
+  ): QueryBuilder
+  rightOuterJoin(
+    tableName: string,
+    column1: string,
+    column2: string,
+  ): QueryBuilder
+  rightOuterJoin(
+    tableName: string,
+    clause: import('knex').Knex.JoinCallback,
+  ): QueryBuilder
 
   /**
    * Set a join raw statement in your query.
@@ -2381,6 +2524,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  having(clause: (query: QueryBuilder) => void): QueryBuilder
   having(columnName: string, value: any): QueryBuilder
   having(
     columnName: string,
@@ -2400,7 +2544,6 @@ export class QueryBuilder {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   havingExists(builder: QueryBuilder): QueryBuilder
@@ -2408,7 +2551,6 @@ export class QueryBuilder {
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   havingNotExists(builder: QueryBuilder): QueryBuilder
@@ -2470,6 +2612,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  orHaving(clause: (query: QueryBuilder) => void): QueryBuilder
   orHaving(columnName: string, value: any): QueryBuilder
   orHaving(
     columnName: string,
@@ -2489,7 +2632,6 @@ export class QueryBuilder {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   orHavingExists(builder: QueryBuilder): QueryBuilder
@@ -2497,7 +2639,6 @@ export class QueryBuilder {
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   orHavingNotExists(builder: QueryBuilder): QueryBuilder
@@ -2559,6 +2700,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  where(clause: (query: QueryBuilder) => void): QueryBuilder
   where(statement: Record<string, any>): QueryBuilder
   where(columnName: string, value: any): QueryBuilder
   where(
@@ -2572,6 +2714,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  whereNot(clause: (query: QueryBuilder) => void): QueryBuilder
   whereNot(statement: Record<string, any>): QueryBuilder
   whereNot(columnName: string, value: any): QueryBuilder
 
@@ -2587,7 +2730,6 @@ export class QueryBuilder {
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   whereExists(builder: QueryBuilder): QueryBuilder
@@ -2595,7 +2737,6 @@ export class QueryBuilder {
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   whereNotExists(builder: QueryBuilder): QueryBuilder
@@ -2605,6 +2746,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  whereLike(clause: (query: QueryBuilder) => void): QueryBuilder
   whereLike(statement: Record<string, any>): QueryBuilder
   whereLike(columnName: string, value: any): QueryBuilder
 
@@ -2613,6 +2755,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  whereILike(clause: (query: QueryBuilder) => void): QueryBuilder
   whereILike(statement: Record<string, any>): QueryBuilder
   whereILike(columnName: string, value: any): QueryBuilder
 
@@ -2671,6 +2814,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  orWhere(clause: (query: QueryBuilder) => void): QueryBuilder
   orWhere(statement: Record<string, any>): QueryBuilder
   orWhere(columnName: string, value: any): QueryBuilder
   orWhere(
@@ -2684,6 +2828,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  orWhereNot(clause: (query: QueryBuilder) => void): QueryBuilder
   orWhereNot(statement: Record<string, any>): QueryBuilder
   orWhereNot(columnName: string, value: any): QueryBuilder
 
@@ -2699,7 +2844,6 @@ export class QueryBuilder {
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   orWhereExists(builder: QueryBuilder): QueryBuilder
@@ -2707,7 +2851,6 @@ export class QueryBuilder {
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {QueryBuilder}
    * @return {QueryBuilder}
    */
   orWhereNotExists(builder: QueryBuilder): QueryBuilder
@@ -2717,6 +2860,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  orWhereLike(clause: (query: QueryBuilder) => void): QueryBuilder
   orWhereLike(statement: Record<string, any>): QueryBuilder
   orWhereLike(columnName: string, value: any): QueryBuilder
 
@@ -2725,6 +2869,7 @@ export class QueryBuilder {
    *
    * @return {QueryBuilder}
    */
+  orWhereILike(clause: (query: QueryBuilder) => void): QueryBuilder
   orWhereILike(statement: Record<string, any>): QueryBuilder
   orWhereILike(columnName: string, value: any): QueryBuilder
 
@@ -2851,7 +2996,7 @@ export class Criteria {
    */
   static when(
     criteria: any,
-    callback: (query: QueryBuilder, criteriaValue: any) => void,
+    callback: (query: ModelQueryBuilder, criteriaValue: any) => void,
   ): typeof Criteria
 
   /**
@@ -2879,6 +3024,7 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static where(clause: (query: QueryBuilder) => void): typeof Criteria
   static where(statement: Record<string, any>): typeof Criteria
   static where(columnName: string, value: any): typeof Criteria
   static where(
@@ -2892,30 +3038,30 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static whereNot(clause: (query: QueryBuilder) => void): typeof Criteria
   static whereNot(statement: Record<string, any>): typeof Criteria
   static whereNot(columnName: string, value: any): typeof Criteria
 
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static whereExists(builder: ModelQueryBuilder): typeof Criteria
+  static whereExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static whereNotExists(builder: ModelQueryBuilder): typeof Criteria
+  static whereNotExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set a where like statement in your query.
    *
    * @return {typeof Criteria}
    */
+  static whereLike(clause: (query: QueryBuilder) => void): typeof Criteria
   static whereLike(statement: Record<string, any>): typeof Criteria
   static whereLike(columnName: string, value: any): typeof Criteria
 
@@ -2924,6 +3070,7 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static whereILike(clause: (query: QueryBuilder) => void): typeof Criteria
   static whereILike(statement: Record<string, any>): typeof Criteria
   static whereILike(columnName: string, value: any): typeof Criteria
 
@@ -2987,6 +3134,7 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static orWhere(clause: (query: QueryBuilder) => void): typeof Criteria
   static orWhere(statement: Record<string, any>): typeof Criteria
   static orWhere(columnName: string, value: any): typeof Criteria
   static orWhere(
@@ -3000,24 +3148,23 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static orWhereNot(clause: (query: QueryBuilder) => void): typeof Criteria
   static orWhereNot(statement: Record<string, any>): typeof Criteria
   static orWhereNot(columnName: string, value: any): typeof Criteria
 
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static orWhereExists(builder: ModelQueryBuilder): typeof Criteria
+  static orWhereExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static orWhereNotExists(builder: ModelQueryBuilder): typeof Criteria
+  static orWhereNotExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set a order by statement in your query.
@@ -3062,6 +3209,7 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static having(clause: (query: QueryBuilder) => void): typeof Criteria
   static having(columnName: string, value: any): typeof Criteria
   static having(
     columnName: string,
@@ -3072,18 +3220,16 @@ export class Criteria {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static havingExists(builder: ModelQueryBuilder): typeof Criteria
+  static havingExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static havingNotExists(builder: ModelQueryBuilder): typeof Criteria
+  static havingNotExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set a having in statement in your query.
@@ -3145,6 +3291,7 @@ export class Criteria {
    *
    * @return {typeof Criteria}
    */
+  static orHaving(clause: (query: QueryBuilder) => void): typeof Criteria
   static orHaving(columnName: string, value: any): typeof Criteria
   static orHaving(
     columnName: string,
@@ -3155,18 +3302,16 @@ export class Criteria {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static orHavingExists(builder: ModelQueryBuilder): typeof Criteria
+  static orHavingExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {import('#src/index').ModelQueryBuilder}
    * @return {typeof Criteria}
    */
-  static orHavingNotExists(builder: ModelQueryBuilder): typeof Criteria
+  static orHavingNotExists(builder: QueryBuilder): typeof Criteria
 
   /**
    * Set an or having in statement in your query.
@@ -3225,6 +3370,24 @@ export class Criteria {
     columnName: string,
     values: [any, any],
   ): typeof Criteria
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static latest(columnName?: string): typeof Criteria
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   *
+   * @param [columnName] {string}
+   * @return {typeof Criteria}
+   */
+  static oldest(columnName?: string): typeof Criteria
 
   /**
    * Set the offset number in your query.
@@ -3333,5 +3496,17 @@ export class ModelQueryBuilder extends QueryBuilder {
   includes(
     relationName: string,
     callback?: (query: ModelQueryBuilder) => Promise<void>,
+  ): ModelQueryBuilder
+
+  /**
+   * Executes the given closure when the first argument is true.
+   *
+   * @param criteria {any}
+   * @param callback {(query: ModelQueryBuilder, criteriaValue: any) => void}
+   */
+  // @ts-ignore
+  when(
+    criteria: any,
+    callback: (query: ModelQueryBuilder, criteriaValue: any) => void,
   ): ModelQueryBuilder
 }
