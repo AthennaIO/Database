@@ -96,6 +96,17 @@ export class PostgresDriver {
   }
 
   /**
+   * Set a query builder in driver.
+   *
+   * @return {PostgresDriver}
+   */
+  setQueryBuilder(queryBuilder) {
+    this.#qb = queryBuilder
+
+    return this
+  }
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -689,23 +700,92 @@ export class PostgresDriver {
   /**
    * Set a join statement in your query.
    *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
    * @return {PostgresDriver}
    */
-  join(tableName, column1, operation = '=', column2, joinType = 'join') {
-    if (operation && !column2) {
-      this.#qb[joinType](tableName, column1, operation)
+  join(tableName, column1, operation, column2) {
+    return this.#join('join', tableName, column1, operation, column2)
+  }
 
-      return this
-    }
+  /**
+   * Set a left join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  leftJoin(tableName, column1, operation, column2) {
+    return this.#join('leftJoin', tableName, column1, operation, column2)
+  }
 
-    this.#qb[joinType](tableName, column1, operation, column2)
+  /**
+   * Set a right join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  rightJoin(tableName, column1, operation, column2) {
+    return this.#join('rightJoin', tableName, column1, operation, column2)
+  }
 
-    return this
+  /**
+   * Set a cross join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  crossJoin(tableName, column1, operation, column2) {
+    return this.#join('crossJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a full outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  fullOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('fullOuterJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a left outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  leftOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('leftOuterJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a right outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {PostgresDriver}
+   */
+  rightOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('rightOuterJoin', tableName, column1, operation, column2)
   }
 
   /**
@@ -749,12 +829,24 @@ export class PostgresDriver {
   /**
    * Set a having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
+   * @param column {any}
+   * @param [operation] {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   having(column, operation, value) {
+    if (Is.Function(column)) {
+      this.#qb.having(query =>
+        column(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.having(column, '=', operation)
 
@@ -782,11 +874,11 @@ export class PostgresDriver {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  havingExists(builder) {
-    this.#qb.havingExists(builder.getQueryBuilder())
+  havingExists(clause) {
+    this.#qb.havingExists(clause.getQueryBuilder())
 
     return this
   }
@@ -794,11 +886,11 @@ export class PostgresDriver {
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  havingNotExists(builder) {
-    this.#qb.havingNotExists(builder.getQueryBuilder())
+  havingNotExists(clause) {
+    this.#qb.havingNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -882,12 +974,24 @@ export class PostgresDriver {
   /**
    * Set an or having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
+   * @param column {any}
+   * @param [operation] {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   orHaving(column, operation, value) {
+    if (Is.Function(column)) {
+      this.#qb.orHaving(query =>
+        column(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orHaving(column, '=', operation)
 
@@ -915,11 +1019,11 @@ export class PostgresDriver {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  orHavingExists(builder) {
-    this.#qb.orHavingExists(builder.getQueryBuilder())
+  orHavingExists(clause) {
+    this.#qb.orHavingExists(clause.getQueryBuilder())
 
     return this
   }
@@ -927,11 +1031,11 @@ export class PostgresDriver {
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  orHavingNotExists(builder) {
-    this.#qb.orHavingNotExists(builder.getQueryBuilder())
+  orHavingNotExists(clause) {
+    this.#qb.orHavingNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1015,12 +1119,24 @@ export class PostgresDriver {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string|Record<string, any>}
-   * @param [value] {Record<string, any>}
+   * @param statement {any}
+   * @param [operation] {any}
+   * @param [value] {any}
    * @return {PostgresDriver}
    */
   where(statement, operation, value) {
+    if (Is.Function(statement)) {
+      this.#qb.where(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#qb.where(statement)
 
@@ -1041,11 +1157,23 @@ export class PostgresDriver {
   /**
    * Set a where not statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   whereNot(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereNot(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.whereNot(statement)
 
@@ -1073,11 +1201,11 @@ export class PostgresDriver {
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  whereExists(builder) {
-    this.#qb.whereExists(builder.getQueryBuilder())
+  whereExists(clause) {
+    this.#qb.whereExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1085,11 +1213,11 @@ export class PostgresDriver {
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  whereNotExists(builder) {
-    this.#qb.whereNotExists(builder.getQueryBuilder())
+  whereNotExists(clause) {
+    this.#qb.whereNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1097,11 +1225,23 @@ export class PostgresDriver {
   /**
    * Set a where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   whereLike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereLike(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.whereLike(statement)
 
@@ -1116,11 +1256,23 @@ export class PostgresDriver {
   /**
    * Set a where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   whereILike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereILike(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.whereILike(statement)
 
@@ -1217,6 +1369,18 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   orWhere(statement, operation, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhere(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#qb.orWhere(statement)
 
@@ -1242,6 +1406,18 @@ export class PostgresDriver {
    * @return {PostgresDriver}
    */
   orWhereNot(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereNot(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhereNot(statement)
 
@@ -1269,11 +1445,11 @@ export class PostgresDriver {
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  orWhereExists(builder) {
-    this.#qb.orWhereExists(builder.getQueryBuilder())
+  orWhereExists(clause) {
+    this.#qb.orWhereExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1281,11 +1457,11 @@ export class PostgresDriver {
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {PostgresDriver}
    */
-  orWhereNotExists(builder) {
-    this.#qb.orWhereNotExists(builder.getQueryBuilder())
+  orWhereNotExists(clause) {
+    this.#qb.orWhereNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1293,11 +1469,23 @@ export class PostgresDriver {
   /**
    * Set an or where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   orWhereLike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereLike(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhereLike(statement)
 
@@ -1312,11 +1500,23 @@ export class PostgresDriver {
   /**
    * Set an or where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {PostgresDriver}
    */
   orWhereILike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereILike(query =>
+        statement(
+          new PostgresDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhereILike(statement)
 
@@ -1474,5 +1674,37 @@ export class PostgresDriver {
     this.#qb.limit(number)
 
     return this
+  }
+
+  /**
+   * Create a join clause by join type
+   *
+   * @param joinType
+   * @param tableName
+   * @param [column1]
+   * @param [operation]
+   * @param [column2]
+   * @return {PostgresDriver}
+   */
+  #join(joinType, tableName, column1, operation, column2) {
+    if (!column1) {
+      this.#qb[joinType](tableName)
+
+      return this
+    }
+
+    if (!operation) {
+      this.#qb[joinType](tableName, column1)
+
+      return this
+    }
+
+    if (!column2) {
+      this.#qb[joinType](tableName, column1, operation)
+
+      return this
+    }
+
+    this.#qb[joinType](tableName, column1, operation, column2)
   }
 }

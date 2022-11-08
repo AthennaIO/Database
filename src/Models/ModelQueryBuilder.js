@@ -339,7 +339,12 @@ export class ModelQueryBuilder {
    * @param callback {(query: ModelQueryBuilder, criteriaValue: any) => void}
    */
   when(criteria, callback) {
-    this.#QB.when(criteria, callback)
+    if (!criteria) {
+      return this
+    }
+
+    // eslint-disable-next-line n/no-callback-literal
+    callback(this, criteria)
 
     return this
   }
@@ -458,11 +463,11 @@ export class ModelQueryBuilder {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  havingExists(builder) {
-    this.#QB.havingExists(builder)
+  havingExists(clause) {
+    this.#QB.havingExists(clause)
 
     return this
   }
@@ -470,11 +475,11 @@ export class ModelQueryBuilder {
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  havingNotExists(builder) {
-    this.#QB.havingNotExists(builder)
+  havingNotExists(clause) {
+    this.#QB.havingNotExists(clause)
 
     return this
   }
@@ -572,11 +577,11 @@ export class ModelQueryBuilder {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  orHavingExists(builder) {
-    this.#QB.orHavingExists(builder)
+  orHavingExists(clause) {
+    this.#QB.orHavingExists(clause)
 
     return this
   }
@@ -584,11 +589,11 @@ export class ModelQueryBuilder {
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  orHavingNotExists(builder) {
-    this.#QB.orHavingNotExists(builder)
+  orHavingNotExists(clause) {
+    this.#QB.orHavingNotExists(clause)
 
     return this
   }
@@ -701,7 +706,7 @@ export class ModelQueryBuilder {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [operation] {string}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
@@ -715,7 +720,7 @@ export class ModelQueryBuilder {
   /**
    * Set a where not statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -728,11 +733,11 @@ export class ModelQueryBuilder {
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  whereExists(builder) {
-    this.#QB.whereExists(builder)
+  whereExists(clause) {
+    this.#QB.whereExists(clause)
 
     return this
   }
@@ -740,11 +745,11 @@ export class ModelQueryBuilder {
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  whereNotExists(builder) {
-    this.#QB.whereNotExists(builder)
+  whereNotExists(clause) {
+    this.#QB.whereNotExists(clause)
 
     return this
   }
@@ -752,7 +757,7 @@ export class ModelQueryBuilder {
   /**
    * Set a where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -765,7 +770,7 @@ export class ModelQueryBuilder {
   /**
    * Set a where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -854,7 +859,7 @@ export class ModelQueryBuilder {
   /**
    * Set a or where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [operation] {string}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
@@ -868,7 +873,7 @@ export class ModelQueryBuilder {
   /**
    * Set an or where not statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -881,11 +886,11 @@ export class ModelQueryBuilder {
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  orWhereExists(builder) {
-    this.#QB.orWhereExists(builder)
+  orWhereExists(clause) {
+    this.#QB.orWhereExists(clause)
 
     return this
   }
@@ -893,11 +898,11 @@ export class ModelQueryBuilder {
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {ModelQueryBuilder}
+   * @param clause {any}
    * @return {ModelQueryBuilder}
    */
-  orWhereNotExists(builder) {
-    this.#QB.orWhereNotExists(builder)
+  orWhereNotExists(clause) {
+    this.#QB.orWhereNotExists(clause)
 
     return this
   }
@@ -905,7 +910,7 @@ export class ModelQueryBuilder {
   /**
    * Set an or where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -918,7 +923,7 @@ export class ModelQueryBuilder {
   /**
    * Set an or where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {ModelQueryBuilder}
    */
@@ -1035,6 +1040,10 @@ export class ModelQueryBuilder {
    * @return {any}
    */
   #parseNames(statement) {
+    if (Is.Function(statement)) {
+      return statement
+    }
+
     if (Is.Object(statement)) {
       return this.#schema.getReversedStatementNamesOf(statement)
     }

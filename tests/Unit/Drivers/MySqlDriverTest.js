@@ -213,6 +213,7 @@ test.group('MySqlDriverTest', group => {
       .where('users.id', 1)
       .orWhere('users.id', 2)
       .whereExists(Database.table('products').where('id', 1).orWhere('id', 2))
+      .orWhereExists(Database.table('products').where('id', 2).orWhere('id', 3))
       .join('products', 'users.id', 'products.userId')
       .find()
 
@@ -228,6 +229,7 @@ test.group('MySqlDriverTest', group => {
       .offset(0)
       .limit(10)
       .whereNotExists(Database.table('products').where('id', 1).orWhere('id', 2))
+      .orWhereNotExists(Database.table('products').where('id', 3).orWhere('id', 4))
       .join('products', 'users.id', 'products.userId')
       .findMany()
 
@@ -466,5 +468,66 @@ test.group('MySqlDriverTest', group => {
 
     assert.deepEqual(report[0].deletedAt, null)
     assert.deepEqual(report[0].number_of_users, 2)
+  })
+
+  test('should be able to use select raw to count data', async ({ assert }) => {
+    const report = await DB.table('users')
+      .selectRaw('count(id) as number_of_users, deletedAt')
+      .groupBy('deletedAt')
+      .havingBetween('number_of_users', [0, 10])
+      .findMany()
+
+    assert.deepEqual(report[0].deletedAt, null)
+    assert.deepEqual(report[0].number_of_users, 2)
+  })
+
+  test('should be able to execute different join types', async ({ assert }) => {
+    const leftJoin = await DB.table('users').leftJoin('products', 'users.id', 'products.userId').findMany()
+    assert.lengthOf(leftJoin, 3)
+
+    const rightJoin = await DB.table('users').rightJoin('products', 'users.id', 'products.userId').findMany()
+    assert.lengthOf(rightJoin, 2)
+
+    const crossJoin = await DB.table('users').crossJoin('products').findMany()
+    assert.lengthOf(crossJoin, 4)
+
+    const leftOuterJoin = await DB.table('users')
+      .leftOuterJoin('products', join => join.on('users.id', 'products.userId'))
+      .findMany()
+    assert.lengthOf(leftOuterJoin, 3)
+
+    const rightOuterJoin = await DB.table('users')
+      .rightOuterJoin('products', join => join.on('users.id', 'products.userId'))
+      .findMany()
+    assert.lengthOf(rightOuterJoin, 2)
+  })
+
+  test('should be able to execute some where clauses using closures', async ({ assert }) => {
+    const users = await DB.table('users')
+      .where(query => {
+        query.where('id', 1).orWhereNull('deletedAt')
+      })
+      .orWhere(query => {
+        query.where('id', 1).orWhereNull('deletedAt')
+      })
+      .oldest()
+      .findMany()
+
+    assert.lengthOf(users, 2)
+  })
+
+  test('should be able to execute some having clauses using closures', async ({ assert }) => {
+    const users = await DB.table('users')
+      .groupBy('id', 'name')
+      .having(query => {
+        query.where('id', 1).orWhereNull('deletedAt')
+      })
+      .orHaving(query => {
+        query.where('id', 1).orWhereNull('deletedAt')
+      })
+      .oldest()
+      .findMany()
+
+    assert.lengthOf(users, 2)
   })
 })

@@ -96,6 +96,17 @@ export class MySqlDriver {
   }
 
   /**
+   * Set a query builder in driver.
+   *
+   * @return {MySqlDriver}
+   */
+  setQueryBuilder(queryBuilder) {
+    this.#qb = queryBuilder
+
+    return this
+  }
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -692,23 +703,92 @@ export class MySqlDriver {
   /**
    * Set a join statement in your query.
    *
-   * @param tableName {string}
-   * @param column1 {string}
-   * @param [operation] {string}
-   * @param column2 {string}
-   * @param joinType {string}
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
    * @return {MySqlDriver}
    */
-  join(tableName, column1, operation = '=', column2, joinType = 'join') {
-    if (operation && !column2) {
-      this.#qb[joinType](tableName, column1, operation)
+  join(tableName, column1, operation, column2) {
+    return this.#join('join', tableName, column1, operation, column2)
+  }
 
-      return this
-    }
+  /**
+   * Set a left join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  leftJoin(tableName, column1, operation, column2) {
+    return this.#join('leftJoin', tableName, column1, operation, column2)
+  }
 
-    this.#qb[joinType](tableName, column1, operation, column2)
+  /**
+   * Set a right join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  rightJoin(tableName, column1, operation, column2) {
+    return this.#join('rightJoin', tableName, column1, operation, column2)
+  }
 
-    return this
+  /**
+   * Set a cross join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  crossJoin(tableName, column1, operation, column2) {
+    return this.#join('crossJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a full outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  fullOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('fullOuterJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a left outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  leftOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('leftOuterJoin', tableName, column1, operation, column2)
+  }
+
+  /**
+   * Set a right outer join statement in your query.
+   *
+   * @param tableName {any}
+   * @param [column1] {any}
+   * @param [operation] {any}
+   * @param [column2] {any}
+   * @return {MySqlDriver}
+   */
+  rightOuterJoin(tableName, column1, operation, column2) {
+    return this.#join('rightOuterJoin', tableName, column1, operation, column2)
   }
 
   /**
@@ -752,12 +832,24 @@ export class MySqlDriver {
   /**
    * Set a having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
+   * @param column {any}
+   * @param [operation] {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   having(column, operation, value) {
+    if (Is.Function(column)) {
+      this.#qb.having(query =>
+        column(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.having(column, '=', operation)
 
@@ -785,11 +877,11 @@ export class MySqlDriver {
   /**
    * Set a having exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  havingExists(builder) {
-    this.#qb.havingExists(builder.getQueryBuilder())
+  havingExists(clause) {
+    this.#qb.havingExists(clause.getQueryBuilder())
 
     return this
   }
@@ -797,11 +889,11 @@ export class MySqlDriver {
   /**
    * Set a having not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  havingNotExists(builder) {
-    this.#qb.havingNotExists(builder.getQueryBuilder())
+  havingNotExists(clause) {
+    this.#qb.havingNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -885,12 +977,24 @@ export class MySqlDriver {
   /**
    * Set an or having statement in your query.
    *
-   * @param column {string}
-   * @param [operation] {string|any}
+   * @param column {any}
+   * @param [operation] {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   orHaving(column, operation, value) {
+    if (Is.Function(column)) {
+      this.#qb.orHaving(query =>
+        column(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orHaving(column, '=', operation)
 
@@ -918,11 +1022,11 @@ export class MySqlDriver {
   /**
    * Set an or having exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  orHavingExists(builder) {
-    this.#qb.orHavingExists(builder.getQueryBuilder())
+  orHavingExists(clause) {
+    this.#qb.orHavingExists(clause.getQueryBuilder())
 
     return this
   }
@@ -930,11 +1034,11 @@ export class MySqlDriver {
   /**
    * Set an or having not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  orHavingNotExists(builder) {
-    this.#qb.orHavingNotExists(builder.getQueryBuilder())
+  orHavingNotExists(clause) {
+    this.#qb.orHavingNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1018,12 +1122,24 @@ export class MySqlDriver {
   /**
    * Set a where statement in your query.
    *
-   * @param statement {string|Record<string, any>}
-   * @param [operation] {string|Record<string, any>}
-   * @param [value] {Record<string, any>}
+   * @param statement {any}
+   * @param [operation] {any}
+   * @param [value] {any}
    * @return {MySqlDriver}
    */
   where(statement, operation, value) {
+    if (Is.Function(statement)) {
+      this.#qb.where(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#qb.where(statement)
 
@@ -1044,11 +1160,23 @@ export class MySqlDriver {
   /**
    * Set a where not statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   whereNot(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereNot(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.whereNot(statement)
 
@@ -1076,11 +1204,11 @@ export class MySqlDriver {
   /**
    * Set a where exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  whereExists(builder) {
-    this.#qb.whereExists(builder.getQueryBuilder())
+  whereExists(clause) {
+    this.#qb.whereExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1088,11 +1216,11 @@ export class MySqlDriver {
   /**
    * Set a where not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  whereNotExists(builder) {
-    this.#qb.whereNotExists(builder.getQueryBuilder())
+  whereNotExists(clause) {
+    this.#qb.whereNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1100,11 +1228,23 @@ export class MySqlDriver {
   /**
    * Set a where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   whereLike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereLike(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.where(statement, 'like')
 
@@ -1119,11 +1259,23 @@ export class MySqlDriver {
   /**
    * Set a where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   whereILike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.whereILike(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.whereILike(statement)
 
@@ -1220,6 +1372,18 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   orWhere(statement, operation, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhere(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#qb.orWhere(statement)
 
@@ -1245,6 +1409,18 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   orWhereNot(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereNot(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhereNot(statement)
 
@@ -1272,11 +1448,11 @@ export class MySqlDriver {
   /**
    * Set an or where exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  orWhereExists(builder) {
-    this.#qb.orWhereExists(builder.getQueryBuilder())
+  orWhereExists(clause) {
+    this.#qb.orWhereExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1284,11 +1460,11 @@ export class MySqlDriver {
   /**
    * Set an or where not exists statement in your query.
    *
-   * @param builder {import('#src/Database/Builders/QueryBuilder')}
+   * @param clause {any}
    * @return {MySqlDriver}
    */
-  orWhereNotExists(builder) {
-    this.#qb.orWhereNotExists(builder.getQueryBuilder())
+  orWhereNotExists(clause) {
+    this.#qb.orWhereNotExists(clause.getQueryBuilder())
 
     return this
   }
@@ -1296,11 +1472,23 @@ export class MySqlDriver {
   /**
    * Set an or where like statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   orWhereLike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereLike(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhere(statement, 'like')
 
@@ -1315,11 +1503,23 @@ export class MySqlDriver {
   /**
    * Set an or where ILike statement in your query.
    *
-   * @param statement {string|Record<string, any>}
+   * @param statement {any}
    * @param [value] {any}
    * @return {MySqlDriver}
    */
   orWhereILike(statement, value) {
+    if (Is.Function(statement)) {
+      this.#qb.orWhereILike(query =>
+        statement(
+          new MySqlDriver(this.#connection, query.client).setQueryBuilder(
+            query,
+          ),
+        ),
+      )
+
+      return this
+    }
+
     if (value === undefined) {
       this.#qb.orWhereILike(statement)
 
@@ -1477,5 +1677,37 @@ export class MySqlDriver {
     this.#qb.limit(number)
 
     return this
+  }
+
+  /**
+   * Create a join clause by join type
+   *
+   * @param joinType
+   * @param tableName
+   * @param [column1]
+   * @param [operation]
+   * @param [column2]
+   * @return {MySqlDriver}
+   */
+  #join(joinType, tableName, column1, operation, column2) {
+    if (!column1) {
+      this.#qb[joinType](tableName)
+
+      return this
+    }
+
+    if (!operation) {
+      this.#qb[joinType](tableName, column1)
+
+      return this
+    }
+
+    if (!column2) {
+      this.#qb[joinType](tableName, column1, operation)
+
+      return this
+    }
+
+    this.#qb[joinType](tableName, column1, operation, column2)
   }
 }
