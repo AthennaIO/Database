@@ -398,4 +398,19 @@ test.group('ProductModelTest', group => {
 
     assert.lengthOf(groupByProducts, 10)
   })
+
+  test('should be able to create product and products using default attributes', async ({ assert }) => {
+    const product = await ProductMySql.create({ name: 'Hello 1' })
+    const products = await ProductMySql.createMany([{ name: 'Hello 2' }, {}])
+
+    assert.isDefined(product.id)
+    assert.notDeepEqual(product.price, 0)
+    assert.deepEqual(product.name, 'Hello 1')
+
+    products.forEach(product => {
+      assert.isDefined(product.id)
+      assert.isDefined(product.name)
+      assert.notDeepEqual(product.price, 0)
+    })
+  })
 })

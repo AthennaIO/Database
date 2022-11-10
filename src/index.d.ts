@@ -907,6 +907,13 @@ export class Model {
   static get primaryKey(): string
 
   /**
+   * Set the default attributes of your model.
+   *
+   * @return {Record<screen, any>}
+   */
+  static get attributes(): Record<string, any>
+
+  /**
    * The attributes that could be persisted in database.
    *
    *  @return {string[]}

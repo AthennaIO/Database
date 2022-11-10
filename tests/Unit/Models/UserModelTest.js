@@ -418,4 +418,20 @@ test.group('UserModelTest', group => {
 
     assert.lengthOf(groupByUsers, 10)
   })
+
+  test('should be able to create user and users using default attributes', async ({ assert }) => {
+    const user = await User.query().select('*').create({ name: 'Hello 1' })
+    const users = await User.query()
+      .select('*')
+      .createMany([{ name: 'Hello 2' }, {}])
+
+    assert.isDefined(user.id)
+    assert.isDefined(user.email)
+    assert.deepEqual(user.name, 'Hello 1')
+
+    users.forEach(user => {
+      assert.isDefined(user.id)
+      assert.isDefined(user.email)
+    })
+  })
 })
