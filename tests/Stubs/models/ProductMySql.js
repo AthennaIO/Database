@@ -21,6 +21,18 @@ export class ProductMySql extends Model {
   }
 
   /**
+   * Set the default attributes of your model.
+   *
+   * @return {Record<string, any>}
+   */
+  static get attributes() {
+    return {
+      name: this.faker.commerce.productName(),
+      price: this.faker.commerce.price(),
+    }
+  }
+
+  /**
    * The attributes that could be persisted in database.
    *
    *  @return {string[]}

@@ -218,7 +218,7 @@ export class QueryBuilder {
   /**
    * Create data or update if already exists.
    *
-   * @param {any | any[]} data
+   * @param {any} data
    * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */

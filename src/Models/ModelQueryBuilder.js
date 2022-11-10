@@ -219,6 +219,16 @@ export class ModelQueryBuilder {
       }
     }
 
+    const attributes = this.#Model.attributes
+
+    Object.keys(attributes).forEach(key => {
+      if (data[key]) {
+        return
+      }
+
+      data[key] = attributes[key]
+    })
+
     return this.#generator.generateOne(await this.#QB.create(data))
   }
 
@@ -234,13 +244,29 @@ export class ModelQueryBuilder {
       data = this.#fillable(data)
     }
 
-    return this.#generator.generateMany(await this.#QB.createMany(data))
+    const executor = data => {
+      const attributes = this.#Model.attributes
+
+      Object.keys(attributes).forEach(key => {
+        if (data[key]) {
+          return
+        }
+
+        data[key] = attributes[key]
+      })
+
+      return data
+    }
+
+    return this.#generator.generateMany(
+      await this.#QB.createMany(data.map(executor)),
+    )
   }
 
   /**
    * Create or update models in database.
    *
-   * @param data {any | any[]}
+   * @param data {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<any | any[]>}
    */
@@ -248,6 +274,16 @@ export class ModelQueryBuilder {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }
+
+    const attributes = this.#Model.attributes
+
+    Object.keys(attributes).forEach(key => {
+      if (data[key]) {
+        return
+      }
+
+      data[key] = attributes[key]
+    })
 
     return this.#generator.generateOne(await this.#QB.createOrUpdate(data))
   }

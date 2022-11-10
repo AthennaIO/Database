@@ -3,6 +3,18 @@ import { Product } from '#tests/Stubs/models/Product'
 
 export class User extends Model {
   /**
+   * Set the default attributes of your model.
+   *
+   * @return {Record<string, any>}
+   */
+  static get attributes() {
+    return {
+      name: this.faker.name.fullName(),
+      email: this.faker.internet.email(),
+    }
+  }
+
+  /**
    * The attributes that could be persisted in database.
    *
    *  @return {string[]}
