@@ -509,4 +509,15 @@ test.group('UserModelTest', group => {
     assert.isDefined(user.createdAt)
     assert.isDefined(user.updatedAt)
   })
+
+  test('should be able to delete models from instance', async ({ assert }) => {
+    const user = await User.find()
+    const userDeleted = await user.delete()
+
+    assert.isDefined(userDeleted.deletedAt)
+
+    const userDeletedForced = await user.delete(true)
+
+    assert.isUndefined(userDeletedForced)
+  })
 })

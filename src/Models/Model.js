@@ -521,6 +521,18 @@ export class Model {
   }
 
   /**
+   * Delete or soft delete your model from database.
+   *
+   * @param {boolean} force
+   * @return {Promise<void> | Promise<any>}
+   */
+  async delete(force = false) {
+    const Model = this.constructor
+
+    return Model.delete({ [Model.primaryKey]: this[Model.primaryKey] }, force)
+  }
+
+  /**
    * Re-retrieve the model from the database. The existing
    * model instance will not be affected.
    *
