@@ -90,6 +90,124 @@ export class ModelQueryBuilder {
   }
 
   /**
+   * Calculate the average of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async avg(column) {
+    this.#setCriterias()
+
+    return this.#QB.avg(this.#parseNames(column))
+  }
+
+  /**
+   * Calculate the average of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async avgDistinct(column) {
+    this.#setCriterias()
+
+    return this.#QB.avgDistinct(this.#parseNames(column))
+  }
+
+  /**
+   * Get the max number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async max(column) {
+    this.#setCriterias()
+
+    return this.#QB.max(this.#parseNames(column))
+  }
+
+  /**
+   * Get the min number of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async min(column) {
+    this.#setCriterias()
+
+    return this.#QB.min(this.#parseNames(column))
+  }
+
+  /**
+   * Sum all numbers of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async sum(column) {
+    this.#setCriterias()
+
+    return this.#QB.sum(this.#parseNames(column))
+  }
+
+  /**
+   * Sum all numbers of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async sumDistinct(column) {
+    this.#setCriterias()
+
+    return this.#QB.sumDistinct(this.#parseNames(column))
+  }
+
+  /**
+   * Increment a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  async increment(column) {
+    this.#setCriterias()
+
+    return this.#QB.increment(this.#parseNames(column))
+  }
+
+  /**
+   * Decrement a value of a given column.
+   *
+   * @param {string} column
+   * @return {Promise<number | number[]>}
+   */
+  async decrement(column) {
+    this.#setCriterias()
+
+    return this.#QB.decrement(this.#parseNames(column))
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async count(column = '*') {
+    this.#setCriterias()
+
+    return this.#QB.count(column === '*' ? column : this.#parseNames(column))
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   *
+   * @param {string} column
+   * @return {Promise<number>}
+   */
+  async countDistinct(column) {
+    return this.#QB.countDistinct(this.#parseNames(column))
+  }
+
+  /**
    * Find one data in database or throw exception if undefined.
    *
    * @return {Promise<any>}
@@ -98,6 +216,24 @@ export class ModelQueryBuilder {
     this.#setCriterias()
 
     return this.#generator.generateOne(await this.#QB.findOrFail())
+  }
+
+  /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @return {Promise<any>}
+   */
+  async findOr(callback) {
+    this.#setCriterias()
+
+    const data = await this.#QB.find()
+
+    if (data) {
+      return this.#generator.generateOne(data)
+    }
+
+    return callback()
   }
 
   /**
@@ -182,17 +318,6 @@ export class ModelQueryBuilder {
     )
 
     return { data: await this.#generator.generateMany(data), meta, links }
-  }
-
-  /**
-   * Count the number of models in database.
-   *
-   * @return {Promise<number>}
-   */
-  async count() {
-    this.#setCriterias()
-
-    return this.#QB.count()
   }
 
   /**

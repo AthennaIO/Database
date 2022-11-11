@@ -413,4 +413,57 @@ test.group('ProductModelTest', group => {
       assert.notDeepEqual(product.price, 0)
     })
   })
+
+  test('should be able to get fresh models', async ({ assert }) => {
+    const product = await ProductMySql.find()
+
+    await ProductMySql.update({ id: product.id }, { name: 'other-name' })
+
+    const freshProduct = await product.fresh()
+
+    assert.notDeepEqual(product.name, freshProduct.name)
+  })
+
+  test('should be able to refresh models', async ({ assert }) => {
+    const product = await ProductMySql.query().includes('user').find()
+
+    product.name = 'other-name'
+    product.user.name = 'other-user-name'
+
+    await product.refresh()
+
+    assert.notDeepEqual(product.name, 'other-name')
+    assert.notDeepEqual(product.user.name, 'other-user-name')
+  })
+
+  test('should be able to find product or execute a closure', async ({ assert }) => {
+    const product = await ProductMySql.findOr({}, async () => 'hello!')
+
+    assert.isDefined(product.id)
+    assert.isDefined(product.name)
+
+    const notFoundProduct = await ProductMySql.findOr({ name: 'not-found' }, async () => 'hello!')
+
+    assert.deepEqual(notFoundProduct, 'hello!')
+  })
+
+  test('should be able to execute aggregates from the model', async ({ assert }) => {
+    const min = await ProductMySql.query().min('price')
+    const max = await ProductMySql.query().max('price')
+    const avg = await ProductMySql.query().avg('price')
+    const avgDistinct = await ProductMySql.query().avgDistinct('price')
+    const sum = await ProductMySql.query().sum('price')
+    const sumDistinct = await ProductMySql.query().sumDistinct('price')
+    const count = await ProductMySql.query().count('price')
+    const countDistinct = await ProductMySql.query().countDistinct('price')
+
+    assert.isDefined(min)
+    assert.isDefined(max)
+    assert.isDefined(avg)
+    assert.isDefined(avgDistinct)
+    assert.isDefined(sum)
+    assert.isDefined(sumDistinct)
+    assert.isDefined(count)
+    assert.isDefined(countDistinct)
+  })
 })

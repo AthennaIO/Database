@@ -155,6 +155,17 @@ export class QueryBuilder {
   }
 
   /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param callback {() => Promise<any>}
+   * @return {Promise<any>}
+   */
+  async findOr(callback) {
+    return this.#driver.findOr(callback)
+  }
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}
