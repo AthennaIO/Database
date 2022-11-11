@@ -145,6 +145,51 @@ export class SchemaBuilder {
   }
 
   /**
+   * Verify if schema has timestamp properties.
+   *
+   * @return {boolean}
+   */
+  hasTimestamp() {
+    return this.hasCreatedAt() && this.hasUpdatedAt()
+  }
+
+  /**
+   * Verify if schema has created at property.
+   *
+   * @return {boolean}
+   */
+  hasCreatedAt() {
+    return !!this.columns.find(column => column.createDate)
+  }
+
+  /**
+   * Verify if schema has updated at property.
+   *
+   * @return {boolean}
+   */
+  hasUpdatedAt() {
+    return !!this.columns.find(column => column.updateDate)
+  }
+
+  /**
+   * Get the created at column name.
+   *
+   * @return {string}
+   */
+  getCreatedAt() {
+    return this.columns.find(column => column.createDate).name
+  }
+
+  /**
+   * Get the created at column name.
+   *
+   * @return {string}
+   */
+  getUpdatedAt() {
+    return this.columns.find(column => column.updateDate).name
+  }
+
+  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *

@@ -237,6 +237,7 @@ test.group('ProductModelTest', group => {
 
     assert.deepEqual(product.name, 'Macbook M2')
     assert.notEqual(product.createdAt, createdAt)
+    assert.lengthOf(await ProductMySql.findMany({ name: 'Macbook M2' }), 1)
 
     const products = await ProductMySql.findMany()
 
@@ -247,6 +248,7 @@ test.group('ProductModelTest', group => {
 
     assert.deepEqual(products[0].name, 'Macbook M3')
     assert.notEqual(products[0].createdAt, createdAt)
+    assert.lengthOf(await ProductMySql.findMany({ name: 'Macbook M3' }), 1)
   })
 
   test('should throw a empty where exception on update without where', async ({ assert }) => {
@@ -465,5 +467,20 @@ test.group('ProductModelTest', group => {
     assert.isDefined(sumDistinct)
     assert.isDefined(count)
     assert.isDefined(countDistinct)
+  })
+
+  test('should be able to create products from instance using save method', async ({ assert }) => {
+    const product = new ProductMySql()
+
+    product.name = 'Macbook M4'
+    product.price = 100
+
+    await product.save()
+
+    assert.isDefined(product.id)
+    assert.deepEqual(product.name, 'Macbook M4')
+    assert.deepEqual(product.price, 100)
+    assert.isDefined(product.createdAt)
+    assert.isDefined(product.updatedAt)
   })
 })

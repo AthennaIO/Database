@@ -225,6 +225,7 @@ test.group('UserModelTest', group => {
 
     assert.deepEqual(user.name, 'João Lenon Updated')
     assert.notEqual(user.createdAt, createdAt)
+    assert.lengthOf(await User.findMany({ name: 'João Lenon Updated' }), 1)
 
     const users = await User.findMany()
 
@@ -235,6 +236,7 @@ test.group('UserModelTest', group => {
 
     assert.deepEqual(users[0].name, 'João Lenon Array Updated')
     assert.notEqual(users[0].createdAt, createdAt)
+    assert.lengthOf(await User.findMany({ name: 'João Lenon Array Updated' }), 1)
   })
 
   test('should throw a empty where exception on update without where', async ({ assert }) => {
@@ -491,5 +493,20 @@ test.group('UserModelTest', group => {
     assert.isDefined(sumDistinct)
     assert.isDefined(count)
     assert.isDefined(countDistinct)
+  })
+
+  test('should be able to create users from instance using save method', async ({ assert }) => {
+    const user = new User()
+
+    user.name = 'Valmir Barbosa'
+    user.email = 'valmirphp@gmail.com'
+
+    await user.save()
+
+    assert.isDefined(user.id)
+    assert.deepEqual(user.name, 'Valmir Barbosa')
+    assert.deepEqual(user.email, 'valmirphp@gmail.com')
+    assert.isDefined(user.createdAt)
+    assert.isDefined(user.updatedAt)
   })
 })

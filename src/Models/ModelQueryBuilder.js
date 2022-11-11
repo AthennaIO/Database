@@ -354,6 +354,16 @@ export class ModelQueryBuilder {
       data[key] = attributes[key]
     })
 
+    if (this.#schema.hasTimestamp()) {
+      const date = new Date()
+
+      data[this.#schema.getCreatedAt()] =
+        data[this.#schema.getCreatedAt()] || date
+
+      data[this.#schema.getUpdatedAt()] =
+        data[this.#schema.getUpdatedAt()] || date
+    }
+
     return this.#generator.generateOne(await this.#QB.create(data))
   }
 
@@ -379,6 +389,16 @@ export class ModelQueryBuilder {
 
         data[key] = attributes[key]
       })
+
+      if (this.#schema.hasTimestamp()) {
+        const date = new Date()
+
+        data[this.#schema.getCreatedAt()] =
+          data[this.#schema.getCreatedAt()] || date
+
+        data[this.#schema.getUpdatedAt()] =
+          data[this.#schema.getUpdatedAt()] || date
+      }
 
       return data
     }
@@ -410,7 +430,17 @@ export class ModelQueryBuilder {
       data[key] = attributes[key]
     })
 
-    return this.#generator.generateOne(await this.#QB.createOrUpdate(data))
+    const hasValue = await this.#QB.find()
+    const primaryKey = this.#Model.primaryKey
+
+    if (hasValue) {
+      return this.where(primaryKey, hasValue[primaryKey]).update(
+        data,
+        ignorePersistOnly,
+      )
+    }
+
+    return this.create(data, ignorePersistOnly)
   }
 
   /**
@@ -418,15 +448,19 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @param {boolean} force
    * @return {Promise<any|any[]>}
    */
-  async update(data, ignorePersistOnly = false, force = false) {
+  async update(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }
 
-    const result = await this.#QB.update(data, force)
+    if (this.#schema.hasUpdatedAt()) {
+      data[this.#schema.getUpdatedAt()] =
+        data[this.#schema.getUpdatedAt()] || new Date()
+    }
+
+    const result = await this.#QB.update(data)
 
     if (Is.Array(result)) {
       return this.#generator.generateMany(result)
