@@ -1019,6 +1019,20 @@ export class Model {
   ): Promise<InstanceType<Class>>
 
   /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param where {any}
+   * @param callback {() => Promise<any>}
+   * @return {Promise<any>}
+   */
+  static findOr<Class extends typeof Model>(
+    this: Class,
+    where?: any,
+    callback?: () => Promise<any>,
+  ): Promise<InstanceType<Class>>
+
+  /**
    * Get one data in DB and return as a subclass instance.
    *
    * @param {any} [where]
@@ -1204,6 +1218,22 @@ export class Model {
    * @return {Promise<this>}
    */
   save(ignorePersistOnly?: boolean): Promise<this>
+
+  /**
+   * Re-retrieve the model from the database. The existing
+   * model instance will not be affected.
+   *
+   * @return {Promise<this>}
+   */
+  fresh(): Promise<this>
+
+  /**
+   * Re-retrieve the model from the database. The existing
+   * model instance will not be affected.
+   *
+   * @return {Promise<this>}
+   */
+  refresh(): Promise<this>
 }
 
 export class Column {
@@ -2120,7 +2150,7 @@ export class QueryBuilder {
    * @param {any} queryBuilder
    * @return {QueryBuilder}
    */
-  setQueryBuilder(queryBuilder: any): QueryBuilder
+  setQueryBuilder(queryBuilder: any): this
 
   /**
    * Calculate the average of a given column.
@@ -2208,6 +2238,15 @@ export class QueryBuilder {
    * @return {Promise<any>}
    */
   findOrFail(): Promise<any>
+
+  /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param callback {() => Promise<any>}
+   * @return {Promise<any>}
+   */
+  findOr(callback: () => Promise<any>): Promise<any>
 
   /**
    * Find a value in database.
@@ -2302,25 +2341,22 @@ export class QueryBuilder {
    * @param tableName {string}
    * @return {QueryBuilder}
    */
-  table(tableName: string): QueryBuilder
+  table(tableName: string): this
 
   /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
-   * @param callback {(query: QueryBuilder, criteriaValue: any) => void}
+   * @param callback {(query: this, criteriaValue: any) => void}
    */
-  when(
-    criteria: any,
-    callback: (query: QueryBuilder, criteriaValue: any) => void,
-  ): QueryBuilder
+  when(criteria: any, callback: (query: this, criteriaValue: any) => void): this
 
   /**
    * Log in console the actual query built.
    *
    * @return {QueryBuilder}
    */
-  dump(): QueryBuilder
+  dump(): this
 
   /**
    * Set the columns that should be selected on query.
@@ -2328,7 +2364,7 @@ export class QueryBuilder {
    * @param columns {string}
    * @return {QueryBuilder}
    */
-  select(...columns: string[]): QueryBuilder
+  select(...columns: string[]): this
 
   /**
    * Set the columns that should be selected on query raw.
@@ -2337,7 +2373,7 @@ export class QueryBuilder {
    * @param bindings {any}
    * @return {QueryBuilder}
    */
-  selectRaw(sql: string, bindings?: any): QueryBuilder
+  selectRaw(sql: string, bindings?: any): this
 
   /**
    * Set a join statement in your query.
@@ -2353,13 +2389,10 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  join(tableName: string, column1: string, column2: string): QueryBuilder
-  join(
-    tableName: string,
-    clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
-  join(tableName: string): QueryBuilder
+  ): this
+  join(tableName: string, column1: string, column2: string): this
+  join(tableName: string, clause: import('knex').Knex.JoinCallback): this
+  join(tableName: string): this
 
   /**
    * Set a left join statement in your query.
@@ -2375,12 +2408,9 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  leftJoin(tableName: string, column1: string, column2: string): QueryBuilder
-  leftJoin(
-    tableName: string,
-    clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
+  ): this
+  leftJoin(tableName: string, column1: string, column2: string): this
+  leftJoin(tableName: string, clause: import('knex').Knex.JoinCallback): this
 
   /**
    * Set a right join statement in your query.
@@ -2396,12 +2426,9 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  rightJoin(tableName: string, column1: string, column2: string): QueryBuilder
-  rightJoin(
-    tableName: string,
-    clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
+  ): this
+  rightJoin(tableName: string, column1: string, column2: string): this
+  rightJoin(tableName: string, clause: import('knex').Knex.JoinCallback): this
 
   /**
    * Set a cross join statement in your query.
@@ -2417,13 +2444,10 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  crossJoin(tableName: string, column1: string, column2: string): QueryBuilder
-  crossJoin(
-    tableName: string,
-    clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
-  crossJoin(tableName: string): QueryBuilder
+  ): this
+  crossJoin(tableName: string, column1: string, column2: string): this
+  crossJoin(tableName: string, clause: import('knex').Knex.JoinCallback): this
+  crossJoin(tableName: string): this
 
   /**
    * Set a full outer join statement in your query.
@@ -2439,16 +2463,12 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  fullOuterJoin(
-    tableName: string,
-    column1: string,
-    column2: string,
-  ): QueryBuilder
+  ): this
+  fullOuterJoin(tableName: string, column1: string, column2: string): this
   fullOuterJoin(
     tableName: string,
     clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a left outer join statement in your query.
@@ -2464,16 +2484,12 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  leftOuterJoin(
-    tableName: string,
-    column1: string,
-    column2: string,
-  ): QueryBuilder
+  ): this
+  leftOuterJoin(tableName: string, column1: string, column2: string): this
   leftOuterJoin(
     tableName: string,
     clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a right outer join statement in your query.
@@ -2489,16 +2505,12 @@ export class QueryBuilder {
     column1: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     column2: string,
-  ): QueryBuilder
-  rightOuterJoin(
-    tableName: string,
-    column1: string,
-    column2: string,
-  ): QueryBuilder
+  ): this
+  rightOuterJoin(tableName: string, column1: string, column2: string): this
   rightOuterJoin(
     tableName: string,
     clause: import('knex').Knex.JoinCallback,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a join raw statement in your query.
@@ -2507,7 +2519,7 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  joinRaw(sql: string, bindings?: any): QueryBuilder
+  joinRaw(sql: string, bindings?: any): this
 
   /**
    * Set a group by statement in your query.
@@ -2515,7 +2527,7 @@ export class QueryBuilder {
    * @param columns {string}
    * @return {QueryBuilder}
    */
-  groupBy(...columns: string[]): QueryBuilder
+  groupBy(...columns: string[]): this
 
   /**
    * Set a group by raw statement in your query.
@@ -2524,20 +2536,20 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  groupByRaw(sql: string, bindings?: any): QueryBuilder
+  groupByRaw(sql: string, bindings?: any): this
 
   /**
    * Set a having statement in your query.
    *
    * @return {QueryBuilder}
    */
-  having(clause: (query: QueryBuilder) => void): QueryBuilder
-  having(columnName: string, value: any): QueryBuilder
+  having(clause: (query: this) => void): this
+  having(columnName: string, value: any): this
   having(
     columnName: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a having raw statement in your query.
@@ -2546,21 +2558,21 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  havingRaw(sql: string, bindings?: any): QueryBuilder
+  havingRaw(sql: string, bindings?: any): this
 
   /**
    * Set a having exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  havingExists(builder: QueryBuilder): QueryBuilder
+  havingExists(builder: this): this
 
   /**
    * Set a having not exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  havingNotExists(builder: QueryBuilder): QueryBuilder
+  havingNotExists(builder: this): this
 
   /**
    * Set a having in statement in your query.
@@ -2569,7 +2581,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  havingIn(columnName: string, values: any[]): QueryBuilder
+  havingIn(columnName: string, values: any[]): this
 
   /**
    * Set a having not in statement in your query.
@@ -2578,7 +2590,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  havingNotIn(columnName: string, values: any[]): QueryBuilder
+  havingNotIn(columnName: string, values: any[]): this
 
   /**
    * Set a having between statement in your query.
@@ -2587,7 +2599,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  havingBetween(columnName: string, values: [any, any]): QueryBuilder
+  havingBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set a having not between statement in your query.
@@ -2596,7 +2608,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  havingNotBetween(columnName: string, values: [any, any]): QueryBuilder
+  havingNotBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set a having null statement in your query.
@@ -2604,7 +2616,7 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  havingNull(columnName: string): QueryBuilder
+  havingNull(columnName: string): this
 
   /**
    * Set a having not null statement in your query.
@@ -2612,20 +2624,20 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  havingNotNull(columnName: string): QueryBuilder
+  havingNotNull(columnName: string): this
 
   /**
    * Set an or having statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orHaving(clause: (query: QueryBuilder) => void): QueryBuilder
-  orHaving(columnName: string, value: any): QueryBuilder
+  orHaving(clause: (query: this) => void): this
+  orHaving(columnName: string, value: any): this
   orHaving(
     columnName: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set an or having raw statement in your query.
@@ -2634,21 +2646,21 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  orHavingRaw(sql: string, bindings?: any): QueryBuilder
+  orHavingRaw(sql: string, bindings?: any): this
 
   /**
    * Set an or having exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orHavingExists(builder: QueryBuilder): QueryBuilder
+  orHavingExists(builder: this): this
 
   /**
    * Set an or having not exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orHavingNotExists(builder: QueryBuilder): QueryBuilder
+  orHavingNotExists(builder: this): this
 
   /**
    * Set an or having in statement in your query.
@@ -2657,7 +2669,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  orHavingIn(columnName: string, values: any[]): QueryBuilder
+  orHavingIn(columnName: string, values: any[]): this
 
   /**
    * Set an or having not in statement in your query.
@@ -2666,7 +2678,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  orHavingNotIn(columnName: string, values: any[]): QueryBuilder
+  orHavingNotIn(columnName: string, values: any[]): this
 
   /**
    * Set an or having between statement in your query.
@@ -2675,7 +2687,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  orHavingBetween(columnName: string, values: [any, any]): QueryBuilder
+  orHavingBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set an or having not between statement in your query.
@@ -2684,7 +2696,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  orHavingNotBetween(columnName: string, values: [any, any]): QueryBuilder
+  orHavingNotBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set an or having null statement in your query.
@@ -2692,7 +2704,7 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  orHavingNull(columnName: string): QueryBuilder
+  orHavingNull(columnName: string): this
 
   /**
    * Set an or having not null statement in your query.
@@ -2700,30 +2712,30 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  orHavingNotNull(columnName: string): QueryBuilder
+  orHavingNotNull(columnName: string): this
 
   /**
    * Set a where statement in your query.
    *
    * @return {QueryBuilder}
    */
-  where(clause: (query: QueryBuilder) => void): QueryBuilder
-  where(statement: Record<string, any>): QueryBuilder
-  where(columnName: string, value: any): QueryBuilder
+  where(clause: (query: this) => void): this
+  where(statement: Record<string, any>): this
+  where(columnName: string, value: any): this
   where(
     columnName: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a where not statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereNot(clause: (query: QueryBuilder) => void): QueryBuilder
-  whereNot(statement: Record<string, any>): QueryBuilder
-  whereNot(columnName: string, value: any): QueryBuilder
+  whereNot(clause: (query: this) => void): this
+  whereNot(statement: Record<string, any>): this
+  whereNot(columnName: string, value: any): this
 
   /**
    * Set a where raw statement in your query.
@@ -2732,46 +2744,46 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  whereRaw(sql: string, bindings?: any): QueryBuilder
+  whereRaw(sql: string, bindings?: any): this
 
   /**
    * Set a where exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereExists(builder: QueryBuilder): QueryBuilder
+  whereExists(builder: this): this
 
   /**
    * Set a where not exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereNotExists(builder: QueryBuilder): QueryBuilder
+  whereNotExists(builder: this): this
 
   /**
    * Set a where like statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereLike(clause: (query: QueryBuilder) => void): QueryBuilder
-  whereLike(statement: Record<string, any>): QueryBuilder
-  whereLike(columnName: string, value: any): QueryBuilder
+  whereLike(clause: (query: this) => void): this
+  whereLike(statement: Record<string, any>): this
+  whereLike(columnName: string, value: any): this
 
   /**
    * Set a where ILike statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereILike(clause: (query: QueryBuilder) => void): QueryBuilder
-  whereILike(statement: Record<string, any>): QueryBuilder
-  whereILike(columnName: string, value: any): QueryBuilder
+  whereILike(clause: (query: this) => void): this
+  whereILike(statement: Record<string, any>): this
+  whereILike(columnName: string, value: any): this
 
   /**
    * Set a where in statement in your query.
    *
    * @return {QueryBuilder}
    */
-  whereIn(columnName: string, values: any[]): QueryBuilder
+  whereIn(columnName: string, values: any[]): this
 
   /**
    * Set a where not in statement in your query.
@@ -2780,7 +2792,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  whereNotIn(columnName: string, values: any[]): QueryBuilder
+  whereNotIn(columnName: string, values: any[]): this
 
   /**
    * Set a where between statement in your query.
@@ -2789,7 +2801,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  whereBetween(columnName: string, values: [any, any]): QueryBuilder
+  whereBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set a where not between statement in your query.
@@ -2798,7 +2810,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  whereNotBetween(columnName: string, values: [any, any]): QueryBuilder
+  whereNotBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set a where null statement in your query.
@@ -2806,7 +2818,7 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  whereNull(columnName: string): QueryBuilder
+  whereNull(columnName: string): this
 
   /**
    * Set a where not null statement in your query.
@@ -2814,30 +2826,30 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  whereNotNull(columnName: string): QueryBuilder
+  whereNotNull(columnName: string): this
 
   /**
    * Set an or where statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhere(clause: (query: QueryBuilder) => void): QueryBuilder
-  orWhere(statement: Record<string, any>): QueryBuilder
-  orWhere(columnName: string, value: any): QueryBuilder
+  orWhere(clause: (query: this) => void): this
+  orWhere(statement: Record<string, any>): this
+  orWhere(columnName: string, value: any): this
   orWhere(
     columnName: string,
     operation: '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike',
     value: any,
-  ): QueryBuilder
+  ): this
 
   /**
    * Set a or where not statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereNot(clause: (query: QueryBuilder) => void): QueryBuilder
-  orWhereNot(statement: Record<string, any>): QueryBuilder
-  orWhereNot(columnName: string, value: any): QueryBuilder
+  orWhereNot(clause: (query: this) => void): this
+  orWhereNot(statement: Record<string, any>): this
+  orWhereNot(columnName: string, value: any): this
 
   /**
    * Set an or where statement in your query.
@@ -2846,46 +2858,46 @@ export class QueryBuilder {
    * @param bindings {any}
    * @return {QueryBuilder}
    */
-  orWhereRaw(sql: string, bindings?: any): QueryBuilder
+  orWhereRaw(sql: string, bindings?: any): this
 
   /**
    * Set an or where exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereExists(builder: QueryBuilder): QueryBuilder
+  orWhereExists(builder: this): this
 
   /**
    * Set an or where not exists statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereNotExists(builder: QueryBuilder): QueryBuilder
+  orWhereNotExists(builder: this): this
 
   /**
    * Set an or where like statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereLike(clause: (query: QueryBuilder) => void): QueryBuilder
-  orWhereLike(statement: Record<string, any>): QueryBuilder
-  orWhereLike(columnName: string, value: any): QueryBuilder
+  orWhereLike(clause: (query: this) => void): this
+  orWhereLike(statement: Record<string, any>): this
+  orWhereLike(columnName: string, value: any): this
 
   /**
    * Set an or where ILike statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereILike(clause: (query: QueryBuilder) => void): QueryBuilder
-  orWhereILike(statement: Record<string, any>): QueryBuilder
-  orWhereILike(columnName: string, value: any): QueryBuilder
+  orWhereILike(clause: (query: this) => void): this
+  orWhereILike(statement: Record<string, any>): this
+  orWhereILike(columnName: string, value: any): this
 
   /**
    * Set an or where in statement in your query.
    *
    * @return {QueryBuilder}
    */
-  orWhereIn(columnName: string, values: any[]): QueryBuilder
+  orWhereIn(columnName: string, values: any[]): this
 
   /**
    * Set an or where not in statement in your query.
@@ -2894,7 +2906,7 @@ export class QueryBuilder {
    * @param values {any[]}
    * @return {QueryBuilder}
    */
-  orWhereNotIn(columnName: string, values: any[]): QueryBuilder
+  orWhereNotIn(columnName: string, values: any[]): this
 
   /**
    * Set an or where between statement in your query.
@@ -2903,7 +2915,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  orWhereBetween(columnName: string, values: [any, any]): QueryBuilder
+  orWhereBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set an or where not between statement in your query.
@@ -2912,7 +2924,7 @@ export class QueryBuilder {
    * @param values {[any, any]}
    * @return {QueryBuilder}
    */
-  orWhereNotBetween(columnName: string, values: [any, any]): QueryBuilder
+  orWhereNotBetween(columnName: string, values: [any, any]): this
 
   /**
    * Set an or where null statement in your query.
@@ -2920,7 +2932,7 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  orWhereNull(columnName: string): QueryBuilder
+  orWhereNull(columnName: string): this
 
   /**
    * Set an or where not null statement in your query.
@@ -2928,7 +2940,7 @@ export class QueryBuilder {
    * @param columnName {string}
    * @return {QueryBuilder}
    */
-  orWhereNotNull(columnName: string): QueryBuilder
+  orWhereNotNull(columnName: string): this
 
   /**
    * Set a order by statement in your query.
@@ -2937,10 +2949,7 @@ export class QueryBuilder {
    * @param [direction] {'asc'|'desc'|'ASC'|'DESC'}
    * @return {QueryBuilder}
    */
-  orderBy(
-    columnName: string,
-    direction: 'asc' | 'desc' | 'ASC' | 'DESC',
-  ): QueryBuilder
+  orderBy(columnName: string, direction: 'asc' | 'desc' | 'ASC' | 'DESC'): this
 
   /**
    * Set an order by raw statement in your query.
@@ -2949,7 +2958,7 @@ export class QueryBuilder {
    * @param [bindings] {any}
    * @return {QueryBuilder}
    */
-  orderByRaw(sql: string, bindings?: any): QueryBuilder
+  orderByRaw(sql: string, bindings?: any): this
 
   /**
    * Order the results easily by the latest date. By default, the result will
@@ -2958,7 +2967,7 @@ export class QueryBuilder {
    * @param [columnName] {string}
    * @return {QueryBuilder}
    */
-  latest(columnName?: string): QueryBuilder
+  latest(columnName?: string): this
 
   /**
    * Order the results easily by the oldest date. By default, the result will
@@ -2967,7 +2976,7 @@ export class QueryBuilder {
    * @param [columnName] {string}
    * @return {QueryBuilder}
    */
-  oldest(columnName?: string): QueryBuilder
+  oldest(columnName?: string): this
 
   /**
    * Set the skip number in your query.
@@ -2975,7 +2984,7 @@ export class QueryBuilder {
    * @param number {number}
    * @return {QueryBuilder}
    */
-  offset(number: number): QueryBuilder
+  offset(number: number): this
 
   /**
    * Set the limit number in your query.
@@ -2983,7 +2992,7 @@ export class QueryBuilder {
    * @param number {number}
    * @return {QueryBuilder}
    */
-  limit(number: number): QueryBuilder
+  limit(number: number): this
 }
 
 export class Criteria {
@@ -3483,7 +3492,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param name
    * @return {ModelQueryBuilder}
    */
-  removeCriteria(name: string): ModelQueryBuilder
+  removeCriteria(name: string): this
 
   /**
    * List the criterias from query builder.
@@ -3502,18 +3511,15 @@ export class ModelQueryBuilder extends QueryBuilder {
    */
   includes(
     relationName: string,
-    callback?: (query: ModelQueryBuilder) => Promise<void>,
-  ): ModelQueryBuilder
+    callback?: (query: this) => Promise<void>,
+  ): this
 
   /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
-   * @param callback {(query: ModelQueryBuilder, criteriaValue: any) => void}
+   * @param callback {(query: this, criteriaValue: any) => void}
    */
   // @ts-ignore
-  when(
-    criteria: any,
-    callback: (query: ModelQueryBuilder, criteriaValue: any) => void,
-  ): ModelQueryBuilder
+  when(criteria: any, callback: (query: this, criteriaValue: any) => void): this
 }

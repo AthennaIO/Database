@@ -434,4 +434,62 @@ test.group('UserModelTest', group => {
       assert.isDefined(user.email)
     })
   })
+
+  test('should be able to get fresh models', async ({ assert }) => {
+    const user = await User.find()
+
+    await User.update({ id: user.id }, { name: 'other-name' })
+
+    const freshUser = await user.fresh()
+
+    assert.notDeepEqual(user.name, freshUser.name)
+  })
+
+  test('should be able to refresh models', async ({ assert }) => {
+    const { id } = await User.find()
+
+    await Product.factory().count(2).create({ userId: id })
+
+    const user = await User.query().where({ id }).includes('products').find()
+
+    user.name = 'other-name'
+    user.products[0].name = 'other-product-name'
+
+    await user.refresh()
+
+    assert.notDeepEqual(user.name, 'other-name')
+    assert.notDeepEqual(user.products[0].name, 'other-product-name')
+    assert.notDeepEqual(user.products[1].name, 'other-product-name')
+  })
+
+  test('should be able to find user or execute a closure', async ({ assert }) => {
+    const user = await User.findOr({}, async () => 'hello!')
+
+    assert.isDefined(user.id)
+    assert.isDefined(user.name)
+
+    const notFoundUser = await User.findOr({ name: 'not-found' }, async () => 'hello!')
+
+    assert.deepEqual(notFoundUser, 'hello!')
+  })
+
+  test('should be able to execute aggregates from the model', async ({ assert }) => {
+    const min = await User.query().min('id')
+    const max = await User.query().max('id')
+    const avg = await User.query().avg('id')
+    const avgDistinct = await User.query().avgDistinct('id')
+    const sum = await User.query().sum('id')
+    const sumDistinct = await User.query().sumDistinct('id')
+    const count = await User.query().count('id')
+    const countDistinct = await User.query().countDistinct('id')
+
+    assert.isDefined(min)
+    assert.isDefined(max)
+    assert.isDefined(avg)
+    assert.isDefined(avgDistinct)
+    assert.isDefined(sum)
+    assert.isDefined(sumDistinct)
+    assert.isDefined(count)
+    assert.isDefined(countDistinct)
+  })
 })

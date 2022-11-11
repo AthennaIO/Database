@@ -492,6 +492,23 @@ export class MySqlDriver {
   }
 
   /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param callback {() => Promise<any>}
+   * @return {Promise<any>}
+   */
+  async findOr(callback) {
+    const data = await this.find()
+
+    if (!data) {
+      return callback()
+    }
+
+    return data
+  }
+
+  /**
    * Find a value in database.
    *
    * @return {Promise<any>}

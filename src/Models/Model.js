@@ -222,6 +222,24 @@ export class Model {
   }
 
   /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param where {any}
+   * @param callback {() => Promise<any>}
+   * @return {Promise<any>}
+   */
+  static async findOr(where = {}, callback) {
+    const query = this.query()
+
+    if (Object.keys(where).length) {
+      query.where(where)
+    }
+
+    return query.where(where).findOr(callback)
+  }
+
+  /**
    * Get one data in DB and return as a subclass instance.
    *
    * @param {any} [where]
@@ -275,6 +293,7 @@ export class Model {
    * @param [page] {boolean}
    * @param [limit] {boolean}
    * @param [resourceUrl] {string}
+   * @param [where] {any}
    * @return {Promise<{
    *   data: InstanceType<this>[],
    *   meta: {
@@ -463,6 +482,48 @@ export class Model {
     Object.keys(updatedModel).forEach(key => (this[key] = updatedModel[key]))
 
     return this
+  }
+
+  /**
+   * Re-retrieve the model from the database. The existing
+   * model instance will not be affected.
+   *
+   * @return {Promise<this>}
+   */
+  async fresh() {
+    const Model = this.constructor
+
+    return Model.query()
+      .where({ [Model.primaryKey]: this[Model.primaryKey] })
+      .find()
+  }
+
+  /**
+   * Re-retrieve the model from the database. The existing
+   * model instance will not be affected.
+   *
+   * @return {Promise<this>}
+   */
+  async refresh() {
+    const Model = this.constructor
+
+    const relations = Model.getSchema().relations.map(r => r.name)
+
+    const query = Model.query().where({
+      [Model.primaryKey]: this[Model.primaryKey],
+    })
+
+    Object.keys(this).forEach(key => {
+      if (!relations.includes(key)) {
+        return
+      }
+
+      query.includes(key)
+    })
+
+    const data = await query.find()
+
+    Object.keys(data).forEach(key => (this[key] = data[key]))
   }
 
   /**
