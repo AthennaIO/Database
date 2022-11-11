@@ -760,6 +760,41 @@ export class SchemaBuilder {
   setRelations(relations: any): this
 
   /**
+   * Verify if schema has timestamp properties.
+   *
+   * @return {boolean}
+   */
+  hasTimestamp(): boolean
+
+  /**
+   * Verify if schema has created at property.
+   *
+   * @return {boolean}
+   */
+  hasCreatedAt(): boolean
+
+  /**
+   * Verify if schema has updated at property.
+   *
+   * @return {boolean}
+   */
+  hasUpdatedAt(): boolean
+
+  /**
+   * Get the created at column name.
+   *
+   * @return {string}
+   */
+  getCreatedAt(): string
+
+  /**
+   * Get the created at column name.
+   *
+   * @return {string}
+   */
+  getUpdatedAt(): string
+
+  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
@@ -1214,10 +1249,9 @@ export class Model {
   /**
    * Update the model values that have been modified.
    *
-   * @param [ignorePersistOnly] {boolean}
    * @return {Promise<this>}
    */
-  save(ignorePersistOnly?: boolean): Promise<this>
+  save(): Promise<this>
 
   /**
    * Re-retrieve the model from the database. The existing
@@ -2314,10 +2348,9 @@ export class QueryBuilder {
    * Update a value in database.
    *
    * @param {any} data
-   * @param {boolean} force
    * @return {Promise<any | any[]>}
    */
-  update(data: any, force?: boolean): Promise<any | any[]>
+  update(data: any): Promise<any | any[]>
 
   /**
    * Delete one value in database.

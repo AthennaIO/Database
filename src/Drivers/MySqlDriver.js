@@ -625,10 +625,9 @@ export class MySqlDriver {
    * Update a value in database.
    *
    * @param {any} data
-   * @param {boolean} [force]
    * @return {Promise<any>}
    */
-  async update(data, force = false) {
+  async update(data) {
     await this.#qb.clone().update(data)
 
     const result = await this.findMany()

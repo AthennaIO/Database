@@ -241,10 +241,9 @@ export class QueryBuilder {
    * Update a value in database.
    *
    * @param {any} data
-   * @param {boolean} [force]
    * @return {Promise<any | any[]>}
    */
-  async update(data, force = false) {
+  async update(data) {
     return this.#driver.update(data)
   }
 

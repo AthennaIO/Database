@@ -81,7 +81,7 @@ export class ModelGenerator {
       return undefined
     }
 
-    return this.#populate(data, new this.#Model())
+    return this.#populate(data, new this.#Model(true))
   }
 
   /**
