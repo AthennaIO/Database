@@ -483,4 +483,15 @@ test.group('ProductModelTest', group => {
     assert.isDefined(product.createdAt)
     assert.isDefined(product.updatedAt)
   })
+
+  test('should be able to delete models from instance', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const productDeleted = await product.delete()
+
+    assert.isDefined(productDeleted.deletedAt)
+
+    const productDeletedForced = await product.delete(true)
+
+    assert.isUndefined(productDeletedForced)
+  })
 })
