@@ -12,7 +12,7 @@ import { Config } from '@athenna/config'
 import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { Database } from '#src/index'
+import { Criteria, Database } from '#src/index'
 import { UserMySql } from '#tests/Stubs/models/UserMySql'
 import { ProductMySql } from '#tests/Stubs/models/ProductMySql'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
@@ -493,5 +493,59 @@ test.group('ProductModelTest', group => {
     const productDeletedForced = await product.delete(true)
 
     assert.isUndefined(productDeletedForced)
+  })
+
+  test('should be able to restore soft deleted models', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const productDeleted = await product.delete()
+
+    assert.isTrue(productDeleted.isTrashed())
+    assert.isDefined(productDeleted.deletedAt)
+
+    await productDeleted.restore()
+
+    assert.isNull(productDeleted.deletedAt)
+  })
+
+  test('should be able to retrieve soft deleted models and only soft deleted', async ({ assert }) => {
+    const toDelete = await ProductMySql.query().limit(5).findMany()
+
+    await Promise.all(toDelete.map(product => product.delete()))
+
+    const withoutTrashed = await ProductMySql.query().findMany()
+
+    withoutTrashed.forEach(product => assert.isNull(product.deletedAt))
+
+    const withTrashed = await ProductMySql.query().withTrashed().findMany()
+
+    assert.lengthOf(withTrashed, 10)
+
+    const onlyTrashed = await ProductMySql.query().onlyTrashed().findMany()
+
+    onlyTrashed.forEach(product => assert.isDefined(product.deletedAt))
+  })
+
+  test('should be able to add, get and remove criterias from the model', async ({ assert }) => {
+    ProductMySql.addCriteria('select', Criteria.select('id').limit(5))
+    ProductMySql.addCriteria('orderBy', Criteria.orderBy('id', 'DESC').get())
+
+    const products = await ProductMySql.findMany()
+
+    assert.lengthOf(products, 5)
+
+    products.forEach(product => assert.isUndefined(product.name))
+
+    let criterias = ProductMySql.getCriterias()
+
+    assert.isDefined(criterias.select)
+    assert.isDefined(criterias.orderBy)
+
+    ProductMySql.removeCriteria('select')
+    ProductMySql.removeCriteria('orderBy')
+
+    criterias = ProductMySql.getCriterias()
+
+    assert.isUndefined(criterias.select)
+    assert.isUndefined(criterias.orderBy)
   })
 })

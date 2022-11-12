@@ -12,7 +12,7 @@ import { Config } from '@athenna/config'
 import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { Database, Model } from '#src/index'
+import { Criteria, Database, Model } from '#src/index'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
@@ -55,25 +55,19 @@ test.group('ModelTest', group => {
   })
 
   test('should be able to list criterias', async ({ assert }) => {
-    class SimpleSoftDeleteModel extends Model {
-      static schema() {
-        return {}
-      }
-
-      static isSoftDelete() {
-        return true
+    class SimpleModel extends Model {
+      static criterias() {
+        return {
+          select: Criteria.select('id').get(),
+        }
       }
     }
 
-    const query = SimpleSoftDeleteModel.query()
-    const criterias = query.removeCriteria('deletedAt').listCriterias()
+    SimpleModel.addCriteria('orderBy', Criteria.orderBy('id', 'DESC'))
 
-    assert.isDefined(criterias)
-    assert.isUndefined(criterias.deletedAt)
+    const criterias = SimpleModel.getCriterias()
 
-    const allCriterias = query.listCriterias(true)
-
-    assert.isDefined(allCriterias)
-    assert.isDefined(allCriterias.deletedAt)
+    assert.isDefined(criterias.select)
+    assert.isDefined(criterias.orderBy)
   })
 })

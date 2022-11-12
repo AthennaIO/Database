@@ -986,9 +986,35 @@ export class Model {
   /**
    * Return the criterias set to this model.
    *
-   * @return {any}
+   * @return {Record<string, Criteria>}
    */
-  static criterias(): any
+  static criterias(): Record<string, Criteria>
+
+  /**
+   * Get the model criterias merging the criterias property
+   * with runtime added criterias.
+   *
+   * @return {Record<string, Criteria>}
+   */
+  static getCriterias(): Record<string, Criteria>
+
+  /**
+   * Set a new criteria in the model.
+   *
+   * @param name {string}
+   * @param criteria {Map<string, any[]>|Criteria}
+   * @return {typeof Model}
+   */
+  static addCriteria(name: string, criteria: Criteria): typeof Model
+  static addCriteria(name: string, criteria: Map<string, any[]>): typeof Model
+
+  /**
+   * Remove a criteria from the model.
+   *
+   * @param name {string}
+   * @return {typeof Model}
+   */
+  static removeCriteria(name: string): typeof Model
 
   /**
    * Create the factory object to generate data.
@@ -998,7 +1024,7 @@ export class Model {
   static factory(returning?: string): ModelFactory
 
   /**
-   * The TypeORM entity schema instance.
+   * The schema instance of this model.
    *
    * @return {SchemaBuilder}
    */
@@ -1087,7 +1113,7 @@ export class Model {
   static findMany<Class extends typeof Model>(
     this: Class,
     where?: any,
-  ): Promise<InstanceType<Class>>
+  ): Promise<InstanceType<Class>[]>
 
   /**
    * Get many data in DB and return as a collection of subclass instance.
@@ -1134,7 +1160,7 @@ export class Model {
    * Create a new model in DB and return as a subclass instance.
    *
    * @param {any} data
-   * @param {boolean} ignorePersistOnly
+   * @param {boolean} [ignorePersistOnly]
    * @return {Promise<InstanceType<this>>}
    */
   static create<Class extends typeof Model>(
@@ -1147,7 +1173,7 @@ export class Model {
    * Create many models in DB and return as subclass instances.
    *
    * @param {any[]} data
-   * @param {boolean} ignorePersistOnly
+   * @param {boolean} [ignorePersistOnly]
    * @return {Promise<InstanceType<this>[]>}
    */
   static createMany<Class extends typeof Model>(
@@ -1176,7 +1202,7 @@ export class Model {
    *
    * @param {any} where
    * @param {any} [data]
-   * @param {boolean} ignorePersistOnly
+   * @param {boolean} [ignorePersistOnly]
    * @return {Promise<InstanceType<this>|InstanceType<this>[]>}
    */
   static update<Class extends typeof Model>(
@@ -1190,7 +1216,7 @@ export class Model {
    * Delete a model in DB and return as a subclass instance or void.
    *
    * @param {any} where
-   * @param {boolean} force
+   * @param {boolean} [force]
    * @return {Promise<InstanceType<this>|void>}
    */
   static delete<Class extends typeof Model>(
@@ -1252,6 +1278,28 @@ export class Model {
    * @return {Promise<this>}
    */
   save(): Promise<this>
+
+  /**
+   * Delete or soft delete your model from database.
+   *
+   * @param {boolean} force
+   * @return {Promise<this | void>}
+   */
+  delete(force?: boolean): Promise<this | void>
+
+  /**
+   * Restore a soft deleted model from database.
+   *
+   * @return {Promise<this>}
+   */
+  restore(): Promise<this>
+
+  /**
+   * Verify if model is soft deleted.
+   *
+   * @return {boolean}
+   */
+  isTrashed(): boolean
 
   /**
    * Re-retrieve the model from the database. The existing
@@ -3473,67 +3521,120 @@ export class ModelQueryBuilder extends QueryBuilder {
   constructor(model: Model, withCriterias?: boolean)
 
   /**
+   * Find a value in database or throw exception if undefined.
+   *
+   * @return {Promise<Model>}
+   */
+  findOrFail(): Promise<Model>
+
+  /**
+   * Return a single model instance or, if no results are found,
+   * execute the given closure.
+   *
+   * @param callback {() => Promise<any>}
+   * @return {Promise<Model>}
+   */
+  findOr(callback: () => Promise<any>): Promise<Model>
+
+  /**
+   * Find a value in database.
+   *
+   * @return {Promise<Model>}
+   */
+  find(): Promise<Model>
+
+  /**
+   * Find many values in database.
+   *
+   * @return {Promise<Model[]>}
+   */
+  findMany(): Promise<Model[]>
+
+  /**
+   * Find many values in database and return as a Collection.
+   *
+   * @return {Promise<Collection<Model>>>}
+   */
+  collection(): Promise<import('@athenna/common').Collection<Model>>
+
+  /**
    * Create one model in database.
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @return {Promise<any>}
+   * @return {Promise<Model>}
    */
   // @ts-ignore
-  create(data: any, ignorePersistOnly?: boolean): Promise<any>
+  create(data: any, ignorePersistOnly?: boolean): Promise<Model>
 
   /**
    * Create many models in database.
    *
    * @param data {any[]}
    * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any[]>}
+   * @return {Promise<Model[]>}
    */
   // @ts-ignore
-  createMany(data: any[], ignorePersistOnly?: boolean): Promise<any[]>
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<Model[]>
 
   /**
    * Create data or update if already exists.
    *
    * @param {any} data
    * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any | any[]>}
+   * @return {Promise<Model | Model[]>}
    */
   // @ts-ignore
-  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+  createOrUpdate(
+    data: any,
+    ignorePersistOnly?: boolean,
+  ): Promise<Model | Model[]>
 
   /**
    * Update one or more models in database.
    *
    * @param data {any}
    * @param {boolean} [ignorePersistOnly]
-   * @return {Promise<any|any[]>}
+   * @return {Promise<Model | Model[]>}
    */
-  update(data: any, ignorePersistOnly?: boolean): Promise<any | any[]>
+  update(data: any, ignorePersistOnly?: boolean): Promise<Model | Model[]>
 
   /**
    * Delete one or more models in database.
    *
    * @param [force] {boolean}
-   * @return {Promise<any|any[]|void>}
+   * @return {Promise<Model | Model[] | voi>}
    */
-  delete(force?: boolean): Promise<any | any[] | void>
+  delete(force?: boolean): Promise<Model | Model[] | void>
+
+  /**
+   * Restore a soft deleted model from database.
+   *
+   * @return {Promise<Model | Model[]>}
+   */
+  restore(): Promise<Model | Model[]>
 
   /**
    * Remove the criteria from query builder by name.
    *
-   * @param name
+   * @param name {string}
    * @return {ModelQueryBuilder}
    */
   removeCriteria(name: string): this
 
   /**
-   * List the criterias from query builder.
+   * Get all the records even the soft deleted.
    *
-   * @param withRemoved {boolean}
-   * @return {any}
+   * @return {ModelQueryBuilder}
    */
-  listCriterias(withRemoved?: boolean): any
+  withTrashed(): this
+
+  /**
+   * Get only the soft deleted values from database.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  onlyTrashed(): this
 
   /**
    * Set a include statement in your query.

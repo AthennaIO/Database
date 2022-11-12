@@ -12,7 +12,7 @@ import { Config } from '@athenna/config'
 import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
-import { Database } from '#src/index'
+import { Criteria, Database } from '#src/index'
 import { User } from '#tests/Stubs/models/User'
 import { Product } from '#tests/Stubs/models/Product'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
@@ -519,5 +519,59 @@ test.group('UserModelTest', group => {
     const userDeletedForced = await user.delete(true)
 
     assert.isUndefined(userDeletedForced)
+  })
+
+  test('should be able to restore soft deleted models', async ({ assert }) => {
+    const user = await User.find()
+    const userDeleted = await user.delete()
+
+    assert.isTrue(userDeleted.isTrashed())
+    assert.isDefined(userDeleted.deletedAt)
+
+    await userDeleted.restore()
+
+    assert.isNull(userDeleted.deletedAt)
+  })
+
+  test('should be able to retrieve soft deleted models and only soft deleted', async ({ assert }) => {
+    const toDelete = await User.query().limit(5).findMany()
+
+    await Promise.all(toDelete.map(user => user.delete()))
+
+    const withoutTrashed = await User.query().findMany()
+
+    withoutTrashed.forEach(user => assert.isNull(user.deletedAt))
+
+    const withTrashed = await User.query().withTrashed().findMany()
+
+    assert.lengthOf(withTrashed, 10)
+
+    const onlyTrashed = await User.query().onlyTrashed().findMany()
+
+    onlyTrashed.forEach(user => assert.isDefined(user.deletedAt))
+  })
+
+  test('should be able to add, get and remove criterias from the model', async ({ assert }) => {
+    User.addCriteria('select', Criteria.select('id').limit(5))
+    User.addCriteria('orderBy', Criteria.orderBy('id', 'DESC').get())
+
+    const users = await User.findMany()
+
+    assert.lengthOf(users, 5)
+
+    users.forEach(user => assert.isUndefined(user.name))
+
+    let criterias = User.getCriterias()
+
+    assert.isDefined(criterias.select)
+    assert.isDefined(criterias.orderBy)
+
+    User.removeCriteria('select')
+    User.removeCriteria('orderBy')
+
+    criterias = User.getCriterias()
+
+    assert.isUndefined(criterias.select)
+    assert.isUndefined(criterias.orderBy)
   })
 })

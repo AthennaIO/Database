@@ -12,7 +12,6 @@ import { faker } from '@faker-js/faker'
 import { Is, String } from '@athenna/common'
 
 import { Database } from '#src/index'
-import { Criteria } from '#src/Models/Criteria'
 import { ModelFactory } from '#src/Models/ModelFactory'
 import { SchemaBuilder } from '#src/Models/SchemaBuilder'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
@@ -22,6 +21,13 @@ import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSch
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 export class Model {
+  /**
+   * All the criterias of the model.
+   *
+   * @type {Record<string, Criteria>}
+   */
+  static criteriasSet = {}
+
   /**
    * The faker instance to create fake data.
    *
@@ -95,18 +101,12 @@ export class Model {
   }
 
   /**
-   * Return the criterias set to this model.
+   * Return the criterias to set in this model query builder.
    *
    * @return {any}
    */
   static criterias() {
-    const criterias = {}
-
-    if (this.isSoftDelete) {
-      criterias.deletedAt = Criteria.whereNull(this.DELETED_AT).get()
-    }
-
-    return criterias
+    return {}
   }
 
   /**
@@ -134,6 +134,52 @@ export class Model {
    */
   static factory(returning = '*') {
     return new ModelFactory(this, returning)
+  }
+
+  /**
+   * Get the model criterias merging the criterias property
+   * with runtime added criterias.
+   *
+   * @return {Record<string, Criteria>}
+   */
+  static getCriterias() {
+    return {
+      ...this.criterias(),
+      ...this.criteriasSet,
+    }
+  }
+
+  /**
+   * Set a new criteria in the model.
+   *
+   * @param name {string}
+   * @param criteria {Map<string, any[]>|Criteria}
+   * @return {typeof Model}
+   */
+  static addCriteria(name, criteria) {
+    if (!(criteria instanceof Map)) {
+      criteria = criteria.get()
+    }
+
+    this.criteriasSet[name] = criteria
+
+    return this
+  }
+
+  /**
+   * Remove a criteria from the model.
+   *
+   * @param name {string}
+   * @return {typeof Model}
+   */
+  static removeCriteria(name) {
+    if (!this.criteriasSet[name]) {
+      return this
+    }
+
+    delete this.criteriasSet[name]
+
+    return this
   }
 
   /**
@@ -524,12 +570,52 @@ export class Model {
    * Delete or soft delete your model from database.
    *
    * @param {boolean} force
-   * @return {Promise<void> | Promise<any>}
+   * @return {Promise<this | void>}
    */
   async delete(force = false) {
     const Model = this.constructor
 
+    if (Model.isSoftDelete && !force) {
+      const deleted = await Model.delete({
+        [Model.primaryKey]: this[Model.primaryKey],
+      })
+
+      Object.keys(deleted).forEach(key => (this[key] = deleted[key]))
+
+      return this
+    }
+
     return Model.delete({ [Model.primaryKey]: this[Model.primaryKey] }, force)
+  }
+
+  /**
+   * Restore a soft deleted model from database.
+   *
+   * @return {Promise<this>}
+   */
+  async restore() {
+    const Model = this.constructor
+
+    const restored = await Model.update(
+      { [Model.primaryKey]: this[Model.primaryKey] },
+      { deletedAt: null },
+      true,
+    )
+
+    Object.keys(restored).forEach(key => (this[key] = restored[key]))
+
+    return this
+  }
+
+  /**
+   * Verify if model is soft deleted.
+   *
+   * @return {boolean}
+   */
+  isTrashed() {
+    const Model = this.constructor
+
+    return !!this[Model.DELETED_AT]
   }
 
   /**
