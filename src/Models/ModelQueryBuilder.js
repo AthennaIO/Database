@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Is, Uuid } from '@athenna/common'
+import { Is, Json, Uuid } from '@athenna/common'
 
-import { Database } from '#src/index'
+import { Criteria, Database } from '#src/index'
 import { ModelGenerator } from '#src/Models/ModelGenerator'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
@@ -24,7 +24,7 @@ export class ModelQueryBuilder {
   /**
    * The model that is using this instance.
    *
-   * @type {import('#src/index').Model}
+   * @type {typeof import('#src/index').Model}
    */
   #Model
 
@@ -36,7 +36,7 @@ export class ModelQueryBuilder {
   #schema
 
   /**
-   * The model generator to create model instances and retrive relations.
+   * The model generator to create model instances and retrieve relations.
    *
    * @type {import('#src/index').ModelGenerator}
    */
@@ -50,11 +50,11 @@ export class ModelQueryBuilder {
   #withCriterias
 
   /**
-   * All the criterias that should be removed by query builder.
+   * All the criterias of the model.
    *
-   * @type {string[]}
+   * @type {Record<string, Criteria>}
    */
-  #removedCriterias = []
+  #criterias
 
   /**
    * Creates a new instance of ModelQueryBuilder.
@@ -69,6 +69,13 @@ export class ModelQueryBuilder {
     this.#QB = Database.connection(model.connection).table(model.table)
     this.#schema = this.#Model.getSchema()
     this.#generator = new ModelGenerator(this.#Model, this.#schema)
+    this.#criterias = Json.copy(this.#Model.getCriterias())
+
+    if (this.#Model.isSoftDelete) {
+      this.#criterias.deletedAt = Criteria.whereNull(
+        this.#Model.DELETED_AT,
+      ).get()
+    }
   }
 
   /**
@@ -492,39 +499,46 @@ export class ModelQueryBuilder {
   }
 
   /**
-   * Remove the criteria from query builder by name.
+   * Restore a soft deleted models from database.
    *
-   * @param name
-   * @return {ModelQueryBuilder}
+   * @return {Promise<any | any[]>}
    */
-  removeCriteria(name) {
-    this.#removedCriterias.push(name)
-
-    return this
+  async restore() {
+    return this.update({ deletedAt: null }, true)
   }
 
   /**
-   * List the criterias from query builder.
+   * Get all the records even the soft deleted.
    *
-   * @param withRemoved {boolean}
-   * @return {any}
+   * @return {ModelQueryBuilder}
    */
-  listCriterias(withRemoved = false) {
-    const criterias = this.#Model.criterias()
+  withTrashed() {
+    return this.removeCriteria('deletedAt')
+  }
 
-    if (withRemoved) {
-      return criterias
+  /**
+   * Get only the soft deleted values from database.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  onlyTrashed() {
+    return this.removeCriteria('deletedAt').whereNotNull(this.#Model.DELETED_AT)
+  }
+
+  /**
+   * Remove the criteria from query builder by name.
+   *
+   * @param name {string}
+   * @return {ModelQueryBuilder}
+   */
+  removeCriteria(name) {
+    if (!this.#criterias[name]) {
+      return this
     }
 
-    const activeCriterias = {}
+    delete this.#criterias[name]
 
-    Object.keys(criterias).forEach(key => {
-      if (!this.#removedCriterias.includes(key)) {
-        activeCriterias[key] = criterias[key]
-      }
-    })
-
-    return activeCriterias
+    return this
   }
 
   /**
@@ -1288,14 +1302,8 @@ export class ModelQueryBuilder {
       return
     }
 
-    const criterias = this.#Model.criterias()
-
-    Object.keys(criterias).forEach(criteriaName => {
-      if (this.#removedCriterias.includes(criteriaName)) {
-        return
-      }
-
-      const criteria = criterias[criteriaName]
+    Object.keys(this.#criterias).forEach(name => {
+      const criteria = this.#criterias[name]
 
       for (const [key, value] of criteria.entries()) {
         this[key](...value)
