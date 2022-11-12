@@ -548,4 +548,11 @@ test.group('ProductModelTest', group => {
     assert.isUndefined(criterias.select)
     assert.isUndefined(criterias.orderBy)
   })
+
+  test('should be able to transform to json the relations included in the model', async ({ assert }) => {
+    const product = await ProductMySql.query().includes('user').find()
+    const productJson = product.toJSON()
+
+    assert.notInstanceOf(productJson.user, UserMySql)
+  })
 })

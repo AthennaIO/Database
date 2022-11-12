@@ -507,9 +507,32 @@ export class Model {
    * @return {any|any[]}
    */
   toJSON() {
-    const json = {}
+    const Model = this.constructor
 
-    Object.keys(this).forEach(key => (json[key] = this[key]))
+    const json = {}
+    const relations = Model.getSchema().relations.map(relation => relation.name)
+
+    Object.keys(this).forEach(key => {
+      if (relations.includes(key)) {
+        if (Is.Array(this[key])) {
+          json[key] = this[key].map(d => {
+            if (d.toJSON) {
+              return d.toJSON()
+            }
+
+            return d
+          })
+
+          return
+        }
+
+        json[key] = this[key].toJSON ? this[key].toJSON() : this[key]
+
+        return
+      }
+
+      json[key] = this[key]
+    })
 
     return json
   }
