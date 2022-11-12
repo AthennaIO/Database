@@ -25,16 +25,17 @@ export class ManyToManyRelation {
     return {
       query: new ModelQueryBuilder(RelationModel),
       connection: Model.connection,
-      primary: Model.primaryKey,
+      primary: relation.primaryKey || Model.primaryKey,
       foreign:
         relation.foreignKey || `${model.constructor.name.toLowerCase()}Id`,
       property: relation.name,
-      localPrimary: Model.primaryKey,
+      pivotLocalPrimary: relation.pivotLocalPrimaryKey || Model.primaryKey,
       pivotLocalForeign:
         relation.pivotLocalForeignKey || `${String.singularize(Model.table)}Id`,
       pivotTable:
         relation.pivotTable || `${Model.table}_${RelationModel.table}`,
-      relationPrimary: RelationModel.primaryKey,
+      pivotRelationPrimary:
+        relation.pivotRelationPrimaryKey || RelationModel.primaryKey,
       pivotRelationForeign:
         relation.pivotRelationForeignKey ||
         `${String.singularize(RelationModel.table)}Id`,
@@ -53,8 +54,8 @@ export class ManyToManyRelation {
       query,
       connection,
       property,
-      localPrimary,
-      relationPrimary,
+      pivotLocalPrimary,
+      pivotRelationPrimary,
       pivotTable,
       pivotLocalForeign,
       pivotRelationForeign,
@@ -65,7 +66,7 @@ export class ManyToManyRelation {
      */
     const pivotTableData = await Database.connection(connection)
       .table(pivotTable)
-      .where(pivotLocalForeign, model[localPrimary])
+      .where(pivotLocalForeign, model[pivotLocalPrimary])
       .findMany()
 
     model.$extras = pivotTableData
@@ -80,7 +81,7 @@ export class ManyToManyRelation {
     }
 
     model[property] = await query
-      .whereIn(relationPrimary, relationIds)
+      .whereIn(pivotRelationPrimary, relationIds)
       .findMany()
 
     return model
@@ -100,12 +101,14 @@ export class ManyToManyRelation {
     const RelationModel = relationSchema.model
 
     const localTable = Model.table
-    const localPrimary = Model.primaryKey
+    const pivotLocalPrimary =
+      relationSchema.pivotLocalPrimaryKey || Model.primaryKey
     const localForeign =
       modelSchema.pivotLocalForeignKey || `${Model.name.toLowerCase()}Id`
 
     const relationTable = RelationModel.table
-    const relationPrimary = RelationModel.primaryKey
+    const pivotRelationPrimary =
+      relationSchema.pivotRelationPrimaryKey || RelationModel.primaryKey
     const relationForeign =
       modelSchema.pivotRelationForeignKey ||
       `${RelationModel.name.toLowerCase()}Id`
@@ -118,21 +121,21 @@ export class ManyToManyRelation {
     await query
       .whereIn(
         relationForeign,
-        relations.map(r => r[relationPrimary]),
+        relations.map(r => r[pivotRelationPrimary]),
       )
       .delete()
 
     const promises = relations.map(relation => {
       const data = {
-        [localForeign]: model[localPrimary],
-        [relationForeign]: relation[relationPrimary],
+        [localForeign]: model[pivotLocalPrimary],
+        [relationForeign]: relation[pivotRelationPrimary],
       }
 
       const createdPromise = query.create(data)
 
       if (
         Model.connection === 'mysql' &&
-        modelSchema[localPrimary] !== 'increments'
+        modelSchema[pivotLocalPrimary] !== 'increments'
       ) {
         return createdPromise.then(() => query.where(data).find())
       }

@@ -21,7 +21,7 @@ export class BelongsToRelation {
 
     return {
       query: new ModelQueryBuilder(RelationModel),
-      primary: RelationModel.primaryKey,
+      primary: relation.primaryKey || RelationModel.primaryKey,
       foreign: relation.foreignKey || `${relation.name}Id`,
       property: relation.name,
     }
