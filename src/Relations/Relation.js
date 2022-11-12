@@ -156,6 +156,18 @@ export class Relation {
   }
 
   /**
+   * Set the pivot local primary key of the relation.
+   *
+   * @param primaryKey {string}
+   * @return {typeof Relation}
+   */
+  static pivotLocalPrimaryKey(primaryKey) {
+    this.#relation.pivotLocalPrimaryKey = primaryKey
+
+    return this
+  }
+
+  /**
    * Set the pivot local foreign key of the relation.
    *
    * @param foreignKey {string}
@@ -168,6 +180,18 @@ export class Relation {
   }
 
   /**
+   * Set the pivot relation primary key of the relation.
+   *
+   * @param primaryKey {string}
+   * @return {typeof Relation}
+   */
+  static pivotRelationPrimaryKey(primaryKey) {
+    this.#relation.pivotRelationPrimaryKey = primaryKey
+
+    return this
+  }
+
+  /**
    * Set the pivot relation foreign key of the relation.
    *
    * @param foreignKey {string}
@@ -175,6 +199,18 @@ export class Relation {
    */
   static pivotRelationForeignKey(foreignKey) {
     this.#relation.pivotRelationForeignKey = foreignKey
+
+    return this
+  }
+
+  /**
+   * Set the primary key of the relation.
+   *
+   * @param column {string}
+   * @return {typeof Relation}
+   */
+  static primaryKey(column) {
+    this.#relation.primaryKey = column
 
     return this
   }

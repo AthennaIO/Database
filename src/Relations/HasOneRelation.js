@@ -23,7 +23,7 @@ export class HasOneRelation {
 
     return {
       query: new ModelQueryBuilder(RelationModel),
-      primary: Model.primaryKey,
+      primary: relation.primaryKey || Model.primaryKey,
       foreign: relation.foreignKey || `${relation.inverseSide}Id`,
       property: relation.name,
     }
