@@ -768,6 +768,34 @@ export class SchemaBuilder {
   getRelationByName(relationName: string): any
 
   /**
+   * Find the last relation name from nested value.
+   *
+   * @param modelName {string}
+   * @param nestedRelationNames {string[]}
+   * @param callback {(query: ModelQueryBuilder) => void}
+   * @return {any}
+   */
+  includeNestedRelations(
+    modelName: string,
+    nestedRelationNames: string[],
+    callback?: (query: ModelQueryBuilder) => void,
+  ): any
+
+  /**
+   * Set isIncluded as true in the relation.
+   *
+   * @param {string} modelName
+   * @param {string} relationName
+   * @param {any} callback
+   * @return {any}
+   */
+  includeRelation(
+    modelName: string,
+    relationName: string,
+    callback?: (query: ModelQueryBuilder) => void,
+  ): any
+
+  /**
    * Get all available relations as string or null..
    *
    * @return {string|null}
@@ -1321,7 +1349,9 @@ export class Model {
    */
   load(
     relationName: string,
-    callback?: (query: ModelQueryBuilder) => void,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
   ): Promise<Model>
 
   /**
@@ -3165,7 +3195,9 @@ export class Criteria {
    */
   static with(
     relationName: string,
-    callback?: (query: ModelQueryBuilder) => Promise<void>,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
   ): typeof Criteria
 
   /**
@@ -3695,7 +3727,12 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  with(relationName: string, callback?: (query: this) => Promise<void>): this
+  with(
+    relationName: string,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+  ): this
 
   /**
    * Executes the given closure when the first argument is true.

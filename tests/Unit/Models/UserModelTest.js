@@ -20,6 +20,7 @@ import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
 import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
+import { ProductDetail } from '#tests/Stubs/models/ProductDetail'
 
 test.group('UserModelTest', group => {
   group.setup(async () => {
@@ -624,5 +625,62 @@ test.group('UserModelTest', group => {
     assert.isUndefined(products[0].name)
     assert.isUndefined(user.products[0].name)
     assert.deepEqual(products[0].id, user.products[0].id)
+  })
+
+  test('should be able to load nested relations using with method', async ({ assert }) => {
+    const { id: userId } = await User.find()
+    const { id: productId } = await Product.factory().create({ userId })
+    await ProductDetail.factory().count(2).create({ productId })
+
+    const user = await User.query().with('products.productDetails').where('id', userId).find()
+
+    assert.isDefined(user.products)
+    assert.isDefined(user.products[0].productDetails)
+    assert.isDefined(user.products[0].productDetails[0].id)
+    assert.lengthOf(user.products[0].productDetails, 2)
+  })
+
+  test('should be able to load nested relations using with method and use a callback', async ({ assert }) => {
+    const { id: userId } = await User.find()
+    const { id: productId } = await Product.factory().create({ userId })
+    await ProductDetail.factory().count(2).create({ productId })
+
+    const user = await User.query()
+      .with('products.productDetails', query => query.select('id', 'productId'))
+      .where('id', userId)
+      .find()
+
+    assert.isDefined(user.products)
+    assert.isDefined(user.products[0].productDetails)
+    assert.isDefined(user.products[0].productDetails[0].id)
+    assert.isUndefined(user.products[0].productDetails[0].content)
+    assert.lengthOf(user.products[0].productDetails, 2)
+  })
+
+  test('should be able to load nested relations using load instance method', async ({ assert }) => {
+    const user = await User.find()
+    const { id: productId } = await Product.factory().create({ userId: user.id })
+    await ProductDetail.factory().count(2).create({ productId })
+
+    await user.load('products.productDetails')
+
+    assert.isDefined(user.products)
+    assert.isDefined(user.products[0].productDetails)
+    assert.isDefined(user.products[0].productDetails[0].id)
+    assert.lengthOf(user.products[0].productDetails, 2)
+  })
+
+  test('should be able to load nested relations using with method and use a callback', async ({ assert }) => {
+    const user = await User.find()
+    const { id: productId } = await Product.factory().create({ userId: user.id })
+    await ProductDetail.factory().count(2).create({ productId })
+
+    await user.load('products.productDetails', query => query.select('id', 'productId'))
+
+    assert.isDefined(user.products)
+    assert.isDefined(user.products[0].productDetails)
+    assert.isDefined(user.products[0].productDetails[0].id)
+    assert.isUndefined(user.products[0].productDetails[0].content)
+    assert.lengthOf(user.products[0].productDetails, 2)
   })
 })

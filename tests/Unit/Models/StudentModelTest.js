@@ -65,17 +65,19 @@ test.group('StudentModelTest', group => {
 
   test('should be able to load courses relation of student', async ({ assert }) => {
     const student = await Student.find()
-    const course = await Course.find()
+    const courses = await Course.query().limit(5).findMany()
 
-    student.courses = [course]
+    student.courses = courses
 
     await student.save()
 
     const studentWithCourses = await Student.query().where('id', student.id).with('courses').find()
 
-    assert.isDefined(studentWithCourses.courses[0].pivot.id)
-    assert.equal(studentWithCourses.courses[0].pivot.studentId, student.id)
-    assert.equal(studentWithCourses.courses[0].pivot.courseId, course.id)
+    studentWithCourses.courses.forEach(course => {
+      assert.deepEqual(course.pivot.studentId, student.id)
+      assert.isDefined(courses.find(c => c.id === course.id))
+    })
+    assert.lengthOf(studentWithCourses.courses, 5)
   })
 
   test('should be able to make sub queries on relations', async ({ assert }) => {

@@ -49,7 +49,7 @@ export class HasOneRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query.where({ [foreign]: model[primary] }).find()
+    model[property] = await query.where(foreign, model[primary]).find()
 
     return model
   }

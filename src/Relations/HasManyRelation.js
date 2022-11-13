@@ -49,9 +49,7 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query
-      .where({ [foreign]: model[primary] })
-      .findMany()
+    model[property] = await query.where(foreign, model[primary]).findMany()
 
     return model
   }
@@ -80,7 +78,19 @@ export class HasManyRelation {
     const results = await query.whereIn(foreign, primaryValues).findMany()
 
     const map = new Map()
-    results.forEach(result => map.set(result[foreign], result))
+    results.forEach(result => {
+      if (!map.has(result[foreign])) {
+        map.set(result[foreign], [result])
+
+        return
+      }
+
+      const array = map.get(result[foreign])
+
+      array.push(result)
+
+      map.set(result[foreign], array)
+    })
 
     return models.map(
       model => (model[property] = map.get(model[primary]) || []),

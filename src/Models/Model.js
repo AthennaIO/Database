@@ -18,7 +18,6 @@ import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
 import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
-import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 export class Model {
@@ -53,7 +52,7 @@ export class Model {
    * @return {string}
    */
   static get table() {
-    return String.pluralize(this.name.toLowerCase())
+    return String.pluralize(String.toSnakeCase(this.name).toLowerCase())
   }
 
   /**
@@ -555,29 +554,31 @@ export class Model {
    * Load a relation in your model.
    *
    * @param relationName {string}
-   * @param callback {(query: ModelQueryBuilder) => void}
+   * @param callback {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
    * @return {Promise<Model>}
    */
   async load(relationName, callback) {
     const Model = this.constructor
     const schema = Model.getSchema()
     const modelGenerator = new ModelGenerator(Model, schema)
-    const relation = schema.getRelationByName(relationName)
 
-    if (!relation) {
-      throw new NotImplementedRelationException(
-        relationName,
+    if (relationName.includes('.')) {
+      const relation = schema.includeNestedRelations(
         Model.name,
-        schema.getAvailableRelationsString(),
+        relationName,
+        callback,
       )
+
+      await modelGenerator.includeRelation(this, relation)
+
+      return this[relation.name]
     }
 
-    relation.isIncluded = true
-    relation.callback = callback
+    const relation = schema.includeRelation(Model.name, relationName, callback)
 
     await modelGenerator.includeRelation(this, relation)
 
-    return this[relationName]
+    return this[relation.name]
   }
 
   /**
