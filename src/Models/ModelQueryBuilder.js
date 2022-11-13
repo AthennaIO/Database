@@ -11,7 +11,6 @@ import { Is, Json, Uuid } from '@athenna/common'
 
 import { Criteria, Database } from '#src/index'
 import { ModelGenerator } from '#src/Models/ModelGenerator'
-import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 
 export class ModelQueryBuilder {
   /**
@@ -884,30 +883,24 @@ export class ModelQueryBuilder {
   }
 
   /**
-   * Include some relation in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string|any}
-   * @param [callback] {any}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
    * @return {ModelQueryBuilder}
    */
-  includes(relationName, callback) {
-    const relations = this.#schema.relations
-    const relation = relations.find(r => r.name === relationName)
-
-    if (!relation) {
-      throw new NotImplementedRelationException(
-        relationName,
+  with(relationName, callback) {
+    if (relationName.includes('.')) {
+      this.#schema.includeNestedRelations(
         this.#Model.name,
-        relations.length ? relations.join(',') : null,
+        relationName,
+        callback,
       )
+
+      return this
     }
 
-    const index = relations.indexOf(relation)
-
-    relation.isIncluded = true
-    relation.callback = callback
-
-    this.#schema.relations[index] = relation
+    this.#schema.includeRelation(this.#Model.name, relationName, callback)
 
     return this
   }

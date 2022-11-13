@@ -46,7 +46,7 @@ test.group('CountryModelTest', group => {
   })
 
   test('should be able to load capital relation of countries', async ({ assert }) => {
-    const [country] = await Country.query().includes('capital').findMany()
+    const [country] = await Country.query().with('capital').findMany()
 
     assert.isDefined(country.capital.id)
     assert.deepEqual(country.id, country.capital.countryId)
@@ -55,7 +55,7 @@ test.group('CountryModelTest', group => {
   test('should be able to make sub queries on relations', async ({ assert }) => {
     const capital = await Capital.query()
       .select('id', 'countryId')
-      .includes('country', query => query.select('id'))
+      .with('country', query => query.select('id'))
       .find()
 
     assert.deepEqual(capital.countryId, capital.country.id)

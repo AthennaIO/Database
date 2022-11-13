@@ -35,6 +35,7 @@ test.group('MigrationTest', group => {
   })
 
   group.each.teardown(async () => {
+    await DB.dropTable('product_details')
     await DB.dropTable('products')
     await DB.dropTable('users')
     await DB.dropTable('students_courses')

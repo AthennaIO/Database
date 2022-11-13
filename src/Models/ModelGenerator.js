@@ -16,7 +16,7 @@ export class ModelGenerator {
   /**
    * The model that is using this instance.
    *
-   * @type {import('#src/index').Model}
+   * @type {typeof import('#src/index').Model}
    */
   #Model
 
@@ -43,7 +43,7 @@ export class ModelGenerator {
    * Generate one model instance with relations loaded.
    *
    * @param data
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model>}
    */
   async generateOne(data) {
     if (!data) {
@@ -53,21 +53,24 @@ export class ModelGenerator {
     const model = this.#instantiateOne(data)
     const relations = this.#schema.getIncludedRelations()
 
-    return this.#includeRelations(model, relations)
+    return this.includeRelations(model, relations)
   }
 
   /**
    * Generate models instances with relations loaded.
    *
    * @param data
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model[]>}
    */
   async generateMany(data) {
     if (!data.length) {
       return []
     }
 
-    return Promise.all(data.map(d => this.generateOne(d)))
+    const models = await Promise.all(data.map(d => this.#instantiateOne(d)))
+    const relations = this.#schema.getIncludedRelations()
+
+    return this.includeRelationsOfAll(models, relations)
   }
 
   /**
@@ -89,7 +92,7 @@ export class ModelGenerator {
    * using the column dictionary to map keys.
    *
    * @param object {any}
-   * @param model {any}
+   * @param model {import('#src/index').Model}
    * @return {any}
    */
   #populate(object, model) {
@@ -125,11 +128,11 @@ export class ModelGenerator {
   /**
    * Include one relation to model.
    *
-   * @param model {any}
+   * @param model {import('#src/index').Model}
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async #includeRelation(model, relation) {
+  async includeRelation(model, relation) {
     switch (relation.type) {
       case 'hasOne':
         return new HasOneRelation().load(model, relation)
@@ -145,19 +148,58 @@ export class ModelGenerator {
   }
 
   /**
+   * Include one relation to model.
+   *
+   * @param models {import('#src/index').Model[]}
+   * @param relation {any}
+   * @return {Promise<any>}
+   */
+  async includeRelationOfAll(models, relation) {
+    switch (relation.type) {
+      case 'hasOne':
+        return new HasOneRelation().loadAll(models, relation)
+      case 'hasMany':
+        return new HasManyRelation().loadAll(models, relation)
+      case 'belongsTo':
+        return new BelongsToRelation().loadAll(models, relation)
+      case 'manyToMany':
+        return new ManyToManyRelation().loadAll(models, relation)
+      default:
+        return models
+    }
+  }
+
+  /**
    * Include relations to model.
    *
-   * @param model {any}
+   * @param model {import('#src/index').Model}
    * @param relations {any[]}
    * @return {Promise<any>}
    */
-  async #includeRelations(model, relations) {
+  async includeRelations(model, relations) {
     if (!relations || !relations.length) {
       return model
     }
 
-    await Promise.all(relations.map(r => this.#includeRelation(model, r)))
+    await Promise.all(relations.map(r => this.includeRelation(model, r)))
 
     return model
+  }
+
+  /**
+   * Include the relations of all models.
+   *
+   * @param models {import('#src/index').Model[]}
+   * @param relations {any[]}
+   * @return {Promise<import('#src/index').Model[]>}
+   */
+  async includeRelationsOfAll(models, relations) {
+    if (!relations || !relations.length) {
+      return models
+    }
+
+    await Promise.all(relations.map(r => this.includeRelationOfAll(models, r)))
+
+    return models
   }
 }

@@ -11,7 +11,7 @@ import { Assert } from '@japa/assert'
 import { faker } from '@faker-js/faker'
 import { Is, String } from '@athenna/common'
 
-import { Database } from '#src/index'
+import { Database, ModelGenerator } from '#src/index'
 import { ModelFactory } from '#src/Models/ModelFactory'
 import { SchemaBuilder } from '#src/Models/SchemaBuilder'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
@@ -52,7 +52,7 @@ export class Model {
    * @return {string}
    */
   static get table() {
-    return String.pluralize(this.name.toLowerCase())
+    return String.pluralize(String.toSnakeCase(this.name).toLowerCase())
   }
 
   /**
@@ -512,6 +512,9 @@ export class Model {
     const json = {}
     const relations = Model.getSchema().relations.map(relation => relation.name)
 
+    /**
+     * Execute the toJSON of relations.
+     */
     Object.keys(this).forEach(key => {
       if (relations.includes(key)) {
         if (Is.Array(this[key])) {
@@ -545,6 +548,37 @@ export class Model {
    */
   toResource(criterias = {}) {
     return this.toJSON()
+  }
+
+  /**
+   * Load a relation in your model.
+   *
+   * @param relationName {string}
+   * @param callback {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
+   * @return {Promise<Model>}
+   */
+  async load(relationName, callback) {
+    const Model = this.constructor
+    const schema = Model.getSchema()
+    const modelGenerator = new ModelGenerator(Model, schema)
+
+    if (relationName.includes('.')) {
+      const relation = schema.includeNestedRelations(
+        Model.name,
+        relationName,
+        callback,
+      )
+
+      await modelGenerator.includeRelation(this, relation)
+
+      return this[relation.name]
+    }
+
+    const relation = schema.includeRelation(Model.name, relationName, callback)
+
+    await modelGenerator.includeRelation(this, relation)
+
+    return this[relation.name]
   }
 
   /**
@@ -675,7 +709,7 @@ export class Model {
         return
       }
 
-      query.includes(key)
+      query.with(key)
     })
 
     const data = await query.find()

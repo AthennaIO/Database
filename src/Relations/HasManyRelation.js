@@ -49,10 +49,51 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query
-      .where({ [foreign]: model[primary] })
-      .findMany()
+    model[property] = await query.where(foreign, model[primary]).findMany()
 
     return model
+  }
+
+  /**
+   * Load all models that has many relation.
+   *
+   * @param models {any[]}
+   * @param relation {any}
+   * @return {Promise<any>}
+   */
+  async loadAll(models, relation) {
+    const { query, primary, foreign, property } = this.getOptions(
+      models[0],
+      relation,
+    )
+
+    /**
+     * Execute client callback if it exists.
+     */
+    if (relation.callback) {
+      await relation.callback(query)
+    }
+
+    const primaryValues = models.map(model => model[primary])
+    const results = await query.whereIn(foreign, primaryValues).findMany()
+
+    const map = new Map()
+    results.forEach(result => {
+      if (!map.has(result[foreign])) {
+        map.set(result[foreign], [result])
+
+        return
+      }
+
+      const array = map.get(result[foreign])
+
+      array.push(result)
+
+      map.set(result[foreign], array)
+    })
+
+    return models.map(
+      model => (model[property] = map.get(model[primary]) || []),
+    )
   }
 }

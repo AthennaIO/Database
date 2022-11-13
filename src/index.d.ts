@@ -760,6 +760,49 @@ export class SchemaBuilder {
   setRelations(relations: any): this
 
   /**
+   * Find the relation object by name.
+   *
+   * @param relationName {string}
+   * @return {any}
+   */
+  getRelationByName(relationName: string): any
+
+  /**
+   * Find the last relation name from nested value.
+   *
+   * @param modelName {string}
+   * @param nestedRelationNames {string[]}
+   * @param callback {(query: ModelQueryBuilder) => void}
+   * @return {any}
+   */
+  includeNestedRelations(
+    modelName: string,
+    nestedRelationNames: string[],
+    callback?: (query: ModelQueryBuilder) => void,
+  ): any
+
+  /**
+   * Set isIncluded as true in the relation.
+   *
+   * @param {string} modelName
+   * @param {string} relationName
+   * @param {any} callback
+   * @return {any}
+   */
+  includeRelation(
+    modelName: string,
+    relationName: string,
+    callback?: (query: ModelQueryBuilder) => void,
+  ): any
+
+  /**
+   * Get all available relations as string or null..
+   *
+   * @return {string|null}
+   */
+  getAvailableRelationsString(): string | null
+
+  /**
    * Verify if schema has timestamp properties.
    *
    * @return {boolean}
@@ -889,8 +932,8 @@ export class ModelGenerator {
   /**
    * Creates a new instance of ModelGenerator.
    *
-   * @param Model {import('#src/index').Model}
-   * @param schema {import('#src/index').SchemaBuilder}
+   * @param Model {Model}
+   * @param schema {SchemaBuilder}
    * @return {ModelGenerator}
    */
   constructor(Model: Model, schema: SchemaBuilder)
@@ -899,17 +942,35 @@ export class ModelGenerator {
    * Generate one model instance with relations loaded.
    *
    * @param data {any}
-   * @return {Promise<any>}
+   * @return {Promise<Model>}
    */
-  generateOne(data: any): Promise<any>
+  generateOne(data: any): Promise<Model>
 
   /**
    * Generate models instances with relations loaded.
    *
    * @param data {any[]}
-   * @return {Promise<any[]>}
+   * @return {Promise<Model[]>}
    */
-  generateMany(data: any[]): Promise<any[]>
+  generateMany(data: any[]): Promise<Model[]>
+
+  /**
+   * Include one relation to model.
+   *
+   * @param model {Model}
+   * @param relation {any}
+   * @return {Promise<Model>}
+   */
+  includeRelation(model: Model, relation: any): Promise<Model>
+
+  /**
+   * Include relations to model.
+   *
+   * @param model {Model}
+   * @param relations {any[]}
+   * @return {Promise<Model>}
+   */
+  includeRelations(model: Model, relations: any[]): Promise<Model>
 }
 
 export class Model {
@@ -1258,6 +1319,13 @@ export class Model {
   static assertNotExists(where: any): Promise<void>
 
   /**
+   * Creates a new instance of your model.
+   *
+   * @param [isFromDatabase] {boolean}
+   */
+  constructor(isFromDatabase?: boolean)
+
+  /**
    * Return a Json object from the actual subclass instance.
    *
    * @return {any|any[]}
@@ -1271,6 +1339,20 @@ export class Model {
    * @return {any|any[]}
    */
   toResource(criterias?: any): any | any[]
+
+  /**
+   * Load a relation in your model.
+   *
+   * @param relationName {string}
+   * @param callback {(query: ModelQueryBuilder) => void}
+   * @return {Promise<Model>}
+   */
+  load(
+    relationName: string,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+  ): Promise<Model>
 
   /**
    * Update the model values that have been modified.
@@ -3105,15 +3187,17 @@ export class Criteria {
   static select(...columns: string[]): typeof Criteria
 
   /**
-   * Set a include statement in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string}
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  static includes(
+  static with(
     relationName: string,
-    callback?: (query: ModelQueryBuilder) => Promise<void>,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
   ): typeof Criteria
 
   /**
@@ -3637,15 +3721,17 @@ export class ModelQueryBuilder extends QueryBuilder {
   onlyTrashed(): this
 
   /**
-   * Set a include statement in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string}
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  includes(
+  with(
     relationName: string,
-    callback?: (query: this) => Promise<void>,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
   ): this
 
   /**

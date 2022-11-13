@@ -1,3 +1,5 @@
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
+
 /**
  * @athenna/database
  *
@@ -142,6 +144,78 @@ export class SchemaBuilder {
     })
 
     return this
+  }
+
+  /**
+   * Get all available relations as string or null..
+   *
+   * @return {string|null}
+   */
+  getAvailableRelationsString() {
+    return this.relations.length ? this.relations.join(',') : null
+  }
+
+  /**
+   * Find the relation object by name.
+   *
+   * @param relationName {string}
+   * @return {any}
+   */
+  getRelationByName(relationName) {
+    return this.relations.find(relation => relationName === relation.name)
+  }
+
+  /**
+   * Find the relation object by name.
+   *
+   * @param modelName {string}
+   * @param nestedRelationNames {string}
+   * @param lastCallback {any}
+   * @return {any}
+   */
+  includeNestedRelations(modelName, nestedRelationNames, lastCallback) {
+    const relationsArray = nestedRelationNames.split('.')
+
+    const mainRelationName = relationsArray.shift()
+    const callback = relationsArray.reduce((cb, relationName, index) => {
+      if (index === relationsArray.length - 1) {
+        cb = query => query.with(relationName, lastCallback)
+      } else {
+        cb = query => query.with(relationName, cb)
+      }
+
+      return cb
+    }, undefined)
+
+    return this.includeRelation(modelName, mainRelationName, callback)
+  }
+
+  /**
+   * Set isIncluded as true in the relation.
+   *
+   * @param {string} modelName
+   * @param {string} relationName
+   * @param {any} callback
+   * @return {any}
+   */
+  includeRelation(modelName, relationName, callback) {
+    const relation = this.getRelationByName(relationName)
+
+    if (!relation) {
+      throw new NotImplementedRelationException(
+        relationName,
+        modelName,
+        this.getAvailableRelationsString(),
+      )
+    }
+
+    relation.isIncluded = true
+    relation.callback = callback
+
+    const index = this.relations.indexOf(relation)
+    this.relations[index] = relation
+
+    return this.relations[index]
   }
 
   /**

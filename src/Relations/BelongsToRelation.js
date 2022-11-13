@@ -44,8 +44,36 @@ export class BelongsToRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query.where({ [primary]: model[foreign] }).find()
+    model[property] = await query.where(primary, model[foreign]).find()
 
     return model
+  }
+
+  /**
+   * Load all models that belongs to relation.
+   *
+   * @param models {any[]}
+   * @param relation {any}
+   * @return {Promise<any>}
+   */
+  async loadAll(models, relation) {
+    const { query, primary, foreign, property } = this.getOptions(relation)
+
+    /**
+     * Execute client callback if it exists.
+     */
+    if (relation.callback) {
+      await relation.callback(query)
+    }
+
+    const foreignValues = models.map(model => model[foreign])
+    const results = await query.whereIn(primary, foreignValues).findMany()
+
+    const map = new Map()
+    results.forEach(result => map.set(result[primary], result))
+
+    return models.map(
+      model => (model[property] = map.get(model[foreign]) || {}),
+    )
   }
 }

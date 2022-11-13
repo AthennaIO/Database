@@ -284,7 +284,7 @@ test.group('ProductModelTest', group => {
     const products = await ProductMySql.query()
       .select('id', 'name', 'userId', 'deletedAt')
       .where('userId', userId)
-      .includes('user', query => query.select('id', 'name'))
+      .with('user', query => query.select('id', 'name'))
       .whereNull('deletedAt')
       .findMany()
 
@@ -311,7 +311,7 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to get the product as JSON', async ({ assert }) => {
-    const [product] = await ProductMySql.query().includes('user').findMany()
+    const [product] = await ProductMySql.query().with('user').findMany()
 
     const productJson = product.toJSON()
 
@@ -319,7 +319,7 @@ test.group('ProductModelTest', group => {
   })
 
   test('should throw a not implemented relation exception', async ({ assert }) => {
-    assert.throws(() => ProductMySql.query().includes('notImplemented'), NotImplementedRelationException)
+    assert.throws(() => ProductMySql.query().with('notImplemented'), NotImplementedRelationException)
   })
 
   test('should be able to find products ordering by latest and oldest', async ({ assert }) => {
@@ -427,7 +427,7 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to refresh models', async ({ assert }) => {
-    const product = await ProductMySql.query().includes('user').find()
+    const product = await ProductMySql.query().with('user').find()
 
     product.name = 'other-name'
     product.user.name = 'other-user-name'
@@ -550,9 +550,43 @@ test.group('ProductModelTest', group => {
   })
 
   test('should be able to transform to json the relations included in the model', async ({ assert }) => {
-    const product = await ProductMySql.query().includes('user').find()
+    const product = await ProductMySql.query().with('user').find()
     const productJson = product.toJSON()
 
     assert.notInstanceOf(productJson.user, UserMySql)
+  })
+
+  test('should be able to load relations after fetching the main model', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const user = await product.load('user')
+
+    assert.isDefined(product.user)
+    assert.deepEqual(user.id, product.user.id)
+  })
+
+  test('should throw an exception when trying to load a relation that does not exist', async ({ assert }) => {
+    const product = await ProductMySql.find()
+
+    await assert.rejects(() => product.load('not-found'), NotImplementedRelationException)
+  })
+
+  test('should be able to reload relations even if it is already loaded', async ({ assert }) => {
+    const product = await ProductMySql.query().with('user').find()
+    const user = await product.load('user', query => query.select('id'))
+
+    assert.isDefined(product.user)
+    assert.isUndefined(user.name)
+    assert.isUndefined(product.user.name)
+    assert.deepEqual(user.id, product.user.id)
+  })
+
+  test('should be able to load relations after fetching the main model making sub queries', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const user = await product.load('user', query => query.select('id'))
+
+    assert.isDefined(product.user)
+    assert.isUndefined(user.name)
+    assert.isUndefined(product.user.name)
+    assert.deepEqual(user.id, product.user.id)
   })
 })

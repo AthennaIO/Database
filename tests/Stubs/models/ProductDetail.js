@@ -1,17 +1,7 @@
-import { User } from '#tests/Stubs/models/User'
 import { Model, Column, Relation } from '#src/index'
-import { ProductDetail } from '#tests/Stubs/models/ProductDetail'
+import { Product } from '#tests/Stubs/models/Product'
 
-export class Product extends Model {
-  /**
-   * The attributes that could be persisted in database.
-   *
-   *  @return {string[]}
-   */
-  static get persistOnly() {
-    return ['id', 'name', 'userId']
-  }
-
+export class ProductDetail extends Model {
   /**
    * Return a boolean specifying if Model will use soft delete.
    *
@@ -29,11 +19,9 @@ export class Product extends Model {
   static schema() {
     return {
       id: Column.autoIncrementedInt('id'),
-      name: Column.string('name', 200),
-      price: Column.integer({ default: 0 }),
-      userId: Column.integer(),
-      user: Relation.belongsTo(User, 'products'),
-      productDetails: Relation.hasMany(ProductDetail, 'product'),
+      content: Column.string('content', 200),
+      productId: Column.integer(),
+      product: Relation.belongsTo(Product, 'productDetails'),
       createdAt: Column.createdAt(),
       updatedAt: Column.updatedAt(),
       deletedAt: Column.deletedAt(this.DELETED_AT),
@@ -48,9 +36,8 @@ export class Product extends Model {
   static async definition() {
     return {
       id: this.faker.datatype.number(),
-      name: this.faker.name.fullName(),
-      price: this.faker.datatype.number(),
-      userId: User.factory('id'),
+      content: this.faker.name.fullName(),
+      productId: Product.factory('id'),
       createdAt: this.faker.date.recent(),
       updatedAt: this.faker.date.recent(),
       deletedAt: null,
