@@ -69,8 +69,6 @@ export class ManyToManyRelation {
       .where(pivotLocalForeign, model[pivotLocalPrimary])
       .findMany()
 
-    model.$extras = pivotTableData
-
     const relationIds = pivotTableData.map(d => d[pivotRelationForeign])
 
     /**
@@ -83,6 +81,17 @@ export class ManyToManyRelation {
     model[property] = await query
       .whereIn(pivotRelationPrimary, relationIds)
       .findMany()
+
+    /**
+     * Get the pivot table array data and set
+     * in the respective relation model.
+     */
+    model[property].forEach(
+      m =>
+        (m.pivot = pivotTableData.find(
+          d => d[pivotRelationForeign] === m[pivotRelationPrimary],
+        )),
+    )
 
     return model
   }
@@ -118,29 +127,31 @@ export class ManyToManyRelation {
 
     const query = Database.connection(Model.connection).table(pivotTable)
 
-    await query
-      .whereIn(
-        relationForeign,
-        relations.map(r => r[pivotRelationPrimary]),
-      )
-      .delete()
-
     const promises = relations.map(relation => {
       const data = {
         [localForeign]: model[pivotLocalPrimary],
         [relationForeign]: relation[pivotRelationPrimary],
       }
 
-      const createdPromise = query.create(data)
+      return query
+        .where(data)
+        .find()
+        .then(exists => {
+          if (exists) {
+            return
+          }
 
-      if (
-        Model.connection === 'mysql' &&
-        modelSchema[pivotLocalPrimary] !== 'increments'
-      ) {
-        return createdPromise.then(() => query.where(data).find())
-      }
+          const createdPromise = query.create(data)
 
-      return createdPromise
+          if (
+            Model.connection === 'mysql' &&
+            modelSchema[pivotLocalPrimary] !== 'increments'
+          ) {
+            return createdPromise.then(() => query.where(data).find())
+          }
+
+          return createdPromise
+        })
     })
 
     return Promise.all(promises)

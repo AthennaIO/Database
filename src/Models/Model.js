@@ -717,7 +717,20 @@ export class Model {
           relationSchema,
         )
 
-        subPromises.then(extras => (this.$extras = extras))
+        /**
+         * Get the pivot table array data and set
+         * in the respective relation model.
+         */
+        subPromises.then(pivotArray => {
+          relations.forEach(
+            relation =>
+              (relation.pivot = pivotArray.find(
+                data =>
+                  data[relationSchema.pivotRelationForeign] ===
+                  relation[relationSchema.pivotRelationPrimary],
+              )),
+          )
+        })
 
         promises.push(subPromises)
       }
