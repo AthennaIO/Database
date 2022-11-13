@@ -54,10 +54,13 @@ test.group('StudentModelTest', group => {
 
     await student.save()
 
-    assert.isDefined(student.$extras[0].id)
-    assert.equal(course.id, student.$extras[0].courseId)
-    assert.equal(student.id, student.$extras[0].studentId)
-    assert.deepEqual(student.$extras, await DB.connection('mysql').table('students_courses').findMany())
+    assert.isDefined(student.courses[0].pivot.id)
+    assert.equal(course.id, student.courses[0].pivot.courseId)
+    assert.equal(student.id, student.courses[0].pivot.studentId)
+    assert.deepEqual(
+      student.courses[0].pivot,
+      await DB.connection('mysql').table('students_courses').where('id', student.courses[0].pivot.id).find(),
+    )
   })
 
   test('should be able to load courses relation of student', async ({ assert }) => {
@@ -70,9 +73,9 @@ test.group('StudentModelTest', group => {
 
     const studentWithCourses = await Student.query().where('id', student.id).includes('courses').find()
 
-    assert.isDefined(studentWithCourses.$extras[0].id)
-    assert.equal(studentWithCourses.$extras[0].studentId, student.id)
-    assert.equal(studentWithCourses.$extras[0].courseId, course.id)
+    assert.isDefined(studentWithCourses.courses[0].pivot.id)
+    assert.equal(studentWithCourses.courses[0].pivot.studentId, student.id)
+    assert.equal(studentWithCourses.courses[0].pivot.courseId, course.id)
   })
 
   test('should be able to make sub queries on relations', async ({ assert }) => {
@@ -89,12 +92,11 @@ test.group('StudentModelTest', group => {
       .includes('courses', query => query.where('id', course.id))
       .find()
 
-    assert.isDefined(studentWithCourses.$extras[0].id)
+    assert.isDefined(studentWithCourses.courses[0].pivot.id)
     assert.equal(studentWithCourses.courses[0].id, course.id)
-    assert.equal(studentWithCourses.$extras[0].courseId, course.id)
-    assert.equal(studentWithCourses.$extras[0].studentId, student.id)
+    assert.equal(studentWithCourses.courses[0].pivot.courseId, course.id)
+    assert.equal(studentWithCourses.courses[0].pivot.studentId, student.id)
 
-    assert.lengthOf(studentWithCourses.$extras, 2)
     assert.lengthOf(studentWithCourses.courses, 1)
   })
 })
