@@ -67,7 +67,10 @@ export class ModelGenerator {
       return []
     }
 
-    return Promise.all(data.map(d => this.generateOne(d)))
+    const models = await Promise.all(data.map(d => this.#instantiateOne(d)))
+    const relations = this.#schema.getIncludedRelations()
+
+    return this.includeRelationsOfAll(models, relations)
   }
 
   /**
@@ -145,6 +148,28 @@ export class ModelGenerator {
   }
 
   /**
+   * Include one relation to model.
+   *
+   * @param models {import('#src/index').Model[]}
+   * @param relation {any}
+   * @return {Promise<any>}
+   */
+  async includeRelationOfAll(models, relation) {
+    switch (relation.type) {
+      case 'hasOne':
+        return new HasOneRelation().loadAll(models, relation)
+      case 'hasMany':
+        return new HasManyRelation().loadAll(models, relation)
+      case 'belongsTo':
+        return new BelongsToRelation().loadAll(models, relation)
+      case 'manyToMany':
+        return new ManyToManyRelation().loadAll(models, relation)
+      default:
+        return models
+    }
+  }
+
+  /**
    * Include relations to model.
    *
    * @param model {import('#src/index').Model}
@@ -159,5 +184,22 @@ export class ModelGenerator {
     await Promise.all(relations.map(r => this.includeRelation(model, r)))
 
     return model
+  }
+
+  /**
+   * Include the relations of all models.
+   *
+   * @param models {import('#src/index').Model[]}
+   * @param relations {any[]}
+   * @return {Promise<import('#src/index').Model[]>}
+   */
+  async includeRelationsOfAll(models, relations) {
+    if (!relations || !relations.length) {
+      return models
+    }
+
+    await Promise.all(relations.map(r => this.includeRelationOfAll(models, r)))
+
+    return models
   }
 }

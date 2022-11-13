@@ -7,12 +7,12 @@
  * file that was distributed with this source code.
  */
 
-import { Database, ModelQueryBuilder } from '#src/index'
 import { String } from '@athenna/common'
+import { Database, ModelQueryBuilder } from '#src/index'
 
 export class ManyToManyRelation {
   /**
-   * Get the relation options to craft the many to many query.
+   * Get the relation options to craft the many-to-many query.
    *
    * @param model {any}
    * @param relation {any}
@@ -94,6 +94,69 @@ export class ManyToManyRelation {
     )
 
     return model
+  }
+
+  /**
+   * Load all models that has many-to-many relation.
+   *
+   * @param models {any[]}
+   * @param relation {any}
+   * @return {Promise<any>}
+   */
+  async loadAll(models, relation) {
+    const {
+      query,
+      connection,
+      property,
+      pivotLocalPrimary,
+      pivotRelationPrimary,
+      pivotTable,
+      pivotLocalForeign,
+      pivotRelationForeign,
+    } = this.getOptions(models[0], relation)
+
+    const pivotLocalPrimaryValues = models.map(
+      model => model[pivotLocalPrimary],
+    )
+
+    /**
+     * Using Database here because there is no PivotModel.
+     */
+    const pivotTableData = await Database.connection(connection)
+      .table(pivotTable)
+      .whereIn(pivotLocalForeign, pivotLocalPrimaryValues)
+      .findMany()
+
+    const foreignIds = pivotTableData.map(d => d[pivotRelationForeign])
+
+    /**
+     * Execute client callback if it exists.
+     */
+    if (relation.callback) {
+      await relation.callback(query)
+    }
+
+    const results = await query
+      .whereIn(pivotRelationPrimary, foreignIds)
+      .findMany()
+
+    const map = new Map()
+    results.forEach(result => map.set(result[pivotRelationPrimary], result))
+
+    return models.map(model => {
+      model[property] = map.get(model[pivotRelationForeign]) || []
+
+      /**
+       * Get the pivot table array data and set
+       * in the respective relation model.
+       */
+      model.pivot =
+        pivotTableData.find(
+          d => d[pivotRelationForeign] === model[pivotRelationPrimary],
+        ) || {}
+
+      return model
+    })
   }
 
   /**
