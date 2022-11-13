@@ -11,13 +11,14 @@ import { Assert } from '@japa/assert'
 import { faker } from '@faker-js/faker'
 import { Is, String } from '@athenna/common'
 
-import { Database } from '#src/index'
+import { Database, ModelGenerator } from '#src/index'
 import { ModelFactory } from '#src/Models/ModelFactory'
 import { SchemaBuilder } from '#src/Models/SchemaBuilder'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
 import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
+import { NotImplementedRelationException } from '#src/Exceptions/NotImplementedRelationException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
 export class Model {
@@ -512,6 +513,9 @@ export class Model {
     const json = {}
     const relations = Model.getSchema().relations.map(relation => relation.name)
 
+    /**
+     * Execute the toJSON of relations.
+     */
     Object.keys(this).forEach(key => {
       if (relations.includes(key)) {
         if (Is.Array(this[key])) {
@@ -545,6 +549,35 @@ export class Model {
    */
   toResource(criterias = {}) {
     return this.toJSON()
+  }
+
+  /**
+   * Load a relation in your model.
+   *
+   * @param relationName {string}
+   * @param callback {(query: ModelQueryBuilder) => void}
+   * @return {Promise<Model>}
+   */
+  async load(relationName, callback) {
+    const Model = this.constructor
+    const schema = Model.getSchema()
+    const modelGenerator = new ModelGenerator(Model, schema)
+    const relation = schema.getRelationByName(relationName)
+
+    if (!relation) {
+      throw new NotImplementedRelationException(
+        relationName,
+        Model.name,
+        schema.getAvailableRelationsString(),
+      )
+    }
+
+    relation.isIncluded = true
+    relation.callback = callback
+
+    await modelGenerator.includeRelation(this, relation)
+
+    return this[relationName]
   }
 
   /**

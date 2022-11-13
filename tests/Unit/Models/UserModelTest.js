@@ -584,4 +584,45 @@ test.group('UserModelTest', group => {
 
     assert.notInstanceOf(userJson.products[0], Product)
   })
+
+  test('should be able to load relations after fetching the main model', async ({ assert }) => {
+    const user = await User.find()
+    await Product.factory().create({ userId: user.id })
+
+    const products = await user.load('products')
+
+    assert.isDefined(user.products)
+    assert.deepEqual(products[0].id, user.products[0].id)
+  })
+
+  test('should throw an exception when trying to load a relation that does not exist', async ({ assert }) => {
+    const user = await User.find()
+
+    await assert.rejects(() => user.load('not-found'), NotImplementedRelationException)
+  })
+
+  test('should be able to reload relations even if it is already loaded', async ({ assert }) => {
+    const { id: userId } = await User.find()
+    await Product.factory().create({ userId })
+
+    const user = await User.query().where('id', userId).includes('products').find()
+    const products = await user.load('products', query => query.select('id'))
+
+    assert.isDefined(user.products)
+    assert.isUndefined(products[0].name)
+    assert.isUndefined(user.products[0].name)
+    assert.deepEqual(products[0].id, user.products[0].id)
+  })
+
+  test('should be able to load relations after fetching the main model making sub queries', async ({ assert }) => {
+    const user = await User.find()
+    await Product.factory().create({ userId: user.id })
+
+    const products = await user.load('products', query => query.select('id'))
+
+    assert.isDefined(user.products)
+    assert.isUndefined(products[0].name)
+    assert.isUndefined(user.products[0].name)
+    assert.deepEqual(products[0].id, user.products[0].id)
+  })
 })

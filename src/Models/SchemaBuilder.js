@@ -145,6 +145,25 @@ export class SchemaBuilder {
   }
 
   /**
+   * Get all available relations as string or null..
+   *
+   * @return {string|null}
+   */
+  getAvailableRelationsString() {
+    return this.relations.length ? this.relations.join(',') : null
+  }
+
+  /**
+   * Find the relation object by name.
+   *
+   * @param relationName {string}
+   * @return {any}
+   */
+  getRelationByName(relationName) {
+    return this.relations.find(relation => relationName === relation.name)
+  }
+
+  /**
    * Verify if schema has timestamp properties.
    *
    * @return {boolean}

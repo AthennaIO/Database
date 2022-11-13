@@ -555,4 +555,38 @@ test.group('ProductModelTest', group => {
 
     assert.notInstanceOf(productJson.user, UserMySql)
   })
+
+  test('should be able to load relations after fetching the main model', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const user = await product.load('user')
+
+    assert.isDefined(product.user)
+    assert.deepEqual(user.id, product.user.id)
+  })
+
+  test('should throw an exception when trying to load a relation that does not exist', async ({ assert }) => {
+    const product = await ProductMySql.find()
+
+    await assert.rejects(() => product.load('not-found'), NotImplementedRelationException)
+  })
+
+  test('should be able to reload relations even if it is already loaded', async ({ assert }) => {
+    const product = await ProductMySql.query().includes('user').find()
+    const user = await product.load('user', query => query.select('id'))
+
+    assert.isDefined(product.user)
+    assert.isUndefined(user.name)
+    assert.isUndefined(product.user.name)
+    assert.deepEqual(user.id, product.user.id)
+  })
+
+  test('should be able to load relations after fetching the main model making sub queries', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const user = await product.load('user', query => query.select('id'))
+
+    assert.isDefined(product.user)
+    assert.isUndefined(user.name)
+    assert.isUndefined(product.user.name)
+    assert.deepEqual(user.id, product.user.id)
+  })
 })

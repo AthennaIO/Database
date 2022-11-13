@@ -891,18 +891,17 @@ export class ModelQueryBuilder {
    * @return {ModelQueryBuilder}
    */
   includes(relationName, callback) {
-    const relations = this.#schema.relations
-    const relation = relations.find(r => r.name === relationName)
+    const relation = this.#schema.getRelationByName(relationName)
 
     if (!relation) {
       throw new NotImplementedRelationException(
         relationName,
         this.#Model.name,
-        relations.length ? relations.join(',') : null,
+        this.#schema.getAvailableRelationsString(),
       )
     }
 
-    const index = relations.indexOf(relation)
+    const index = this.#schema.relations.indexOf(relation)
 
     relation.isIncluded = true
     relation.callback = callback
