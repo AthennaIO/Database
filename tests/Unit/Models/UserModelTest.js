@@ -269,7 +269,7 @@ test.group('UserModelTest', group => {
     const userId = await User.factory('id').create()
     const { id } = await Product.create({ name: 'iPhone X', userId })
 
-    const user = await User.query().where({ id: userId }).includes('products').find()
+    const user = await User.query().where({ id: userId }).with('products').find()
 
     assert.deepEqual(user.products[0].id, id)
     assert.deepEqual(user.products[0].name, 'iPhone X')
@@ -283,7 +283,7 @@ test.group('UserModelTest', group => {
     const user = await User.query()
       .select('id', 'name')
       .where('id', userId)
-      .includes('products', query => query.select('id', 'name').whereNull('deletedAt').orderBy('id', 'DESC'))
+      .with('products', query => query.select('id', 'name').whereNull('deletedAt').orderBy('id', 'DESC'))
       .find()
 
     assert.deepEqual(user.id, userId)
@@ -309,7 +309,7 @@ test.group('UserModelTest', group => {
   })
 
   test('should be able to get the user as JSON', async ({ assert }) => {
-    const [user] = await User.query().includes('products').findMany()
+    const [user] = await User.query().with('products').findMany()
 
     const userJson = user.toJSON()
 
@@ -317,7 +317,7 @@ test.group('UserModelTest', group => {
   })
 
   test('should be able to get the user/users as resource', async ({ assert }) => {
-    const users = await User.query().includes('products').findMany()
+    const users = await User.query().with('products').findMany()
 
     const userResource = users[0].toResource()
 
@@ -328,7 +328,7 @@ test.group('UserModelTest', group => {
   })
 
   test('should be able to get the user/users as resource using resource class', async ({ assert }) => {
-    const users = await User.query().includes('products').findMany()
+    const users = await User.query().with('products').findMany()
 
     const userResource = UserResource.toJson(users[0])
 
@@ -339,7 +339,7 @@ test.group('UserModelTest', group => {
   })
 
   test('should throw a not implemented relation exception', async ({ assert }) => {
-    assert.throws(() => User.query().includes('notImplemented'), NotImplementedRelationException)
+    assert.throws(() => User.query().with('notImplemented'), NotImplementedRelationException)
   })
 
   test('should be able to find users ordering by latest and oldest', async ({ assert }) => {
@@ -452,7 +452,7 @@ test.group('UserModelTest', group => {
 
     await Product.factory().count(2).create({ userId: id })
 
-    const user = await User.query().where({ id }).includes('products').find()
+    const user = await User.query().where({ id }).with('products').find()
 
     user.name = 'other-name'
     user.products[0].name = 'other-product-name'
@@ -579,7 +579,7 @@ test.group('UserModelTest', group => {
     const { id } = await User.query().find()
     await Product.factory().create({ userId: id })
 
-    const user = await User.query().includes('products').find()
+    const user = await User.query().with('products').find()
     const userJson = user.toJSON()
 
     assert.notInstanceOf(userJson.products[0], Product)
@@ -605,7 +605,7 @@ test.group('UserModelTest', group => {
     const { id: userId } = await User.find()
     await Product.factory().create({ userId })
 
-    const user = await User.query().where('id', userId).includes('products').find()
+    const user = await User.query().where('id', userId).with('products').find()
     const products = await user.load('products', query => query.select('id'))
 
     assert.isDefined(user.products)

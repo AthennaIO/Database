@@ -71,7 +71,7 @@ test.group('StudentModelTest', group => {
 
     await student.save()
 
-    const studentWithCourses = await Student.query().where('id', student.id).includes('courses').find()
+    const studentWithCourses = await Student.query().where('id', student.id).with('courses').find()
 
     assert.isDefined(studentWithCourses.courses[0].pivot.id)
     assert.equal(studentWithCourses.courses[0].pivot.studentId, student.id)
@@ -89,7 +89,7 @@ test.group('StudentModelTest', group => {
 
     const studentWithCourses = await Student.query()
       .where('id', student.id)
-      .includes('courses', query => query.where('id', course.id))
+      .with('courses', query => query.where('id', course.id))
       .find()
 
     assert.isDefined(studentWithCourses.courses[0].pivot.id)

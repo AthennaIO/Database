@@ -708,7 +708,7 @@ export class Model {
         return
       }
 
-      query.includes(key)
+      query.with(key)
     })
 
     const data = await query.find()

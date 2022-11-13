@@ -884,13 +884,13 @@ export class ModelQueryBuilder {
   }
 
   /**
-   * Include some relation in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string|any}
    * @param [callback] {any}
    * @return {ModelQueryBuilder}
    */
-  includes(relationName, callback) {
+  with(relationName, callback) {
     const relation = this.#schema.getRelationByName(relationName)
 
     if (!relation) {

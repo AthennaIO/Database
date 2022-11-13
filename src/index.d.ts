@@ -3157,13 +3157,13 @@ export class Criteria {
   static select(...columns: string[]): typeof Criteria
 
   /**
-   * Set a include statement in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string}
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  static includes(
+  static with(
     relationName: string,
     callback?: (query: ModelQueryBuilder) => Promise<void>,
   ): typeof Criteria
@@ -3689,16 +3689,13 @@ export class ModelQueryBuilder extends QueryBuilder {
   onlyTrashed(): this
 
   /**
-   * Set a include statement in your query.
+   * Eager load a relation in your query.
    *
    * @param relationName {string}
    * @param [callback] {any}
    * @return {typeof Criteria}
    */
-  includes(
-    relationName: string,
-    callback?: (query: this) => Promise<void>,
-  ): this
+  with(relationName: string, callback?: (query: this) => Promise<void>): this
 
   /**
    * Executes the given closure when the first argument is true.
