@@ -35,4 +35,8 @@ export class Country extends Model {
       name: this.faker.name.fullName(),
     }
   }
+
+  capitalQuery() {
+    return this.hasOne(Capital)
+  }
 }

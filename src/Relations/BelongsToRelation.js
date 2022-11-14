@@ -16,7 +16,7 @@ export class BelongsToRelation {
    * @param relation {any}
    * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
    */
-  getOptions(relation) {
+  static getOptions(relation) {
     const RelationModel = relation.model
 
     return {
@@ -28,13 +28,33 @@ export class BelongsToRelation {
   }
 
   /**
+   * Create a new query builder for a belongs to relation.
+   *
+   * @param model {import('#src/index').Model}
+   * @param RelationModel {typeof import('#src/index').Model}
+   * @param [withCriterias] {boolean}
+   * @return {ModelQueryBuilder}
+   */
+  static getQueryBuilder(model, RelationModel, withCriterias) {
+    const Model = model.constructor
+    const relation = Model.getSchema().getRelationByModel(RelationModel)
+
+    const { primary, foreign } = this.getOptions(relation)
+
+    return new ModelQueryBuilder(RelationModel, withCriterias).where(
+      primary,
+      model[foreign],
+    )
+  }
+
+  /**
    * Load a belongs to relation.
    *
    * @param model {any}
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async load(model, relation) {
+  static async load(model, relation) {
     const { query, primary, foreign, property } = this.getOptions(relation)
 
     /**
@@ -56,7 +76,7 @@ export class BelongsToRelation {
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async loadAll(models, relation) {
+  static async loadAll(models, relation) {
     const { query, primary, foreign, property } = this.getOptions(relation)
 
     /**

@@ -61,4 +61,11 @@ test.group('CountryModelTest', group => {
     assert.deepEqual(capital.countryId, capital.country.id)
     assert.isUndefined(capital.name, capital.country.name)
   })
+
+  test('should be able to execute relations queries from models', async ({ assert }) => {
+    const country = await Country.find()
+    const capital = await country.capitalQuery().find()
+
+    assert.deepEqual(country.id, capital.countryId)
+  })
 })

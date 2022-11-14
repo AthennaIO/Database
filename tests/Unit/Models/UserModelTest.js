@@ -683,4 +683,13 @@ test.group('UserModelTest', group => {
     assert.isUndefined(user.products[0].productDetails[0].content)
     assert.lengthOf(user.products[0].productDetails, 2)
   })
+
+  test('should be able to execute relations queries from models', async ({ assert }) => {
+    const user = await User.find()
+    await Product.factory().count(2).create({ userId: user.id })
+
+    const products = await user.productsQuery().findMany()
+
+    products.forEach(product => product.userId === user.id)
+  })
 })

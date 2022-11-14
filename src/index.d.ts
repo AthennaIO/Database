@@ -768,6 +768,14 @@ export class SchemaBuilder {
   getRelationByName(relationName: string): any
 
   /**
+   * Find the relation object by model.
+   *
+   * @param model {typeof import('#src/index').Model}
+   * @return {any}
+   */
+  getRelationByModel(model: typeof Model): any
+
+  /**
    * Find the last relation name from nested value.
    *
    * @param modelName {string}
@@ -1324,6 +1332,54 @@ export class Model {
    * @param [isFromDatabase] {boolean}
    */
   constructor(isFromDatabase?: boolean)
+
+  /**
+   * Creates a new has one query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  hasOne(
+    RelationModel: typeof Model,
+    withCriterias?: boolean,
+  ): ModelQueryBuilder
+
+  /**
+   * Creates a new has many query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  hasMany(
+    RelationModel: typeof Model,
+    withCriterias?: boolean,
+  ): ModelQueryBuilder
+
+  /**
+   * Creates a new belongs to query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  belongsTo(
+    RelationModel: typeof Model,
+    withCriterias?: boolean,
+  ): ModelQueryBuilder
+
+  /**
+   * Creates a new many-to-many query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {Promise<ModelQueryBuilder>}
+   */
+  manyToMany(
+    RelationModel: typeof Model,
+    withCriterias?: boolean,
+  ): Promise<ModelQueryBuilder>
 
   /**
    * Return a Json object from the actual subclass instance.
@@ -3687,7 +3743,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * Delete one or more models in database.
    *
    * @param [force] {boolean}
-   * @return {Promise<Model | Model[] | voi>}
+   * @return {Promise<Model | Model[] | void>}
    */
   delete(force?: boolean): Promise<Model | Model[] | void>
 

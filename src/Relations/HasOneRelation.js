@@ -17,7 +17,7 @@ export class HasOneRelation {
    * @param relation {any}
    * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
    */
-  getOptions(model, relation) {
+  static getOptions(model, relation) {
     const Model = model.constructor
     const RelationModel = relation.model
 
@@ -30,13 +30,33 @@ export class HasOneRelation {
   }
 
   /**
+   * Create a new query builder for a has one relation.
+   *
+   * @param model {import('#src/index').Model}
+   * @param RelationModel {typeof import('#src/index').Model}
+   * @param [withCriterias] {boolean}
+   * @return {ModelQueryBuilder}
+   */
+  static getQueryBuilder(model, RelationModel, withCriterias) {
+    const Model = model.constructor
+    const relation = Model.getSchema().getRelationByModel(RelationModel)
+
+    const { primary, foreign } = this.getOptions(model, relation)
+
+    return new ModelQueryBuilder(RelationModel, withCriterias).where(
+      foreign,
+      model[primary],
+    )
+  }
+
+  /**
    * Load a has one relation.
    *
    * @param model {any}
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async load(model, relation) {
+  static async load(model, relation) {
     const { query, primary, foreign, property } = this.getOptions(
       model,
       relation,
@@ -61,7 +81,7 @@ export class HasOneRelation {
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async loadAll(models, relation) {
+  static async loadAll(models, relation) {
     const { query, primary, foreign, property } = this.getOptions(
       models[0],
       relation,

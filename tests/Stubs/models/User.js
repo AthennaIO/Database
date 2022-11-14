@@ -65,6 +65,14 @@ export class User extends Model {
     }
   }
 
+  /**
+   *
+   * @return {ModelQueryBuilder}
+   */
+  productsQuery() {
+    return this.hasMany(Product, true)
+  }
+
   toResource(criterias = {}) {
     return {
       id: this.id,

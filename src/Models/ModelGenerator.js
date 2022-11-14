@@ -135,13 +135,13 @@ export class ModelGenerator {
   async includeRelation(model, relation) {
     switch (relation.type) {
       case 'hasOne':
-        return new HasOneRelation().load(model, relation)
+        return HasOneRelation.load(model, relation)
       case 'hasMany':
-        return new HasManyRelation().load(model, relation)
+        return HasManyRelation.load(model, relation)
       case 'belongsTo':
-        return new BelongsToRelation().load(model, relation)
+        return BelongsToRelation.load(model, relation)
       case 'manyToMany':
-        return new ManyToManyRelation().load(model, relation)
+        return ManyToManyRelation.load(model, relation)
       default:
         return model
     }
@@ -157,13 +157,13 @@ export class ModelGenerator {
   async includeRelationOfAll(models, relation) {
     switch (relation.type) {
       case 'hasOne':
-        return new HasOneRelation().loadAll(models, relation)
+        return HasOneRelation.loadAll(models, relation)
       case 'hasMany':
-        return new HasManyRelation().loadAll(models, relation)
+        return HasManyRelation.loadAll(models, relation)
       case 'belongsTo':
-        return new BelongsToRelation().loadAll(models, relation)
+        return BelongsToRelation.loadAll(models, relation)
       case 'manyToMany':
-        return new ManyToManyRelation().loadAll(models, relation)
+        return ManyToManyRelation.loadAll(models, relation)
       default:
         return models
     }

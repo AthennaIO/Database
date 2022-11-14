@@ -166,6 +166,16 @@ export class SchemaBuilder {
   }
 
   /**
+   * Find the relation object by model.
+   *
+   * @param Model {typeof import('#src/index').Model}
+   * @return {any}
+   */
+  getRelationByModel(Model) {
+    return this.relations.find(relation => Model === relation.model)
+  }
+
+  /**
    * Find the relation object by name.
    *
    * @param modelName {string}

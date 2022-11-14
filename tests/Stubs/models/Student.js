@@ -44,4 +44,12 @@ export class Student extends Model {
       name: this.faker.name.fullName(),
     }
   }
+
+  /**
+   *
+   * @return {Promise<ModelQueryBuilder>}
+   */
+  coursesQuery() {
+    return this.manyToMany(Course)
+  }
 }
