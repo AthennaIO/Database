@@ -8,10 +8,11 @@
  */
 
 import { ModelQueryBuilder } from '#src/index'
+import { HasOneQueryBuilder } from '#src/Relations/HasOne/HasOneQueryBuilder'
 
-export class HasManyRelation {
+export class HasOneRelation {
   /**
-   * Get the relation options to craft the has many query.
+   * Get the relation options to craft the has one query.
    *
    * @param model {any}
    * @param relation {any}
@@ -30,27 +31,27 @@ export class HasManyRelation {
   }
 
   /**
-   * Create a new query builder for a has many relation.
+   * Create a new query builder for a has one relation.
    *
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {ModelQueryBuilder}
+   * @return {HasOneQueryBuilder}
    */
   static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor
     const relation = Model.getSchema().getRelationByModel(RelationModel)
 
-    const { primary, foreign } = this.getOptions(model, relation)
-
-    return new ModelQueryBuilder(RelationModel, withCriterias).where(
-      foreign,
-      model[primary],
+    return new HasOneQueryBuilder(
+      model,
+      RelationModel,
+      withCriterias,
+      this.getOptions(model, relation),
     )
   }
 
   /**
-   * Load a has many relation.
+   * Load a has one relation.
    *
    * @param model {any}
    * @param relation {any}
@@ -69,13 +70,13 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query.where(foreign, model[primary]).findMany()
+    model[property] = await query.where(foreign, model[primary]).find()
 
     return model
   }
 
   /**
-   * Load all models that has many relation.
+   * Load all models that has one relation.
    *
    * @param models {any[]}
    * @param relation {any}
@@ -98,22 +99,10 @@ export class HasManyRelation {
     const results = await query.whereIn(foreign, primaryValues).findMany()
 
     const map = new Map()
-    results.forEach(result => {
-      if (!map.has(result[foreign])) {
-        map.set(result[foreign], [result])
-
-        return
-      }
-
-      const array = map.get(result[foreign])
-
-      array.push(result)
-
-      map.set(result[foreign], array)
-    })
+    results.forEach(result => map.set(result[foreign], result))
 
     return models.map(
-      model => (model[property] = map.get(model[primary]) || []),
+      model => (model[property] = map.get(model[primary]) || {}),
     )
   }
 }

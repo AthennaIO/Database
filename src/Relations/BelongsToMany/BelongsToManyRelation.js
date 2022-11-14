@@ -9,8 +9,9 @@
 
 import { String } from '@athenna/common'
 import { Database, ModelQueryBuilder } from '#src/index'
+import { BelongsToManyQueryBuilder } from '#src/Relations/BelongsToMany/BelongsToManyQueryBuilder'
 
-export class ManyToManyRelation {
+export class BelongsToManyRelation {
   /**
    * Get the relation options to craft the many-to-many query.
    *
@@ -48,34 +49,17 @@ export class ManyToManyRelation {
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {Promise<ModelQueryBuilder>}
+   * @return {import('#src/index').BelongsToManyQueryBuilder}
    */
-  static async getQueryBuilder(model, RelationModel, withCriterias) {
+  static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor
     const relation = Model.getSchema().getRelationByModel(RelationModel)
 
-    const {
-      connection,
-      pivotTable,
-      pivotLocalForeign,
-      pivotLocalPrimary,
-      pivotRelationPrimary,
-      pivotRelationForeign,
-    } = this.getOptions(model, relation)
-
-    /**
-     * Using Database here because there is no PivotModel.
-     */
-    const pivotTableData = await Database.connection(connection)
-      .table(pivotTable)
-      .where(pivotLocalForeign, model[pivotLocalPrimary])
-      .findMany()
-
-    const relationIds = pivotTableData.map(d => d[pivotRelationForeign])
-
-    return new ModelQueryBuilder(RelationModel, withCriterias).whereIn(
-      pivotRelationPrimary,
-      relationIds,
+    return new BelongsToManyQueryBuilder(
+      model,
+      RelationModel,
+      withCriterias,
+      this.getOptions(model, relation),
     )
   }
 

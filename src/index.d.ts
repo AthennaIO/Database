@@ -1338,48 +1338,48 @@ export class Model {
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {HasOneQueryBuilder}
    */
   hasOne(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): HasOneQueryBuilder
 
   /**
    * Creates a new has many query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {HasManyQueryBuilder}
    */
   hasMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): HasManyQueryBuilder
 
   /**
    * Creates a new belongs to query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {BelongsToQueryBuilder}
    */
   belongsTo(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): BelongsToQueryBuilder
 
   /**
-   * Creates a new many-to-many query builder.
+   * Creates a new belongs to many query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {Promise<ModelQueryBuilder>}
+   * @return {BelongsToManyQueryBuilder}
    */
-  manyToMany(
+  belongsToMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): Promise<ModelQueryBuilder>
+  ): BelongsToManyQueryBuilder
 
   /**
    * Return a Json object from the actual subclass instance.
@@ -2109,10 +2109,10 @@ export class Relation {
   static belongsTo(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
-   * Create a manyToMany relation schema.
+   * Create a belongsToMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.model(model).type('manyToMany').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('belongsToMany').inverseSide(inverseSide).get()
    *
    * @param model {any}
    * @param inverseSide {string}
@@ -2120,7 +2120,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(
+  static belongsToMany(
     model: Model,
     inverseSide: string,
     pivotTable?: string,
@@ -2138,11 +2138,11 @@ export class Relation {
   /**
    * Set the relation type.
    *
-   * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
+   * @param type {"hasOne","hasMany","belongsTo","belongsToMany"}
    * @return {typeof Relation}
    */
   static type(
-    type: 'hasOne' | 'hasMany' | 'belongsTo' | 'manyToMany',
+    type: 'hasOne' | 'hasMany' | 'belongsTo' | 'belongsToMany',
   ): typeof Relation
 
   /**
@@ -3798,4 +3798,23 @@ export class ModelQueryBuilder extends QueryBuilder {
    */
   // @ts-ignore
   when(criteria: any, callback: (query: this, criteriaValue: any) => void): this
+}
+
+export class HasOneQueryBuilder extends ModelQueryBuilder {}
+export class HasManyQueryBuilder extends ModelQueryBuilder {}
+export class BelongsToQueryBuilder extends ModelQueryBuilder {}
+export class BelongsToManyQueryBuilder extends ModelQueryBuilder {
+  /**
+   * Get the pivot table data.
+   *
+   * @return {Promise<any[]>}
+   */
+  getPivotTable(): Promise<any[]>
+
+  /**
+   * Get the pivot table relation ids.
+   *
+   * @return {Promise<any[]>}
+   */
+  getPivotTablesRelationIds(): Promise<any[]>
 }

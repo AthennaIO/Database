@@ -62,7 +62,7 @@ test.group('CountryModelTest', group => {
     assert.isUndefined(capital.name, capital.country.name)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const country = await Country.find()
     const capital = await country.capitalQuery().find()
 

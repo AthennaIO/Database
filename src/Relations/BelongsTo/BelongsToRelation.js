@@ -8,6 +8,7 @@
  */
 
 import { ModelQueryBuilder } from '#src/index'
+import { BelongsToQueryBuilder } from '#src/Relations/BelongsTo/BelongsToQueryBuilder'
 
 export class BelongsToRelation {
   /**
@@ -33,17 +34,17 @@ export class BelongsToRelation {
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {ModelQueryBuilder}
+   * @return {BelongsToQueryBuilder}
    */
   static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor
     const relation = Model.getSchema().getRelationByModel(RelationModel)
 
-    const { primary, foreign } = this.getOptions(relation)
-
-    return new ModelQueryBuilder(RelationModel, withCriterias).where(
-      primary,
-      model[foreign],
+    return new BelongsToQueryBuilder(
+      model,
+      RelationModel,
+      withCriterias,
+      this.getOptions(relation),
     )
   }
 

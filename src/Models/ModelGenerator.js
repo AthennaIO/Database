@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { HasOneRelation } from '#src/Relations/HasOneRelation'
-import { HasManyRelation } from '#src/Relations/HasManyRelation'
-import { BelongsToRelation } from '#src/Relations/BelongsToRelation'
-import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
+import { HasOneRelation } from '#src/Relations/HasOne/HasOneRelation'
+import { HasManyRelation } from '#src/Relations/HasMany/HasManyRelation'
+import { BelongsToRelation } from '#src/Relations/BelongsTo/BelongsToRelation'
+import { BelongsToManyRelation } from '#src/Relations/BelongsToMany/BelongsToManyRelation'
 
 export class ModelGenerator {
   /**
@@ -140,8 +140,8 @@ export class ModelGenerator {
         return HasManyRelation.load(model, relation)
       case 'belongsTo':
         return BelongsToRelation.load(model, relation)
-      case 'manyToMany':
-        return ManyToManyRelation.load(model, relation)
+      case 'belongsToMany':
+        return BelongsToManyRelation.load(model, relation)
       default:
         return model
     }
@@ -162,8 +162,8 @@ export class ModelGenerator {
         return HasManyRelation.loadAll(models, relation)
       case 'belongsTo':
         return BelongsToRelation.loadAll(models, relation)
-      case 'manyToMany':
-        return ManyToManyRelation.loadAll(models, relation)
+      case 'belongsToMany':
+        return BelongsToManyRelation.loadAll(models, relation)
       default:
         return models
     }

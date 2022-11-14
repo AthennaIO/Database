@@ -80,10 +80,10 @@ export class Relation {
   }
 
   /**
-   * Create a manyToMany relation schema.
+   * Create a belongsToMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.model(model).type('manyToMany').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('belongsToMany').inverseSide(inverseSide).get()
    *
    * @param inverseSide {string}
    * @param model {any}
@@ -91,9 +91,9 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(model, inverseSide, pivotTable, cascade = false) {
+  static belongsToMany(model, inverseSide, pivotTable, cascade = false) {
     const relation = this.model(model)
-      .type('manyToMany')
+      .type('belongsToMany')
       .inverseSide(inverseSide)
 
     if (cascade) {
@@ -122,7 +122,7 @@ export class Relation {
   /**
    * Set the relation type.
    *
-   * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
+   * @param type {"hasOne","hasMany","belongsTo","belongsToMany"}
    * @return {typeof Relation}
    */
   static type(type) {

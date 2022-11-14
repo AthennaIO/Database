@@ -102,14 +102,13 @@ test.group('StudentModelTest', group => {
     assert.lengthOf(studentWithCourses.courses, 1)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const student = await Student.find()
     student.courses = await Course.query().limit(2).findMany()
 
     await student.save()
 
-    const query = await student.coursesQuery()
-    const courses = await query.findMany()
+    const courses = await student.coursesQuery().findMany()
 
     courses.forEach(course => assert.isDefined(student.courses.find(c => c.id === course.id)))
   })

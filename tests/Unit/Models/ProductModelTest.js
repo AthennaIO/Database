@@ -590,7 +590,7 @@ test.group('ProductModelTest', group => {
     assert.deepEqual(user.id, product.user.id)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const product = await ProductMySql.find()
     const user = await product.userQuery().find()
 
