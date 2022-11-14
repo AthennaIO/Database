@@ -742,7 +742,7 @@ export class Model {
 
   /**
    * Re-retrieve the model from the database. The existing
-   * model instance will not be affected.
+   * model instance will be affected.
    *
    * @return {Promise<this>}
    */

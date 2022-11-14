@@ -1119,7 +1119,10 @@ export class Model {
    * @param [withCriterias] {boolean}
    * @return {ModelQueryBuilder}
    */
-  static query(withCriterias?: boolean): ModelQueryBuilder
+  static query<Class extends typeof Model>(
+    this: Class,
+    withCriterias?: boolean,
+  ): ModelQueryBuilder<InstanceType<Class>>
 
   /**
    * Truncate all data in database of this model.
@@ -1343,7 +1346,7 @@ export class Model {
   hasOne(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): HasOneQueryBuilder
+  ): HasOneQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Creates a new has many query builder.
@@ -1355,7 +1358,7 @@ export class Model {
   hasMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): HasManyQueryBuilder
+  ): HasManyQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Creates a new belongs to query builder.
@@ -1367,7 +1370,7 @@ export class Model {
   belongsTo(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): BelongsToQueryBuilder
+  ): BelongsToQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Creates a new belongs to many query builder.
@@ -1379,7 +1382,7 @@ export class Model {
   belongsToMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): BelongsToManyQueryBuilder
+  ): BelongsToManyQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Return a Json object from the actual subclass instance.
@@ -1449,7 +1452,7 @@ export class Model {
 
   /**
    * Re-retrieve the model from the database. The existing
-   * model instance will not be affected.
+   * model instance will be affected.
    *
    * @return {Promise<this>}
    */
@@ -3650,7 +3653,7 @@ export class Criteria {
   static get(): Map<string, any[]>
 }
 
-export class ModelQueryBuilder extends QueryBuilder {
+export class ModelQueryBuilder<T = any> extends QueryBuilder {
   /**
    * Creates a new instance of ModelQueryBuilder.
    *
@@ -3658,14 +3661,14 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param withCriterias
    * @return {ModelQueryBuilder}
    */
-  constructor(model: Model, withCriterias?: boolean)
+  constructor(model: T, withCriterias?: boolean)
 
   /**
    * Find a value in database or throw exception if undefined.
    *
    * @return {Promise<Model>}
    */
-  findOrFail(): Promise<Model>
+  findOrFail(): Promise<T>
 
   /**
    * Return a single model instance or, if no results are found,
@@ -3674,28 +3677,28 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param callback {() => Promise<any>}
    * @return {Promise<Model>}
    */
-  findOr(callback: () => Promise<any>): Promise<Model>
+  findOr(callback: () => Promise<any>): Promise<T>
 
   /**
    * Find a value in database.
    *
    * @return {Promise<Model>}
    */
-  find(): Promise<Model>
+  find(): Promise<T>
 
   /**
    * Find many values in database.
    *
    * @return {Promise<Model[]>}
    */
-  findMany(): Promise<Model[]>
+  findMany(): Promise<T[]>
 
   /**
    * Find many values in database and return as a Collection.
    *
    * @return {Promise<Collection<Model>>>}
    */
-  collection(): Promise<import('@athenna/common').Collection<Model>>
+  collection(): Promise<import('@athenna/common').Collection<T>>
 
   /**
    * Create one model in database.
@@ -3705,7 +3708,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model>}
    */
   // @ts-ignore
-  create(data: any, ignorePersistOnly?: boolean): Promise<Model>
+  create(data: any, ignorePersistOnly?: boolean): Promise<T>
 
   /**
    * Create many models in database.
@@ -3715,7 +3718,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model[]>}
    */
   // @ts-ignore
-  createMany(data: any[], ignorePersistOnly?: boolean): Promise<Model[]>
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<T[]>
 
   /**
    * Create data or update if already exists.
@@ -3725,10 +3728,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model | Model[]>}
    */
   // @ts-ignore
-  createOrUpdate(
-    data: any,
-    ignorePersistOnly?: boolean,
-  ): Promise<Model | Model[]>
+  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Update one or more models in database.
@@ -3737,7 +3737,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param {boolean} [ignorePersistOnly]
    * @return {Promise<Model | Model[]>}
    */
-  update(data: any, ignorePersistOnly?: boolean): Promise<Model | Model[]>
+  update(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Delete one or more models in database.
@@ -3745,14 +3745,14 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param [force] {boolean}
    * @return {Promise<Model | Model[] | void>}
    */
-  delete(force?: boolean): Promise<Model | Model[] | void>
+  delete(force?: boolean): Promise<T | T[] | void>
 
   /**
    * Restore a soft deleted model from database.
    *
    * @return {Promise<Model | Model[]>}
    */
-  restore(): Promise<Model | Model[]>
+  restore(): Promise<T | T[]>
 
   /**
    * Remove the criteria from query builder by name.
@@ -3786,8 +3786,12 @@ export class ModelQueryBuilder extends QueryBuilder {
   with(
     relationName: string,
     callback?: (
-      query: ModelQueryBuilder,
-    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+      query: ModelQueryBuilder<Model>,
+    ) =>
+      | void
+      | Promise<void>
+      | ModelQueryBuilder<Model>
+      | Promise<ModelQueryBuilder<Model>>,
   ): this
 
   /**
@@ -3800,10 +3804,10 @@ export class ModelQueryBuilder extends QueryBuilder {
   when(criteria: any, callback: (query: this, criteriaValue: any) => void): this
 }
 
-export class HasOneQueryBuilder extends ModelQueryBuilder {}
-export class HasManyQueryBuilder extends ModelQueryBuilder {}
-export class BelongsToQueryBuilder extends ModelQueryBuilder {}
-export class BelongsToManyQueryBuilder extends ModelQueryBuilder {
+export class HasOneQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class HasManyQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class BelongsToQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class BelongsToManyQueryBuilder<T> extends ModelQueryBuilder<T> {
   /**
    * Get the pivot table data.
    *

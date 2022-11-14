@@ -68,4 +68,38 @@ test.group('CountryModelTest', group => {
 
     assert.deepEqual(country.id, capital.countryId)
   })
+
+  test('should be able to create relations using it queries from models', async ({ assert }) => {
+    const country = await Country.create({ name: 'Brazil' })
+
+    await country.load('capital')
+
+    assert.isUndefined(country.capital)
+
+    const capital = await country.capitalQuery().create({ name: 'Brasilia' })
+
+    await country.refresh()
+
+    assert.deepEqual(country.id, capital.countryId)
+    assert.deepEqual(country.capital, capital)
+  })
+
+  test('should be able to update relations using it queries from models', async ({ assert }) => {
+    const country = await Country.find()
+    const capital = await country.capitalQuery().update({ name: 'Testing' })
+
+    await country.load('capital')
+
+    assert.deepEqual(country.id, capital.countryId)
+    assert.deepEqual(country.capital, capital)
+  })
+
+  test('should be able to delete relations using it queries from models', async ({ assert }) => {
+    const country = await Country.find()
+    await country.capitalQuery().delete()
+
+    await country.load('capital')
+
+    assert.isUndefined(country.capital)
+  })
 })

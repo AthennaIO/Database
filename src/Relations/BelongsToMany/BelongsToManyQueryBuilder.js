@@ -323,9 +323,9 @@ export class BelongsToManyQueryBuilder {
     await Database.connection(this.#options.connection)
       .table(this.#options.pivotTable)
       .create({
-        [this.#options.localForeign]:
+        [this.#options.pivotLocalForeign]:
           this.#fatherModel[this.#options.pivotLocalPrimary],
-        [this.#options.relationForeign]:
+        [this.#options.pivotRelationForeign]:
           model[this.#options.pivotRelationPrimary],
       })
 
@@ -343,9 +343,9 @@ export class BelongsToManyQueryBuilder {
     const models = await this.#ModelQB.createMany(data, ignorePersistOnly)
 
     const pivotDatas = models.map(model => ({
-      [this.#options.localForeign]:
+      [this.#options.pivotLocalForeign]:
         this.#fatherModel[this.#options.pivotLocalPrimary],
-      [this.#options.relationForeign]:
+      [this.#options.pivotRelationForeign]:
         model[this.#options.pivotRelationPrimary],
     }))
 
@@ -369,15 +369,15 @@ export class BelongsToManyQueryBuilder {
     await Database.connection(this.#options.connection)
       .table(this.#options.pivotTable)
       .where({
-        [this.#options.localForeign]:
+        [this.#options.pivotLocalForeign]:
           this.#fatherModel[this.#options.pivotLocalPrimary],
-        [this.#options.relationForeign]:
+        [this.#options.pivotRelationForeign]:
           model[this.#options.pivotRelationPrimary],
       })
       .createOrUpdate({
-        [this.#options.localForeign]:
+        [this.#options.pivotLocalForeign]:
           this.#fatherModel[this.#options.pivotLocalPrimary],
-        [this.#options.relationForeign]:
+        [this.#options.pivotRelationForeign]:
           model[this.#options.pivotRelationPrimary],
       })
 
@@ -407,6 +407,14 @@ export class BelongsToManyQueryBuilder {
    */
   async delete(force = false) {
     const relationIds = await this.getPivotTablesRelationIds()
+
+    await Database.connection(this.#options.connection)
+      .table(this.#options.pivotTable)
+      .where(
+        this.#options.pivotLocalForeign,
+        this.#fatherModel[this.#options.pivotLocalPrimary],
+      )
+      .delete()
 
     return this.#ModelQB
       .whereIn(this.#options.pivotRelationPrimary, relationIds)

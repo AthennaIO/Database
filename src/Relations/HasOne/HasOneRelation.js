@@ -101,8 +101,6 @@ export class HasOneRelation {
     const map = new Map()
     results.forEach(result => map.set(result[foreign], result))
 
-    return models.map(
-      model => (model[property] = map.get(model[primary]) || {}),
-    )
+    return models.map(model => (model[property] = map.get(model[primary])))
   }
 }

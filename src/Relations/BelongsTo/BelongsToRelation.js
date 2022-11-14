@@ -93,8 +93,6 @@ export class BelongsToRelation {
     const map = new Map()
     results.forEach(result => map.set(result[primary], result))
 
-    return models.map(
-      model => (model[property] = map.get(model[foreign]) || {}),
-    )
+    return models.map(model => (model[property] = map.get(model[foreign])))
   }
 }
