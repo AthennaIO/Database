@@ -14,7 +14,10 @@ import { Is, String } from '@athenna/common'
 import { Database, ModelGenerator } from '#src/index'
 import { ModelFactory } from '#src/Models/ModelFactory'
 import { SchemaBuilder } from '#src/Models/SchemaBuilder'
+import { HasOneRelation } from '#src/Relations/HasOneRelation'
+import { HasManyRelation } from '#src/Relations/HasManyRelation'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
+import { BelongsToRelation } from '#src/Relations/BelongsToRelation'
 import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
@@ -499,6 +502,54 @@ export class Model {
    */
   constructor(isFromDatabase = false) {
     this.#isFromDatabase = isFromDatabase
+  }
+
+  /**
+   * Creates a new has one query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  hasOne(RelationModel, withCriterias) {
+    return HasOneRelation.getQueryBuilder(this, RelationModel, withCriterias)
+  }
+
+  /**
+   * Creates a new has many query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  hasMany(RelationModel, withCriterias) {
+    return HasManyRelation.getQueryBuilder(this, RelationModel, withCriterias)
+  }
+
+  /**
+   * Creates a new belongs to query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {ModelQueryBuilder}
+   */
+  belongsTo(RelationModel, withCriterias) {
+    return BelongsToRelation.getQueryBuilder(this, RelationModel, withCriterias)
+  }
+
+  /**
+   * Creates a new many-to-many query builder.
+   *
+   * @param {typeof Model} RelationModel
+   * @param {boolean} [withCriterias]
+   * @return {Promise<ModelQueryBuilder>}
+   */
+  manyToMany(RelationModel, withCriterias) {
+    return ManyToManyRelation.getQueryBuilder(
+      this,
+      RelationModel,
+      withCriterias,
+    )
   }
 
   /**

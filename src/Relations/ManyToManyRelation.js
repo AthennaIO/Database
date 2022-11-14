@@ -18,7 +18,7 @@ export class ManyToManyRelation {
    * @param relation {any}
    * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
    */
-  getOptions(model, relation) {
+  static getOptions(model, relation) {
     const Model = model.constructor
     const RelationModel = relation.model
 
@@ -43,13 +43,50 @@ export class ManyToManyRelation {
   }
 
   /**
+   * Create a new query builder for a many-to-many relation.
+   *
+   * @param model {import('#src/index').Model}
+   * @param RelationModel {typeof import('#src/index').Model}
+   * @param [withCriterias] {boolean}
+   * @return {Promise<ModelQueryBuilder>}
+   */
+  static async getQueryBuilder(model, RelationModel, withCriterias) {
+    const Model = model.constructor
+    const relation = Model.getSchema().getRelationByModel(RelationModel)
+
+    const {
+      connection,
+      pivotTable,
+      pivotLocalForeign,
+      pivotLocalPrimary,
+      pivotRelationPrimary,
+      pivotRelationForeign,
+    } = this.getOptions(model, relation)
+
+    /**
+     * Using Database here because there is no PivotModel.
+     */
+    const pivotTableData = await Database.connection(connection)
+      .table(pivotTable)
+      .where(pivotLocalForeign, model[pivotLocalPrimary])
+      .findMany()
+
+    const relationIds = pivotTableData.map(d => d[pivotRelationForeign])
+
+    return new ModelQueryBuilder(RelationModel, withCriterias).whereIn(
+      pivotRelationPrimary,
+      relationIds,
+    )
+  }
+
+  /**
    * Load a many-to-many relation.
    *
    * @param model {any}
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async load(model, relation) {
+  static async load(model, relation) {
     const {
       query,
       connection,
@@ -103,7 +140,7 @@ export class ManyToManyRelation {
    * @param relation {any}
    * @return {Promise<any>}
    */
-  async loadAll(models, relation) {
+  static async loadAll(models, relation) {
     const {
       query,
       connection,

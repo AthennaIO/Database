@@ -86,4 +86,12 @@ export class ProductMySql extends Model {
       deletedAt: null,
     }
   }
+
+  /**
+   *
+   * @return {ModelQueryBuilder}
+   */
+  userQuery() {
+    return this.belongsTo(UserMySql, true)
+  }
 }

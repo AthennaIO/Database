@@ -216,7 +216,7 @@ export class ModelQueryBuilder {
   /**
    * Find one data in database or throw exception if undefined.
    *
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model>}
    */
   async findOrFail() {
     this.#setCriterias()
@@ -228,7 +228,7 @@ export class ModelQueryBuilder {
    * Return a single model instance or, if no results are found,
    * execute the given closure.
    *
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model | any>}
    */
   async findOr(callback) {
     this.#setCriterias()
@@ -245,7 +245,7 @@ export class ModelQueryBuilder {
   /**
    * Find one data in database.
    *
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model>}
    */
   async find() {
     this.#setCriterias()
@@ -256,7 +256,7 @@ export class ModelQueryBuilder {
   /**
    * Find many data in database.
    *
-   * @return {Promise<any[]>}
+   * @return {Promise<import('#src/index').Model[]>}
    */
   async findMany() {
     this.#setCriterias()
@@ -267,7 +267,7 @@ export class ModelQueryBuilder {
   /**
    * Find many data in database and return as a Collection.
    *
-   * @return {Promise<Collection>}
+   * @return {Promise<Collection<import('#src/index').Model>>}
    */
   async collection() {
     this.#setCriterias()
@@ -298,7 +298,7 @@ export class ModelQueryBuilder {
    * @param [limit] {boolean}
    * @param [resourceUrl] {string}
    * @return {Promise<{
-   *   data: InstanceType<this>[],
+   *   data: import('#src/index').Model[],
    *   meta: {
    *     totalItems: number,
    *     itemsPerPage: number,
@@ -331,7 +331,7 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @return {Promise<any>}
+   * @return {Promise<import('#src/index').Model>}
    */
   async create(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
@@ -378,7 +378,7 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @return {Promise<any[]>}
+   * @return {Promise<import('#src/index').Model[]>}
    */
   async createMany(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
@@ -419,7 +419,7 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @return {Promise<any | any[]>}
+   * @return {Promise<import('#src/index').Model | import('#src/index').Model[]>}
    */
   async createOrUpdate(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
@@ -454,7 +454,7 @@ export class ModelQueryBuilder {
    *
    * @param data {any}
    * @param {boolean} ignorePersistOnly
-   * @return {Promise<any|any[]>}
+   * @return {Promise<import('#src/index').Model | import('#src/index').Model[]>}
    */
   async update(data, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
@@ -479,7 +479,7 @@ export class ModelQueryBuilder {
    * Delete one or more models in database.
    *
    * @param [force] {boolean}
-   * @return {Promise<any|any[]|void>}
+   * @return {Promise<import('#src/index').Model | import('#src/index').Model[] | void>}
    */
   async delete(force = false) {
     if (this.#Model.isSoftDelete && !force) {
@@ -500,7 +500,7 @@ export class ModelQueryBuilder {
   /**
    * Restore a soft deleted models from database.
    *
-   * @return {Promise<any | any[]>}
+   * @return {Promise<import('#src/index').Model | import('#src/index').Model[]>}
    */
   async restore() {
     return this.update({ deletedAt: null }, true)

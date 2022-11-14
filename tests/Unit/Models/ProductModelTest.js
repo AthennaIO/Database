@@ -589,4 +589,11 @@ test.group('ProductModelTest', group => {
     assert.isUndefined(product.user.name)
     assert.deepEqual(user.id, product.user.id)
   })
+
+  test('should be able to execute relations queries from models', async ({ assert }) => {
+    const product = await ProductMySql.find()
+    const user = await product.userQuery().find()
+
+    assert.deepEqual(user.id, product.userId)
+  })
 })
