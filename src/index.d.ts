@@ -1119,7 +1119,10 @@ export class Model {
    * @param [withCriterias] {boolean}
    * @return {ModelQueryBuilder}
    */
-  static query(withCriterias?: boolean): ModelQueryBuilder
+  static query<Class extends typeof Model>(
+    this: Class,
+    withCriterias?: boolean,
+  ): ModelQueryBuilder<InstanceType<Class>>
 
   /**
    * Truncate all data in database of this model.
@@ -1338,48 +1341,48 @@ export class Model {
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {HasOneQueryBuilder}
    */
   hasOne(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): HasOneQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Creates a new has many query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {HasManyQueryBuilder}
    */
   hasMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): HasManyQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Creates a new belongs to query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {BelongsToQueryBuilder}
    */
   belongsTo(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): ModelQueryBuilder
+  ): BelongsToQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
-   * Creates a new many-to-many query builder.
+   * Creates a new belongs to many query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {Promise<ModelQueryBuilder>}
+   * @return {BelongsToManyQueryBuilder}
    */
-  manyToMany(
+  belongsToMany(
     RelationModel: typeof Model,
     withCriterias?: boolean,
-  ): Promise<ModelQueryBuilder>
+  ): BelongsToManyQueryBuilder<InstanceType<typeof RelationModel>>
 
   /**
    * Return a Json object from the actual subclass instance.
@@ -1449,7 +1452,7 @@ export class Model {
 
   /**
    * Re-retrieve the model from the database. The existing
-   * model instance will not be affected.
+   * model instance will be affected.
    *
    * @return {Promise<this>}
    */
@@ -2109,10 +2112,10 @@ export class Relation {
   static belongsTo(model: Model, inverseSide: string, cascade?: boolean): any
 
   /**
-   * Create a manyToMany relation schema.
+   * Create a belongsToMany relation schema.
    *
    * This method is an alias for:
-   * @example Relation.model(model).type('manyToMany').inverseSide(inverseSide).get()
+   * @example Relation.model(model).type('belongsToMany').inverseSide(inverseSide).get()
    *
    * @param model {any}
    * @param inverseSide {string}
@@ -2120,7 +2123,7 @@ export class Relation {
    * @param cascade {boolean}
    * @return {any}
    */
-  static manyToMany(
+  static belongsToMany(
     model: Model,
     inverseSide: string,
     pivotTable?: string,
@@ -2138,11 +2141,11 @@ export class Relation {
   /**
    * Set the relation type.
    *
-   * @param type {"hasOne","hasMany","belongsTo","manyToMany"}
+   * @param type {"hasOne","hasMany","belongsTo","belongsToMany"}
    * @return {typeof Relation}
    */
   static type(
-    type: 'hasOne' | 'hasMany' | 'belongsTo' | 'manyToMany',
+    type: 'hasOne' | 'hasMany' | 'belongsTo' | 'belongsToMany',
   ): typeof Relation
 
   /**
@@ -3650,7 +3653,7 @@ export class Criteria {
   static get(): Map<string, any[]>
 }
 
-export class ModelQueryBuilder extends QueryBuilder {
+export class ModelQueryBuilder<T = any> extends QueryBuilder {
   /**
    * Creates a new instance of ModelQueryBuilder.
    *
@@ -3658,14 +3661,14 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param withCriterias
    * @return {ModelQueryBuilder}
    */
-  constructor(model: Model, withCriterias?: boolean)
+  constructor(model: T, withCriterias?: boolean)
 
   /**
    * Find a value in database or throw exception if undefined.
    *
    * @return {Promise<Model>}
    */
-  findOrFail(): Promise<Model>
+  findOrFail(): Promise<T>
 
   /**
    * Return a single model instance or, if no results are found,
@@ -3674,28 +3677,28 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param callback {() => Promise<any>}
    * @return {Promise<Model>}
    */
-  findOr(callback: () => Promise<any>): Promise<Model>
+  findOr(callback: () => Promise<any>): Promise<T>
 
   /**
    * Find a value in database.
    *
    * @return {Promise<Model>}
    */
-  find(): Promise<Model>
+  find(): Promise<T>
 
   /**
    * Find many values in database.
    *
    * @return {Promise<Model[]>}
    */
-  findMany(): Promise<Model[]>
+  findMany(): Promise<T[]>
 
   /**
    * Find many values in database and return as a Collection.
    *
    * @return {Promise<Collection<Model>>>}
    */
-  collection(): Promise<import('@athenna/common').Collection<Model>>
+  collection(): Promise<import('@athenna/common').Collection<T>>
 
   /**
    * Create one model in database.
@@ -3705,7 +3708,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model>}
    */
   // @ts-ignore
-  create(data: any, ignorePersistOnly?: boolean): Promise<Model>
+  create(data: any, ignorePersistOnly?: boolean): Promise<T>
 
   /**
    * Create many models in database.
@@ -3715,7 +3718,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model[]>}
    */
   // @ts-ignore
-  createMany(data: any[], ignorePersistOnly?: boolean): Promise<Model[]>
+  createMany(data: any[], ignorePersistOnly?: boolean): Promise<T[]>
 
   /**
    * Create data or update if already exists.
@@ -3725,10 +3728,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @return {Promise<Model | Model[]>}
    */
   // @ts-ignore
-  createOrUpdate(
-    data: any,
-    ignorePersistOnly?: boolean,
-  ): Promise<Model | Model[]>
+  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Update one or more models in database.
@@ -3737,7 +3737,7 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param {boolean} [ignorePersistOnly]
    * @return {Promise<Model | Model[]>}
    */
-  update(data: any, ignorePersistOnly?: boolean): Promise<Model | Model[]>
+  update(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Delete one or more models in database.
@@ -3745,14 +3745,14 @@ export class ModelQueryBuilder extends QueryBuilder {
    * @param [force] {boolean}
    * @return {Promise<Model | Model[] | void>}
    */
-  delete(force?: boolean): Promise<Model | Model[] | void>
+  delete(force?: boolean): Promise<T | T[] | void>
 
   /**
    * Restore a soft deleted model from database.
    *
    * @return {Promise<Model | Model[]>}
    */
-  restore(): Promise<Model | Model[]>
+  restore(): Promise<T | T[]>
 
   /**
    * Remove the criteria from query builder by name.
@@ -3786,8 +3786,12 @@ export class ModelQueryBuilder extends QueryBuilder {
   with(
     relationName: string,
     callback?: (
-      query: ModelQueryBuilder,
-    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+      query: ModelQueryBuilder<Model>,
+    ) =>
+      | void
+      | Promise<void>
+      | ModelQueryBuilder<Model>
+      | Promise<ModelQueryBuilder<Model>>,
   ): this
 
   /**
@@ -3798,4 +3802,23 @@ export class ModelQueryBuilder extends QueryBuilder {
    */
   // @ts-ignore
   when(criteria: any, callback: (query: this, criteriaValue: any) => void): this
+}
+
+export class HasOneQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class HasManyQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class BelongsToQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class BelongsToManyQueryBuilder<T> extends ModelQueryBuilder<T> {
+  /**
+   * Get the pivot table data.
+   *
+   * @return {Promise<any[]>}
+   */
+  getPivotTable(): Promise<any[]>
+
+  /**
+   * Get the pivot table relation ids.
+   *
+   * @return {Promise<any[]>}
+   */
+  getPivotTablesRelationIds(): Promise<any[]>
 }

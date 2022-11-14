@@ -14,12 +14,12 @@ import { Is, String } from '@athenna/common'
 import { Database, ModelGenerator } from '#src/index'
 import { ModelFactory } from '#src/Models/ModelFactory'
 import { SchemaBuilder } from '#src/Models/SchemaBuilder'
-import { HasOneRelation } from '#src/Relations/HasOneRelation'
-import { HasManyRelation } from '#src/Relations/HasManyRelation'
 import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
-import { BelongsToRelation } from '#src/Relations/BelongsToRelation'
-import { ManyToManyRelation } from '#src/Relations/ManyToManyRelation'
+import { HasOneRelation } from '#src/Relations/HasOne/HasOneRelation'
+import { HasManyRelation } from '#src/Relations/HasMany/HasManyRelation'
 import { EmptyWhereException } from '#src/Exceptions/EmptyWhereException'
+import { BelongsToRelation } from '#src/Relations/BelongsTo/BelongsToRelation'
+import { BelongsToManyRelation } from '#src/Relations/BelongsToMany/BelongsToManyRelation'
 import { NotImplementedSchemaException } from '#src/Exceptions/NotImplementedSchemaException'
 import { NotImplementedDefinitionException } from '#src/Exceptions/NotImplementedDefinitionException'
 
@@ -509,7 +509,7 @@ export class Model {
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {import('#src/index').HasOneQueryBuilder}
    */
   hasOne(RelationModel, withCriterias) {
     return HasOneRelation.getQueryBuilder(this, RelationModel, withCriterias)
@@ -520,7 +520,7 @@ export class Model {
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {import('#src/index').HasManyQueryBuilder}
    */
   hasMany(RelationModel, withCriterias) {
     return HasManyRelation.getQueryBuilder(this, RelationModel, withCriterias)
@@ -531,21 +531,21 @@ export class Model {
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {ModelQueryBuilder}
+   * @return {import('#src/index').BelongsToQueryBuilder}
    */
   belongsTo(RelationModel, withCriterias) {
     return BelongsToRelation.getQueryBuilder(this, RelationModel, withCriterias)
   }
 
   /**
-   * Creates a new many-to-many query builder.
+   * Creates a new belongs to many query builder.
    *
    * @param {typeof Model} RelationModel
    * @param {boolean} [withCriterias]
-   * @return {Promise<ModelQueryBuilder>}
+   * @return {import('#src/index').BelongsToManyQueryBuilder}
    */
-  manyToMany(RelationModel, withCriterias) {
-    return ManyToManyRelation.getQueryBuilder(
+  belongsToMany(RelationModel, withCriterias) {
+    return BelongsToManyRelation.getQueryBuilder(
       this,
       RelationModel,
       withCriterias,
@@ -742,7 +742,7 @@ export class Model {
 
   /**
    * Re-retrieve the model from the database. The existing
-   * model instance will not be affected.
+   * model instance will be affected.
    *
    * @return {Promise<this>}
    */
@@ -793,10 +793,10 @@ export class Model {
        */
       delete data[key]
 
-      if (relationSchema.type === 'manyToMany') {
+      if (relationSchema.type === 'belongsToMany') {
         const relations = this[key]
 
-        const subPromises = ManyToManyRelation.saveAll(
+        const subPromises = BelongsToManyRelation.saveAll(
           this,
           relations,
           relationSchema,

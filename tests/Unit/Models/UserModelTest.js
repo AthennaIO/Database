@@ -684,12 +684,23 @@ test.group('UserModelTest', group => {
     assert.lengthOf(user.products[0].productDetails, 2)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const user = await User.find()
     await Product.factory().count(2).create({ userId: user.id })
 
     const products = await user.productsQuery().findMany()
 
     products.forEach(product => product.userId === user.id)
+  })
+
+  test('should be able to create relations using it queries from models', async ({ assert }) => {
+    const user = await User.find()
+    const product = await user.productsQuery().create({ name: 'GTR' })
+
+    await user.load('products')
+
+    assert.deepEqual(product.name, 'GTR')
+    assert.deepEqual(product.userId, user.id)
+    assert.deepEqual(product, user.products[0])
   })
 })

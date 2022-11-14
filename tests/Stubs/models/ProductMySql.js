@@ -87,10 +87,6 @@ export class ProductMySql extends Model {
     }
   }
 
-  /**
-   *
-   * @return {ModelQueryBuilder}
-   */
   userQuery() {
     return this.belongsTo(UserMySql, true)
   }

@@ -8,10 +8,11 @@
  */
 
 import { ModelQueryBuilder } from '#src/index'
+import { HasManyQueryBuilder } from '#src/Relations/HasMany/HasManyQueryBuilder'
 
-export class HasOneRelation {
+export class HasManyRelation {
   /**
-   * Get the relation options to craft the has one query.
+   * Get the relation options to craft the has many query.
    *
    * @param model {any}
    * @param relation {any}
@@ -30,7 +31,7 @@ export class HasOneRelation {
   }
 
   /**
-   * Create a new query builder for a has one relation.
+   * Create a new query builder for a has many relation.
    *
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
@@ -41,16 +42,16 @@ export class HasOneRelation {
     const Model = model.constructor
     const relation = Model.getSchema().getRelationByModel(RelationModel)
 
-    const { primary, foreign } = this.getOptions(model, relation)
-
-    return new ModelQueryBuilder(RelationModel, withCriterias).where(
-      foreign,
-      model[primary],
+    return new HasManyQueryBuilder(
+      model,
+      RelationModel,
+      withCriterias,
+      this.getOptions(model, relation),
     )
   }
 
   /**
-   * Load a has one relation.
+   * Load a has many relation.
    *
    * @param model {any}
    * @param relation {any}
@@ -69,13 +70,13 @@ export class HasOneRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query.where(foreign, model[primary]).find()
+    model[property] = await query.where(foreign, model[primary]).findMany()
 
     return model
   }
 
   /**
-   * Load all models that has one relation.
+   * Load all models that has many relation.
    *
    * @param models {any[]}
    * @param relation {any}
@@ -98,10 +99,22 @@ export class HasOneRelation {
     const results = await query.whereIn(foreign, primaryValues).findMany()
 
     const map = new Map()
-    results.forEach(result => map.set(result[foreign], result))
+    results.forEach(result => {
+      if (!map.has(result[foreign])) {
+        map.set(result[foreign], [result])
+
+        return
+      }
+
+      const array = map.get(result[foreign])
+
+      array.push(result)
+
+      map.set(result[foreign], array)
+    })
 
     return models.map(
-      model => (model[property] = map.get(model[primary]) || {}),
+      model => (model[property] = map.get(model[primary]) || []),
     )
   }
 }

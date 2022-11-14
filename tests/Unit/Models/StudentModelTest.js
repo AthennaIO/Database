@@ -102,15 +102,54 @@ test.group('StudentModelTest', group => {
     assert.lengthOf(studentWithCourses.courses, 1)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const student = await Student.find()
     student.courses = await Course.query().limit(2).findMany()
 
     await student.save()
 
-    const query = await student.coursesQuery()
-    const courses = await query.findMany()
+    const courses = await student.coursesQuery().findMany()
 
     courses.forEach(course => assert.isDefined(student.courses.find(c => c.id === course.id)))
+  })
+
+  test('should be able to create relations using it queries from models', async ({ assert }) => {
+    const student = await Student.query().with('courses').find()
+    const course = await student.coursesQuery().create({ name: 'Math' })
+
+    assert.lengthOf(student.courses, 0)
+    await student.refresh()
+
+    assert.lengthOf(student.courses, 1)
+    assert.deepEqual(student.courses[0].id, course.id)
+  })
+
+  test('should be able to update relations using it queries from models', async ({ assert }) => {
+    const student = await Student.find()
+    student.courses = await Course.query().limit(2).findMany()
+
+    await student.save()
+
+    const courses = await student.coursesQuery().update({ name: 'Testing' })
+
+    await student.refresh()
+
+    assert.lengthOf(courses, 2)
+    assert.lengthOf(student.courses, 2)
+    assert.deepEqual(student.courses[0].name, 'Testing')
+    assert.deepEqual(student.courses[1].name, 'Testing')
+  })
+
+  test('should be able to delete relations using it queries from models', async ({ assert }) => {
+    const student = await Student.find()
+    student.courses = await Course.query().limit(2).findMany()
+
+    await student.save()
+
+    await student.coursesQuery().delete()
+
+    await student.refresh()
+
+    assert.lengthOf(student.courses, 0)
   })
 })

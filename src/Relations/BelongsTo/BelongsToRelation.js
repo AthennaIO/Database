@@ -8,59 +8,55 @@
  */
 
 import { ModelQueryBuilder } from '#src/index'
+import { BelongsToQueryBuilder } from '#src/Relations/BelongsTo/BelongsToQueryBuilder'
 
-export class HasManyRelation {
+export class BelongsToRelation {
   /**
-   * Get the relation options to craft the has many query.
+   * Get the relation options to craft the belongs to query.
    *
-   * @param model {any}
    * @param relation {any}
    * @return {{query: ModelQueryBuilder, property: string, primary: string, foreign: string}}
    */
-  static getOptions(model, relation) {
-    const Model = model.constructor
+  static getOptions(relation) {
     const RelationModel = relation.model
 
     return {
       query: new ModelQueryBuilder(RelationModel),
-      primary: relation.primaryKey || Model.primaryKey,
-      foreign: relation.foreignKey || `${relation.inverseSide}Id`,
+      primary: relation.primaryKey || RelationModel.primaryKey,
+      foreign: relation.foreignKey || `${relation.name}Id`,
       property: relation.name,
     }
   }
 
   /**
-   * Create a new query builder for a has many relation.
+   * Create a new query builder for a belongs to relation.
    *
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {ModelQueryBuilder}
+   * @return {BelongsToQueryBuilder}
    */
   static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor
     const relation = Model.getSchema().getRelationByModel(RelationModel)
 
-    const { primary, foreign } = this.getOptions(model, relation)
-
-    return new ModelQueryBuilder(RelationModel, withCriterias).where(
-      foreign,
-      model[primary],
+    return new BelongsToQueryBuilder(
+      model,
+      RelationModel,
+      withCriterias,
+      this.getOptions(relation),
     )
   }
 
   /**
-   * Load a has many relation.
+   * Load a belongs to relation.
    *
    * @param model {any}
    * @param relation {any}
    * @return {Promise<any>}
    */
   static async load(model, relation) {
-    const { query, primary, foreign, property } = this.getOptions(
-      model,
-      relation,
-    )
+    const { query, primary, foreign, property } = this.getOptions(relation)
 
     /**
      * Execute client callback if it exists.
@@ -69,23 +65,20 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    model[property] = await query.where(foreign, model[primary]).findMany()
+    model[property] = await query.where(primary, model[foreign]).find()
 
     return model
   }
 
   /**
-   * Load all models that has many relation.
+   * Load all models that belongs to relation.
    *
    * @param models {any[]}
    * @param relation {any}
    * @return {Promise<any>}
    */
   static async loadAll(models, relation) {
-    const { query, primary, foreign, property } = this.getOptions(
-      models[0],
-      relation,
-    )
+    const { query, primary, foreign, property } = this.getOptions(relation)
 
     /**
      * Execute client callback if it exists.
@@ -94,26 +87,12 @@ export class HasManyRelation {
       await relation.callback(query)
     }
 
-    const primaryValues = models.map(model => model[primary])
-    const results = await query.whereIn(foreign, primaryValues).findMany()
+    const foreignValues = models.map(model => model[foreign])
+    const results = await query.whereIn(primary, foreignValues).findMany()
 
     const map = new Map()
-    results.forEach(result => {
-      if (!map.has(result[foreign])) {
-        map.set(result[foreign], [result])
+    results.forEach(result => map.set(result[primary], result))
 
-        return
-      }
-
-      const array = map.get(result[foreign])
-
-      array.push(result)
-
-      map.set(result[foreign], array)
-    })
-
-    return models.map(
-      model => (model[property] = map.get(model[primary]) || []),
-    )
+    return models.map(model => (model[property] = map.get(model[foreign])))
   }
 }

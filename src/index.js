@@ -12,22 +12,27 @@ import { Config } from '@athenna/config'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 import { QueryBuilder } from '#src/Database/Builders/QueryBuilder'
 
+export * from './Models/Model.js'
 export * from './Models/Column.js'
+export * from './Models/Resource.js'
 export * from './Models/Criteria.js'
-export * from './Models/ModelQueryBuilder.js'
-export * from './Relations/Relation.js'
+export * from './Models/ModelFactory.js'
 export * from './Models/SchemaBuilder.js'
-export * from './Facades/Database.js'
+export * from './Models/ModelGenerator.js'
+export * from './Models/ModelQueryBuilder.js'
+
+export * from './Relations/Relation.js'
+
+export * from './Helpers/DatabaseLoader.js'
+
 export * from './Facades/DB.js'
+export * from './Facades/Database.js'
+
 export * from './Factories/ConnectionFactory.js'
 export * from './Factories/DriverFactory.js'
-export * from './Models/ModelFactory.js'
-export * from './Models/ModelGenerator.js'
-export * from './Helpers/DatabaseLoader.js'
-export * from './Database/Migrations/Migration.js'
-export * from './Models/Model.js'
-export * from './Models/Resource.js'
+
 export * from './Database/Seeders/Seeder.js'
+export * from './Database/Migrations/Migration.js'
 export * from './Database/Transactions/Transaction.js'
 
 export class DatabaseImpl {

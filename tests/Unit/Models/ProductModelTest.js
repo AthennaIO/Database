@@ -590,10 +590,29 @@ test.group('ProductModelTest', group => {
     assert.deepEqual(user.id, product.user.id)
   })
 
-  test('should be able to execute relations queries from models', async ({ assert }) => {
+  test('should be able to find relations using it queries from models', async ({ assert }) => {
     const product = await ProductMySql.find()
     const user = await product.userQuery().find()
 
     assert.deepEqual(user.id, product.userId)
+  })
+
+  test('should be able to update relations using it queries from models', async ({ assert }) => {
+    const product = await ProductMySql.query().with('user').find()
+    const user = await product.userQuery().update({ name: 'Daniel Luna' })
+
+    await product.refresh()
+
+    assert.deepEqual(user.id, product.userId)
+    assert.deepEqual(product.user, user)
+  })
+
+  test('should be able to delete relations using it queries from models', async ({ assert }) => {
+    const product = await ProductMySql.query().with('user').find()
+    await product.userQuery().delete()
+
+    await product.refresh()
+
+    assert.isDefined(product.user.deletedAt)
   })
 })

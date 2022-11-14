@@ -29,7 +29,7 @@ export class Student extends Model {
     return {
       id: Column.autoIncrementedUuid('id'),
       name: Column.string('name', 200),
-      courses: Relation.manyToMany(Course, 'students'),
+      courses: Relation.belongsToMany(Course, 'students'),
     }
   }
 
@@ -45,11 +45,7 @@ export class Student extends Model {
     }
   }
 
-  /**
-   *
-   * @return {Promise<ModelQueryBuilder>}
-   */
   coursesQuery() {
-    return this.manyToMany(Course)
+    return this.belongsToMany(Course)
   }
 }
