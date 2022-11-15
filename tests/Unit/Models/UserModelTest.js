@@ -66,6 +66,10 @@ test.group('UserModelTest', group => {
     ])
 
     assert.lengthOf(users, 2)
+    assert.deepEqual(users[0].name, 'Victor Tesoura')
+    assert.isUndefined(users[0].email)
+    assert.deepEqual(users[1].name, 'Henry Bernardo')
+    assert.isUndefined(users[1].email)
   })
 
   test('should be able to create or update user', async ({ assert }) => {
@@ -702,5 +706,153 @@ test.group('UserModelTest', group => {
     assert.deepEqual(product.name, 'GTR')
     assert.deepEqual(product.userId, user.id)
     assert.deepEqual(product, user.products[0])
+  })
+
+  test('should be able to find models only where has the relations', async ({ assert }) => {
+    const [userOne, userTwo] = await User.query().findMany()
+    await userOne.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }])
+    await userTwo.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }, { name: 'GTR35' }])
+
+    const twoUsers = await User.query().has('products').findMany()
+
+    assert.lengthOf(twoUsers, 2)
+
+    const oneUser = await User.query().has('products', '>=', 3).findMany()
+
+    assert.lengthOf(oneUser, 1)
+
+    const emptyUsers = await User.query().has('products', '>=', 4).findMany()
+
+    assert.lengthOf(emptyUsers, 0)
+  })
+
+  test('should be able to find models only where has the relations and using callback queries', async ({ assert }) => {
+    const [userOne, userTwo] = await User.query().findMany()
+    await userOne.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }])
+    await userTwo.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }, { name: 'GTR35' }])
+
+    const twoUsers = await User.query()
+      .whereHas('products', query => query.with('productDetails').orderBy('name', 'DESC'))
+      .findMany()
+
+    assert.lengthOf(twoUsers, 2)
+    twoUsers.forEach(user => {
+      const last = user.products.length - 1
+
+      assert.deepEqual(user.products[last].name, 'GTR33')
+
+      user.products.forEach(product => assert.isDefined(product.productDetails))
+    })
+
+    const oneUser = await User.query()
+      .whereHas('products', query => query.orderBy('name', 'DESC'), '>=', 3)
+      .findMany()
+
+    assert.lengthOf(oneUser, 1)
+    assert.deepEqual(oneUser[0].products[0].name, 'GTR35')
+
+    const emptyUsers = await User.query()
+      .whereHas('products', query => query.where('name', 'not-found'))
+      .findMany()
+
+    assert.lengthOf(emptyUsers, 0)
+  })
+
+  test('should be able to find models only where has the nested relations', async ({ assert }) => {
+    const [userOne, userTwo] = await User.query().findMany()
+    const productsOne = await userOne.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }])
+    await Promise.all(
+      productsOne.map(product =>
+        product
+          .productDetailsQuery()
+          .createMany([{ content: 'detail1' }, { content: 'detail2' }, { content: 'detail3' }, { content: 'detail4' }]),
+      ),
+    )
+    const productsTwo = await userTwo
+      .productsQuery()
+      .createMany([{ name: 'GTR33' }, { name: 'GTR34' }, { name: 'GTR35' }])
+    await Promise.all(
+      productsTwo.map(product =>
+        product
+          .productDetailsQuery()
+          .createMany([
+            { content: 'detail5' },
+            { content: 'detail6' },
+            { content: 'detail7' },
+            { content: 'detail8' },
+            { content: 'detail9' },
+            { content: 'detail10' },
+          ]),
+      ),
+    )
+
+    const twoUsers = await User.query().has('products.productDetails').findMany()
+
+    assert.lengthOf(twoUsers, 2)
+
+    const oneUser = await User.query().has('products.productDetails', '>=', 6).findMany()
+
+    assert.lengthOf(oneUser, 1)
+
+    const emptyUsers = await User.query().has('products.productDetails', '>=', 7).findMany()
+
+    assert.lengthOf(emptyUsers, 0)
+  })
+
+  test('should be able to find models only where has the nested relations and using callback queries', async ({
+    assert,
+  }) => {
+    const [userOne, userTwo] = await User.query().findMany()
+    const productsOne = await userOne.productsQuery().createMany([{ name: 'GTR33' }, { name: 'GTR34' }])
+    await Promise.all(
+      productsOne.map(product =>
+        product
+          .productDetailsQuery()
+          .createMany([{ content: 'detail1' }, { content: 'detail2' }, { content: 'detail3' }, { content: 'detail4' }]),
+      ),
+    )
+    const productsTwo = await userTwo
+      .productsQuery()
+      .createMany([{ name: 'GTR33' }, { name: 'GTR34' }, { name: 'GTR35' }])
+    await Promise.all(
+      productsTwo.map(product =>
+        product
+          .productDetailsQuery()
+          .createMany([
+            { content: 'detail5' },
+            { content: 'detail6' },
+            { content: 'detail7' },
+            { content: 'detail8' },
+            { content: 'detail9' },
+            { content: 'detail99' },
+          ]),
+      ),
+    )
+
+    const twoUsers = await User.query()
+      .whereHas('products.productDetails', query => query.orderBy('content', 'DESC'))
+      .findMany()
+
+    assert.lengthOf(twoUsers, 2)
+    twoUsers[0].products.forEach(product => {
+      assert.isDefined(product.productDetails)
+      assert.deepEqual(product.productDetails[0].content, 'detail4')
+    })
+
+    const oneUser = await User.query()
+      .whereHas('products.productDetails', query => query.orderBy('content', 'ASC'), '>=', 6)
+      .findMany()
+
+    assert.lengthOf(oneUser, 1)
+    oneUser[0].products.forEach(product => {
+      assert.isDefined(product.productDetails)
+      assert.deepEqual(product.productDetails[0].content, 'detail5')
+    })
+
+    const emptyUsers = await User.query()
+      .whereHas('products.productDetails', query => query.where('content', 'not-found'), '>=', 7)
+      .findMany()
+
+    assert.lengthOf(emptyUsers, 0)
   })
 })
