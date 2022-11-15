@@ -117,4 +117,16 @@ export class HasManyRelation {
       model => (model[property] = map.get(model[primary]) || []),
     )
   }
+
+  /**
+   * Save the has many relation of the model..
+   *
+   * @param model {any}
+   * @param relations {any}
+   * @param relationSchema {any}
+   * @return {Promise<any[]>}
+   */
+  static async save(model, relations, relationSchema) {
+    return Promise.all(relations.map(relation => relation.save()))
+  }
 }

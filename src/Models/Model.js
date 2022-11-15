@@ -1,3 +1,5 @@
+/* eslint-disable no-case-declarations */
+
 /**
  * @athenna/database
  *
@@ -793,31 +795,23 @@ export class Model {
        */
       delete data[key]
 
-      if (relationSchema.type === 'belongsToMany') {
-        const relations = this[key]
+      const relation = this[key]
 
-        const subPromises = BelongsToManyRelation.saveAll(
-          this,
-          relations,
-          relationSchema,
-        )
-
-        /**
-         * Get the pivot table array data and set
-         * in the respective relation model.
-         */
-        subPromises.then(pivotArray => {
-          relations.forEach(
-            relation =>
-              (relation.pivot = pivotArray.find(
-                data =>
-                  data[relationSchema.pivotRelationForeign] ===
-                  relation[relationSchema.pivotRelationPrimary],
-              )),
+      switch (relationSchema.type) {
+        case 'hasOne':
+          promises.push(HasOneRelation.save(this, relation, relationSchema))
+          break
+        // TODO Implement when we got the isDirty logic on save method.
+        // case 'hasMany':
+        //   promises.push(HasManyRelation.save(this, relation, relationSchema))
+        //   break
+        case 'belongsTo':
+          promises.push(BelongsToRelation.save(this, relation, relationSchema))
+          break
+        case 'belongsToMany':
+          promises.push(
+            BelongsToManyRelation.save(this, relation, relationSchema),
           )
-        })
-
-        promises.push(subPromises)
       }
     })
 

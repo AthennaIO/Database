@@ -95,4 +95,16 @@ export class BelongsToRelation {
 
     return models.map(model => (model[property] = map.get(model[foreign])))
   }
+
+  /**
+   * Save the belongs to relation of the model.
+   *
+   * @param model {any}
+   * @param relation {any}
+   * @param relationSchema {any}
+   * @return {Promise<any>}
+   */
+  static async save(model, relation, relationSchema) {
+    await relation.save()
+  }
 }

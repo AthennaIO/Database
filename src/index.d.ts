@@ -3806,7 +3806,23 @@ export class ModelQueryBuilder<T = any> extends QueryBuilder {
 
 export class HasOneQueryBuilder<T> extends ModelQueryBuilder<T> {}
 export class HasManyQueryBuilder<T> extends ModelQueryBuilder<T> {}
-export class BelongsToQueryBuilder<T> extends ModelQueryBuilder<T> {}
+export class BelongsToQueryBuilder<T> extends ModelQueryBuilder<T> {
+  /**
+   * Assign a child model to a new parent model.
+   *
+   * @param childModel {import('#src/index').Model}
+   * @return {void}
+   */
+  associate(childModel: Model): void
+
+  /**
+   * Remove a parent model from a child model.
+   *
+   * @return {void}
+   */
+  dissociate(): void
+}
+
 export class BelongsToManyQueryBuilder<T> extends ModelQueryBuilder<T> {
   /**
    * Get the pivot table data.
@@ -3821,4 +3837,20 @@ export class BelongsToManyQueryBuilder<T> extends ModelQueryBuilder<T> {
    * @return {Promise<any[]>}
    */
   getPivotTablesRelationIds(): Promise<any[]>
+
+  /**
+   * Attach a model to another by inserting a record in the pivot
+   * table.
+   *
+   * @return {Promise<void>}
+   */
+  attach(id: string, additionalColumns?: Record<string, any>): Promise<void>
+
+  /**
+   * Delete the appropriate record out of the pivot table; however,
+   * both models will remain in the database.
+   *
+   * @return {Promise<void>}
+   */
+  detach(id?: any): Promise<void>
 }

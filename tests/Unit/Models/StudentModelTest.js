@@ -152,4 +152,43 @@ test.group('StudentModelTest', group => {
 
     assert.lengthOf(student.courses, 0)
   })
+
+  test('should be able to attach a course to the student', async ({ assert }) => {
+    const student = await Student.find()
+    const course = await Course.find()
+
+    await student.coursesQuery().attach(course.id)
+
+    await student.load('courses')
+
+    assert.deepEqual(student.courses[0].id, course.id)
+  })
+
+  test('should be able to detach a course from the student', async ({ assert }) => {
+    const student = await Student.find()
+    const [courseOne, courseTwo] = await Course.findMany()
+
+    await student.coursesQuery().attach(courseOne.id)
+    await student.coursesQuery().attach(courseTwo.id)
+    await student.coursesQuery().detach(courseOne.id)
+
+    await student.load('courses')
+
+    assert.lengthOf(student.courses, 1)
+    assert.isDefined(await Course.find({ id: courseOne.id }))
+  })
+
+  test('should be able to detach all courses from the student', async ({ assert }) => {
+    const student = await Student.find()
+    student.courses = await Course.query().limit(5).findMany()
+
+    await student.save()
+    assert.lengthOf(student.courses, 5)
+
+    await student.coursesQuery().detach()
+
+    await student.load('courses')
+
+    assert.lengthOf(student.courses, 0)
+  })
 })
