@@ -188,33 +188,22 @@ export class BelongsToManyRelation {
    * @param relationSchema {any}
    * @return {Promise<any[]>}
    */
-  static async saveAll(model, relations, relationSchema) {
-    const Model = model.constructor
-    const modelSchema = Model.schema()
-    const RelationModel = relationSchema.model
+  static async save(model, relations, relationSchema) {
+    const {
+      connection,
+      pivotLocalPrimary,
+      pivotRelationPrimary,
+      pivotTable,
+      pivotLocalForeign,
+      pivotRelationForeign,
+    } = this.getOptions(model, relationSchema)
 
-    const localTable = Model.table
-    const pivotLocalPrimary =
-      relationSchema.pivotLocalPrimaryKey || Model.primaryKey
-    const localForeign =
-      modelSchema.pivotLocalForeignKey || `${Model.name.toLowerCase()}Id`
-
-    const relationTable = RelationModel.table
-    const pivotRelationPrimary =
-      relationSchema.pivotRelationPrimaryKey || RelationModel.primaryKey
-    const relationForeign =
-      modelSchema.pivotRelationForeignKey ||
-      `${RelationModel.name.toLowerCase()}Id`
-
-    const pivotTable =
-      relationSchema.pivotTable || `${localTable}_${relationTable}`
-
-    const query = Database.connection(Model.connection).table(pivotTable)
+    const query = Database.connection(connection).table(pivotTable)
 
     const promises = relations.map(relation => {
       const data = {
-        [localForeign]: model[pivotLocalPrimary],
-        [relationForeign]: relation[pivotRelationPrimary],
+        [pivotLocalForeign]: model[pivotLocalPrimary],
+        [pivotRelationForeign]: relation[pivotRelationPrimary],
       }
 
       return query
@@ -227,10 +216,7 @@ export class BelongsToManyRelation {
 
           const createdPromise = query.create(data)
 
-          if (
-            Model.connection === 'mysql' &&
-            modelSchema[pivotLocalPrimary] !== 'increments'
-          ) {
+          if (connection === 'mysql' && pivotLocalPrimary !== 'increments') {
             return createdPromise.then(() => query.where(data).find())
           }
 
@@ -238,6 +224,18 @@ export class BelongsToManyRelation {
         })
     })
 
-    return Promise.all(promises)
+    const pivotTableData = await Promise.all(promises)
+
+    /**
+     * Get the pivot table array data and set
+     * in the respective relation model.
+     */
+    relations.forEach(relation => {
+      const statement = data =>
+        data[relationSchema.pivotRelationForeign] ===
+        relation[relationSchema.pivotRelationPrimary]
+
+      relation.pivot = pivotTableData.find(statement)
+    })
   }
 }

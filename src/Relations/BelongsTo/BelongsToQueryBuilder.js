@@ -252,6 +252,25 @@ export class BelongsToQueryBuilder {
   }
 
   /**
+   * Assign a child model to a new parent model.
+   *
+   * @param childModel {import('#src/index').Model}
+   * @return {void}
+   */
+  associate(childModel) {
+    this.#fatherModel[this.#options.foreign] = childModel[this.#options.primary]
+  }
+
+  /**
+   * Remove a parent model from a child model.
+   *
+   * @return {void}
+   */
+  dissociate() {
+    this.#fatherModel[this.#options.foreign] = null
+  }
+
+  /**
    * Create one model in database.
    *
    * @param data {any}

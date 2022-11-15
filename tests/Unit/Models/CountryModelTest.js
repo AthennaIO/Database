@@ -102,4 +102,15 @@ test.group('CountryModelTest', group => {
 
     assert.isUndefined(country.capital)
   })
+
+  test('should be able to save the capital of the country using save method', async ({ assert }) => {
+    const country = await Country.query().with('capital').find()
+
+    country.capital.name = 'Testing'
+
+    await country.save()
+    await country.capital.refresh()
+
+    assert.deepEqual(country.capital.name, 'Testing')
+  })
 })

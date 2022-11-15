@@ -615,4 +615,38 @@ test.group('ProductModelTest', group => {
 
     assert.isDefined(product.user.deletedAt)
   })
+
+  test('should be able to associate a user to the product', async ({ assert }) => {
+    const user = await UserMySql.find()
+    const product = await ProductMySql.create()
+
+    product.userQuery().associate(user)
+
+    await product.save()
+    await user.load('products', query => query.where('id', product.id))
+
+    assert.deepEqual(user.id, product.userId)
+    assert.deepEqual(user.products[0].id, product.id)
+  })
+
+  test('should be able to disassociate a user from the product', async ({ assert }) => {
+    const product = await ProductMySql.find()
+
+    product.userQuery().dissociate()
+
+    await product.save()
+
+    assert.isNull(product.userId)
+  })
+
+  test('should be able to save the user of the product using save method', async ({ assert }) => {
+    const product = await ProductMySql.query().with('user').find()
+
+    product.user.name = 'Testing'
+
+    await product.save()
+    await product.user.refresh()
+
+    assert.deepEqual(product.user.name, 'Testing')
+  })
 })

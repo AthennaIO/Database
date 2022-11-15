@@ -103,4 +103,16 @@ export class HasOneRelation {
 
     return models.map(model => (model[property] = map.get(model[primary])))
   }
+
+  /**
+   * Save has one relation of the model..
+   *
+   * @param model {any}
+   * @param relation {any}
+   * @param relationSchema {any}
+   * @return {Promise<any>}
+   */
+  static async save(model, relation, relationSchema) {
+    await relation.save()
+  }
 }

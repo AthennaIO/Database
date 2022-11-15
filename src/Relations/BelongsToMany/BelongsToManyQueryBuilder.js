@@ -311,6 +311,50 @@ export class BelongsToManyQueryBuilder {
   }
 
   /**
+   * Attach a model to another by inserting a record in the pivot
+   * table.
+   *
+   * @return {Promise<void>}
+   */
+  async attach(id, additionalColumns = {}) {
+    await Database.connection(this.#options.connection)
+      .table(this.#options.pivotTable)
+      .create({
+        [this.#options.pivotLocalForeign]:
+          this.#fatherModel[this.#options.pivotLocalPrimary],
+        [this.#options.pivotRelationForeign]: id,
+        ...additionalColumns,
+      })
+  }
+
+  /**
+   * Delete the appropriate record out of the pivot table; however,
+   * both models will remain in the database.
+   */
+  async detach(id) {
+    if (!id) {
+      await Database.connection(this.#options.connection)
+        .table(this.#options.pivotTable)
+        .where(
+          this.#options.pivotLocalForeign,
+          this.#fatherModel[this.#options.pivotLocalPrimary],
+        )
+        .delete()
+
+      return
+    }
+
+    await Database.connection(this.#options.connection)
+      .table(this.#options.pivotTable)
+      .where(
+        this.#options.pivotLocalForeign,
+        this.#fatherModel[this.#options.pivotLocalPrimary],
+      )
+      .where(this.#options.pivotRelationForeign, id)
+      .delete()
+  }
+
+  /**
    * Create one model in database.
    *
    * @param data {any}
@@ -408,16 +452,23 @@ export class BelongsToManyQueryBuilder {
   async delete(force = false) {
     const relationIds = await this.getPivotTablesRelationIds()
 
+    const models = await this.whereIn(
+      this.#options.pivotRelationPrimary,
+      relationIds,
+    ).findMany()
+    const modelsIds = models.map(m => m[this.#options.pivotRelationPrimary])
+
     await Database.connection(this.#options.connection)
       .table(this.#options.pivotTable)
       .where(
         this.#options.pivotLocalForeign,
         this.#fatherModel[this.#options.pivotLocalPrimary],
       )
+      .whereIn(this.#options.pivotRelationForeign, modelsIds)
       .delete()
 
     return this.#ModelQB
-      .whereIn(this.#options.pivotRelationPrimary, relationIds)
+      .whereIn(this.#options.pivotRelationPrimary, modelsIds)
       .delete(force)
   }
 
