@@ -804,6 +804,42 @@ export class SchemaBuilder {
   ): any
 
   /**
+   * Include nested has relations.
+   *
+   * @param modelName {string}
+   * @param nestedRelationNames {string}
+   * @param lastCallback {any}
+   * @param operation {string}
+   * @param count {number}
+   * @return {any}
+   */
+  includeNestedHasRelations(
+    modelName: string,
+    nestedRelationNames: string,
+    lastCallback: (query: ModelQueryBuilder) => void | undefined,
+    operation: string,
+    count: number,
+  ): any
+
+  /**
+   * Set isIncluded as true as the has map in the relation.
+   *
+   * @param {string} modelName
+   * @param {string} relationName
+   * @param {any} callback
+   * @param {string} operation
+   * @param {number} count
+   * @return {any}
+   */
+  includeHasRelation(
+    modelName: string,
+    relationName: string,
+    callback: (query: ModelQueryBuilder) => void | undefined,
+    operation: string,
+    count: number,
+  ): any
+
+  /**
    * Get all available relations as string or null..
    *
    * @return {string|null}
@@ -3792,6 +3828,56 @@ export class ModelQueryBuilder<T = any> extends QueryBuilder {
       | Promise<void>
       | ModelQueryBuilder<Model>
       | Promise<ModelQueryBuilder<Model>>,
+  ): this
+
+  /**
+   * Set a has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [operation] {string}
+   * @param [count] {number}
+   */
+  has(
+    relationName: string,
+    operation?:
+      | '='
+      | '>'
+      | '>='
+      | '<'
+      | '<='
+      | '<>'
+      | '=='
+      | '!='
+      | '==='
+      | '!==',
+    count?: number,
+  ): this
+
+  /**
+   * Set a where has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
+   * @param [operation] {string}
+   * @param [count] {number}
+   */
+  whereHas(
+    relationName: string,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+    operation?:
+      | '='
+      | '>'
+      | '>='
+      | '<'
+      | '<='
+      | '<>'
+      | '=='
+      | '!='
+      | '==='
+      | '!==',
+    count?: number,
   ): this
 
   /**

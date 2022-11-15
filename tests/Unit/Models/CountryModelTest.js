@@ -113,4 +113,22 @@ test.group('CountryModelTest', group => {
 
     assert.deepEqual(country.capital.name, 'Testing')
   })
+
+  test('should be able to find models only where has the relation', async ({ assert }) => {
+    await Country.create({ name: 'India' })
+    const countries = await Country.query().has('capital').findMany()
+
+    assert.lengthOf(countries, 10)
+  })
+
+  test('should be able to find models only where has the relation and callback', async ({ assert }) => {
+    const country = await Country.create({ name: 'India' })
+    await country.capitalQuery().create({ name: 'Nova Delhi' })
+
+    const countries = await Country.query()
+      .whereHas('capital', query => query.where('name', 'Nova Delhi'))
+      .findMany()
+
+    assert.lengthOf(countries, 1)
+  })
 })

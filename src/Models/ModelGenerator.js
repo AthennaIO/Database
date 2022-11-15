@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Is } from '@athenna/common'
 import { HasOneRelation } from '#src/Relations/HasOne/HasOneRelation'
 import { HasManyRelation } from '#src/Relations/HasMany/HasManyRelation'
 import { BelongsToRelation } from '#src/Relations/BelongsTo/BelongsToRelation'
@@ -53,7 +54,9 @@ export class ModelGenerator {
     const model = this.#instantiateOne(data)
     const relations = this.#schema.getIncludedRelations()
 
-    return this.includeRelations(model, relations)
+    await this.includeRelations(model, relations)
+
+    return this.#filterOneByHas(model, relations)
   }
 
   /**
@@ -70,59 +73,9 @@ export class ModelGenerator {
     const models = await Promise.all(data.map(d => this.#instantiateOne(d)))
     const relations = this.#schema.getIncludedRelations()
 
-    return this.includeRelationsOfAll(models, relations)
-  }
+    await this.includeRelationsOfAll(models, relations)
 
-  /**
-   * Instantiate one model using vanilla database data.
-   *
-   * @param data {any}
-   * @return {any}
-   */
-  #instantiateOne(data) {
-    if (!data) {
-      return undefined
-    }
-
-    return this.#populate(data, new this.#Model(true))
-  }
-
-  /**
-   * Populate one object data in the model instance
-   * using the column dictionary to map keys.
-   *
-   * @param object {any}
-   * @param model {import('#src/index').Model}
-   * @return {any}
-   */
-  #populate(object, model) {
-    const columnDictionary = this.#schema.columnDictionary
-
-    const columns = this.#schema.columns
-
-    Object.keys(object).forEach(key => {
-      const property = columnDictionary[key]
-
-      const column = columns.find(c => c.name === property)
-
-      if (key === '__v') {
-        return
-      }
-
-      if (!column) {
-        model[key] = object[key]
-
-        return
-      }
-
-      if (column.isHidden) {
-        return
-      }
-
-      model[property] = object[key]
-    })
-
-    return model
+    return this.#filterManyByHas(models, relations)
   }
 
   /**
@@ -201,5 +154,136 @@ export class ModelGenerator {
     await Promise.all(relations.map(r => this.includeRelationOfAll(models, r)))
 
     return models
+  }
+
+  /**
+   * Filter the model by the has statement if it exists
+   * in included relations.
+   *
+   * @param model {import('#src/index').Model}
+   * @param relations {any[]}
+   * @return {undefined|any}
+   */
+  #filterOneByHas(model, relations) {
+    const hasRelations = relations.filter(relation => relation.has)
+
+    if (!hasRelations.length) {
+      return model
+    }
+
+    const couldBeReturned = hasRelations.map(hasRelation => {
+      if (!Is.Array(model[hasRelation.name])) {
+        return !!model[hasRelation.name]
+      }
+
+      const { operation, count } = hasRelation.has
+      const length = model[hasRelation.name].length
+
+      return this.#compare(length, operation, count)
+    })
+
+    if (couldBeReturned.includes(false)) {
+      return undefined
+    }
+
+    return model
+  }
+
+  /**
+   * Filter the models by the has statement if it exists
+   * in included relations.
+   *
+   * @param models {import('#src/index').Model[]}
+   * @param relations {any[]}
+   * @return {undefined|any}
+   */
+  #filterManyByHas(models, relations) {
+    return models.filter(model => this.#filterOneByHas(model, relations))
+  }
+
+  /**
+   * Instantiate one model using vanilla database data.
+   *
+   * @param data {any}
+   * @return {any}
+   */
+  #instantiateOne(data) {
+    if (!data) {
+      return undefined
+    }
+
+    return this.#populate(data, new this.#Model(true))
+  }
+
+  /**
+   * Populate one object data in the model instance
+   * using the column dictionary to map keys.
+   *
+   * @param object {any}
+   * @param model {import('#src/index').Model}
+   * @return {any}
+   */
+  #populate(object, model) {
+    const columnDictionary = this.#schema.columnDictionary
+
+    const columns = this.#schema.columns
+
+    Object.keys(object).forEach(key => {
+      const property = columnDictionary[key]
+
+      const column = columns.find(c => c.name === property)
+
+      if (key === '__v') {
+        return
+      }
+
+      if (!column) {
+        model[key] = object[key]
+
+        return
+      }
+
+      if (column.isHidden) {
+        return
+      }
+
+      model[property] = object[key]
+    })
+
+    return model
+  }
+
+  /**
+   * Compare the first and second value with dynamic
+   * operator.
+   *
+   * @param first {any}
+   * @param operator {string}
+   * @param second {any}
+   * @return {boolean}
+   */
+  #compare(first, operator, second) {
+    switch (operator) {
+      case '>':
+        return first > second
+      case '<':
+        return first < second
+      case '>=':
+        return first >= second
+      case '<=':
+        return first <= second
+      case '==':
+        // eslint-disable-next-line eqeqeq
+        return first == second
+      case '!=':
+        // eslint-disable-next-line eqeqeq
+        return first != second
+      case '=':
+      case '===':
+        return first === second
+      case '<>':
+      case '!==':
+        return first !== second
+    }
   }
 }

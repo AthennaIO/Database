@@ -56,4 +56,8 @@ export class Product extends Model {
       deletedAt: null,
     }
   }
+
+  productDetailsQuery() {
+    return this.hasMany(ProductDetail, true)
+  }
 }

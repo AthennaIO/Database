@@ -136,9 +136,7 @@ export class BelongsToManyRelation {
       pivotRelationForeign,
     } = this.getOptions(models[0], relation)
 
-    const pivotLocalPrimaryValues = models.map(
-      model => model[pivotLocalPrimary],
-    )
+    const pivotLocalPrimaryValues = models.map(m => m[pivotLocalPrimary])
 
     /**
      * Using Database here because there is no PivotModel.
@@ -148,7 +146,24 @@ export class BelongsToManyRelation {
       .whereIn(pivotLocalForeign, pivotLocalPrimaryValues)
       .findMany()
 
-    const foreignIds = pivotTableData.map(d => d[pivotRelationForeign])
+    const pivotTableMap = new Map()
+    const pivotRelationForeignIds = []
+
+    pivotTableData.forEach(data => {
+      pivotRelationForeignIds.push(data[pivotRelationForeign])
+
+      if (!pivotTableMap.has(data[pivotLocalForeign])) {
+        pivotTableMap.set(data[pivotLocalForeign], [data[pivotRelationForeign]])
+
+        return
+      }
+
+      const array = pivotTableMap.get(data[pivotLocalForeign])
+
+      array.push(data[pivotRelationForeign])
+
+      pivotTableMap.set(data[pivotLocalForeign], array)
+    })
 
     /**
      * Execute client callback if it exists.
@@ -158,23 +173,29 @@ export class BelongsToManyRelation {
     }
 
     const results = await query
-      .whereIn(pivotRelationPrimary, foreignIds)
+      .whereIn(pivotRelationPrimary, pivotRelationForeignIds)
       .findMany()
 
     const map = new Map()
+
     results.forEach(result => map.set(result[pivotRelationPrimary], result))
 
     return models.map(model => {
-      model[property] = map.get(model[pivotRelationForeign]) || []
+      const ids = pivotTableMap.get(model[pivotLocalPrimary]) || []
+      model[property] = ids.map(id => {
+        const relation = map.get(id)
 
-      /**
-       * Get the pivot table array data and set
-       * in the respective relation model.
-       */
-      model.pivot =
-        pivotTableData.find(
-          d => d[pivotRelationForeign] === model[pivotRelationPrimary],
-        ) || {}
+        if (!relation) {
+          return undefined
+        }
+
+        const statement = data =>
+          data[pivotLocalForeign] === model[pivotLocalPrimary]
+
+        relation.pivot = pivotTableData.find(statement) || {}
+
+        return relation
+      })
 
       return model
     })
@@ -215,8 +236,12 @@ export class BelongsToManyRelation {
           }
 
           const createdPromise = query.create(data)
+          const schema = model.constructor.getSchema()
+          const isNotIncrements = schema.columns.find(
+            c => c.name === pivotLocalPrimary && c.type !== 'increments',
+          )
 
-          if (connection === 'mysql' && pivotLocalPrimary !== 'increments') {
+          if (connection === 'mysql' && isNotIncrements) {
             return createdPromise.then(() => query.where(data).find())
           }
 

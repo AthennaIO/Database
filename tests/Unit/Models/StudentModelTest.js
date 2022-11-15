@@ -46,6 +46,15 @@ test.group('StudentModelTest', group => {
     await Folder.safeRemove(Path.database())
   })
 
+  test('should be able to create many students', async ({ assert }) => {
+    const students = await Student.query()
+      .orderBy('name', 'ASC')
+      .createMany([{ name: 'João Lenon' }, { name: 'Thais Gabriela' }])
+
+    assert.deepEqual(students[0].name, 'João Lenon')
+    assert.deepEqual(students[1].name, 'Thais Gabriela')
+  })
+
   test('should be able to enroll many to many relations', async ({ assert }) => {
     const student = await Student.find()
     const course = await Course.find()
@@ -190,5 +199,62 @@ test.group('StudentModelTest', group => {
     await student.load('courses')
 
     assert.lengthOf(student.courses, 0)
+  })
+
+  test('should be able to find models only where has the relations', async ({ assert }) => {
+    const [studentOne, studentTwo] = await Student.query().findMany()
+    await studentOne.coursesQuery().createMany([{ name: 'Math' }, { name: 'Portuguese' }])
+    await studentTwo.coursesQuery().createMany([{ name: 'English' }, { name: 'Math' }, { name: 'Chemistry' }])
+
+    const twoStudents = await Student.query().has('courses').findMany()
+
+    assert.lengthOf(twoStudents, 2)
+    assert.isDefined(twoStudents[0].courses.find(c => c.name === 'Math'))
+    assert.isDefined(twoStudents[0].courses.find(c => c.name === 'Portuguese'))
+
+    const oneStudent = await Student.query().has('courses', '>=', 3).findMany()
+
+    assert.lengthOf(oneStudent, 1)
+    assert.isDefined(oneStudent[0].courses.find(c => c.name === 'Math'))
+    assert.isDefined(oneStudent[0].courses.find(c => c.name === 'English'))
+    assert.isDefined(oneStudent[0].courses.find(c => c.name === 'Chemistry'))
+
+    const emptyStudents = await Student.query().has('courses', '>=', 4).findMany()
+
+    assert.lengthOf(emptyStudents, 0)
+  })
+
+  test('should be able to find models only where has the relations and callback', async ({ assert }) => {
+    const [studentOne, studentTwo] = await Student.query().findMany()
+    await studentOne.coursesQuery().createMany([{ name: 'Math' }, { name: 'Portuguese' }])
+    await studentTwo.coursesQuery().createMany([{ name: 'English' }, { name: 'Math' }, { name: 'Chemistry' }])
+
+    const twoStudents = await Student.query()
+      .whereHas('courses', query => query.select('id'))
+      .findMany()
+
+    assert.lengthOf(twoStudents, 2)
+    assert.isDefined(twoStudents[0].courses[0].id)
+    assert.isDefined(twoStudents[0].courses[1].id)
+    assert.isUndefined(twoStudents[0].courses[0].name)
+    assert.isUndefined(twoStudents[0].courses[1].name)
+
+    const oneStudent = await Student.query()
+      .whereHas('courses', query => query.select('id'), '>=', 3)
+      .findMany()
+
+    assert.lengthOf(oneStudent, 1)
+    assert.isDefined(oneStudent[0].courses[0].id)
+    assert.isDefined(oneStudent[0].courses[1].id)
+    assert.isDefined(oneStudent[0].courses[2].id)
+    assert.isUndefined(oneStudent[0].courses[0].name)
+    assert.isUndefined(oneStudent[0].courses[1].name)
+    assert.isUndefined(oneStudent[0].courses[2].name)
+
+    const emptyStudents = await Student.query()
+      .whereHas('courses', query => query.select('id').where('name', 'not-found'), '>=', 4)
+      .findMany()
+
+    assert.lengthOf(emptyStudents, 0)
   })
 })

@@ -70,6 +70,8 @@ test.group('ProductModelTest', group => {
     ])
 
     assert.lengthOf(products, 2)
+    assert.deepEqual(products[0].name, 'iPhone X')
+    assert.deepEqual(products[1].name, 'iPhone X')
   })
 
   test('should be able to create or update product', async ({ assert }) => {
@@ -648,5 +650,23 @@ test.group('ProductModelTest', group => {
     await product.user.refresh()
 
     assert.deepEqual(product.user.name, 'Testing')
+  })
+
+  test('should be able to find models only where has the relation', async ({ assert }) => {
+    await ProductMySql.create({ name: 'GTR34' })
+    const products = await ProductMySql.query().has('user').findMany()
+
+    assert.lengthOf(products, 10)
+  })
+
+  test('should be able to find models only where has the relation and callback', async ({ assert }) => {
+    const product = await ProductMySql.create({ name: 'GTR34' })
+    await product.userQuery().create({ name: 'Daniel Luna', email: 'daniel.luna@nubank.com' })
+
+    const products = await ProductMySql.query()
+      .whereHas('user', query => query.where('name', 'Daniel Luna'))
+      .findMany()
+
+    assert.lengthOf(products, 1)
   })
 })

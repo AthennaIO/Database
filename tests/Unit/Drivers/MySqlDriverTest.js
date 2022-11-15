@@ -176,12 +176,18 @@ test.group('MySqlDriverTest', group => {
     assert.isDefined(user.updatedAt)
     assert.isNull(user.deletedAt)
 
-    const users = await DB.table('users').createMany([
-      { name: 'Victor Tesoura', email: 'txsoura@gmail.com' },
-      { name: 'Henry Bernardo', email: 'hbplay@gmail.com' },
-    ])
+    const users = await DB.table('users')
+      .orderBy('name', 'desc')
+      .createMany([
+        { name: 'Victor Tesoura', email: 'txsoura@gmail.com' },
+        { name: 'Henry Bernardo', email: 'hbplay@gmail.com' },
+      ])
 
     assert.lengthOf(users, 2)
+    assert.deepEqual(users[0].name, 'Victor Tesoura')
+    assert.deepEqual(users[0].email, 'txsoura@gmail.com')
+    assert.deepEqual(users[1].name, 'Henry Bernardo')
+    assert.deepEqual(users[1].email, 'hbplay@gmail.com')
   })
 
   test('should be able to create or update user', async ({ assert }) => {

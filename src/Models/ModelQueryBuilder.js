@@ -370,7 +370,9 @@ export class ModelQueryBuilder {
         data[this.#schema.getUpdatedAt()] || date
     }
 
-    return this.#generator.generateOne(await this.#QB.create(data))
+    return this.#generator.generateOne(
+      await this.#QB.create(data, this.#Model.primaryKey),
+    )
   }
 
   /**
@@ -406,11 +408,23 @@ export class ModelQueryBuilder {
           data[this.#schema.getUpdatedAt()] || date
       }
 
+      const primaryKey = this.#Model.primaryKey
+
+      if (!data[primaryKey]) {
+        const column = this.#schema.columns.find(
+          column => column.name === primaryKey,
+        )
+
+        if (column.type === 'uuid') {
+          data[primaryKey] = Uuid.generate()
+        }
+      }
+
       return data
     }
 
     return this.#generator.generateMany(
-      await this.#QB.createMany(data.map(executor)),
+      await this.#QB.createMany(data.map(executor), this.#Model.primaryKey),
     )
   }
 
@@ -901,6 +915,69 @@ export class ModelQueryBuilder {
     }
 
     this.#schema.includeRelation(this.#Model.name, relationName, callback)
+
+    return this
+  }
+
+  /**
+   * Set a has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [operation] {string}
+   * @param [count] {number}
+   */
+  has(relationName, operation = '>=', count = 1) {
+    if (relationName.includes('.')) {
+      this.#schema.includeNestedHasRelations(
+        this.#Model.name,
+        relationName,
+        undefined,
+        operation,
+        count,
+      )
+
+      return this
+    }
+
+    this.#schema.includeHasRelation(
+      this.#Model.name,
+      relationName,
+      undefined,
+      operation,
+      count,
+    )
+
+    return this
+  }
+
+  /**
+   * Set a where has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
+   * @param [operation] {string}
+   * @param [count] {number}
+   */
+  whereHas(relationName, callback, operation = '>=', count = 1) {
+    if (relationName.includes('.')) {
+      this.#schema.includeNestedHasRelations(
+        this.#Model.name,
+        relationName,
+        callback,
+        operation,
+        count,
+      )
+
+      return this
+    }
+
+    this.#schema.includeHasRelation(
+      this.#Model.name,
+      relationName,
+      callback,
+      operation,
+      count,
+    )
 
     return this
   }

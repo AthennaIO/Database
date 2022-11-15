@@ -592,6 +592,7 @@ export class MySqlDriver {
 
     const promises = data.map(data => {
       return this.#qb
+        .clone()
         .insert(data)
         .then(([id]) => ids.push(data[primaryKey] || id))
     })

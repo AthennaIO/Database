@@ -282,7 +282,13 @@ export class BelongsToQueryBuilder {
       data[this.#options.primary] = this.#fatherModel[this.#options.foreign]
     }
 
-    return this.#ModelQB.create(data, ignorePersistOnly)
+    const model = await this.#ModelQB.create(data, ignorePersistOnly)
+
+    this.associate(model)
+
+    await this.#fatherModel.save()
+
+    return model
   }
 
   /**

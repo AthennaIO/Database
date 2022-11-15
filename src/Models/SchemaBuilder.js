@@ -176,7 +176,7 @@ export class SchemaBuilder {
   }
 
   /**
-   * Find the relation object by name.
+   * Include nested relations.
    *
    * @param modelName {string}
    * @param nestedRelationNames {string}
@@ -198,6 +198,77 @@ export class SchemaBuilder {
     }, undefined)
 
     return this.includeRelation(modelName, mainRelationName, callback)
+  }
+
+  /**
+   * Include nested has relations.
+   *
+   * @param modelName {string}
+   * @param nestedRelationNames {string}
+   * @param lastCallback {any}
+   * @param operation {string}
+   * @param count {number}
+   * @return {any}
+   */
+  includeNestedHasRelations(
+    modelName,
+    nestedRelationNames,
+    lastCallback,
+    operation,
+    count,
+  ) {
+    const relationsArray = nestedRelationNames.split('.')
+
+    const mainRelationName = relationsArray.shift()
+    const callback = relationsArray.reduce((cb, relationName, index) => {
+      if (index === relationsArray.length - 1) {
+        cb = query =>
+          query.whereHas(relationName, lastCallback, operation, count)
+      } else {
+        cb = query => query.whereHas(relationName, cb, '>=', 1)
+      }
+
+      return cb
+    }, undefined)
+
+    return this.includeHasRelation(
+      modelName,
+      mainRelationName,
+      callback,
+      '>=',
+      1,
+    )
+  }
+
+  /**
+   * Set isIncluded as true as the has map in the relation.
+   *
+   * @param {string} modelName
+   * @param {string} relationName
+   * @param {any} callback
+   * @param {string} operation
+   * @param {number} count
+   * @return {any}
+   */
+  includeHasRelation(modelName, relationName, callback, operation, count) {
+    const relation = this.getRelationByName(relationName)
+
+    if (!relation) {
+      throw new NotImplementedRelationException(
+        relationName,
+        modelName,
+        this.getAvailableRelationsString(),
+      )
+    }
+
+    relation.has = { count, operation }
+    relation.isIncluded = true
+    relation.callback = callback
+
+    const index = this.relations.indexOf(relation)
+    this.relations[index] = relation
+
+    return this.relations[index]
   }
 
   /**
