@@ -3282,6 +3282,20 @@ export class Criteria {
   static select(...columns: string[]): typeof Criteria
 
   /**
+   * Get all the records even the soft deleted.
+   *
+   * @return {typeof Criteria}
+   */
+  static withTrashed(): typeof Criteria
+
+  /**
+   * Get only the soft deleted values from database.
+   *
+   * @return {typeof Criteria}
+   */
+  static onlyTrashed(): typeof Criteria
+
+  /**
    * Eager load a relation in your query.
    *
    * @param relationName {string}
@@ -3293,6 +3307,38 @@ export class Criteria {
     callback?: (
       query: ModelQueryBuilder,
     ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+  ): typeof Criteria
+
+  /**
+   * Set a has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [operation] {string}
+   * @param [count] {number}
+   * @return {typeof Criteria}
+   */
+  static has(
+    relationName: string,
+    operation?: string,
+    count?: number,
+  ): typeof Criteria
+
+  /**
+   * Set a where has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
+   * @param [operation] {string}
+   * @param [count] {number}
+   * @return {typeof Criteria}
+   */
+  static whereHas(
+    relationName: string,
+    callback?: (
+      query: ModelQueryBuilder,
+    ) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>,
+    operation?: string,
+    count?: number,
   ): typeof Criteria
 
   /**
