@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import { Json } from '@athenna/common'
+
 export class Resource {
   /**
    * Set your object blueprint to execute in resources.
@@ -32,10 +34,12 @@ export class Resource {
     const blueprint = this.blueprint(object)
 
     Object.keys(blueprint).forEach(key => {
-      if (!blueprint[key]) delete blueprint[key]
+      if (blueprint[key] === undefined) {
+        delete blueprint[key]
+      }
     })
 
-    return JSON.parse(JSON.stringify(blueprint))
+    return Json.copy(blueprint)
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Model, Column, Relation } from '#src/index'
 import { Product } from '#tests/Stubs/models/Product'
+import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
 
 export class User extends Model {
   /**
@@ -70,9 +71,6 @@ export class User extends Model {
   }
 
   toResource(criterias = {}) {
-    return {
-      id: this.id,
-      name: this.name,
-    }
+    return UserResource.toJson(this)
   }
 }
