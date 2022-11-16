@@ -49,7 +49,7 @@ export class BelongsToManyRelation {
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {import('#src/index').BelongsToManyQueryBuilder}
+   * @return {BelongsToManyQueryBuilder}
    */
   static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor
