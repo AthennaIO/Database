@@ -321,17 +321,6 @@ test.group('UserModelTest', group => {
     assert.notInstanceOf(userJson, User)
   })
 
-  test('should be able to get the user/users as resource', async ({ assert }) => {
-    const users = await User.query().with('products').findMany()
-
-    const userResource = users[0].toResource()
-
-    assert.notInstanceOf(userResource, User)
-
-    assert.isUndefined(userResource.createdAt)
-    assert.isUndefined(users.toResource({ role: 'admin' })[0].createdAt)
-  })
-
   test('should be able to get the user/users as resource using resource class', async ({ assert }) => {
     const users = await User.query().with('products').findMany()
 
@@ -340,6 +329,8 @@ test.group('UserModelTest', group => {
     assert.notInstanceOf(userResource, User)
 
     assert.isUndefined(userResource.createdAt)
+    assert.isDefined(userResource.products)
+    assert.lengthOf(userResource.products, 0)
     assert.isUndefined(UserResource.toArray(users)[0].createdAt)
   })
 
@@ -854,5 +845,20 @@ test.group('UserModelTest', group => {
       .findMany()
 
     assert.lengthOf(emptyUsers, 0)
+  })
+
+  test('should be able to convert relationships in resources', async ({ assert }) => {
+    await Product.factory().create()
+
+    const users = await User.query().has('products').findMany()
+    const json = users.toResource()
+
+    assert.isDefined(json[0].id)
+    assert.isDefined(json[0].name)
+    assert.isUndefined(json[0].createdAt)
+    assert.isDefined(json[0].products)
+    assert.isDefined(json[0].products[0].id)
+    assert.isDefined(json[0].products[0].name)
+    assert.isUndefined(json[0].products[0].createdAt)
   })
 })
