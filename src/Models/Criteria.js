@@ -25,6 +25,28 @@ export class Criteria {
   }
 
   /**
+   * Get all the records even the soft deleted.
+   *
+   * @return {ModelQueryBuilder}
+   */
+  static withTrashed() {
+    this.#criteria.set('withTrashed')
+
+    return this
+  }
+
+  /**
+   * Get only the soft deleted values from database.
+   *
+   * @return {typeof Criteria}
+   */
+  static onlyTrashed() {
+    this.#criteria.set('onlyTrashed')
+
+    return this
+  }
+
+  /**
    * Executes the given closure when the first argument is true.
    *
    * @param criteria {any}
@@ -49,14 +71,43 @@ export class Criteria {
   }
 
   /**
-   * Set a include statement in your query.
+   * Eager load a relation in your query.
    *
-   * @param relation {string|any}
-   * @param [callback] {any}
+   * @param relationName {string|any}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
    * @return {typeof Criteria}
    */
-  static includes(relation, callback) {
-    this.#criteria.set('includes', [relation, callback])
+  static with(relationName, callback) {
+    this.#criteria.set('with', [relationName, callback])
+
+    return this
+  }
+
+  /**
+   * Set a has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [operation] {string}
+   * @param [count] {number}
+   * @return {typeof Criteria}
+   */
+  static has(relationName, operation, count) {
+    this.#criteria.set('has', [relationName, operation, count])
+
+    return this
+  }
+
+  /**
+   * Set a where has statement in your query.
+   *
+   * @param relationName {string}
+   * @param [callback] {(query: ModelQueryBuilder) => void | Promise<void> | ModelQueryBuilder | Promise<ModelQueryBuilder>}
+   * @param [operation] {string}
+   * @param [count] {number}
+   * @return {typeof Criteria}
+   */
+  static whereHas(relationName, callback, operation, count) {
+    this.#criteria.set('whereHas', [relationName, callback, operation, count])
 
     return this
   }
