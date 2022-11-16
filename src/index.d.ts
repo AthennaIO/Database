@@ -10,6 +10,7 @@
 import { Facade } from '@athenna/ioc'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@athenna/common'
+import { Assert } from '@japa/assert'
 
 export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
@@ -921,14 +922,14 @@ export class SchemaBuilder {
   getReversedStatementNamesOf(statement: any): any
 }
 
-export class ModelFactory {
+export class ModelFactory<T = any> {
   /**
    * The model that we are going to use to generate
    * data.
    *
    * @type {any}
    */
-  Model: Model
+  Model: T
 
   /**
    * Set the returning key that this factory will return.
@@ -944,7 +945,7 @@ export class ModelFactory {
    * @param returning {string}
    * @return {ModelFactory}
    */
-  constructor(Model: Model, returning?: string)
+  constructor(Model: T, returning?: string)
 
   /**
    * Set the number of models to be created
@@ -952,7 +953,23 @@ export class ModelFactory {
    * @param number
    * @return {ModelFactory}
    */
-  count(number: number): ModelFactory
+  count(number: number): this
+
+  /**
+   * Set the soft delete state in your model to
+   * fabricate deleted data.
+   *
+   * @return {ModelFactory}
+   */
+  trashed(): this
+
+  /**
+   * Remove the soft delete state in your model to
+   * not fabricate deleted data.
+   *
+   * @return {ModelFactory}
+   */
+  untrashed(): this
 
   /**
    * Make models without creating it on database.
@@ -960,7 +977,7 @@ export class ModelFactory {
    * @param override {any}
    * @param asArrayOnOne {boolean}
    */
-  make(override?: any, asArrayOnOne?: boolean): Promise<any | any[]>
+  make(override?: any, asArrayOnOne?: boolean): Promise<T | T[]>
 
   /**
    * Create models creating it on database.
@@ -969,7 +986,7 @@ export class ModelFactory {
    * @param asArrayOnOne {boolean}
    * @return {any | any[]}
    */
-  create(override?: any, asArrayOnOne?: boolean): Promise<any | any[]>
+  create(override?: any, asArrayOnOne?: boolean): Promise<T | T[]>
 }
 
 export class ModelGenerator {
@@ -1126,7 +1143,10 @@ export class Model {
    *
    * @return {ModelFactory}
    */
-  static factory(returning?: string): ModelFactory
+  static factory<Class extends typeof Model>(
+    this: Class,
+    returning?: string,
+  ): ModelFactory<InstanceType<Class>>
 
   /**
    * The schema instance of this model.
@@ -1340,6 +1360,14 @@ export class Model {
    * @return {Promise<void>}
    */
   static assertSoftDelete(where: any): Promise<void>
+
+  /**
+   * Assert that the model has not been softly deleted.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static assertNotSoftDelete(where: any): Promise<void>
 
   /**
    * Assert that the number of respective model is the number.

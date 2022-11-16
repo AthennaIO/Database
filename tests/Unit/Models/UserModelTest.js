@@ -861,4 +861,23 @@ test.group('UserModelTest', group => {
     assert.isDefined(json[0].products[0].name)
     assert.isUndefined(json[0].products[0].createdAt)
   })
+
+  test('should be able to fabricate trashed data using factories', async ({ assert }) => {
+    const factory = User.factory()
+
+    const userMake = await factory.trashed().make()
+    const userCreate = await factory.trashed().create()
+
+    assert.isDefined(userMake.deletedAt)
+    assert.instanceOf(userMake, User)
+    assert.isDefined(userCreate.deletedAt)
+    assert.instanceOf(userCreate, User)
+    assert.isTrue(userCreate.isTrashed())
+    await User.assertSoftDelete({ id: userCreate.id })
+
+    const notDeletedUser = await factory.untrashed().create()
+
+    assert.isNull(notDeletedUser.deletedAt)
+    await User.assertNotSoftDelete({ id: notDeletedUser.id })
+  })
 })

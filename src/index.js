@@ -22,6 +22,10 @@ export * from './Models/ModelGenerator.js'
 export * from './Models/ModelQueryBuilder.js'
 
 export * from './Relations/Relation.js'
+export * from './Relations/HasOne/HasOneQueryBuilder.js'
+export * from './Relations/HasMany/HasManyQueryBuilder.js'
+export * from './Relations/BelongsTo/BelongsToQueryBuilder.js'
+export * from './Relations/BelongsToMany/BelongsToManyQueryBuilder.js'
 
 export * from './Helpers/DatabaseLoader.js'
 

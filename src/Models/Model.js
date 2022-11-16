@@ -448,9 +448,25 @@ export class Model {
    * @return {Promise<void>}
    */
   static async assertSoftDelete(where) {
-    const model = await this.find(where)
+    const model = await this.query(false).find()
 
     new Assert().isDefined(model[this.DELETED_AT])
+  }
+
+  /**
+   * Assert that the model has not been softly deleted.
+   *
+   * @param {any} where
+   * @return {Promise<void>}
+   */
+  static async assertNotSoftDelete(where) {
+    const model = await this.query(false).where(where).find()
+
+    if (model[this.DELETED_AT] === undefined) {
+      new Assert().isUndefined(model[this.DELETED_AT])
+    } else {
+      new Assert().isNull(model[this.DELETED_AT])
+    }
   }
 
   /**
@@ -460,7 +476,7 @@ export class Model {
    * @return {Promise<void>}
    */
   static async assertCount(number) {
-    const count = await this.count()
+    const count = await this.query().count()
 
     new Assert().equal(number, count)
   }
@@ -468,11 +484,11 @@ export class Model {
   /**
    * Assert that the values matches any model in database.
    *
-   * @param {any} values
+   * @param {any} where
    * @return {Promise<void>}
    */
   static async assertExists(where) {
-    const model = await this.find(where)
+    const model = await this.query().where(where).find()
 
     new Assert().isDefined(model)
   }
@@ -484,7 +500,7 @@ export class Model {
    * @return {Promise<void>}
    */
   static async assertNotExists(where) {
-    const model = await this.find(where)
+    const model = await this.query().where(where).find()
 
     new Assert().isUndefined(model)
   }

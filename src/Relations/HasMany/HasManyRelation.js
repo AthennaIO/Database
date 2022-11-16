@@ -36,7 +36,7 @@ export class HasManyRelation {
    * @param model {import('#src/index').Model}
    * @param RelationModel {typeof import('#src/index').Model}
    * @param [withCriterias] {boolean}
-   * @return {ModelQueryBuilder}
+   * @return {HasManyQueryBuilder}
    */
   static getQueryBuilder(model, RelationModel, withCriterias) {
     const Model = model.constructor

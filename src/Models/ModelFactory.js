@@ -24,6 +24,13 @@ export class ModelFactory {
   #count = 1
 
   /**
+   * Set if the soft delete state in active or not.
+   *
+   * @type {boolean}
+   */
+  #trashed = false
+
+  /**
    * Set the returning key that this factory will return.
    *
    * @type {string|null}
@@ -43,7 +50,31 @@ export class ModelFactory {
   }
 
   /**
-   * Set the number of models to be created
+   * Set the soft delete state in your model to
+   * fabricate deleted data.
+   *
+   * @return {ModelFactory}
+   */
+  trashed() {
+    this.#trashed = true
+
+    return this
+  }
+
+  /**
+   * Remove the soft delete state in your model to
+   * not fabricate deleted data.
+   *
+   * @return {ModelFactory}
+   */
+  untrashed() {
+    this.#trashed = false
+
+    return this
+  }
+
+  /**
+   * Set the number of models to be created.
    *
    * @param number
    * @return {ModelFactory}
@@ -72,6 +103,14 @@ export class ModelFactory {
     if (this.returning !== '*') {
       data = data.map(d => d[this.returning])
     }
+
+    data = data.map(d => {
+      const model = new this.Model()
+
+      Object.keys(d).forEach(key => (model[key] = d[key]))
+
+      return model
+    })
 
     if (asArrayOnOne && data.length === 1) {
       return data[0]
@@ -131,6 +170,10 @@ export class ModelFactory {
     }, [])
 
     await Promise.all(promises)
+
+    if (this.#trashed) {
+      data[this.Model.DELETED_AT] = new Date()
+    }
 
     return {
       ...data,
