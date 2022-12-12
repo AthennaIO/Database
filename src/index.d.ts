@@ -10,10 +10,156 @@
 import { Facade } from '@athenna/ioc'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@athenna/common'
-import { Assert } from '@japa/assert'
 
 export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
+
+export class MongoDatabaseImpl {
+  /**
+   * Creates a new instance of DatabaseImpl.
+   *
+   * @param {any} configs
+   * @return {MongoDatabaseImpl}
+   */
+  constructor(configs?: any)
+
+  /**
+   * Change the database connection.
+   *
+   * @param {string} connection
+   * @return {DatabaseImpl}
+   */
+  connection(connection: string): DatabaseImpl
+
+  /**
+   * Synchronize all the models of this database connection.
+   *
+   * @return {Promise<void>}
+   */
+  sync(path?: string): Promise<void>
+
+  /**
+   * Connect to database.
+   *
+   * @param {boolean} force
+   * @param {boolean} saveOnFactory
+   * @return {Promise<this>}
+   */
+  connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Close the connection with database in this instance.
+   *
+   * @return {Promise<void>}
+   */
+  close(): Promise<void>
+
+  /**
+   * Close all the connections with all databases.
+   *
+   * @return {Promise<void>}
+   */
+  closeAll(): Promise<void>
+
+  /**
+   * Return the client of driver.
+   *
+   * @return {import('mongoose').Connection | null}
+   */
+  getClient(): import('mongoose').Connection
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('mongoose').Collection | null}
+   */
+  getQueryBuilder(): import('mongoose').Collection
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  startTransaction(): Promise<Transaction>
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {boolean}
+   */
+  hasDatabase(database: string): Promise<boolean>
+
+  /**
+   * Create a new database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  createDatabase(databaseName: string): Promise<void>
+
+  /**
+   * Drop some database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  dropDatabase(databaseName: string): Promise<void>
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  getCurrentDatabase(): Promise<string | undefined>
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {boolean}
+   */
+  hasTable(table: string): Promise<boolean>
+
+  /**
+   * Drop a table in database.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  dropTable(tableName: string): Promise<void>
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  truncate(tableName: string): Promise<void>
+
+  /**
+   * Creates a new instance of QueryBuilder for this table.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName: string): QueryBuilder
+}
 
 export class MySqlDatabaseImpl {
   /**
@@ -127,6 +273,13 @@ export class MySqlDatabaseImpl {
    * @return {Promise<string[]>}
    */
   getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
 
   /**
    * Get the current database name.
@@ -299,6 +452,13 @@ export class PostgresDatabaseImpl {
   getTables(): Promise<string[]>
 
   /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
+
+  /**
    * Get the current database name.
    *
    * @return {Promise<string | undefined>}
@@ -468,6 +628,13 @@ export class DatabaseImpl {
    * @return {Promise<string[]>}
    */
   getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
 
   /**
    * Get the current database name.
