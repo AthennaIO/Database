@@ -31,6 +31,7 @@ test.group('DriverFactoryTest', group => {
   })
 
   group.each.teardown(async () => {
+    await DriverFactory.closeConnectionByName('mongo')
     await DriverFactory.closeConnectionByName('mysql')
     await DriverFactory.closeConnectionByName('postgres')
   })
@@ -43,7 +44,7 @@ test.group('DriverFactoryTest', group => {
     const drivers = DriverFactory.availableDrivers()
     const connectedDrivers = DriverFactory.availableDrivers(true)
 
-    assert.deepEqual(drivers, ['mysql', 'postgres'])
+    assert.deepEqual(drivers, ['mongo', 'mysql', 'postgres'])
     assert.deepEqual(connectedDrivers, ['postgres'])
   })
 
@@ -54,7 +55,7 @@ test.group('DriverFactoryTest', group => {
 
     const drivers = DriverFactory.availableDrivers()
 
-    assert.deepEqual(drivers, ['mysql', 'postgres', 'other'])
+    assert.deepEqual(drivers, ['mongo', 'mysql', 'postgres', 'other'])
   })
 
   test('should throw a driver exist exception', async ({ assert }) => {

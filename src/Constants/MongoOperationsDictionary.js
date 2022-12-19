@@ -32,22 +32,6 @@ export function createMatchByOperator(object, operator) {
 }
 
 /**
- * Create a new object pointing to the operation.
- *
- * @param object {any}
- * @param operator { '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike' }
- */
-export function createObjectWithOperator(object, operator) {
-  const newObject = {}
-
-  Object.keys(object).forEach(
-    key => (newObject[key] = setOperator(object[key], operator)),
-  )
-
-  return newObject
-}
-
-/**
  * Set the mongo operation in value.
  *
  * @param key {string}
@@ -69,16 +53,4 @@ export function setOperator(value, operator) {
   }
 
   return object
-}
-
-/**
- * Set the mongo operation in key value.
- *
- * @param key {string}
- * @param value {any}
- * @param operator {'=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike'}
- * @return {any}
- */
-export function setOperatorInKey(key, value, operator) {
-  return { [key]: setOperator(value, operator) }
 }

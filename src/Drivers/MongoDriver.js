@@ -9,18 +9,15 @@
 
 import { Collection, Exec, Is, Json, Options } from '@athenna/common'
 
-import {
-  setOperator,
-  createObjectWithOperator,
-} from '#src/Constants/MongoOperationsDictionary'
 import { DriverFactory } from '#src/Factories/DriverFactory'
 import { BadJoinException } from '#src/Exceptions/BadJoinException'
 import { Transaction } from '#src/Database/Transactions/Transaction'
+import { setOperator } from '#src/Constants/MongoOperationsDictionary'
 import { WrongMethodException } from '#src/Exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/Exceptions/NotFoundDataException'
+import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 import { NotConnectedDatabaseException } from '#src/Exceptions/NotConnectedDatabaseException'
 import { NotImplementedMethodException } from '#src/Exceptions/NotImplementedMethodException'
-import { NoTableSelectedException } from '#src/Exceptions/NoTableSelectedException'
 
 export class MongoDriver {
   /**
@@ -391,7 +388,7 @@ export class MongoDriver {
   async truncate(tableName) {
     const collection = this.#client.collection(tableName)
 
-    await collection.deleteMany()
+    await collection.deleteMany({}, { session: this.#session })
   }
 
   /**
@@ -673,13 +670,17 @@ export class MongoDriver {
    * @return {Promise<import('@athenna/common').PaginatedResponse>}
    */
   async paginate(page = 0, limit = 10, resourceUrl = '/') {
-    const countPpl = this.#createPipeline()
+    const pipeline = this.#createPipeline({
+      clearWhere: false,
+      clearOrWhere: false,
+      clearPipeline: false,
+    })
 
-    countPpl.push({ $group: { _id: null, count: { $sum: 1 } } })
-    countPpl.push({ $project: { _id: 0, count: 1 } })
+    pipeline.push({ $group: { _id: null, count: { $sum: 1 } } })
+    pipeline.push({ $project: { _id: 0, count: 1 } })
 
     const [{ count }] = await this.#qb
-      .aggregate(countPpl, { session: this.#session })
+      .aggregate(pipeline, { session: this.#session })
       .toArray()
 
     const data = await this.offset(page).limit(limit).findMany()
@@ -716,7 +717,9 @@ export class MongoDriver {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    const { insertedIds } = await this.#qb.insertMany(data)
+    const { insertedIds } = await this.#qb.insertMany(data, {
+      session: this.#session,
+    })
     const insertedIdsArray = []
 
     Object.keys(insertedIds).forEach(key =>
@@ -734,25 +737,21 @@ export class MongoDriver {
    * @return {Promise<any | any[]>}
    */
   async createOrUpdate(data, primaryKey = '_id') {
-    const pipeline = this.#createPipeline({
-      clearWhere: false,
-      clearOrWhere: false,
-      clearPipeline: false,
-    })
+    const pipeline = this.#createPipeline()
 
     const hasValue = (
       await this.#qb.aggregate(pipeline, { session: this.#session }).toArray()
     )[0]
 
     if (hasValue) {
-      return this.update(data)
+      return this.where(primaryKey, hasValue[primaryKey]).update(data)
     }
 
     return this.create(data, primaryKey)
   }
 
   /**
-   * Update a value in database.
+   * Update data in database.
    *
    * @param {any} data
    * @return {Promise<any>}
@@ -779,12 +778,12 @@ export class MongoDriver {
   }
 
   /**
-   * Delete one value in database.
+   * Delete data in database.
    *
    * @return {Promise<void>}
    */
   async delete() {
-    await this.#qb.delete()
+    await this.#qb.deleteMany({}, { session: this.#session })
   }
 
   /**
@@ -843,7 +842,24 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   select(...columns) {
+    if (columns.includes('*')) {
+      return this
+    }
+
     const $project = columns.reduce((previous, column) => {
+      if (column.includes(`${this.#table}.`)) {
+        column = column.replace(`${this.#table}.`, '')
+      }
+
+      if (column.includes(' as ')) {
+        const [select, alias] = column.split(' as ')
+
+        previous[select] = 0
+        previous[alias] = `$${select}`
+
+        return previous
+      }
+
       previous[column] = 1
 
       return previous
@@ -878,7 +894,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   join(tableName, column1, operation, column2) {
-    let foreignField = column2 || operation
+    let foreignField = column2 || operation || '_id'
 
     if (foreignField.includes('.')) {
       const [table, column] = foreignField.split('.')
@@ -890,7 +906,7 @@ export class MongoDriver {
       foreignField = column
     }
 
-    let localField = column1
+    let localField = column1 || '_id'
 
     if (localField.includes('.')) {
       localField = localField.split('.')[1]
@@ -999,10 +1015,9 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   groupBy(...columns) {
-    const $group = columns.reduce(
-      (previous, column) => (previous._id[column] = `$${column}`),
-      { _id: {} },
-    )
+    const $group = { _id: {} }
+
+    columns.forEach(column => ($group._id[column] = `$${column}`))
 
     this.#pipeline.push({ $group })
     this.#pipeline.push({ $replaceRoot: { newRoot: '$_id' } })
@@ -1289,6 +1304,12 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   where(statement, operation, value) {
+    if (Is.Function(statement)) {
+      statement(this)
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#where = {
         ...this.#where,
@@ -1299,12 +1320,12 @@ export class MongoDriver {
     }
 
     if (value === undefined) {
-      this.#where = createObjectWithOperator(statement, operation)
+      this.#where[statement] = setOperator(operation, '=')
 
       return this
     }
 
-    this.#where[statement] = setOperator(operation, value)
+    this.#where[statement] = setOperator(value, operation)
 
     return this
   }
@@ -1467,6 +1488,12 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhere(statement, operation, value) {
+    if (Is.Function(statement)) {
+      statement(this)
+
+      return this
+    }
+
     if (operation === undefined) {
       this.#orWhere = {
         ...this.#orWhere,
@@ -1477,12 +1504,12 @@ export class MongoDriver {
     }
 
     if (value === undefined) {
-      this.#orWhere = createObjectWithOperator(statement, operation)
+      this.#orWhere[statement] = setOperator(operation, '=')
 
       return this
     }
 
-    this.#orWhere[statement] = setOperator(operation, value)
+    this.#orWhere[statement] = setOperator(value, operation)
 
     return this
   }
@@ -1728,15 +1755,22 @@ export class MongoDriver {
     if (Is.Empty(this.#orWhere)) {
       const where = Json.copy(this.#where)
 
-      this.#where = {}
+      if (options.clearWhere) {
+        this.#where = {}
+      }
 
       return where
     }
 
     const where = { $or: [Json.copy(this.#where), Json.copy(this.#orWhere)] }
 
-    this.#where = {}
-    this.#orWhere = {}
+    if (options.clearWhere) {
+      this.#where = {}
+    }
+
+    if (options.clearOrWhere) {
+      this.#orWhere = {}
+    }
 
     return where
   }

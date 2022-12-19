@@ -537,6 +537,7 @@ export class DatabaseImpl {
    * @param {string} connection
    * @return {MySqlDatabaseImpl|PostgresDatabaseImpl}
    */
+  connection(connection: 'mongo'): MongoDatabaseImpl
   connection(connection: 'mysql'): MySqlDatabaseImpl
   connection(connection: 'postgres'): PostgresDatabaseImpl
 
@@ -2765,7 +2766,7 @@ export class QueryBuilder {
   createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
 
   /**
-   * Update a value in database.
+   * Update data in database.
    *
    * @param {any} data
    * @return {Promise<any | any[]>}
@@ -2773,7 +2774,7 @@ export class QueryBuilder {
   update(data: any): Promise<any | any[]>
 
   /**
-   * Delete one value in database.
+   * Delete data in database.
    *
    * @return {Promise<any | void>}
    */
