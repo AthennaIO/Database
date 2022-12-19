@@ -15,7 +15,7 @@ export class MongoMemory {
    *
    * @type {MongoMemoryReplSet}
    */
-  static #replSet
+  static #replSet = null
 
   /**
    * Start the replica set.
@@ -23,9 +23,13 @@ export class MongoMemory {
    * @return {Promise<void>}
    */
   static async start() {
+    if (this.#replSet) {
+      return
+    }
+
     this.#replSet = await MongoMemoryReplSet.create({
       instanceOpts: [{ port: 27017 }, { port: 27018 }, { port: 27019 }],
-      replSet: { count: 3 },
+      replSet: { name: 'rs', count: 3 },
     })
   }
 
@@ -35,6 +39,11 @@ export class MongoMemory {
    * @return {Promise<void>}
    */
   static async stop() {
+    if (!this.#replSet) {
+      return
+    }
+
     await this.#replSet.stop()
+    this.#replSet = null
   }
 }

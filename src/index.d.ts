@@ -32,13 +32,6 @@ export class MongoDatabaseImpl {
   connection(connection: string): DatabaseImpl
 
   /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
-
-  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -177,13 +170,6 @@ export class MySqlDatabaseImpl {
    * @return {DatabaseImpl}
    */
   connection(connection: string): DatabaseImpl
-
-  /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
 
   /**
    * Connect to database.
@@ -363,13 +349,6 @@ export class PostgresDatabaseImpl {
   connection(connection: string): DatabaseImpl
 
   /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
-
-  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -540,13 +519,6 @@ export class DatabaseImpl {
   connection(connection: 'mongo'): MongoDatabaseImpl
   connection(connection: 'mysql'): MySqlDatabaseImpl
   connection(connection: 'postgres'): PostgresDatabaseImpl
-
-  /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
 
   /**
    * Connect to database.
@@ -1037,6 +1009,13 @@ export class SchemaBuilder {
   hasUpdatedAt(): boolean
 
   /**
+   * Verify if schema has deleted at property.
+   *
+   * @return {boolean}
+   */
+  hasDeletedAt(): boolean
+
+  /**
    * Get the created at column name.
    *
    * @return {string}
@@ -1051,12 +1030,50 @@ export class SchemaBuilder {
   getUpdatedAt(): string
 
   /**
+   * Get the deleted at column name.
+   *
+   * @return {string}
+   */
+  getDeletedAt(): string
+
+  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
    * @return {any[]}
    */
   getIncludedRelations(): any[]
+
+  /**
+   * Get the column dictionary.
+   *
+   * @return {any}
+   */
+  getColumnDictionary(): any
+
+  /**
+   * Get the column name of a reversed column name.
+   *
+   * @param reversedColumnName {string}
+   * @return {string}
+   */
+  getColumnNameOf(reversedColumnName: string): string
+
+  /**
+   * Get the column names of a reversed columns.
+   *
+   * @param reversedColumns {string[]}
+   * @return {string[]}
+   */
+  getColumnNamesOf(reversedColumns: string[]): string[]
+
+  /**
+   * Return an object statement with keys.
+   *
+   * @param reversedStatement {any}
+   * @return {any}
+   */
+  getStatementNamesOf(reversedStatement: any): any
 
   /**
    * Get the column dictionary reversed.
@@ -1701,7 +1718,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedInt(name: string): any
+  static autoIncrementedInt(name?: string): any
 
   /**
    * Create an auto incremented uuid primary key. Usefully for id's.
@@ -1712,7 +1729,18 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedUuid(name: string): any
+  static autoIncrementedUuid(name?: string): any
+
+  /**
+   * Create an auto incremented object id primary key. Usefully for id's.
+   *
+   * This method is an alias for:
+   * @example Column.type('objectId').isPrimary().get()
+   *
+   * @param [name] {string}
+   * @return {any}
+   */
+  static autoIncrementedObjectId(name?: string): any
 
   /**
    * Create a "string" column.

@@ -717,16 +717,15 @@ export class MongoDriver {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    const { insertedIds } = await this.#qb.insertMany(data, {
-      session: this.#session,
-    })
+    const { insertedIds } = await this.#qb.insertMany(data)
+
     const insertedIdsArray = []
 
     Object.keys(insertedIds).forEach(key =>
       insertedIdsArray.push(insertedIds[key]),
     )
 
-    return this.whereIn('_id', insertedIdsArray).findMany()
+    return this.whereIn(primaryKey, insertedIdsArray).findMany()
   }
 
   /**

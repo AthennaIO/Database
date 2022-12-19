@@ -70,6 +70,7 @@ export default {
       database: 'admin',
       user: '',
       password: '',
+      url: Env('DB_URL'),
       w: 'majority',
       replicaSet: 'rs',
       retryWrites: true,

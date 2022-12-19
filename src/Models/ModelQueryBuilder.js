@@ -334,45 +334,9 @@ export class ModelQueryBuilder {
    * @return {Promise<import('#src/index').Model>}
    */
   async create(data, ignorePersistOnly = false) {
-    if (!ignorePersistOnly) {
-      data = this.#fillable(data)
-    }
+    const result = await this.createMany([data], ignorePersistOnly)
 
-    const primaryKey = this.#Model.primaryKey
-
-    if (!data[primaryKey]) {
-      const column = this.#schema.columns.find(
-        column => column.name === primaryKey,
-      )
-
-      if (column.type === 'uuid') {
-        data[primaryKey] = Uuid.generate()
-      }
-    }
-
-    const attributes = this.#Model.attributes
-
-    Object.keys(attributes).forEach(key => {
-      if (data[key]) {
-        return
-      }
-
-      data[key] = attributes[key]
-    })
-
-    if (this.#schema.hasTimestamp()) {
-      const date = new Date()
-
-      data[this.#schema.getCreatedAt()] =
-        data[this.#schema.getCreatedAt()] || date
-
-      data[this.#schema.getUpdatedAt()] =
-        data[this.#schema.getUpdatedAt()] || date
-    }
-
-    return this.#generator.generateOne(
-      await this.#QB.create(data, this.#Model.primaryKey),
-    )
+    return result[0]
   }
 
   /**
@@ -406,25 +370,33 @@ export class ModelQueryBuilder {
 
         data[this.#schema.getUpdatedAt()] =
           data[this.#schema.getUpdatedAt()] || date
+
+        if (this.#schema.hasDeletedAt()) {
+          data[this.#schema.getDeletedAt()] =
+            data[this.#schema.getDeletedAt()] || null
+        }
       }
 
       const primaryKey = this.#Model.primaryKey
 
       if (!data[primaryKey]) {
         const column = this.#schema.columns.find(
-          column => column.name === primaryKey,
+          column => column.name === this.#schema.columnDictionary[primaryKey],
         )
 
-        if (column.type === 'uuid') {
+        if (column && column.type === 'uuid') {
           data[primaryKey] = Uuid.generate()
         }
       }
 
-      return data
+      return this.#schema.getStatementNamesOf(data)
     }
 
     return this.#generator.generateMany(
-      await this.#QB.createMany(data.map(executor), this.#Model.primaryKey),
+      await this.#QB.createMany(
+        data.map(executor),
+        this.#schema.columnDictionary[this.#Model.primaryKey],
+      ),
     )
   }
 
@@ -451,7 +423,7 @@ export class ModelQueryBuilder {
     })
 
     const hasValue = await this.#QB.find()
-    const primaryKey = this.#Model.primaryKey
+    const primaryKey = this.#schema.getColumnNameOf(this.#Model.primaryKey)
 
     if (hasValue) {
       return this.where(primaryKey, hasValue[primaryKey]).update(
@@ -1324,14 +1296,14 @@ export class ModelQueryBuilder {
     }
 
     if (Is.Object(statement)) {
-      return this.#schema.getReversedStatementNamesOf(statement)
+      return this.#schema.getStatementNamesOf(statement)
     }
 
     if (Is.Array(statement)) {
-      return this.#schema.getReversedColumnNamesOf(statement)
+      return this.#schema.getColumnNamesOf(statement)
     }
 
-    return this.#schema.getReversedColumnNameOf(statement)
+    return this.#schema.getColumnNameOf(statement)
   }
 
   /**

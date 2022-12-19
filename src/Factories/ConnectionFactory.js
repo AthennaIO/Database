@@ -51,11 +51,23 @@ export class ConnectionFactory {
    * @return {Promise<import('mongoose').Mongoose.Connection>}
    */
   static async #mongoose(conName) {
-    const configs = Config.get(`database.connections.${conName}`)
+    const configs = Json.copy(Config.get(`database.connections.${conName}`))
 
     const connectionUrl = Parser.connectionObjToDbUrl(configs)
 
-    return mongoose.createConnection(connectionUrl)
+    const exists = value => value !== undefined && value !== null
+
+    if (exists(configs.driver)) delete configs.driver
+    if (exists(configs.protocol)) delete configs.protocol
+    if (exists(configs.host)) delete configs.host
+    if (exists(configs.port)) delete configs.port
+    if (exists(configs.database)) delete configs.database
+    if (exists(configs.user)) delete configs.user
+    if (exists(configs.password)) delete configs.password
+
+    const connection = await mongoose.createConnection(connectionUrl, configs)
+
+    return connection.$initialConnection
   }
 
   /**

@@ -11,6 +11,7 @@
 
 import { Assert } from '@japa/assert'
 import { faker } from '@faker-js/faker'
+import { Config } from '@athenna/config'
 import { Is, String } from '@athenna/common'
 
 import { Database, ModelGenerator } from '#src/index'
@@ -66,6 +67,12 @@ export class Model {
    * @return {string}
    */
   static get primaryKey() {
+    const driver = Config.get(`database.connections.${this.connection}.driver`)
+
+    if (driver === 'mongo') {
+      return '_id'
+    }
+
     return 'id'
   }
 

@@ -327,6 +327,15 @@ export class SchemaBuilder {
   }
 
   /**
+   * Verify if schema has deleted at property.
+   *
+   * @return {boolean}
+   */
+  hasDeletedAt() {
+    return !!this.columns.find(column => column.deleteDate)
+  }
+
+  /**
    * Get the created at column name.
    *
    * @return {string}
@@ -345,6 +354,15 @@ export class SchemaBuilder {
   }
 
   /**
+   * Get the deleted at column name.
+   *
+   * @return {string}
+   */
+  getDeletedAt() {
+    return this.columns.find(column => column.deleteDate).name
+  }
+
+  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
@@ -352,6 +370,55 @@ export class SchemaBuilder {
    */
   getIncludedRelations() {
     return this.relations.filter(relation => relation.isIncluded)
+  }
+
+  /**
+   * Get the column dictionary.
+   *
+   * @return {any}
+   */
+  getColumnDictionary() {
+    return this.columnDictionary
+  }
+
+  /**
+   * Get the column name of a reversed column name.
+   *
+   * @param reversedColumnName {string}
+   * @return {string}
+   */
+  getColumnNameOf(reversedColumnName) {
+    return this.columnDictionary[reversedColumnName] || reversedColumnName
+  }
+
+  /**
+   * Get the column names of a reversed columns.
+   *
+   * @param reversedColumns {string[]}
+   * @return {string[]}
+   */
+  getColumnNamesOf(reversedColumns) {
+    const columns = this.getColumnDictionary()
+
+    return reversedColumns.map(
+      reversedColumn => columns[reversedColumn] || reversedColumn,
+    )
+  }
+
+  /**
+   * Return an object statement with keys.
+   *
+   * @param reversedStatement {any}
+   * @return {any}
+   */
+  getStatementNamesOf(reversedStatement) {
+    const newStatement = {}
+
+    Object.keys(reversedStatement).forEach(key => {
+      newStatement[this.getColumnNameOf(key)] = reversedStatement[key]
+    })
+
+    return newStatement
   }
 
   /**
@@ -390,9 +457,7 @@ export class SchemaBuilder {
   getReversedColumnNamesOf(columns) {
     const reversedColumns = this.getReversedColumnDictionary()
 
-    columns = columns.map(column => reversedColumns[column] || column)
-
-    return columns
+    return columns.map(column => reversedColumns[column] || column)
   }
 
   /**
