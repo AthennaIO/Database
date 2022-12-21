@@ -13,7 +13,6 @@ import { Folder, Path } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger/providers/LoggerProvider'
 
 import { Criteria, Database } from '#src/index'
-import { MongoMemory } from '#tests/Helpers/MongoMemory'
 import { UserMongo } from '#tests/Stubs/models/UserMongo'
 import { ProductMongo } from '#tests/Stubs/models/ProductMongo'
 import { DatabaseProvider } from '#src/Providers/DatabaseProvider'
@@ -29,8 +28,6 @@ test.group('UserMongoModelTest', group => {
     await new Folder(Path.stubs('database')).copy(Path.database())
     await Config.safeLoad(Path.config('database.js'))
     await Config.safeLoad(Path.config('logging.js'))
-
-    await MongoMemory.start()
   })
 
   group.each.setup(async () => {
@@ -52,8 +49,6 @@ test.group('UserMongoModelTest', group => {
   group.teardown(async () => {
     await Folder.safeRemove(Path.config())
     await Folder.safeRemove(Path.database())
-
-    await MongoMemory.stop()
   })
 
   test('should be able to create user and users', async ({ assert }) => {
@@ -297,7 +292,7 @@ test.group('UserMongoModelTest', group => {
     const user = await UserMongo.query()
       .select('id', 'name')
       .where('id', userId)
-      .with('products', query => query.select('id', 'name').whereNull('deletedAt').orderBy('id', 'DESC'))
+      .with('products', query => query.orderBy('id', 'DESC'))
       .find()
 
     assert.deepEqual(user.id, userId)
@@ -395,8 +390,8 @@ test.group('UserMongoModelTest', group => {
       .orWhereNotBetween('id', [11, 20])
       .orWhereLike('name', '%testing%')
       .orWhereILike('name', '%testing%')
-      .orWhereExists(UserMongo.query().where('id', 1))
-      .orWhereNotExists(UserMongo.query().where('id', 2))
+      // .orWhereExists(UserMongo.query().where('id', 1))
+      // .orWhereNotExists(UserMongo.query().where('id', 2))
       .findMany()
 
     assert.lengthOf(whereUsers, 10)
@@ -419,8 +414,8 @@ test.group('UserMongoModelTest', group => {
       .orHavingNotNull('name')
       .orHavingBetween('id', [1, 10])
       .orHavingNotBetween('id', [11, 20])
-      .orHavingExists(UserMongo.query().where('id', 1))
-      .orHavingNotExists(UserMongo.query().where('id', 2))
+      // .orHavingExists(UserMongo.query().where('id', 1))
+      // .orHavingNotExists(UserMongo.query().where('id', 2))
       .findMany()
 
     assert.lengthOf(groupByUsers, 10)
@@ -611,7 +606,7 @@ test.group('UserMongoModelTest', group => {
     await ProductMongo.factory().create({ userId })
 
     const user = await UserMongo.query().where('id', userId).with('products').find()
-    const products = await user.load('products', query => query.select('id'))
+    const products = await user.load('products', query => query.select('id', 'userId'))
 
     assert.isDefined(user.products)
     assert.isUndefined(products[0].name)
@@ -623,7 +618,7 @@ test.group('UserMongoModelTest', group => {
     const user = await UserMongo.find()
     await ProductMongo.factory().create({ userId: user.id })
 
-    const products = await user.load('products', query => query.select('id'))
+    const products = await user.load('products', query => query.select('id', 'userId'))
 
     assert.isDefined(user.products)
     assert.isUndefined(products[0].name)

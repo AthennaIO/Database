@@ -37,6 +37,7 @@ export class ProductMongo extends Model {
    */
   static get attributes() {
     return {
+      id: this.faker.datatype.number(),
       name: this.faker.commerce.productName(),
       price: this.faker.commerce.price(),
     }
@@ -98,5 +99,9 @@ export class ProductMongo extends Model {
 
   userQuery() {
     return this.belongsTo(UserMongo, true)
+  }
+
+  productDetailsQuery() {
+    return this.hasMany(ProductDetailMongo, true)
   }
 }

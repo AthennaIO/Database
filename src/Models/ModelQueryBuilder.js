@@ -452,7 +452,7 @@ export class ModelQueryBuilder {
         data[this.#schema.getUpdatedAt()] || new Date()
     }
 
-    const result = await this.#QB.update(data)
+    const result = await this.#QB.update(this.#schema.getStatementNamesOf(data))
 
     if (Is.Array(result)) {
       return this.#generator.generateMany(result)
@@ -470,7 +470,7 @@ export class ModelQueryBuilder {
   async delete(force = false) {
     if (this.#Model.isSoftDelete && !force) {
       const result = await this.#QB.update({
-        [this.#Model.DELETED_AT]: new Date(),
+        [this.#schema.getColumnNameOf(this.#Model.DELETED_AT)]: new Date(),
       })
 
       if (Is.Array(result)) {

@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { ModelQueryBuilder } from '#src/index'
 import { BelongsToQueryBuilder } from '#src/Relations/BelongsTo/BelongsToQueryBuilder'
 
 export class BelongsToRelation {
@@ -21,7 +20,7 @@ export class BelongsToRelation {
     const RelationModel = relation.model
 
     return {
-      query: new ModelQueryBuilder(RelationModel),
+      query: RelationModel.query(),
       primary: relation.primaryKey || RelationModel.primaryKey,
       foreign: relation.foreignKey || `${relation.name}Id`,
       property: relation.name,
@@ -42,9 +41,8 @@ export class BelongsToRelation {
 
     return new BelongsToQueryBuilder(
       model,
-      RelationModel,
-      withCriterias,
       this.getOptions(relation),
+      RelationModel.query(withCriterias),
     )
   }
 

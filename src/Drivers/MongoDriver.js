@@ -79,16 +79,20 @@ export class MongoDriver {
   /**
    * The or where clause used in update queries.
    *
-   * @type {Record<string, any>}
+   * @type {Record<string, any>[]}
    */
-  #orWhere = {}
+  #orWhere = []
 
   /**
    * The aggregate pipeline to make mongo queries.
    *
    * @type {any[]}
    */
-  #pipeline = []
+  #pipeline = [
+    {
+      $sort: { _id: 1 },
+    },
+  ]
 
   /**
    * Creates a new instance of MongoDriver.
@@ -782,7 +786,7 @@ export class MongoDriver {
    * @return {Promise<void>}
    */
   async delete() {
-    await this.#qb.deleteMany({}, { session: this.#session })
+    await this.#qb.deleteMany(this.#createWhere(), { session: this.#session })
   }
 
   /**
@@ -808,11 +812,9 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   dump() {
-    console.log({
-      where: this.#where,
-      orWhere: this.#orWhere,
-      pipeline: this.#pipeline,
-    })
+    console.log('where:', this.#where)
+    console.log('orWhere:', this.#orWhere)
+    console.log('pipeline:', this.#pipeline)
 
     return this
   }
@@ -1098,9 +1100,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingIn(columnName, values) {
-    this.#where[columnName] = { $in: values }
-
-    return this
+    return this.whereIn(columnName, values)
   }
 
   /**
@@ -1111,9 +1111,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingNotIn(columnName, values) {
-    this.#where[columnName] = { $nin: values }
-
-    return this
+    return this.whereNotIn(columnName, values)
   }
 
   /**
@@ -1124,9 +1122,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingBetween(columnName, values) {
-    this.#where[columnName] = { $gte: values[0], $lte: values[1] }
-
-    return this
+    return this.whereBetween(columnName, values)
   }
 
   /**
@@ -1137,9 +1133,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingNotBetween(columnName, values) {
-    this.#where[columnName] = { $not: { $gte: values[0], $lte: values[1] } }
-
-    return this
+    return this.whereNotBetween(columnName, values)
   }
 
   /**
@@ -1149,9 +1143,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingNull(columnName) {
-    this.#where[columnName] = null
-
-    return this
+    return this.whereNull(columnName)
   }
 
   /**
@@ -1161,9 +1153,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   havingNotNull(columnName) {
-    this.#where[columnName] = { $ne: null }
-
-    return this
+    return this.whereNotNull(columnName)
   }
 
   /**
@@ -1226,9 +1216,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingIn(columnName, values) {
-    this.#orWhere[columnName] = { $in: values }
-
-    return this
+    return this.orWhereIn(columnName, values)
   }
 
   /**
@@ -1239,9 +1227,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingNotIn(columnName, values) {
-    this.#orWhere[columnName] = { $nin: values }
-
-    return this
+    return this.orWhereNotIn(columnName, values)
   }
 
   /**
@@ -1252,9 +1238,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingBetween(columnName, values) {
-    this.#orWhere[columnName] = { $gte: values[0], $lte: values[1] }
-
-    return this
+    return this.orWhereBetween(columnName, values)
   }
 
   /**
@@ -1265,9 +1249,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingNotBetween(columnName, values) {
-    this.#orWhere[columnName] = { $not: { $gte: values[0], $lte: values[1] } }
-
-    return this
+    return this.orWhereNotBetween(columnName, values)
   }
 
   /**
@@ -1277,9 +1259,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingNull(columnName) {
-    this.#orWhere[columnName] = null
-
-    return this
+    return this.whereNull(columnName)
   }
 
   /**
@@ -1289,9 +1269,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orHavingNotNull(columnName) {
-    this.#orWhere[columnName] = { $ne: null }
-
-    return this
+    return this.whereNotNull(columnName)
   }
 
   /**
@@ -1337,7 +1315,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   whereNot(statement, value) {
-    return this.where(statement, value, '<>')
+    return this.where(statement, '<>', value)
   }
 
   /**
@@ -1388,7 +1366,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   whereLike(statement, value) {
-    return this.where(statement, value, 'like')
+    return this.where(statement, 'like', value)
   }
 
   /**
@@ -1399,7 +1377,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   whereILike(statement, value) {
-    return this.where(statement, value, 'ilike')
+    return this.where(statement, 'ilike', value)
   }
 
   /**
@@ -1494,21 +1472,18 @@ export class MongoDriver {
     }
 
     if (operation === undefined) {
-      this.#orWhere = {
-        ...this.#orWhere,
-        ...statement,
-      }
+      this.#orWhere.push(statement)
 
       return this
     }
 
     if (value === undefined) {
-      this.#orWhere[statement] = setOperator(operation, '=')
+      this.#orWhere.push({ [statement]: setOperator(operation, '=') })
 
       return this
     }
 
-    this.#orWhere[statement] = setOperator(value, operation)
+    this.#orWhere.push({ [statement]: setOperator(value, operation) })
 
     return this
   }
@@ -1521,7 +1496,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereNot(statement, value) {
-    return this.orWhere(statement, value, '<>')
+    return this.orWhere(statement, '<>', value)
   }
 
   /**
@@ -1572,7 +1547,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereLike(statement, value) {
-    return this.orWhere(statement, value, 'like')
+    return this.orWhere(statement, 'like', value)
   }
 
   /**
@@ -1583,7 +1558,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereILike(statement, value) {
-    return this.orWhere(statement, value, 'ilike')
+    return this.orWhere(statement, 'ilike', value)
   }
 
   /**
@@ -1594,7 +1569,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereIn(columnName, values) {
-    this.#orWhere[columnName] = { $in: values }
+    this.#orWhere.push({ [columnName]: { $in: values } })
 
     return this
   }
@@ -1607,7 +1582,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereNotIn(columnName, values) {
-    this.#orWhere[columnName] = { $nin: values }
+    this.#orWhere.push({ [columnName]: { $nin: values } })
 
     return this
   }
@@ -1620,7 +1595,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereBetween(columnName, values) {
-    this.#orWhere[columnName] = { $gte: values[0], $lte: values[1] }
+    this.#orWhere.push({ [columnName]: { $gte: values[0], $lte: values[1] } })
 
     return this
   }
@@ -1633,7 +1608,9 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereNotBetween(columnName, values) {
-    this.#orWhere[columnName] = { $not: { $gte: values[0], $lte: values[1] } }
+    this.#orWhere.push({
+      [columnName]: { $not: { $gte: values[0], $lte: values[1] } },
+    })
 
     return this
   }
@@ -1645,7 +1622,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereNull(columnName) {
-    this.#orWhere[columnName] = null
+    this.#orWhere.push({ [columnName]: null })
 
     return this
   }
@@ -1657,7 +1634,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   orWhereNotNull(columnName) {
-    this.#orWhere[columnName] = { $ne: null }
+    this.#orWhere.push({ [columnName]: { $ne: null } })
 
     return this
   }
@@ -1761,14 +1738,14 @@ export class MongoDriver {
       return where
     }
 
-    const where = { $or: [Json.copy(this.#where), Json.copy(this.#orWhere)] }
+    const where = { $or: [Json.copy(this.#where), ...Json.copy(this.#orWhere)] }
 
     if (options.clearWhere) {
       this.#where = {}
     }
 
     if (options.clearOrWhere) {
-      this.#orWhere = {}
+      this.#orWhere = []
     }
 
     return where
@@ -1797,7 +1774,7 @@ export class MongoDriver {
       let $match = Json.copy(this.#where)
 
       if (!Is.Empty(this.#orWhere)) {
-        $match = { $or: [Json.copy(this.#where), Json.copy(this.#orWhere)] }
+        $match = { $or: [Json.copy(this.#where), ...Json.copy(this.#orWhere)] }
       }
 
       pipeline.push({ $match })
@@ -1808,7 +1785,7 @@ export class MongoDriver {
     }
 
     if (options.clearOrWhere) {
-      this.#orWhere = {}
+      this.#orWhere = []
     }
 
     return pipeline

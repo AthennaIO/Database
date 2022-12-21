@@ -3,6 +3,17 @@ import { ProductMongo } from '#tests/Stubs/models/ProductMongo'
 
 export class ProductDetailMongo extends Model {
   /**
+   * Set the default attributes of your model.
+   *
+   * @return {Record<string, any>}
+   */
+  static get attributes() {
+    return {
+      id: this.faker.datatype.number(),
+    }
+  }
+
+  /**
    * Set the db connection that this model instance will work with.
    *
    * @return {string}

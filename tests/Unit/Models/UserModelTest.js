@@ -288,7 +288,7 @@ test.group('UserModelTest', group => {
     const user = await User.query()
       .select('id', 'name')
       .where('id', userId)
-      .with('products', query => query.select('id', 'name').whereNull('deletedAt').orderBy('id', 'DESC'))
+      .with('products', query => query.select('id', 'name').orderBy('id', 'DESC'))
       .find()
 
     assert.deepEqual(user.id, userId)

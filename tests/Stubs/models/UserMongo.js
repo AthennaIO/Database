@@ -1,7 +1,20 @@
 import { Model, Column, Relation } from '#src/index'
 import { ProductMongo } from '#tests/Stubs/models/ProductMongo'
+import { UserResource } from '#tests/Stubs/app/Resources/UserResource'
 
 export class UserMongo extends Model {
+  /**
+   * Set the default attributes of your model.
+   *
+   * @return {Record<string, any>}
+   */
+  static get attributes() {
+    return {
+      name: this.faker.name.fullName(),
+      email: this.faker.internet.email(),
+    }
+  }
+
   /**
    * Set the primary key of your model.
    *
@@ -78,5 +91,13 @@ export class UserMongo extends Model {
       updatedAt: this.faker.date.recent(),
       deletedAt: null,
     }
+  }
+
+  productsQuery() {
+    return this.hasMany(ProductMongo, true)
+  }
+
+  toResource(criterias = {}) {
+    return UserResource.toJson(this)
   }
 }

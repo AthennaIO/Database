@@ -48,6 +48,18 @@ export function setOperator(value, operator) {
 
   const object = { [mongoOperator]: value }
 
+  if (operator === 'like' || operator === 'ilike') {
+    let valueRegexString = value.replace(/%/g, '')
+
+    if (!value.startsWith('%') && value.endsWith('%')) {
+      valueRegexString = `^${valueRegexString}`
+    } else if (value.startsWith('%') && !value.endsWith('%')) {
+      valueRegexString = `${valueRegexString}$`
+    }
+
+    object[mongoOperator] = new RegExp(valueRegexString)
+  }
+
   if (operator === 'ilike') {
     object.$options = 'i'
   }
