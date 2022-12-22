@@ -34,6 +34,25 @@ export class Column {
   }
 
   /**
+   * Create an auto incremented object id primary key. Usefully for id's.
+   *
+   * This method is an alias for:
+   * @example Column.type('objectId').isPrimary().get()
+   *
+   * @param [name] {string}
+   * @return {any}
+   */
+  static autoIncrementedObjectId(name) {
+    const column = this.type('objectId').isPrimary()
+
+    if (name) {
+      column.name(name)
+    }
+
+    return column.get()
+  }
+
+  /**
    * Create an auto incremented uuid primary key. Usefully for id's.
    *
    * This method is an alias for:
@@ -559,7 +578,10 @@ export class Column {
    * @return {any}
    */
   static deletedAt(name) {
-    const column = this.type('datetime').isNullable().default(null)
+    const column = this.type('datetime')
+      .isNullable()
+      .default(null)
+      .isDeleteDate()
 
     if (name) {
       column.name(name)

@@ -615,7 +615,7 @@ test.group('ProductModelTest', group => {
 
     await product.refresh()
 
-    assert.isDefined(product.user.deletedAt)
+    assert.isUndefined(product.user)
   })
 
   test('should be able to associate a user to the product', async ({ assert }) => {

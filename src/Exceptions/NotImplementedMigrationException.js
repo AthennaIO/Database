@@ -16,7 +16,7 @@ export class NotImplementedMigrationException extends Exception {
    * @return {NotImplementedMigrationException}
    */
   constructor(migrationName) {
-    const content = `Run method not implemented on seed..`
+    const content = `The up and down methods are not implemented on migration.`
 
     super(
       content,

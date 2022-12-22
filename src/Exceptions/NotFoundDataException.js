@@ -17,8 +17,13 @@ export class NotFoundDataException extends Exception {
    * @return {NotFoundDataException}
    */
   constructor(conName) {
-    const content = `Data not found in database using ${conName} connection.`
+    const content = `Data not found in database.`
 
-    super(content, 404, 'E_NOT_FOUND_DATA_ERROR')
+    super(
+      content,
+      404,
+      'E_NOT_FOUND_DATA_ERROR',
+      `Data not found in database using the using ${conName} connection.`,
+    )
   }
 }

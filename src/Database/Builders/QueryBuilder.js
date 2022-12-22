@@ -238,7 +238,7 @@ export class QueryBuilder {
   }
 
   /**
-   * Update a value in database.
+   * Update data in database.
    *
    * @param {any} data
    * @return {Promise<any | any[]>}
@@ -248,7 +248,7 @@ export class QueryBuilder {
   }
 
   /**
-   * Delete one value in database.
+   * Delete data in database.
    *
    * @return {Promise<any|any[]|void>}
    */

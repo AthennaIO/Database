@@ -37,7 +37,6 @@ export default {
       password: '12345',
       database: 'athenna',
       debug: false,
-      synchronize: false,
     },
 
     postgres: {
@@ -48,7 +47,6 @@ export default {
       password: '12345',
       database: 'postgres',
       debug: false,
-      synchronize: true,
     },
 
     nullDriver: {
@@ -66,14 +64,15 @@ export default {
 
     mongo: {
       driver: 'mongo',
-      host: 'localhost',
-      port: 27018,
+      protocol: 'mongodb',
+      host: 'localhost:27017,localhost:27018,localhost:27019',
+      port: 27017,
       database: 'admin',
-      username: 'root',
-      password: '12345',
-      logging: ['error', 'warn'],
-      synchronize: false,
-      writeConcern: 'majority',
+      user: '',
+      password: '',
+      url: Env('DB_URL'),
+      w: 'majority',
+      replicaSet: 'rs',
       retryWrites: true,
       useNewUrlParser: true,
       useUnifiedTopology: true,

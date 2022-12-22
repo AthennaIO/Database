@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { ModelQueryBuilder } from '#src/index'
 import { HasManyQueryBuilder } from '#src/Relations/HasMany/HasManyQueryBuilder'
 
 export class HasManyRelation {
@@ -23,7 +22,7 @@ export class HasManyRelation {
     const RelationModel = relation.model
 
     return {
-      query: new ModelQueryBuilder(RelationModel),
+      query: RelationModel.query(),
       primary: relation.primaryKey || Model.primaryKey,
       foreign: relation.foreignKey || `${relation.inverseSide}Id`,
       property: relation.name,
@@ -44,9 +43,8 @@ export class HasManyRelation {
 
     return new HasManyQueryBuilder(
       model,
-      RelationModel,
-      withCriterias,
       this.getOptions(model, relation),
+      RelationModel.query(withCriterias),
     )
   }
 

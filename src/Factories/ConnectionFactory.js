@@ -8,9 +8,10 @@
  */
 
 import knex from 'knex'
+import mongoose from 'mongoose'
 
 import { Config } from '@athenna/config'
-import { Json } from '@athenna/common'
+import { Json, Parser } from '@athenna/common'
 
 export class ConnectionFactory {
   /**
@@ -24,6 +25,16 @@ export class ConnectionFactory {
   }
 
   /**
+   * Create the connection with a mongo database.
+   *
+   * @param {string} conName
+   * @return {Promise<any>}
+   */
+  static async mongo(conName) {
+    return this.#mongoose(conName)
+  }
+
+  /**
    * Create the connection with a postgres database.
    *
    * @param {string} conName
@@ -31,6 +42,32 @@ export class ConnectionFactory {
    */
   static async postgres(conName) {
     return this.#knex(conName, 'pg')
+  }
+
+  /**
+   * Create a database connection using mongoose.
+   *
+   * @param {string} conName
+   * @return {Promise<import('mongoose').Mongoose.Connection>}
+   */
+  static async #mongoose(conName) {
+    const configs = Json.copy(Config.get(`database.connections.${conName}`))
+
+    const connectionUrl = Parser.connectionObjToDbUrl(configs)
+
+    const exists = value => value !== undefined && value !== null
+
+    if (exists(configs.driver)) delete configs.driver
+    if (exists(configs.protocol)) delete configs.protocol
+    if (exists(configs.host)) delete configs.host
+    if (exists(configs.port)) delete configs.port
+    if (exists(configs.database)) delete configs.database
+    if (exists(configs.user)) delete configs.user
+    if (exists(configs.password)) delete configs.password
+
+    const connection = await mongoose.createConnection(connectionUrl, configs)
+
+    return connection.$initialConnection
   }
 
   /**

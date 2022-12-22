@@ -13,12 +13,13 @@ import { Config } from '@athenna/config'
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 
-import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
-import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
+import { MongoDriver } from '#src/Drivers/MongoDriver'
+import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
+import { ConnectionFailedException } from '#src/Exceptions/ConnectionFailedException'
 import { NotImplementedConfigException } from '#src/Exceptions/NotImplementedConfigException'
-import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
+import { CloseConnectionFailedException } from '#src/Exceptions/CloseConnectionFailedException'
 
 export class DriverFactory {
   /**
@@ -27,6 +28,7 @@ export class DriverFactory {
    * @type {Map<string, { Driver: any, client?: any }>}
    */
   static #drivers = new Map()
+    .set('mongo', { Driver: MongoDriver })
     .set('mysql', { Driver: MySqlDriver })
     .set('postgres', { Driver: PostgresDriver })
 
