@@ -11,6 +11,7 @@ import { assert } from '@japa/assert'
 import { pathToFileURL } from 'node:url'
 import { specReporter } from '@japa/spec-reporter'
 import { processCliArgs, configure, run } from '@japa/runner'
+
 import { MongoMemory } from '#tests/Helpers/MongoMemory'
 
 process.env.DB_CONNECTION = 'postgres'

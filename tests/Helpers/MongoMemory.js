@@ -31,6 +31,8 @@ export class MongoMemory {
       instanceOpts: [{ port: 27017 }, { port: 27018 }, { port: 27019 }],
       replSet: { name: 'rs', count: 3 },
     })
+
+    console.log('##### STARTING MONGODB MEMORY SERVER #####')
   }
 
   /**
@@ -45,5 +47,7 @@ export class MongoMemory {
 
     await this.#replSet.stop()
     this.#replSet = null
+
+    console.log('##### STOPPING MONGODB MEMORY SERVER #####')
   }
 }
