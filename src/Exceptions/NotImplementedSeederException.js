@@ -16,7 +16,7 @@ export class NotImplementedSeederException extends Exception {
    * @return {NotImplementedSeederException}
    */
   constructor(modelName) {
-    const content = `Run method not implemented on seed..`
+    const content = `Run method not implemented on seed.`
 
     super(
       content,

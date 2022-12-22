@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import { Database } from '#src/index'
 import { String } from '@athenna/common'
-import { Database, ModelQueryBuilder } from '#src/index'
 import { BelongsToManyQueryBuilder } from '#src/Relations/BelongsToMany/BelongsToManyQueryBuilder'
 
 export class BelongsToManyRelation {
@@ -24,7 +24,7 @@ export class BelongsToManyRelation {
     const RelationModel = relation.model
 
     return {
-      query: new ModelQueryBuilder(RelationModel),
+      query: RelationModel.query(),
       connection: Model.connection,
       primary: relation.primaryKey || Model.primaryKey,
       foreign:
@@ -57,9 +57,8 @@ export class BelongsToManyRelation {
 
     return new BelongsToManyQueryBuilder(
       model,
-      RelationModel,
-      withCriterias,
       this.getOptions(model, relation),
+      RelationModel.query(withCriterias),
     )
   }
 

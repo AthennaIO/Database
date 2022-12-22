@@ -12,6 +12,8 @@ import { pathToFileURL } from 'node:url'
 import { specReporter } from '@japa/spec-reporter'
 import { processCliArgs, configure, run } from '@japa/runner'
 
+import { MongoMemory } from '#tests/Helpers/MongoMemory'
+
 process.env.DB_CONNECTION = 'postgres'
 
 /*
@@ -31,7 +33,19 @@ process.env.DB_CONNECTION = 'postgres'
 configure({
   ...processCliArgs(process.argv.slice(2)),
   ...{
-    files: ['tests/**/*Test.js'],
+    suites: [
+      {
+        name: 'all',
+        files: ['tests/**/*Test.js'],
+        configure(suite) {
+          suite.setup(async () => {
+            await MongoMemory.start()
+
+            return async () => await MongoMemory.stop()
+          })
+        },
+      },
+    ],
     plugins: [assert()],
     reporters: [specReporter()],
     importer: filePath => import(pathToFileURL(filePath).href),

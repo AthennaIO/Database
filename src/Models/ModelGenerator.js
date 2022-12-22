@@ -224,14 +224,12 @@ export class ModelGenerator {
    * @return {any}
    */
   #populate(object, model) {
-    const columnDictionary = this.#schema.columnDictionary
-
     const columns = this.#schema.columns
 
     Object.keys(object).forEach(key => {
-      const property = columnDictionary[key]
+      const property = this.#schema.getReversedColumnNameOf(key)
 
-      const column = columns.find(c => c.name === property)
+      const column = columns.find(c => c.name === key)
 
       if (key === '__v') {
         return

@@ -7,8 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { ModelQueryBuilder } from '#src/Models/ModelQueryBuilder'
-
 export class BelongsToQueryBuilder {
   /**
    * The relation options.
@@ -38,12 +36,11 @@ export class BelongsToQueryBuilder {
    */
   #ModelQB
 
-  constructor(model, RelationModel, withCriterias, options) {
+  constructor(fatherModel, options, relationQuery) {
     this.#options = options
-    this.#fatherModel = model
-    this.#FatherModel = model.constructor
-
-    this.#ModelQB = new ModelQueryBuilder(RelationModel, withCriterias)
+    this.#ModelQB = relationQuery
+    this.#fatherModel = fatherModel
+    this.#FatherModel = fatherModel.constructor
   }
 
   /**

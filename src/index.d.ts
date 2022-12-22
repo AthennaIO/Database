@@ -10,10 +10,149 @@
 import { Facade } from '@athenna/ioc'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@athenna/common'
-import { Assert } from '@japa/assert'
 
 export const DB: Facade & DatabaseImpl
 export const Database: Facade & DatabaseImpl
+
+export class MongoDatabaseImpl {
+  /**
+   * Creates a new instance of DatabaseImpl.
+   *
+   * @param {any} configs
+   * @return {MongoDatabaseImpl}
+   */
+  constructor(configs?: any)
+
+  /**
+   * Change the database connection.
+   *
+   * @param {string} connection
+   * @return {DatabaseImpl}
+   */
+  connection(connection: string): DatabaseImpl
+
+  /**
+   * Connect to database.
+   *
+   * @param {boolean} force
+   * @param {boolean} saveOnFactory
+   * @return {Promise<this>}
+   */
+  connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Close the connection with database in this instance.
+   *
+   * @return {Promise<void>}
+   */
+  close(): Promise<void>
+
+  /**
+   * Close all the connections with all databases.
+   *
+   * @return {Promise<void>}
+   */
+  closeAll(): Promise<void>
+
+  /**
+   * Return the client of driver.
+   *
+   * @return {import('mongoose').Connection | null}
+   */
+  getClient(): import('mongoose').Connection
+
+  /**
+   * Return the query builder of driver.
+   *
+   * @return {import('mongoose').Collection | null}
+   */
+  getQueryBuilder(): import('mongoose').Collection
+
+  /**
+   * Create a new transaction.
+   *
+   * @return {Promise<Transaction>}
+   */
+  startTransaction(): Promise<Transaction>
+
+  /**
+   * Verify if database exists.
+   *
+   * @param {string} database
+   * @return {boolean}
+   */
+  hasDatabase(database: string): Promise<boolean>
+
+  /**
+   * Create a new database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  createDatabase(databaseName: string): Promise<void>
+
+  /**
+   * Drop some database.
+   *
+   * @param {string} databaseName
+   * @return {Promise<void>}
+   */
+  dropDatabase(databaseName: string): Promise<void>
+
+  /**
+   * List all tables available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
+
+  /**
+   * Get the current database name.
+   *
+   * @return {Promise<string | undefined>}
+   */
+  getCurrentDatabase(): Promise<string | undefined>
+
+  /**
+   * Verify if table exists.
+   *
+   * @param {string} table
+   * @return {boolean}
+   */
+  hasTable(table: string): Promise<boolean>
+
+  /**
+   * Drop a table in database.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  dropTable(tableName: string): Promise<void>
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   *
+   * @param {string} tableName
+   * @return {Promise<void>}
+   */
+  truncate(tableName: string): Promise<void>
+
+  /**
+   * Creates a new instance of QueryBuilder for this table.
+   *
+   * @param tableName {string}
+   * @return {QueryBuilder}
+   */
+  table(tableName: string): QueryBuilder
+}
 
 export class MySqlDatabaseImpl {
   /**
@@ -31,13 +170,6 @@ export class MySqlDatabaseImpl {
    * @return {DatabaseImpl}
    */
   connection(connection: string): DatabaseImpl
-
-  /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
 
   /**
    * Connect to database.
@@ -129,6 +261,13 @@ export class MySqlDatabaseImpl {
   getTables(): Promise<string[]>
 
   /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
+
+  /**
    * Get the current database name.
    *
    * @return {Promise<string | undefined>}
@@ -210,13 +349,6 @@ export class PostgresDatabaseImpl {
   connection(connection: string): DatabaseImpl
 
   /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
-
-  /**
    * Connect to database.
    *
    * @param {boolean} force
@@ -297,6 +429,13 @@ export class PostgresDatabaseImpl {
    * @return {Promise<string[]>}
    */
   getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
 
   /**
    * Get the current database name.
@@ -377,15 +516,9 @@ export class DatabaseImpl {
    * @param {string} connection
    * @return {MySqlDatabaseImpl|PostgresDatabaseImpl}
    */
+  connection(connection: 'mongo'): MongoDatabaseImpl
   connection(connection: 'mysql'): MySqlDatabaseImpl
   connection(connection: 'postgres'): PostgresDatabaseImpl
-
-  /**
-   * Synchronize all the models of this database connection.
-   *
-   * @return {Promise<void>}
-   */
-  sync(path?: string): Promise<void>
 
   /**
    * Connect to database.
@@ -468,6 +601,13 @@ export class DatabaseImpl {
    * @return {Promise<string[]>}
    */
   getTables(): Promise<string[]>
+
+  /**
+   * List all databases available.
+   *
+   * @return {Promise<string[]>}
+   */
+  getDatabases(): Promise<string[]>
 
   /**
    * Get the current database name.
@@ -869,6 +1009,13 @@ export class SchemaBuilder {
   hasUpdatedAt(): boolean
 
   /**
+   * Verify if schema has deleted at property.
+   *
+   * @return {boolean}
+   */
+  hasDeletedAt(): boolean
+
+  /**
    * Get the created at column name.
    *
    * @return {string}
@@ -883,12 +1030,50 @@ export class SchemaBuilder {
   getUpdatedAt(): string
 
   /**
+   * Get the deleted at column name.
+   *
+   * @return {string}
+   */
+  getDeletedAt(): string
+
+  /**
    * Get all the relations that has the "isIncluded"
    * property as true.
    *
    * @return {any[]}
    */
   getIncludedRelations(): any[]
+
+  /**
+   * Get the column dictionary.
+   *
+   * @return {any}
+   */
+  getColumnDictionary(): any
+
+  /**
+   * Get the column name of a reversed column name.
+   *
+   * @param reversedColumnName {string}
+   * @return {string}
+   */
+  getColumnNameOf(reversedColumnName: string): string
+
+  /**
+   * Get the column names of a reversed columns.
+   *
+   * @param reversedColumns {string[]}
+   * @return {string[]}
+   */
+  getColumnNamesOf(reversedColumns: string[]): string[]
+
+  /**
+   * Return an object statement with keys.
+   *
+   * @param reversedStatement {any}
+   * @return {any}
+   */
+  getStatementNamesOf(reversedStatement: any): any
 
   /**
    * Get the column dictionary reversed.
@@ -1533,7 +1718,7 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedInt(name: string): any
+  static autoIncrementedInt(name?: string): any
 
   /**
    * Create an auto incremented uuid primary key. Usefully for id's.
@@ -1544,7 +1729,18 @@ export class Column {
    * @param [name] {string}
    * @return {any}
    */
-  static autoIncrementedUuid(name: string): any
+  static autoIncrementedUuid(name?: string): any
+
+  /**
+   * Create an auto incremented object id primary key. Usefully for id's.
+   *
+   * This method is an alias for:
+   * @example Column.type('objectId').isPrimary().get()
+   *
+   * @param [name] {string}
+   * @return {any}
+   */
+  static autoIncrementedObjectId(name?: string): any
 
   /**
    * Create a "string" column.
@@ -2598,7 +2794,7 @@ export class QueryBuilder {
   createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
 
   /**
-   * Update a value in database.
+   * Update data in database.
    *
    * @param {any} data
    * @return {Promise<any | any[]>}
@@ -2606,7 +2802,7 @@ export class QueryBuilder {
   update(data: any): Promise<any | any[]>
 
   /**
-   * Delete one value in database.
+   * Delete data in database.
    *
    * @return {Promise<any | void>}
    */
