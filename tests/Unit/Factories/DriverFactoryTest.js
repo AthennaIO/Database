@@ -74,7 +74,7 @@ test.group('DriverFactoryTest', group => {
     assert.throws(() => DriverFactory.fabricate('notImplemented'), NotImplementedConfigException)
   })
 
-  test('should throw a not implemented driver exception', async ({ assert }) => {
+  test('should throw a not found driver exception', async ({ assert }) => {
     assert.throws(() => DriverFactory.fabricate('nullDriver'), NotFoundDriverException)
   })
 
