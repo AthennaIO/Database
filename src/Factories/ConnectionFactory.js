@@ -7,9 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import knex from 'knex'
-import mongoose from 'mongoose'
-
 import { Config } from '@athenna/config'
 import { Json, Parser } from '@athenna/common'
 
@@ -51,8 +48,8 @@ export class ConnectionFactory {
    * @return {Promise<import('mongoose').Mongoose.Connection>}
    */
   static async #mongoose(conName) {
+    const mongoose = await import('mongoose')
     const configs = Json.copy(Config.get(`database.connections.${conName}`))
-
     const connectionUrl = Parser.connectionObjToDbUrl(configs)
 
     const exists = value => value !== undefined && value !== null
@@ -78,8 +75,8 @@ export class ConnectionFactory {
    * @return {Promise<import('typeorm').DataSource>}
    */
   static async #knex(conName, client) {
+    const knex = await import('knex')
     const configs = Json.copy(Config.get(`database.connections.${conName}`))
-
     const poolConfig = Json.copy(configs.pool)
     const debugConfig = Json.copy(configs.debug)
     const useNullAsDefaultConfig = Json.copy(configs.useNullAsDefault)
@@ -90,7 +87,7 @@ export class ConnectionFactory {
     delete configs.synchronize
     delete configs.useNullAsDefault
 
-    return knex({
+    return knex.default({
       client,
       connection: configs,
       migrations: {
