@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -158,8 +158,9 @@
       "node": true
     },
     "globals": {
+      "ioc": true,
       "Env": true,
-      "ioc": true
+      "Config": true
     },
     "plugins": [
       "prettier"

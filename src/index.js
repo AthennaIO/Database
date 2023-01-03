@@ -77,6 +77,15 @@ export class DatabaseImpl {
   }
 
   /**
+   * Verify if database is already connected.
+   *
+   * @return {boolean}
+   */
+  isConnected() {
+    return this.#driver.isConnected
+  }
+
+  /**
    * Connect to database.
    *
    * @param {boolean} force

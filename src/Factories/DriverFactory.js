@@ -154,7 +154,11 @@ export class DriverFactory {
     }
 
     try {
-      await client.destroy()
+      if (!client.destroy) {
+        await client.close()
+      } else {
+        await client.destroy()
+      }
 
       driverObject.client = null
 

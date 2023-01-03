@@ -40,6 +40,13 @@ export class MongoDatabaseImpl {
   connect(force?: boolean, saveOnFactory?: boolean): this
 
   /**
+   * Verify if database is already connected.
+   *
+   * @return {boolean}
+   */
+  isConnected(): boolean
+
+  /**
    * Close the connection with database in this instance.
    *
    * @return {Promise<void>}
@@ -178,6 +185,13 @@ export class MySqlDatabaseImpl {
    * @return {Promise<this>}
    */
   connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Verify if database is already connected.
+   *
+   * @return {boolean}
+   */
+  isConnected(): boolean
 
   /**
    * Close the connection with database in this instance.
@@ -357,6 +371,13 @@ export class PostgresDatabaseImpl {
   connect(force?: boolean, saveOnFactory?: boolean): this
 
   /**
+   * Verify if database is already connected.
+   *
+   * @return {boolean}
+   */
+  isConnected(): boolean
+
+  /**
    * Close the connection with database in this instance.
    *
    * @return {Promise<void>}
@@ -527,6 +548,13 @@ export class DatabaseImpl {
    * @return {Promise<this>}
    */
   connect(force?: boolean, saveOnFactory?: boolean): this
+
+  /**
+   * Verify if database is already connected.
+   *
+   * @return {boolean}
+   */
+  isConnected(): boolean
 
   /**
    * Close the connection with database in this instance.
