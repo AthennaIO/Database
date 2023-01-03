@@ -25,7 +25,7 @@ export class MongoDriver {
    *
    * @type {boolean}
    */
-  #isConnected = false
+  isConnected = false
 
   /**
    * Set if the connection will be saved on factory.
@@ -106,7 +106,7 @@ export class MongoDriver {
     this.#connection = connection
 
     if (client) {
-      this.#isConnected = true
+      this.isConnected = true
       this.#isSavedOnFactory = true
       this.#client = client
       this.#session = session
@@ -150,7 +150,7 @@ export class MongoDriver {
    * @return {Promise<void>}
    */
   async connect(force = false, saveOnFactory = true) {
-    if (this.#isConnected && !force) {
+    if (this.isConnected && !force) {
       return
     }
 
@@ -160,7 +160,7 @@ export class MongoDriver {
       saveOnFactory,
     )
 
-    this.#isConnected = true
+    this.isConnected = true
     this.#isSavedOnFactory = saveOnFactory
   }
 
@@ -170,7 +170,7 @@ export class MongoDriver {
    * @return {Promise<void>}
    */
   async close() {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       return
     }
 
@@ -184,7 +184,7 @@ export class MongoDriver {
     this.#table = null
     this.#client = null
     this.#session = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -193,7 +193,7 @@ export class MongoDriver {
    * @return {import('mongoose').Mongoose.Collection}
    */
   query() {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
 
@@ -231,7 +231,7 @@ export class MongoDriver {
     this.#table = null
     this.#client = null
     this.#session = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -250,7 +250,7 @@ export class MongoDriver {
     this.#table = null
     this.#client = null
     this.#session = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -796,7 +796,7 @@ export class MongoDriver {
    * @return {MongoDriver}
    */
   table(tableName) {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
 

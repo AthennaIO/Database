@@ -48,10 +48,9 @@ export class ConnectionFactory {
    * @return {Promise<import('mongoose').Mongoose.Connection>}
    */
   static async #mongoose(conName) {
-    const mongoose = await import('mongoose')
+    let mongoose = await import('mongoose')
     const configs = Json.copy(Config.get(`database.connections.${conName}`))
     const connectionUrl = Parser.connectionObjToDbUrl(configs)
-
     const exists = value => value !== undefined && value !== null
 
     if (exists(configs.driver)) delete configs.driver
@@ -62,7 +61,15 @@ export class ConnectionFactory {
     if (exists(configs.user)) delete configs.user
     if (exists(configs.password)) delete configs.password
 
+    if (!mongoose.createConnection) {
+      mongoose = mongoose.default
+    }
+
     const connection = await mongoose.createConnection(connectionUrl, configs)
+
+    if (!connection) {
+      return
+    }
 
     return connection.$initialConnection
   }

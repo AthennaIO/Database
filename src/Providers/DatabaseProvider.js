@@ -7,9 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { ServiceProvider } from '@athenna/ioc'
-
 import { DatabaseImpl } from '#src/index'
+import { ServiceProvider } from '@athenna/ioc'
 
 export class DatabaseProvider extends ServiceProvider {
   /**
@@ -21,6 +20,10 @@ export class DatabaseProvider extends ServiceProvider {
     const Database = this.container
       .bind('Athenna/Core/Database', DatabaseImpl)
       .use('Athenna/Core/Database')
+
+    if (Database.isConnected()) {
+      return
+    }
 
     if (Env('DB_AUTO_CONNECT', true)) {
       await Database.connect()

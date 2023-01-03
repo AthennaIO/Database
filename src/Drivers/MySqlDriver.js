@@ -23,7 +23,7 @@ export class MySqlDriver {
    *
    * @type {boolean}
    */
-  #isConnected = false
+  isConnected = false
 
   /**
    * Set if the connection will be saved on factory.
@@ -71,7 +71,7 @@ export class MySqlDriver {
     this.#connection = connection
 
     if (client) {
-      this.#isConnected = true
+      this.isConnected = true
       this.#isSavedOnFactory = true
       this.#client = client
     }
@@ -114,7 +114,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async connect(force = false, saveOnFactory = true) {
-    if (this.#isConnected && !force) {
+    if (this.isConnected && !force) {
       return
     }
 
@@ -124,7 +124,7 @@ export class MySqlDriver {
       saveOnFactory,
     )
 
-    this.#isConnected = true
+    this.isConnected = true
     this.#isSavedOnFactory = saveOnFactory
 
     this.#qb = this.query()
@@ -136,7 +136,7 @@ export class MySqlDriver {
    * @return {Promise<void>}
    */
   async close() {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       return
     }
 
@@ -149,7 +149,7 @@ export class MySqlDriver {
     this.#qb = null
     this.#table = null
     this.#client = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -158,7 +158,7 @@ export class MySqlDriver {
    * @return {import('knex').Knex.QueryBuilder}
    */
   query() {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
 
@@ -198,7 +198,7 @@ export class MySqlDriver {
 
     this.#table = null
     this.#client = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -211,7 +211,7 @@ export class MySqlDriver {
 
     this.#table = null
     this.#client = null
-    this.#isConnected = false
+    this.isConnected = false
   }
 
   /**
@@ -656,7 +656,7 @@ export class MySqlDriver {
    * @return {MySqlDriver}
    */
   table(tableName) {
-    if (!this.#isConnected) {
+    if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
 
