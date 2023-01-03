@@ -7,13 +7,13 @@
  * file that was distributed with this source code.
  */
 
-import { Logger } from '@athenna/logger'
 import { Config } from '@athenna/config'
+import { Logger } from '@athenna/logger'
 
+import { MongoDriver } from '#src/Drivers/MongoDriver'
 import { MySqlDriver } from '#src/Drivers/MySqlDriver'
 import { PostgresDriver } from '#src/Drivers/PostgresDriver'
 
-import { MongoDriver } from '#src/Drivers/MongoDriver'
 import { ConnectionFactory } from '#src/Factories/ConnectionFactory'
 import { DriverExistException } from '#src/Exceptions/DriverExistException'
 import { NotFoundDriverException } from '#src/Exceptions/NotFoundDriverException'
