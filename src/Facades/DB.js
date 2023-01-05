@@ -10,6 +10,6 @@
 import { Facade } from '@athenna/ioc'
 
 /**
- * @type {Facade & import('#src/index').DatabaseImpl}
+ * @type {typeof Facade & import('#src/index').DatabaseImpl}
  */
 export const DB = Facade.createFor('Athenna/Core/Database')
