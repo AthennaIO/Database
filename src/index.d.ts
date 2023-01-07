@@ -10,8 +10,8 @@
 import { Facade } from '@athenna/ioc'
 import { Faker } from '@faker-js/faker'
 import { Collection, PaginatedResponse } from '@athenna/common'
-export const DB: Facade & DatabaseImpl
-export const Database: Facade & DatabaseImpl
+export const DB: typeof Facade & DatabaseImpl
+export const Database: typeof Facade & DatabaseImpl
 
 export class MongoDatabaseImpl {
   /**
