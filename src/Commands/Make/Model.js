@@ -53,7 +53,7 @@ export class MakeModel extends Command {
    */
   async handle(name, options) {
     const resource = 'Model'
-    const path = Path.app(`Models/${name}.js`)
+    const path = Path.app(`Models/${name}.${Path.ext()}`)
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
 

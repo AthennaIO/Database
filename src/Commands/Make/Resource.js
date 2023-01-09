@@ -53,7 +53,7 @@ export class MakeResource extends Command {
    */
   async handle(name, options) {
     const resource = 'Resource'
-    const path = Path.app(`Resources/${name}.js`)
+    const path = Path.app(`Resources/${name}.${Path.ext()}`)
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
 
