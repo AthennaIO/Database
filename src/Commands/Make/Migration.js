@@ -61,7 +61,9 @@ export class MakeMigration extends Command {
       name.replace('Migrations', '').replace('Migration', '').toLowerCase(),
     )
     const resource = 'Migration'
-    const path = Path.migrations(`${date}_${time}_create_${tableName}_table.js`)
+    const path = Path.migrations(
+      `${date}_${time}_create_${tableName}_table.${Path.ext()}`,
+    )
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
 

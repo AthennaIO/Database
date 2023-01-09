@@ -53,7 +53,7 @@ export class MakeSeeder extends Command {
    */
   async handle(name, options) {
     const resource = 'Seeder'
-    const path = Path.seeders(`${name}.js`)
+    const path = Path.seeders(`${name}.${Path.ext()}`)
 
     this.title(`MAKING ${resource}\n`, 'bold', 'green')
 

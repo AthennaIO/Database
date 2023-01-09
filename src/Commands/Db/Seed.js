@@ -64,7 +64,7 @@ export class DbSeed extends Command {
 
     if (options.class) {
       const Seed = await Module.getFrom(
-        Path.seeders(options.class.concat('.js')),
+        Path.seeders(options.class.concat(`.${Path.ext()}`)),
       )
 
       const seed = new Seed()
