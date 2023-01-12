@@ -25,6 +25,10 @@ export class DatabaseProvider extends ServiceProvider {
       return
     }
 
+    if (Env('IS_ARTISAN', false)) {
+      return
+    }
+
     if (Env('DB_AUTO_CONNECT', true)) {
       await Database.connect()
     }
