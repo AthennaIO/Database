@@ -34,8 +34,8 @@ export class DbSeed extends Command {
    * Set additional flags in the commander instance.
    * This method is executed when registering your command.
    *
-   * @param {import('commander').Command} commander
-   * @return {import('commander').Command}
+   * @param {import('@athenna/artisan').Commander} commander
+   * @return {import('@athenna/artisan').Commander}
    */
   addFlags(commander) {
     return commander
