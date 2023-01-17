@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "3.0.7",
+  "version": "3.0.9",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -52,7 +52,7 @@
     "@faker-js/faker": "7.4.0"
   },
   "devDependencies": {
-    "@athenna/artisan": "3.0.9",
+    "@athenna/artisan": "3.0.10",
     "@athenna/common": "3.0.2",
     "@athenna/config": "3.0.4",
     "@athenna/ioc": "3.0.2",
@@ -61,6 +61,7 @@
     "@japa/run-failed-tests": "1.0.7",
     "@japa/runner": "2.0.7",
     "@japa/spec-reporter": "1.1.12",
+    "@types/commander": "2.12.2",
     "@types/knex": "0.16.1",
     "@types/mongoose": "^5.11.97",
     "c8": "7.11.2",
