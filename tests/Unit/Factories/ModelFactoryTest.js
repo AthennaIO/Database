@@ -47,15 +47,15 @@ test.group('ModelFactoryTest', group => {
     const userMake = await User.factory().count(1).make()
     const userCreate = await User.factory().count(1).create()
 
-    await User.assertNotExists({ id: userMake.id })
-    await User.assertExists({ id: userCreate.id })
+    assert.isFalse(await User.find({ id: userMake.id }))
+    assert.isTrue(await User.find({ id: userCreate.id }))
   })
 
   test('should be able to make/create many users', async ({ assert }) => {
     const usersMake = await User.factory().count(10).make()
     const usersCreate = await User.factory().count(10).create()
 
-    await User.assertNotExists({ id: usersMake[0].id })
-    await User.assertExists({ id: usersCreate[0].id })
+    assert.isFalse(await User.find({ id: usersMake[0].id }))
+    assert.isTrue(await User.find({ id: usersCreate[0].id }))
   })
 })

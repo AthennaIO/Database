@@ -1566,46 +1566,6 @@ export class Model {
   ): Promise<InstanceType<Class> | void>
 
   /**
-   * Assert that the model has been softly deleted.
-   *
-   * @param {any} where
-   * @return {Promise<void>}
-   */
-  static assertSoftDelete(where: any): Promise<void>
-
-  /**
-   * Assert that the model has not been softly deleted.
-   *
-   * @param {any} where
-   * @return {Promise<void>}
-   */
-  static assertNotSoftDelete(where: any): Promise<void>
-
-  /**
-   * Assert that the number of respective model is the number.
-   *
-   * @param {number} number
-   * @return {Promise<void>}
-   */
-  static assertCount(number: number): Promise<void>
-
-  /**
-   * Assert that the values matches any model in database.
-   *
-   * @param {any} where
-   * @return {Promise<void>}
-   */
-  static assertExists(where: any): Promise<void>
-
-  /**
-   * Assert that the values does not match any model in database.
-   *
-   * @param {any} where
-   * @return {Promise<void>}
-   */
-  static assertNotExists(where: any): Promise<void>
-
-  /**
    * Creates a new instance of your model.
    *
    * @param [isFromDatabase] {boolean}

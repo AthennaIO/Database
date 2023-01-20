@@ -307,16 +307,6 @@ test.group('UserMongoModelTest', group => {
     assert.deepEqual(user.products[0].id, product.id)
   })
 
-  test('should be able to make database assertions', async () => {
-    const userId = await UserMongo.factory('id').create()
-    await ProductMongo.factory().count(5).create({ userId })
-    await ProductMongo.factory().count(5).create({ userId, deletedAt: new Date() })
-
-    await UserMongo.assertExists({ id: userId })
-    await ProductMongo.assertCount(5)
-    await ProductMongo.assertSoftDelete({ userId })
-  })
-
   test('should be able to get the user as JSON', async ({ assert }) => {
     const [user] = await UserMongo.query().with('products').findMany()
 
@@ -877,11 +867,9 @@ test.group('UserMongoModelTest', group => {
     assert.isDefined(userCreate.deletedAt)
     assert.instanceOf(userCreate, UserMongo)
     assert.isTrue(userCreate.isTrashed())
-    await UserMongo.assertSoftDelete({ id: userCreate.id })
 
     const notDeletedUser = await factory.untrashed().create()
 
     assert.isNull(notDeletedUser.deletedAt)
-    await UserMongo.assertNotSoftDelete({ id: notDeletedUser.id })
   })
 })
