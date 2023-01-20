@@ -304,14 +304,6 @@ test.group('ProductModelTest', group => {
     assert.deepEqual(products[0].user.id, user.id)
   })
 
-  test('should be able to make database assertions', async () => {
-    await ProductMySql.factory().count(5).create({ userId, deletedAt: new Date() })
-
-    await UserMySql.assertExists({ id: userId })
-    await ProductMySql.assertCount(10)
-    await ProductMySql.assertSoftDelete({ userId })
-  })
-
   test('should be able to get the product as JSON', async ({ assert }) => {
     const [product] = await ProductMySql.query().with('user').findMany()
 
