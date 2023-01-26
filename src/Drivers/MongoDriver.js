@@ -695,11 +695,11 @@ export class MongoDriver {
   /**
    * Create a value in database.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async create(data, primaryKey = '_id') {
+  async create(data = {}, primaryKey = '_id') {
     if (Is.Array(data)) {
       throw new WrongMethodException('create', 'createMany')
     }
@@ -712,11 +712,11 @@ export class MongoDriver {
   /**
    * Create many values in database.
    *
-   * @param {any[]} data
+   * @param {any[]} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async createMany(data, primaryKey = '_id') {
+  async createMany(data = [], primaryKey = '_id') {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
@@ -735,11 +735,11 @@ export class MongoDriver {
   /**
    * Create data or update if already exists.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
-  async createOrUpdate(data, primaryKey = '_id') {
+  async createOrUpdate(data = {}, primaryKey = '_id') {
     const pipeline = this.#createPipeline()
 
     const hasValue = (

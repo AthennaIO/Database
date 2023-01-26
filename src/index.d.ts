@@ -2756,37 +2756,37 @@ export class QueryBuilder {
   /**
    * Create a value in database.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  create(data: any, primaryKey?: string): Promise<any>
+  create(data?: any, primaryKey?: string): Promise<any>
 
   /**
    * Create many values in database.
    *
-   * @param {any[]} data
+   * @param {any[]} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any[]>}
    */
-  createMany(data: any[], primaryKey?: string): Promise<any[]>
+  createMany(data?: any[], primaryKey?: string): Promise<any[]>
 
   /**
    * Create data or update if already exists.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
-  createOrUpdate(data: any, primaryKey?: string): Promise<any | any[]>
+  createOrUpdate(data?: any, primaryKey?: string): Promise<any | any[]>
 
   /**
    * Update data in database.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @return {Promise<any | any[]>}
    */
-  update(data: any): Promise<any | any[]>
+  update(data?: any): Promise<any | any[]>
 
   /**
    * Delete data in database.
@@ -3996,41 +3996,41 @@ export class ModelQueryBuilder<T = any> extends QueryBuilder {
   /**
    * Create one model in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<Model>}
    */
   // @ts-ignore
-  create(data: any, ignorePersistOnly?: boolean): Promise<T>
+  create(data?: any, ignorePersistOnly?: boolean): Promise<T>
 
   /**
    * Create many models in database.
    *
-   * @param data {any[]}
+   * @param [data] {any[]}
    * @param {boolean} [ignorePersistOnly]
    * @return {Promise<Model[]>}
    */
   // @ts-ignore
-  createMany(data: any[], ignorePersistOnly?: boolean): Promise<T[]>
+  createMany(data?: any[], ignorePersistOnly?: boolean): Promise<T[]>
 
   /**
    * Create data or update if already exists.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {boolean} [ignorePersistOnly]
    * @return {Promise<Model | Model[]>}
    */
   // @ts-ignore
-  createOrUpdate(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
+  createOrUpdate(data?: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Update one or more models in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} [ignorePersistOnly]
    * @return {Promise<Model | Model[]>}
    */
-  update(data: any, ignorePersistOnly?: boolean): Promise<T | T[]>
+  update(data?: any, ignorePersistOnly?: boolean): Promise<T | T[]>
 
   /**
    * Delete one or more models in database.

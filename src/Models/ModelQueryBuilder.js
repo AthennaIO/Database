@@ -329,11 +329,11 @@ export class ModelQueryBuilder {
   /**
    * Create one model in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<import('#src/index').Model>}
    */
-  async create(data, ignorePersistOnly = false) {
+  async create(data = {}, ignorePersistOnly = false) {
     const result = await this.createMany([data], ignorePersistOnly)
 
     return result[0]
@@ -342,16 +342,20 @@ export class ModelQueryBuilder {
   /**
    * Create many models in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<import('#src/index').Model[]>}
    */
-  async createMany(data, ignorePersistOnly = false) {
+  async createMany(data = [], ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }
 
     const executor = data => {
+      if (data === null || data === undefined) {
+        data = {}
+      }
+
       const attributes = this.#Model.attributes
 
       Object.keys(attributes).forEach(key => {
@@ -403,11 +407,11 @@ export class ModelQueryBuilder {
   /**
    * Create or update models in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<import('#src/index').Model | import('#src/index').Model[]>}
    */
-  async createOrUpdate(data, ignorePersistOnly = false) {
+  async createOrUpdate(data = {}, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }
@@ -438,11 +442,11 @@ export class ModelQueryBuilder {
   /**
    * Update one or more models in database.
    *
-   * @param data {any}
+   * @param [data] {any}
    * @param {boolean} ignorePersistOnly
    * @return {Promise<import('#src/index').Model | import('#src/index').Model[]>}
    */
-  async update(data, ignorePersistOnly = false) {
+  async update(data = {}, ignorePersistOnly = false) {
     if (!ignorePersistOnly) {
       data = this.#fillable(data)
     }

@@ -207,7 +207,7 @@ export class QueryBuilder {
   /**
    * Create a value in database.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
@@ -218,7 +218,7 @@ export class QueryBuilder {
   /**
    * Create many values in database.
    *
-   * @param {any[]} data
+   * @param {any[]} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any[]>}
    */
@@ -229,7 +229,7 @@ export class QueryBuilder {
   /**
    * Create data or update if already exists.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
