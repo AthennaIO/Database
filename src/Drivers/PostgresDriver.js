@@ -569,11 +569,11 @@ export class PostgresDriver {
   /**
    * Create a value in database.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async create(data, primaryKey = 'id') {
+  async create(data = {}, primaryKey = 'id') {
     if (Is.Array(data)) {
       throw new WrongMethodException('create', 'createMany')
     }
@@ -586,11 +586,11 @@ export class PostgresDriver {
   /**
    * Create many values in database.
    *
-   * @param {any[]} data
+   * @param {any[]} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any>}
    */
-  async createMany(data, primaryKey = 'id') {
+  async createMany(data = [], primaryKey = 'id') {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
@@ -601,11 +601,11 @@ export class PostgresDriver {
   /**
    * Create data or update if already exists.
    *
-   * @param {any} data
+   * @param {any} [data]
    * @param {string} [primaryKey]
    * @return {Promise<any | any[]>}
    */
-  async createOrUpdate(data, primaryKey = 'id') {
+  async createOrUpdate(data = {}, primaryKey = 'id') {
     const query = this.#qb.clone()
     const hasValue = await query.first()
 
