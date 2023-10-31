@@ -409,8 +409,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.havingExists(builder)
+  public havingExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.havingExists(closure)
 
     return this
   }
@@ -418,8 +420,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.havingNotExists(builder)
+  public havingNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.havingNotExists(closure)
 
     return this
   }
@@ -503,8 +507,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.orHavingExists(builder)
+  public orHavingExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.orHavingExists(closure)
 
     return this
   }
@@ -512,8 +518,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.orHavingNotExists(builder)
+  public orHavingNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.orHavingNotExists(closure)
 
     return this
   }
@@ -605,8 +613,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.whereExists(builder)
+  public whereExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.whereExists(closure)
 
     return this
   }
@@ -614,8 +624,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.whereNotExists(builder)
+  public whereNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.whereNotExists(closure)
 
     return this
   }
@@ -623,10 +635,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public whereLike(statement: any, value?: any): QueryBuilder {
     this.driver.whereLike(statement, value)
 
     return this
@@ -731,8 +740,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.orWhereExists(builder)
+  public orWhereExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.orWhereExists(closure)
 
     return this
   }
@@ -740,8 +751,10 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists(builder: QueryBuilder): QueryBuilder {
-    this.driver.orWhereNotExists(builder)
+  public orWhereNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): QueryBuilder {
+    this.driver.orWhereNotExists(closure)
 
     return this
   }

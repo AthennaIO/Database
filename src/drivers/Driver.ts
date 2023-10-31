@@ -59,6 +59,15 @@ export abstract class Driver<Client = any, QB = any> {
   }
 
   /**
+   * Clone the driver instance.
+   */
+  public clone(): Driver<Client, QB> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return new this.constructor(this.connection, this.client)
+  }
+
+  /**
    * Return the client of driver.
    */
   public getClient(): Client {
@@ -474,12 +483,16 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a having exists statement in your query.
    */
-  public abstract havingExists(clause: any): this
+  public abstract havingExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set a having not exists statement in your query.
    */
-  public abstract havingNotExists(clause: any): this
+  public abstract havingNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set a having in statement in your query.
@@ -524,12 +537,16 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set an or having exists statement in your query.
    */
-  public abstract orHavingExists(clause: any): this
+  public abstract orHavingExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set an or having not exists statement in your query.
    */
-  public abstract orHavingNotExists(clause: any): this
+  public abstract orHavingNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set an or having in statement in your query.
@@ -579,12 +596,16 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a where exists statement in your query.
    */
-  public abstract whereExists(clause: any): this
+  public abstract whereExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set a where not exists statement in your query.
    */
-  public abstract whereNotExists(clause: any): this
+  public abstract whereNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set a where like statement in your query.
@@ -655,12 +676,16 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set an or where exists statement in your query.
    */
-  public abstract orWhereExists(clause: any): this
+  public abstract orWhereExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set an or where not exists statement in your query.
    */
-  public abstract orWhereNotExists(clause: any): this
+  public abstract orWhereNotExists(
+    closure: (query: Driver<Client, QB>) => void
+  ): this
 
   /**
    * Set an or where like statement in your query.

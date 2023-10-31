@@ -16,6 +16,7 @@ export const FakeDriver: any = {
   tableName: '',
   client: undefined,
   qb: undefined,
+  clone: () => FakeDriver,
   getClient: () => {},
   getQueryBuilder: () => {},
   setQueryBuilder: () => {},
