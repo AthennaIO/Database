@@ -9,7 +9,7 @@
 
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
-import { DatabaseProvider, DriverFactory } from '#src'
+import { Database, DatabaseProvider, DriverFactory } from '#src'
 import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, type Context, AfterEach, BeforeEach, Mock } from '@athenna/test'
 
@@ -22,6 +22,7 @@ export default class DatabaseProviderTest {
 
   @AfterEach()
   public async afterEach() {
+    Mock.restoreAll()
     ioc.reconstruct()
     Config.clear()
   }
@@ -34,6 +35,13 @@ export default class DatabaseProviderTest {
   }
 
   @Test()
+  public async shouldBeAbleToUseDatabaseImplementationFromFacade({ assert }: Context) {
+    await new DatabaseProvider().register()
+
+    assert.isFalse(Database.isConnected())
+  }
+
+  @Test()
   public async shouldAutomaticallyShutdownAllOpenConnectionsWhenShuttingDownTheProvider({ assert }: Context) {
     Mock.when(DriverFactory, 'closeAllConnections').resolve(undefined)
 
@@ -43,5 +51,16 @@ export default class DatabaseProviderTest {
     await provider.shutdown()
 
     assert.calledOnce(DriverFactory.closeAllConnections)
+  }
+
+  @Test()
+  public async shouldNotTryToCloseConnectionIfDependencyIsNotRegisteredInTheServiceContainer({ assert }: Context) {
+    Mock.when(DriverFactory, 'closeAllConnections').resolve(undefined)
+
+    const provider = new DatabaseProvider()
+
+    await provider.shutdown()
+
+    assert.notCalled(DriverFactory.closeAllConnections)
   }
 }
