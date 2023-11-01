@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { TableBuilder } from 'knex'
+import type { Knex } from 'knex'
 import type { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
@@ -23,7 +23,7 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * The drivers responsible for handling database operations.
    */
-  public driver: Driver = null
+  public driver: Driver<Client, QB> = null
 
   /**
    * Creates a new instance of DatabaseImpl.
@@ -32,13 +32,14 @@ export class DatabaseImpl<Client = any, QB = any> {
     this.driver = DriverFactory.fabricate(this.connectionName)
   }
 
-  // TODO do method overload
-  // public connection(connection: 'mongo'): DatabaseImpl<MongoDriver, MongoQB>
+  public connection(
+    connection: 'postgres'
+  ): DatabaseImpl<Knex, Knex.QueryBuilder>
 
   /**
    * Change the database connection.
    */
-  public connection(connection: string): DatabaseImpl<Client, QB> {
+  public connection(connection: string): DatabaseImpl {
     const database = new DatabaseImpl()
 
     database.connectionName = connection
@@ -57,8 +58,12 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Connect to database.
    */
-  public async connect(options?: ConnectionOptions): Promise<void> {
+  public async connect(
+    options?: ConnectionOptions
+  ): Promise<DatabaseImpl<Client, QB>> {
     await this.driver.connect(options)
+
+    return this
   }
 
   /**
@@ -164,7 +169,7 @@ export class DatabaseImpl<Client = any, QB = any> {
    */
   public async createTable(
     table: string,
-    closure: (builder: TableBuilder) => void | Promise<void>
+    closure: (builder: Knex.TableBuilder) => void | Promise<void>
   ): Promise<void> {
     await this.driver.createTable(table, closure)
   }
@@ -187,14 +192,14 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Make a raw query in database.
    */
-  public raw(sql: string, bindings?: any): Promise<any> {
+  public raw<T = any>(sql: string, bindings?: any): Knex.Raw<T> {
     return this.driver.raw(sql, bindings)
   }
 
   /**
    * Creates a new instance of QueryBuilder for this table.
    */
-  public table(table: string | any): QueryBuilder {
-    return new QueryBuilder(this.driver, table)
+  public table(table: string | any): QueryBuilder<Client, QB> {
+    return new QueryBuilder<Client, QB>(this.driver, table)
   }
 }

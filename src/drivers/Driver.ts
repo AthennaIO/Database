@@ -46,6 +46,11 @@ export abstract class Driver<Client = any, QB = any> {
   protected qb: QB = null
 
   /**
+   * Set the driver name.
+   */
+  public abstract name: string
+
+  /**
    * Creates a new instance of the Driver.
    */
   public constructor(connection: string | any, client: Client = null) {

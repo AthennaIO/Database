@@ -20,6 +20,11 @@ import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatab
 
 export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
+   * The name of the driver.
+   */
+  public name = 'postgres'
+
+  /**
    * Connect to database.
    */
   public async connect(options?: ConnectionOptions): Promise<void> {

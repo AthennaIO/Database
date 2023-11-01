@@ -16,6 +16,7 @@ export const FakeDriver: any = {
   tableName: '',
   client: undefined,
   qb: undefined,
+  name: Config.get('database.default', 'postgres'),
   clone: () => FakeDriver,
   getClient: () => {},
   getQueryBuilder: () => {},

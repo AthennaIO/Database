@@ -7,19 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import type { Driver } from '#src/drivers/Driver'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
-import { Test, Mock, BeforeEach, AfterEach, type Context } from '@athenna/test'
+import { Test, Mock, AfterEach, type Context } from '@athenna/test'
 
 export default class QueryBuilderTest {
-  private driver: Driver
-
-  @BeforeEach()
-  public beforeEach() {
-    this.driver = FakeDriver
-  }
-
   @AfterEach()
   public afterEach() {
     Mock.restoreAll()
@@ -27,7 +19,7 @@ export default class QueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheDriverClientOfTheQueryBuilder({ assert }: Context) {
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.getClient()
 
     assert.deepEqual(FakeDriver.getClient(), result)
@@ -35,7 +27,7 @@ export default class QueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheDriverQueryBuilderOfTheQueryBuilder({ assert }: Context) {
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.getQueryBuilder()
 
     assert.deepEqual(FakeDriver.getQueryBuilder(), result)
@@ -44,131 +36,131 @@ export default class QueryBuilderTest {
   @Test()
   public async shouldBeAbleToGetTheAvgOfAGivenColumn({ assert }: Context) {
     const fakeAvg = '200'
-    Mock.when(this.driver, 'avg').resolve(fakeAvg)
+    Mock.when(FakeDriver, 'avg').resolve(fakeAvg)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.avg('score')
 
-    assert.calledWith(this.driver.avg, 'score')
+    assert.calledWith(FakeDriver.avg, 'score')
     assert.equal(result, fakeAvg)
   }
 
   @Test()
   public async shouldBeAbleToGetTheAvgDistinctOfAGivenColumn({ assert }: Context) {
     const fakeAvg = '200'
-    Mock.when(this.driver, 'avgDistinct').resolve(fakeAvg)
+    Mock.when(FakeDriver, 'avgDistinct').resolve(fakeAvg)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.avgDistinct('score')
 
-    assert.calledWith(this.driver.avgDistinct, 'score')
+    assert.calledWith(FakeDriver.avgDistinct, 'score')
     assert.equal(result, fakeAvg)
   }
 
   @Test()
   public async shouldBeAbleToGetTheMaxNumberOfAGivenColumn({ assert }: Context) {
     const fakeMax = '200'
-    Mock.when(this.driver, 'max').resolve(fakeMax)
+    Mock.when(FakeDriver, 'max').resolve(fakeMax)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.max('score')
 
-    assert.calledWith(this.driver.max, 'score')
+    assert.calledWith(FakeDriver.max, 'score')
     assert.equal(result, fakeMax)
   }
 
   @Test()
   public async shouldBeAbleToGetTheMinNumberOfAGivenColumn({ assert }: Context) {
     const fakeMin = '10'
-    Mock.when(this.driver, 'min').resolve(fakeMin)
+    Mock.when(FakeDriver, 'min').resolve(fakeMin)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.min('score')
 
-    assert.calledWith(this.driver.min, 'score')
+    assert.calledWith(FakeDriver.min, 'score')
     assert.equal(result, fakeMin)
   }
 
   @Test()
   public async shouldBeAbleToSumAllNumbersOfAGivenColumn({ assert }: Context) {
     const fakeSum = '1000'
-    Mock.when(this.driver, 'sum').resolve(fakeSum)
+    Mock.when(FakeDriver, 'sum').resolve(fakeSum)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.sum('score')
 
-    assert.calledWith(this.driver.sum, 'score')
+    assert.calledWith(FakeDriver.sum, 'score')
     assert.equal(result, fakeSum)
   }
 
   @Test()
   public async shouldBeAbleToSumDistinctValuesOfAGivenColumn({ assert }: Context) {
     const fakeSumDistinct = '900'
-    Mock.when(this.driver, 'sumDistinct').resolve(fakeSumDistinct)
+    Mock.when(FakeDriver, 'sumDistinct').resolve(fakeSumDistinct)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.sumDistinct('score')
 
-    assert.calledWith(this.driver.sumDistinct, 'score')
+    assert.calledWith(FakeDriver.sumDistinct, 'score')
     assert.equal(result, fakeSumDistinct)
   }
 
   @Test()
   public async shouldBeAbleToIncrementAValueOfAGivenColumn({ assert }: Context) {
-    Mock.when(this.driver, 'increment').resolve(undefined)
+    Mock.when(FakeDriver, 'increment').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     await queryBuilder.increment('score')
 
-    assert.calledOnce(this.driver.increment)
-    assert.calledWith(this.driver.increment, 'score')
+    assert.calledOnce(FakeDriver.increment)
+    assert.calledWith(FakeDriver.increment, 'score')
   }
 
   @Test()
   public async shouldBeAbleToDecrementAValueOfAGivenColumn({ assert }: Context) {
-    Mock.when(this.driver, 'decrement').resolve(undefined)
+    Mock.when(FakeDriver, 'decrement').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     await queryBuilder.decrement('score')
 
-    assert.calledOnce(this.driver.decrement)
-    assert.calledWith(this.driver.decrement, 'score')
+    assert.calledOnce(FakeDriver.decrement)
+    assert.calledWith(FakeDriver.decrement, 'score')
   }
 
   @Test()
   public async shouldBeAbleToCountRecords({ assert }: Context) {
     const fakeCount = '42'
-    Mock.when(this.driver, 'count').resolve(fakeCount)
+    Mock.when(FakeDriver, 'count').resolve(fakeCount)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.count()
 
-    assert.calledOnce(this.driver.count)
+    assert.calledOnce(FakeDriver.count)
     assert.equal(result, fakeCount)
   }
 
   @Test()
   public async shouldBeAbleToCountDistinctRecords({ assert }: Context) {
     const fakeCountDistinct = '35'
-    Mock.when(this.driver, 'countDistinct').resolve(fakeCountDistinct)
+    Mock.when(FakeDriver, 'countDistinct').resolve(fakeCountDistinct)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.countDistinct('userId')
 
-    assert.calledOnce(this.driver.countDistinct)
-    assert.calledWith(this.driver.countDistinct, 'userId')
+    assert.calledOnce(FakeDriver.countDistinct)
+    assert.calledWith(FakeDriver.countDistinct, 'userId')
     assert.equal(result, fakeCountDistinct)
   }
 
   @Test()
   public async shouldBeAbleToFindDataUsingFindOrFail({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
-    Mock.when(this.driver, 'findOrFail').resolve(expectedData)
+    Mock.when(FakeDriver, 'findOrFail').resolve(expectedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.findOrFail()
 
-    assert.calledOnce(this.driver.findOrFail)
+    assert.calledOnce(FakeDriver.findOrFail)
     assert.deepEqual(result, expectedData)
   }
 
@@ -176,24 +168,24 @@ export default class QueryBuilderTest {
   public async shouldBeAbleToFindDataOrExecuteTheCallback({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
     const callback = async () => expectedData
-    Mock.when(this.driver, 'findOr').resolve(expectedData)
+    Mock.when(FakeDriver, 'findOr').resolve(expectedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.findOr(callback)
 
-    assert.calledOnceWith(this.driver.findOr, callback)
+    assert.calledOnceWith(FakeDriver.findOr, callback)
     assert.deepEqual(result, expectedData)
   }
 
   @Test()
   public async shouldBeAbleToFindData({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
-    Mock.when(this.driver, 'find').resolve(expectedData)
+    Mock.when(FakeDriver, 'find').resolve(expectedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.find()
 
-    assert.calledOnce(this.driver.find)
+    assert.calledOnce(FakeDriver.find)
     assert.deepEqual(result, expectedData)
   }
 
@@ -203,12 +195,12 @@ export default class QueryBuilderTest {
       { id: '1', name: 'John Doe' },
       { id: '2', name: 'Jane Doe' }
     ]
-    Mock.when(this.driver, 'findMany').resolve(expectedData)
+    Mock.when(FakeDriver, 'findMany').resolve(expectedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.findMany()
 
-    assert.calledOnce(this.driver.findMany)
+    assert.calledOnce(FakeDriver.findMany)
     assert.deepEqual(result, expectedData)
   }
 
@@ -218,12 +210,12 @@ export default class QueryBuilderTest {
       { id: '1', name: 'John Doe' },
       { id: '2', name: 'Jane Doe' }
     ]
-    Mock.when(this.driver, 'collection').resolve(expectedData)
+    Mock.when(FakeDriver, 'collection').resolve(expectedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.collection()
 
-    assert.calledOnce(this.driver.collection)
+    assert.calledOnce(FakeDriver.collection)
     assert.deepEqual(result, expectedData)
   }
 
@@ -231,12 +223,12 @@ export default class QueryBuilderTest {
   public async shouldBeAbleToCreateData({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     const createdData = { id: '3', ...dataToCreate }
-    Mock.when(this.driver, 'create').resolve(createdData)
+    Mock.when(FakeDriver, 'create').resolve(createdData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.create(dataToCreate)
 
-    assert.calledOnceWith(this.driver.create, dataToCreate)
+    assert.calledOnceWith(FakeDriver.create, dataToCreate)
     assert.deepEqual(result, createdData)
   }
 
@@ -247,24 +239,24 @@ export default class QueryBuilderTest {
       { id: '4', ...dataToCreate[0] },
       { id: '5', ...dataToCreate[1] }
     ]
-    Mock.when(this.driver, 'createMany').resolve(createdData)
+    Mock.when(FakeDriver, 'createMany').resolve(createdData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.createMany(dataToCreate)
 
-    assert.calledOnceWith(this.driver.createMany, dataToCreate)
+    assert.calledOnceWith(FakeDriver.createMany, dataToCreate)
     assert.deepEqual(result, createdData)
   }
 
   @Test()
   public async shouldBeAbleToCreateOrUpdateData({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(this.driver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
-    assert.calledOnceWith(this.driver.createOrUpdate, dataToCreateOrUpdate)
+    assert.calledOnceWith(FakeDriver.createOrUpdate, dataToCreateOrUpdate)
     assert.deepEqual(result, dataToCreateOrUpdate)
   }
 
@@ -272,23 +264,23 @@ export default class QueryBuilderTest {
   public async shouldBeAbleToUpdateData({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User' }
     const updatedData = { id: '1', ...dataToUpdate }
-    Mock.when(this.driver, 'update').resolve(updatedData)
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.update(dataToUpdate)
 
-    assert.calledOnceWith(this.driver.update, dataToUpdate)
+    assert.calledOnceWith(FakeDriver.update, dataToUpdate)
     assert.deepEqual(result, updatedData)
   }
 
   @Test()
   public async shouldBeAbleToDeleteData({ assert }: Context) {
-    Mock.when(this.driver, 'delete').resolve(undefined)
+    Mock.when(FakeDriver, 'delete').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     await queryBuilder.delete()
 
-    assert.calledOnce(this.driver.delete)
+    assert.calledOnce(FakeDriver.delete)
   }
 
   @Test()
@@ -296,29 +288,29 @@ export default class QueryBuilderTest {
     const sqlQuery = 'SELECT * FROM users WHERE id = ?'
     const bindings = [1]
     const expectedResult = [{ id: '1', name: 'John Doe' }]
-    Mock.when(this.driver, 'raw').resolve(expectedResult)
+    Mock.when(FakeDriver, 'raw').resolve(expectedResult)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.raw(sqlQuery, bindings)
 
-    assert.calledOnceWith(this.driver.raw, sqlQuery, bindings)
+    assert.calledOnceWith(FakeDriver.raw, sqlQuery, bindings)
     assert.deepEqual(result, expectedResult)
   }
 
   @Test()
   public async shouldBeAbleToChangeTheTableOfTheQueryBuilder({ assert }: Context) {
-    Mock.when(this.driver, 'table').resolve(undefined)
+    Mock.when(FakeDriver, 'table').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.table('profiles')
 
-    assert.calledWith(this.driver.table, 'profiles')
+    assert.calledWith(FakeDriver.table, 'profiles')
   }
 
   @Test()
   public async shouldExecuteTheGivenClosureWhenCriteriaIsNotTrue({ assert }: Context) {
     let called = false
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.when(true, () => {
       called = true
     })
@@ -328,12 +320,12 @@ export default class QueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToDumpTheQueryCrafted({ assert }: Context) {
-    Mock.when(this.driver, 'dump').resolve(undefined)
+    Mock.when(FakeDriver, 'dump').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.dump()
 
-    assert.calledOnce(this.driver.dump)
+    assert.calledOnce(FakeDriver.dump)
   }
 
   @Test()
@@ -342,35 +334,35 @@ export default class QueryBuilderTest {
     const limit = 10
     const resourceUrl = '/users'
     const paginatedResult = { data: [], meta: { total: 0, perPage: limit, currentPage: page } }
-    Mock.when(this.driver, 'paginate').resolve(paginatedResult)
+    Mock.when(FakeDriver, 'paginate').resolve(paginatedResult)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     const result = await queryBuilder.paginate(page, limit, resourceUrl)
 
-    assert.calledOnceWith(this.driver.paginate, page, limit, resourceUrl)
+    assert.calledOnceWith(FakeDriver.paginate, page, limit, resourceUrl)
     assert.deepEqual(result, paginatedResult)
   }
 
   @Test()
   public async shouldAllowSelectingSpecificColumnsFromTable({ assert }: Context) {
     const columns = ['id', 'name']
-    Mock.when(this.driver, 'select').resolve(undefined)
+    Mock.when(FakeDriver, 'select').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.select(...columns)
 
-    assert.calledOnceWith(this.driver.select, ...columns)
+    assert.calledOnceWith(FakeDriver.select, ...columns)
   }
 
   @Test()
   public async shouldAllowRawSqlSelectionForSpecializedQueries({ assert }: Context) {
     const sql = 'COUNT(*) as userCount'
-    Mock.when(this.driver, 'selectRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'selectRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.selectRaw(sql)
 
-    assert.calledOnceWith(this.driver.selectRaw, sql)
+    assert.calledOnceWith(FakeDriver.selectRaw, sql)
   }
 
   @Test()
@@ -379,12 +371,12 @@ export default class QueryBuilderTest {
     const column1 = 'users.id'
     const operation = '='
     const column2 = 'posts.user_id'
-    Mock.when(this.driver, 'join').resolve(undefined)
+    Mock.when(FakeDriver, 'join').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.join(tableName, column1, operation, column2)
 
-    assert.calledOnceWith(this.driver.join, tableName, column1, operation, column2)
+    assert.calledOnceWith(FakeDriver.join, tableName, column1, operation, column2)
   }
 
   @Test()
@@ -392,12 +384,12 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'leftJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'leftJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.leftJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.leftJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.leftJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
@@ -405,12 +397,12 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'rightJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'rightJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.rightJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.rightJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.rightJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
@@ -418,12 +410,12 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'crossJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'crossJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.crossJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.crossJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.crossJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
@@ -431,12 +423,12 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'fullOuterJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'fullOuterJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.fullOuterJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.fullOuterJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.fullOuterJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
@@ -444,12 +436,12 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'leftOuterJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'leftOuterJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.leftOuterJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.leftOuterJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.leftOuterJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
@@ -457,45 +449,45 @@ export default class QueryBuilderTest {
     const table = 'profiles'
     const firstColumn = 'users.id'
     const secondColumn = 'profiles.user_id'
-    Mock.when(this.driver, 'rightOuterJoin').resolve(undefined)
+    Mock.when(FakeDriver, 'rightOuterJoin').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.rightOuterJoin(table, firstColumn, secondColumn)
 
-    assert.calledOnceWith(this.driver.rightOuterJoin, table, firstColumn, secondColumn)
+    assert.calledOnceWith(FakeDriver.rightOuterJoin, table, firstColumn, secondColumn)
   }
 
   @Test()
   public async shouldApplyJoinRawForGivenTableAndConditions({ assert }: Context) {
     const sql = 'NATURAL FULL JOIN users'
-    Mock.when(this.driver, 'joinRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'joinRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.joinRaw(sql)
 
-    assert.calledOnceWith(this.driver.joinRaw, sql)
+    assert.calledOnceWith(FakeDriver.joinRaw, sql)
   }
 
   @Test()
   public async shouldAllowGroupingBySpecifiedColumns({ assert }: Context) {
     const columns = ['account_id']
-    Mock.when(this.driver, 'groupBy').resolve(undefined)
+    Mock.when(FakeDriver, 'groupBy').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.groupBy(...columns)
 
-    assert.calledOnceWith(this.driver.groupBy, ...columns)
+    assert.calledOnceWith(FakeDriver.groupBy, ...columns)
   }
 
   @Test()
   public async shouldAllowGroupingBySpecifiedColumnsUsingGroupByRaw({ assert }: Context) {
     const sql = 'age WITH ROLLUP'
-    Mock.when(this.driver, 'groupByRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'groupByRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.groupByRaw(sql)
 
-    assert.calledOnceWith(this.driver.groupByRaw, sql)
+    assert.calledOnceWith(FakeDriver.groupByRaw, sql)
   }
 
   @Test()
@@ -503,23 +495,23 @@ export default class QueryBuilderTest {
     const column = 'id'
     const operator = '>'
     const value = 100
-    Mock.when(this.driver, 'having').resolve(undefined)
+    Mock.when(FakeDriver, 'having').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.having(column, operator, value)
 
-    assert.calledOnceWith(this.driver.having, column, operator, value)
+    assert.calledOnceWith(FakeDriver.having, column, operator, value)
   }
 
   @Test()
   public async shouldAddAHavingRawSQLClauseToTheQuery({ assert }: Context) {
     const sql = 'id > 100'
-    Mock.when(this.driver, 'havingRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'havingRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingRaw(sql)
 
-    assert.calledOnceWith(this.driver.havingRaw, sql)
+    assert.calledOnceWith(FakeDriver.havingRaw, sql)
   }
 
   @Test()
@@ -527,12 +519,12 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'havingExists').resolve(undefined)
+    Mock.when(FakeDriver, 'havingExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingExists(closure)
 
-    assert.calledOnce(this.driver.havingExists)
+    assert.calledOnce(FakeDriver.havingExists)
   }
 
   @Test()
@@ -540,103 +532,103 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'havingNotExists').resolve(undefined)
+    Mock.when(FakeDriver, 'havingNotExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingNotExists(closure)
 
-    assert.calledOnce(this.driver.havingNotExists)
+    assert.calledOnce(FakeDriver.havingNotExists)
   }
 
   @Test()
   public async shouldAddAHavingInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
-    Mock.when(this.driver, 'havingIn').resolve(undefined)
+    Mock.when(FakeDriver, 'havingIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingIn(column, values)
 
-    assert.calledOnce(this.driver.havingIn)
+    assert.calledOnce(FakeDriver.havingIn)
   }
 
   @Test()
   public async shouldAddAHavingNotInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
-    Mock.when(this.driver, 'havingNotIn').resolve(undefined)
+    Mock.when(FakeDriver, 'havingNotIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingNotIn(column, values)
 
-    assert.calledOnce(this.driver.havingNotIn)
+    assert.calledOnce(FakeDriver.havingNotIn)
   }
 
   @Test()
   public async shouldAddAHavingBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
-    Mock.when(this.driver, 'havingBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'havingBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingBetween(column, values)
 
-    assert.calledOnce(this.driver.havingBetween)
+    assert.calledOnce(FakeDriver.havingBetween)
   }
 
   @Test()
   public async shouldAddAHavingNotBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
-    Mock.when(this.driver, 'havingNotBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'havingNotBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingNotBetween(column, values)
 
-    assert.calledOnce(this.driver.havingNotBetween)
+    assert.calledOnce(FakeDriver.havingNotBetween)
   }
 
   @Test()
   public async shouldAddAHavingNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
-    Mock.when(this.driver, 'havingNull').resolve(undefined)
+    Mock.when(FakeDriver, 'havingNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingNull(column)
 
-    assert.calledOnce(this.driver.havingNull)
+    assert.calledOnce(FakeDriver.havingNull)
   }
 
   @Test()
   public async shouldAddAHavingNotNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
-    Mock.when(this.driver, 'havingNotNull').resolve(undefined)
+    Mock.when(FakeDriver, 'havingNotNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.havingNotNull(column)
 
-    assert.calledOnce(this.driver.havingNotNull)
+    assert.calledOnce(FakeDriver.havingNotNull)
   }
 
   @Test()
   public async shouldAddAnOrHavingClauseToTheQuery({ assert }: Context) {
     const column = 'id'
-    Mock.when(this.driver, 'orHaving').resolve(undefined)
+    Mock.when(FakeDriver, 'orHaving').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHaving(column)
 
-    assert.calledOnce(this.driver.orHaving)
+    assert.calledOnce(FakeDriver.orHaving)
   }
 
   @Test()
   public async shouldAddAnOrHavingRawSQLClauseToTheQuery({ assert }: Context) {
-    Mock.when(this.driver, 'orHavingRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingRaw('age > 100')
 
-    assert.calledOnce(this.driver.orHavingRaw)
+    assert.calledOnce(FakeDriver.orHavingRaw)
   }
 
   @Test()
@@ -644,12 +636,12 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'orHavingExists').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingExists(closure)
 
-    assert.calledOnce(this.driver.orHavingExists)
+    assert.calledOnce(FakeDriver.orHavingExists)
   }
 
   @Test()
@@ -657,82 +649,82 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'orHavingNotExists').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingNotExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingNotExists(closure)
 
-    assert.calledOnce(this.driver.orHavingNotExists)
+    assert.calledOnce(FakeDriver.orHavingNotExists)
   }
 
   @Test()
   public async shouldAddAnOrHavingInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
-    Mock.when(this.driver, 'orHavingIn').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingIn(column, values)
 
-    assert.calledOnce(this.driver.orHavingIn)
+    assert.calledOnce(FakeDriver.orHavingIn)
   }
 
   @Test()
   public async shouldAddAnOrHavingNotInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
-    Mock.when(this.driver, 'orHavingNotIn').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingNotIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingNotIn(column, values)
 
-    assert.calledOnce(this.driver.orHavingNotIn)
+    assert.calledOnce(FakeDriver.orHavingNotIn)
   }
 
   @Test()
   public async shouldAddAnOrHavingBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
-    Mock.when(this.driver, 'orHavingBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingBetween(column, values)
 
-    assert.calledOnce(this.driver.orHavingBetween)
+    assert.calledOnce(FakeDriver.orHavingBetween)
   }
 
   @Test()
   public async shouldAddAnOrHavingNotBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
-    Mock.when(this.driver, 'orHavingNotBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingNotBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingNotBetween(column, values)
 
-    assert.calledOnce(this.driver.orHavingNotBetween)
+    assert.calledOnce(FakeDriver.orHavingNotBetween)
   }
 
   @Test()
   public async shouldAddAnOrHavingNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
-    Mock.when(this.driver, 'orHavingNull').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingNull(column)
 
-    assert.calledOnce(this.driver.orHavingNull)
+    assert.calledOnce(FakeDriver.orHavingNull)
   }
 
   @Test()
   public async shouldAddAnOrHavingNotNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
-    Mock.when(this.driver, 'orHavingNotNull').resolve(undefined)
+    Mock.when(FakeDriver, 'orHavingNotNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orHavingNotNull(column)
 
-    assert.calledOnce(this.driver.orHavingNotNull)
+    assert.calledOnce(FakeDriver.orHavingNotNull)
   }
 
   @Test()
@@ -740,36 +732,36 @@ export default class QueryBuilderTest {
     const column = 'age'
     const operation = '>'
     const value = 18
-    Mock.when(this.driver, 'where').resolve(undefined)
+    Mock.when(FakeDriver, 'where').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.where(column, operation, value)
 
-    assert.calledOnceWith(this.driver.where, column, operation, value)
+    assert.calledOnceWith(FakeDriver.where, column, operation, value)
   }
 
   @Test()
   public async shouldFilterResultsUsingRawWhereClauseForComplexConditions({ assert }: Context) {
     const sql = 'age > ? AND account_id IS NOT NULL'
     const bindings = [18]
-    Mock.when(this.driver, 'whereRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'whereRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereRaw(sql, ...bindings)
 
-    assert.calledOnceWith(this.driver.whereRaw, sql, ...bindings)
+    assert.calledOnceWith(FakeDriver.whereRaw, sql, ...bindings)
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNotClause({ assert }: Context) {
     const column = 'age'
     const value = 18
-    Mock.when(this.driver, 'whereNot').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNot').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNot(column, value)
 
-    assert.calledOnceWith(this.driver.whereNot, column, value)
+    assert.calledOnceWith(FakeDriver.whereNot, column, value)
   }
 
   @Test()
@@ -777,12 +769,12 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'whereExists').resolve(undefined)
+    Mock.when(FakeDriver, 'whereExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereExists(closure)
 
-    assert.calledOnce(this.driver.whereExists)
+    assert.calledOnce(FakeDriver.whereExists)
   }
 
   @Test()
@@ -790,92 +782,92 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'whereNotExists').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNotExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNotExists(closure)
 
-    assert.calledOnce(this.driver.whereNotExists)
+    assert.calledOnce(FakeDriver.whereNotExists)
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereLikeClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereLike').resolve(undefined)
+    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereLike('name', 'lenon')
 
-    assert.calledOnceWith(this.driver.whereLike, 'name', 'lenon')
+    assert.calledOnceWith(FakeDriver.whereLike, 'name', 'lenon')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereILikeClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereILike').resolve(undefined)
+    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereILike('name', 'Lenon')
 
-    assert.calledOnceWith(this.driver.whereILike, 'name', 'Lenon')
+    assert.calledOnceWith(FakeDriver.whereILike, 'name', 'Lenon')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereInClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereIn').resolve(undefined)
+    Mock.when(FakeDriver, 'whereIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereIn('age', [1, 2, 3])
 
-    assert.calledOnceWith(this.driver.whereIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.whereIn, 'age', [1, 2, 3])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNoInClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereNotIn').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNotIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNotIn('age', [1, 2, 3])
 
-    assert.calledOnceWith(this.driver.whereNotIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.whereNotIn, 'age', [1, 2, 3])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereBetweenClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'whereBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereBetween('age', [1, 10])
 
-    assert.calledOnceWith(this.driver.whereBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.whereBetween, 'age', [1, 10])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNotBetweenClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereNotBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNotBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNotBetween('age', [1, 10])
 
-    assert.calledOnceWith(this.driver.whereNotBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.whereNotBetween, 'age', [1, 10])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNullClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereNull').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNull('age')
 
-    assert.calledOnceWith(this.driver.whereNull, 'age')
+    assert.calledOnceWith(FakeDriver.whereNull, 'age')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNotNullClause({ assert }: Context) {
-    Mock.when(this.driver, 'whereNotNull').resolve(undefined)
+    Mock.when(FakeDriver, 'whereNotNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.whereNotNull('age')
 
-    assert.calledOnceWith(this.driver.whereNotNull, 'age')
+    assert.calledOnceWith(FakeDriver.whereNotNull, 'age')
   }
 
   @Test()
@@ -883,36 +875,36 @@ export default class QueryBuilderTest {
     const column = 'age'
     const operation = '>'
     const value = 18
-    Mock.when(this.driver, 'orWhere').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhere').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhere(column, operation, value)
 
-    assert.calledOnceWith(this.driver.orWhere, column, operation, value)
+    assert.calledOnceWith(FakeDriver.orWhere, column, operation, value)
   }
 
   @Test()
   public async shouldFilterResultsUsingRawOrWhereClauseForComplexConditions({ assert }: Context) {
     const sql = 'age > ? AND account_id IS NOT NULL'
     const bindings = [18]
-    Mock.when(this.driver, 'orWhereRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereRaw(sql, ...bindings)
 
-    assert.calledOnceWith(this.driver.orWhereRaw, sql, ...bindings)
+    assert.calledOnceWith(FakeDriver.orWhereRaw, sql, ...bindings)
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNotClause({ assert }: Context) {
     const column = 'age'
     const value = 18
-    Mock.when(this.driver, 'orWhereNot').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNot(column, value)
 
-    assert.calledOnceWith(this.driver.orWhereNot, column, value)
+    assert.calledOnceWith(FakeDriver.orWhereNot, column, value)
   }
 
   @Test()
@@ -920,12 +912,12 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'orWhereExists').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereExists(closure)
 
-    assert.calledOnce(this.driver.orWhereExists)
+    assert.calledOnce(FakeDriver.orWhereExists)
   }
 
   @Test()
@@ -933,155 +925,155 @@ export default class QueryBuilderTest {
     const closure = query => {
       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
     }
-    Mock.when(this.driver, 'orWhereNotExists').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNotExists').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNotExists(closure)
 
-    assert.calledOnce(this.driver.orWhereNotExists)
+    assert.calledOnce(FakeDriver.orWhereNotExists)
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereLikeClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereLike').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereLike').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereLike('name', 'lenon')
 
-    assert.calledOnceWith(this.driver.orWhereLike, 'name', 'lenon')
+    assert.calledOnceWith(FakeDriver.orWhereLike, 'name', 'lenon')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereILikeClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereILike').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereILike('name', 'Lenon')
 
-    assert.calledOnceWith(this.driver.orWhereILike, 'name', 'Lenon')
+    assert.calledOnceWith(FakeDriver.orWhereILike, 'name', 'Lenon')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereInClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereIn').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereIn('age', [1, 2, 3])
 
-    assert.calledOnceWith(this.driver.orWhereIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.orWhereIn, 'age', [1, 2, 3])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNoInClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereNotIn').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNotIn').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNotIn('age', [1, 2, 3])
 
-    assert.calledOnceWith(this.driver.orWhereNotIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.orWhereNotIn, 'age', [1, 2, 3])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereBetweenClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereBetween('age', [1, 10])
 
-    assert.calledOnceWith(this.driver.orWhereBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.orWhereBetween, 'age', [1, 10])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNotBetweenClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereNotBetween').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNotBetween').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNotBetween('age', [1, 10])
 
-    assert.calledOnceWith(this.driver.orWhereNotBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.orWhereNotBetween, 'age', [1, 10])
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNullClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereNull').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNull('age')
 
-    assert.calledOnceWith(this.driver.orWhereNull, 'age')
+    assert.calledOnceWith(FakeDriver.orWhereNull, 'age')
   }
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNotNullClause({ assert }: Context) {
-    Mock.when(this.driver, 'orWhereNotNull').resolve(undefined)
+    Mock.when(FakeDriver, 'orWhereNotNull').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orWhereNotNull('age')
 
-    assert.calledOnceWith(this.driver.orWhereNotNull, 'age')
+    assert.calledOnceWith(FakeDriver.orWhereNotNull, 'age')
   }
 
   @Test()
   public async shouldOrderBySpecifiedColumnInGivenDirection({ assert }: Context) {
     const column = 'name'
     const direction = 'ASC'
-    Mock.when(this.driver, 'orderBy').resolve(undefined)
+    Mock.when(FakeDriver, 'orderBy').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orderBy(column, direction)
 
-    assert.calledOnceWith(this.driver.orderBy, column, direction)
+    assert.calledOnceWith(FakeDriver.orderBy, column, direction)
   }
 
   @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
-    Mock.when(this.driver, 'latest').resolve(undefined)
+    Mock.when(FakeDriver, 'latest').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.latest('createdAt')
 
-    assert.calledOnceWith(this.driver.latest, 'createdAt')
+    assert.calledOnceWith(FakeDriver.latest, 'createdAt')
   }
 
   @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingOldest({ assert }: Context) {
-    Mock.when(this.driver, 'oldest').resolve(undefined)
+    Mock.when(FakeDriver, 'oldest').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.oldest('createdAt')
 
-    assert.calledOnceWith(this.driver.oldest, 'createdAt')
+    assert.calledOnceWith(FakeDriver.oldest, 'createdAt')
   }
 
   @Test()
   public async shouldOrderBySpecifiedColumnInGivenDirectionUsingRawSQL({ assert }: Context) {
-    Mock.when(this.driver, 'orderByRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'orderByRaw').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.orderByRaw('name DESC NULLS LAST')
 
-    assert.calledOnceWith(this.driver.orderByRaw, 'name DESC NULLS LAST')
+    assert.calledOnceWith(FakeDriver.orderByRaw, 'name DESC NULLS LAST')
   }
 
   @Test()
   public async shouldOffsetTheResultsByGivenValue({ assert }: Context) {
     const offsetValue = 10
-    Mock.when(this.driver, 'offset').resolve(undefined)
+    Mock.when(FakeDriver, 'offset').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.offset(offsetValue)
 
-    assert.calledOnceWith(this.driver.offset, offsetValue)
+    assert.calledOnceWith(FakeDriver.offset, offsetValue)
   }
 
   @Test()
   public async shouldLimitTheNumberOfResultsReturned({ assert }: Context) {
     const limitValue = 10
-    Mock.when(this.driver, 'limit').resolve(undefined)
+    Mock.when(FakeDriver, 'limit').resolve(undefined)
 
-    const queryBuilder = new QueryBuilder(this.driver, 'users')
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.limit(limitValue)
 
-    assert.calledOnceWith(this.driver.limit, limitValue)
+    assert.calledOnceWith(FakeDriver.limit, limitValue)
   }
 }
