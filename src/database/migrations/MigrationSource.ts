@@ -7,21 +7,17 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@athenna/config'
 import { Module, Path } from '@athenna/common'
 import type { Migration } from '#src/database/migrations/Migration'
 
-export type Source = {
+type Source = {
   name: string
-  Migration: typeof Migration
+  Migration: new (...args: any[]) => Migration
 }
 
 export class MigrationSource {
   public connection = null
 
-  /**
-   * Creates a new instance of MigrationSource.
-   */
   public constructor(connection: string) {
     this.connection = connection
   }
@@ -30,15 +26,7 @@ export class MigrationSource {
    * Verify if migration is able to run by connection.
    */
   private isAbleToRun(migration: typeof Migration): boolean {
-    const defaultConnection = Config.get('database.default')
-
-    const isDefaultConnection =
-      migration.connection === 'default' &&
-      this.connection === defaultConnection
-
-    const isSameConnection = migration.connection === this.connection
-
-    return isDefaultConnection || isSameConnection
+    return migration.connection() === this.connection
   }
 
   /**
@@ -74,8 +62,6 @@ export class MigrationSource {
    * methods in object.
    */
   public async getMigration(source: Source) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     const migration = new source.Migration()
 
     return {

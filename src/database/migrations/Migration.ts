@@ -8,13 +8,15 @@
  */
 
 import type { Knex } from 'knex'
+import { Config } from '@athenna/config'
 
 export abstract class Migration {
   /**
-   * Create a table instance.
+   * Define the database connection that the
+   * migration will use.
    */
-  public static get connection(): string {
-    return 'default'
+  public static connection(): string {
+    return Config.get('database.default')
   }
 
   /**
