@@ -60,6 +60,13 @@ export class Transaction<Client = any, QB = any> {
   }
 
   /**
+   * Revert database migrations.
+   */
+  public async revertMigrations(): Promise<void> {
+    await this.driver.revertMigrations()
+  }
+
+  /**
    * List all databases available.
    */
   public async getDatabases(): Promise<string[]> {

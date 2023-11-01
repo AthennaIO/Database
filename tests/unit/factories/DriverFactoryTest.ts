@@ -95,36 +95,36 @@ export default class DriverFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateConnectionWithDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('default')
+    const connection = DriverFactory.createConnection('default')
 
     assert.deepEqual(connection, {})
   }
 
   @Test()
   public async shouldBeAbleToCreateConnectionWithTheDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('default')
+    const connection = DriverFactory.createConnection('default')
 
     assert.deepEqual(connection, {})
   }
 
   @Test()
   public async shouldBeAbleToCreateConnectionWithPostgresDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('postgres')
+    const connection = DriverFactory.createConnection('postgres')
 
     assert.deepEqual(connection, {})
   }
 
   @Test()
   public async shouldBeAbleToSaveTheCreatedConnectionIfSaveOnFactoryIsTrue({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('postgres', { saveOnFactory: true })
+    const connection = DriverFactory.createConnection('postgres', { saveOnFactory: true })
 
     assert.deepEqual(connection, {})
     assert.deepEqual(DriverFactory.drivers.get('postgres').client, {})
@@ -132,9 +132,9 @@ export default class DriverFactoryTest {
 
   @Test()
   public async shouldNotSaveTheCreatedConnectionIfSaveOnFactoryIsFalse({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('postgres', { saveOnFactory: false })
+    const connection = DriverFactory.createConnection('postgres', { saveOnFactory: false })
 
     assert.deepEqual(connection, {})
     assert.isUndefined(DriverFactory.drivers.get('postgres').client)
@@ -147,9 +147,9 @@ export default class DriverFactoryTest {
     Log.when('channelOrVanilla').return({
       success: logSuccessFake
     })
-    Mock.when(ConnectionFactory, 'postgres').resolve({})
+    Mock.when(ConnectionFactory, 'postgres').return({})
 
-    const connection = await DriverFactory.createConnection('postgres')
+    const connection = DriverFactory.createConnection('postgres')
 
     assert.deepEqual(connection, {})
     assert.calledWith(Log.channelOrVanilla, 'application')
@@ -160,7 +160,7 @@ export default class DriverFactoryTest {
   public async shouldThrowConnectionFailedExceptionIfConnectionWithDatabaseFails({ assert }: Context) {
     Mock.when(ConnectionFactory, 'postgres').throw(new Error('Connection failed!'))
 
-    await assert.rejects(() => DriverFactory.createConnection('postgres'), ConnectionFailedException)
+    assert.throws(() => DriverFactory.createConnection('postgres'), ConnectionFailedException)
   }
 
   @Test()

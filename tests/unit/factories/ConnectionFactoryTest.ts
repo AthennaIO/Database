@@ -28,15 +28,12 @@ export default class ConnectionFactoryTest {
   public async shouldBeAbleToCreateTheConnectionUsingKnex({ assert }: Context) {
     const knexFake = Mock.fake()
 
-    Mock.when(ConnectionFactory, 'getKnex').resolve({ default: knexFake })
+    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
 
-    await ConnectionFactory.knex('postgres', 'pg')
+    ConnectionFactory.knex('postgres', 'pg')
 
     assert.calledWith(knexFake, {
       client: 'pg',
-      connection: {
-        driver: 'postgres'
-      },
       debug: false,
       migrations: {
         tableName: 'migrations'
@@ -52,13 +49,11 @@ export default class ConnectionFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateTheConnectionUsingMongoose({ assert }: Context) {
-    const mongooseFake = Mock.sandbox.stub().returns({
-      asPromise: Mock.fake()
-    })
+    const mongooseFake = Mock.fake()
 
-    Mock.when(ConnectionFactory, 'getMongoose').resolve({ createConnection: mongooseFake })
+    Mock.when(ConnectionFactory, 'getMongoose').return({ createConnection: mongooseFake })
 
-    await ConnectionFactory.mongoose('mongo')
+    ConnectionFactory.mongoose('mongo')
 
     assert.calledWith(mongooseFake, 'mongodb://localhost:27017', { replicaSet: 'admin' })
   }
@@ -67,15 +62,12 @@ export default class ConnectionFactoryTest {
   public async shouldBeAbleToCreateTheConnectionToMysqlDirectly({ assert }: Context) {
     const knexFake = Mock.fake()
 
-    Mock.when(ConnectionFactory, 'getKnex').resolve({ default: knexFake })
+    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
 
-    await ConnectionFactory.mysql('mysql')
+    ConnectionFactory.mysql('mysql')
 
     assert.calledWith(knexFake, {
       client: 'mysql2',
-      connection: {
-        driver: 'mysql'
-      },
       debug: false,
       migrations: {
         tableName: 'migrations'
@@ -93,15 +85,12 @@ export default class ConnectionFactoryTest {
   public async shouldBeAbleToCreateTheConnectionToPostgresDirectly({ assert }: Context) {
     const knexFake = Mock.fake()
 
-    Mock.when(ConnectionFactory, 'getKnex').resolve({ default: knexFake })
+    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
 
-    await ConnectionFactory.postgres('postgres')
+    ConnectionFactory.postgres('postgres')
 
     assert.calledWith(knexFake, {
       client: 'pg',
-      connection: {
-        driver: 'postgres'
-      },
       debug: false,
       migrations: {
         tableName: 'migrations'
@@ -117,13 +106,11 @@ export default class ConnectionFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateTheConnectionToMongoDirectly({ assert }: Context) {
-    const mongooseFake = Mock.sandbox.stub().returns({
-      asPromise: Mock.fake()
-    })
+    const mongooseFake = Mock.fake()
 
-    Mock.when(ConnectionFactory, 'getMongoose').resolve({ createConnection: mongooseFake })
+    Mock.when(ConnectionFactory, 'getMongoose').return({ createConnection: mongooseFake })
 
-    await ConnectionFactory.mongo('mongo')
+    ConnectionFactory.mongo('mongo')
 
     assert.calledWith(mongooseFake, 'mongodb://localhost:27017', { replicaSet: 'admin' })
   }

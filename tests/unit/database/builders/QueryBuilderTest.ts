@@ -308,7 +308,7 @@ export default class QueryBuilderTest {
   }
 
   @Test()
-  public async shouldExecuteTheGivenClosureWhenCriteriaIsNotTrue({ assert }: Context) {
+  public async shouldExecuteTheGivenClosureWhenCriteriaIsTrue({ assert }: Context) {
     let called = false
     const queryBuilder = new QueryBuilder(FakeDriver, 'users')
     queryBuilder.when(true, () => {
@@ -316,6 +316,17 @@ export default class QueryBuilderTest {
     })
 
     assert.isTrue(called)
+  }
+
+  @Test()
+  public async shouldNotExecuteTheGivenClosureWhenCriteriaIsNotTrue({ assert }: Context) {
+    let called = false
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.when(false, () => {
+      called = true
+    })
+
+    assert.isFalse(called)
   }
 
   @Test()

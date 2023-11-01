@@ -8,9 +8,10 @@
  */
 
 import type { Knex } from 'knex'
-import { Json } from '@athenna/common'
+import { debug } from '#src/debug'
 import { Config } from '@athenna/config'
 import type { Connection } from 'mongoose'
+import { Json, Module } from '@athenna/common'
 
 export class ConnectionFactory {
   /**
@@ -34,71 +35,82 @@ export class ConnectionFactory {
   /**
    * Create the connection with a mysql database.
    */
-  public static async mysql(con: string): Promise<Knex> {
+  public static mysql(con: string): Knex {
     return this.knex(con, 'mysql2')
   }
 
   /**
    * Create the connection with a mongo database.
    */
-  public static async mongo(con: string): Promise<Connection> {
+  public static mongo(con: string): Connection {
     return this.mongoose(con)
   }
 
   /**
    * Create the connection with a postgres database.
    */
-  public static async postgres(con: string): Promise<Knex> {
+  public static postgres(con: string): Knex {
     return this.knex(con, 'pg')
   }
 
   /**
    * Create a database connection using mongoose.
    */
-  public static async mongoose(con: string) {
-    const mongoose = await this.getMongoose()
+  public static mongoose(con: string) {
+    const mongoose = this.getMongoose()
     const configs = Config.get(`database.connections.${con}`, {})
+    const options = Json.omit(configs, ['url', 'driver'])
 
-    return mongoose
-      .createConnection(configs.url, Json.omit(configs, ['url']))
-      .asPromise()
+    debug('creating new connection using Mongoose. Options defined: %o', {
+      url: configs.url,
+      ...options
+    })
+
+    return mongoose.createConnection(configs.url, options)
   }
 
   /**
    * Create a database connection using knex.
    */
-  public static async knex(con: string, client: string): Promise<Knex> {
-    const knex = await this.getKnex()
+  public static knex(con: string, client: string): Knex {
+    const knex = this.getKnex()
     const configs = Config.get(`database.connections.${con}`, {})
-
-    return knex.default({
+    const options = {
       client,
-      connection: configs,
-      migrations: configs.migrations || {
+      migrations: {
         tableName: 'migrations'
       },
-      pool: configs.pool || {
+      pool: {
         min: 2,
         max: 20,
         acquireTimeoutMillis: 60 * 1000
       },
-      debug: configs.debug || false,
-      useNullAsDefault: configs.useNullAsDefault || false
-    })
+      debug: false,
+      useNullAsDefault: false,
+      ...Json.omit(configs, ['driver'])
+    }
+
+    debug('creating new connection using Knex. Options defined: %o', options)
+
+    return knex.default(options)
   }
 
   /**
    * Import knex in a method to be easier to mock.
    */
-  public static async getKnex() {
-    return await import('knex')
+  public static getKnex() {
+    const require = Module.createRequire(import.meta.url)
+
+    return require('knex')
   }
 
   /**
    * Import mongoose in a method to be easier to mock.
    */
-  public static async getMongoose() {
-    let mongoose = await import('mongoose')
+  public static getMongoose() {
+    const require = Module.createRequire(import.meta.url)
+
+    let mongoose = require('mongoose')
 
     if (!mongoose.createConnection) {
       mongoose = mongoose.default

@@ -28,8 +28,10 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Creates a new instance of DatabaseImpl.
    */
-  public constructor() {
+  public constructor(options?: ConnectionOptions) {
     this.driver = DriverFactory.fabricate(this.connectionName)
+
+    this.connect(options)
   }
 
   public connection(
@@ -39,8 +41,11 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Change the database connection.
    */
-  public connection(connection: string): DatabaseImpl {
-    const database = new DatabaseImpl()
+  public connection(
+    connection: string,
+    options?: ConnectionOptions
+  ): DatabaseImpl {
+    const database = new DatabaseImpl(options)
 
     database.connectionName = connection
     database.driver = DriverFactory.fabricate(connection)
@@ -58,10 +63,8 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Connect to database.
    */
-  public async connect(
-    options?: ConnectionOptions
-  ): Promise<DatabaseImpl<Client, QB>> {
-    await this.driver.connect(options)
+  public connect(options?: ConnectionOptions): DatabaseImpl<Client, QB> {
+    this.driver.connect(options)
 
     return this
   }

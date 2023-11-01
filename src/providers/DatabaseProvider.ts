@@ -11,22 +11,8 @@ import { ServiceProvider } from '@athenna/ioc'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
 
 export class DatabaseProvider extends ServiceProvider {
-  public async boot() {
-    const database = new DatabaseImpl()
-
-    ioc.instance('Athenna/Core/Database', database)
-
-    if (database.isConnected()) {
-      return
-    }
-
-    if (Config.get<string[]>('rc.environments', []).includes('artisan')) {
-      return
-    }
-
-    if (Config.get('database.autoConnect', false)) {
-      await database.connect()
-    }
+  public async register() {
+    ioc.singleton('Athenna/Core/Database', DatabaseImpl)
   }
 
   public async shutdown() {

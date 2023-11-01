@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Config } from '@athenna/config'
 import { Exec, Options } from '@athenna/common'
@@ -60,6 +61,7 @@ export class DriverFactory {
     const { Driver, client } = this.drivers.get(driver)
 
     if (client) {
+      debug('client found for driver %s, using it as default', driver)
       return new Driver(con, client)
     }
 
@@ -75,10 +77,7 @@ export class DriverFactory {
    * Create the connection with database using
    * the configuration name to find the configs.
    */
-  public static async createConnection(
-    con: string,
-    options?: CreateConOptions
-  ): Promise<any> {
+  public static createConnection(con: string, options?: CreateConOptions): any {
     con = this.parseConName(con)
 
     options = Options.create(options, {
@@ -89,10 +88,10 @@ export class DriverFactory {
     const driverKey = this.drivers.get(driver)
 
     try {
-      const client = await ConnectionFactory[driver](con)
+      const client = ConnectionFactory[driver](con)
 
       if (Config.is('rc.bootLogs', true)) {
-        await Log.channelOrVanilla('application').success(
+        Log.channelOrVanilla('application').success(
           `Successfully connected to ({yellow} ${con}) database connection`
         )
       }
@@ -100,6 +99,8 @@ export class DriverFactory {
       if (!options.saveOnFactory) {
         return client
       }
+
+      debug('saving new connection client in factory for driver %s', driver)
 
       driverKey.client = client
 
@@ -121,6 +122,8 @@ export class DriverFactory {
     const driverKey = this.drivers.get(driver)
     const client = driverKey.client
 
+    debug('closing connection for %s driver used by %s connection', driver, con)
+
     if (!client) {
       return
     }
@@ -139,6 +142,8 @@ export class DriverFactory {
     const availableDrivers = this.availableDrivers({ onlyConnected: true })
 
     await Exec.concurrently(availableDrivers, async (driver: string) => {
+      debug('closing connection for %s driver', driver)
+
       const driverKey = this.drivers.get(driver)
 
       await ConnectionFactory.closeByDriver(driver, driverKey.client)
