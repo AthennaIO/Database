@@ -13,11 +13,13 @@ import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'
 
 export default class DatabaseImplTest {
   @BeforeEach()
   public async beforeEach() {
+    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
     await Config.loadAll(Path.fixtures('config'))
   }
 
@@ -30,24 +32,20 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToConnectToTheDefaultDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'connect').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl()
 
-    assert.calledOnceWith(DriverFactory.fabricate, 'postgres')
     assert.calledOnce(database.driver.connect)
   }
 
   @Test()
   public async shouldBeAbleToValidateThatDatabaseIsConnected({ assert }: Context) {
     Mock.when(FakeDriver, 'isConnected').value(true)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connect()
     const isConnected = database.isConnected()
 
     assert.isTrue(isConnected)
-    assert.calledOnceWith(DriverFactory.fabricate, 'postgres')
   }
 
   @Test()
@@ -64,7 +62,6 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToCloseTheConnectionWithDefaultDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'close').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connect()
     await database.close()

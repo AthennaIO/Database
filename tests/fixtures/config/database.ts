@@ -8,9 +8,12 @@
  */
 
 export default {
-  default: 'postgres',
+  default: 'fake',
 
   connections: {
+    fake: {
+      driver: 'fake'
+    },
     mysql: {
       driver: 'mysql'
     },

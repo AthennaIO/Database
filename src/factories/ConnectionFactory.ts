@@ -22,6 +22,7 @@ export class ConnectionFactory {
     client: any
   ): Promise<void> {
     switch (driver) {
+      case 'fake':
       case 'mysql':
       case 'postgres':
         await client.destroy()
@@ -31,6 +32,11 @@ export class ConnectionFactory {
         break
     }
   }
+
+  /**
+   * For testing purposes only.
+   */
+  public static fake() {}
 
   /**
    * Create the connection with a mysql database.

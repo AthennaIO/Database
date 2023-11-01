@@ -28,10 +28,10 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Creates a new instance of DatabaseImpl.
    */
-  public constructor(options?: ConnectionOptions) {
+  public constructor(athennaDbOpts?: ConnectionOptions) {
     this.driver = DriverFactory.fabricate(this.connectionName)
 
-    this.connect(options)
+    this.connect(athennaDbOpts)
   }
 
   public connection(

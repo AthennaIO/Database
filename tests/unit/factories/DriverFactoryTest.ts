@@ -12,18 +12,21 @@ import { Log, LoggerProvider } from '@athenna/logger'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, Mock, type Context, AfterEach, BeforeEach } from '@athenna/test'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { ConnectionFailedException } from '#src/exceptions/ConnectionFailedException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
 export default class DriverFactoryTest {
-  public oldDrivers = DriverFactory.drivers
+  public originalDrivers = DriverFactory.drivers
 
   @BeforeEach()
   public async beforeEach() {
+    DriverFactory.drivers = Json.copy(this.originalDrivers)
+    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
+
     new LoggerProvider().register()
-    DriverFactory.drivers = Json.copy(this.oldDrivers)
     await Config.loadAll(Path.fixtures('config'))
   }
 
@@ -38,7 +41,7 @@ export default class DriverFactoryTest {
   public shouldBeAbleToListAllAvailableDrivers({ assert }: Context) {
     const drivers = DriverFactory.availableDrivers()
 
-    assert.deepEqual(drivers, ['postgres'])
+    assert.deepEqual(drivers, ['postgres', 'fake'])
   }
 
   @Test()
@@ -70,7 +73,7 @@ export default class DriverFactoryTest {
   public shouldBeAbleToFabricateTheDefaultDriverInstance({ assert }: Context) {
     const driver = DriverFactory.fabricate('default')
 
-    assert.instanceOf(driver, PostgresDriver)
+    assert.deepEqual(driver, new FakeDriverClass())
   }
 
   @Test()
@@ -95,7 +98,7 @@ export default class DriverFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateConnectionWithDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').return({})
+    Mock.when(ConnectionFactory, 'fake').return({})
 
     const connection = DriverFactory.createConnection('default')
 
@@ -104,7 +107,7 @@ export default class DriverFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateConnectionWithTheDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').return({})
+    Mock.when(ConnectionFactory, 'fake').return({})
 
     const connection = DriverFactory.createConnection('default')
 
@@ -168,7 +171,7 @@ export default class DriverFactoryTest {
     const clientFake = {
       destroy: Mock.fake()
     }
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
+    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: clientFake })
 
     await DriverFactory.closeConnection('default')
 

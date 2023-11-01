@@ -12,16 +12,17 @@ import { DatabaseImpl } from '#src/database/DatabaseImpl'
 
 export class DatabaseProvider extends ServiceProvider {
   public async register() {
-    ioc.singleton('Athenna/Core/Database', DatabaseImpl)
+    this.container.instance('athennaDbOpts', undefined)
+    this.container.singleton('Athenna/Core/Database', DatabaseImpl)
   }
 
   public async shutdown() {
-    const Database = this.container.use('Athenna/Core/Database')
+    const database = this.container.use('Athenna/Core/Database')
 
-    if (!Database) {
+    if (!database) {
       return
     }
 
-    await Database.closeAll()
+    await database.closeAll()
   }
 }
