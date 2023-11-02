@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { Knex, TableBuilder } from 'knex'
+import type { Knex } from 'knex'
 import type { Driver } from '#src/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 
@@ -120,7 +120,7 @@ export class Transaction<Client = any, QB = any> {
    */
   public async createTable(
     table: string,
-    closure?: TableBuilder
+    closure?: (builder: Knex.TableBuilder) => void | Promise<void>
   ): Promise<void> {
     return this.driver.createTable(table, closure)
   }

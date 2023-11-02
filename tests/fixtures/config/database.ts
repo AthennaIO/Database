@@ -26,6 +26,17 @@ export default {
     },
     'not-found-driver': {
       driver: 'not-found'
+    },
+    'postgres-docker': {
+      driver: 'postgres',
+      connection: {
+        host: 'localhost',
+        port: 5433,
+        user: 'postgres',
+        password: '12345',
+        database: 'postgres'
+      },
+      debug: false
     }
   }
 }

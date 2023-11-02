@@ -6,6 +6,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 import {
   Exec,
   Is,
@@ -34,6 +35,10 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
       saveOnFactory: true,
       connect: true
     })
+
+    if (!options.connect) {
+      return
+    }
 
     if (this.isConnected && !options.force) {
       return
@@ -580,10 +585,6 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
 
   /**
    * Set a join raw statement in your query.
-   *
-   * @param sql {string}
-   * @param [bindings] {any}
-   * @return {PostgresDriver}
    */
   public joinRaw(sql: string, bindings?: any): this {
     this.qb.joinRaw(sql, bindings)
@@ -1047,11 +1048,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(
-    statement: string | Record<string, any>,
-    operation?: string | Record<string, any>,
-    value?: Record<string, any>
-  ): this {
+  public orWhere(statement: any, operation?: any, value?: any): this {
     if (Is.Function(statement)) {
       this.qb.orWhere(query =>
         statement(

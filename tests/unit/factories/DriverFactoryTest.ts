@@ -139,7 +139,7 @@ export default class DriverFactoryTest {
     const connection = DriverFactory.createConnection('postgres', { saveOnFactory: false })
 
     assert.deepEqual(connection, {})
-    assert.isUndefined(DriverFactory.drivers.get('postgres').client)
+    assert.isNull(DriverFactory.drivers.get('postgres').client)
   }
 
   @Test()

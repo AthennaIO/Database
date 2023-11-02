@@ -23,7 +23,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set if the connection will be saved on factory.
    */
-  protected isSavedOnFactory: boolean = true
+  public isSavedOnFactory: boolean = false
 
   /**
    * The connection name used for this instance.
@@ -54,7 +54,6 @@ export abstract class Driver<Client = any, QB = any> {
     if (client) {
       this.client = client
       this.isConnected = true
-      this.isSavedOnFactory = true
     }
   }
 

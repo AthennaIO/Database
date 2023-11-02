@@ -25,7 +25,8 @@ export class DriverFactory {
    * All athenna drivers connection configuration.
    */
   public static drivers: Map<string, DriverKey> = new Map().set('postgres', {
-    Driver: PostgresDriver
+    Driver: PostgresDriver,
+    client: null
   })
 
   /**
@@ -62,7 +63,11 @@ export class DriverFactory {
 
     if (client) {
       debug('client found for driver %s, using it as default', driver)
-      return new Driver(con, client)
+      const impl = new Driver(con, client)
+
+      impl.isSavedOnFactory = true
+
+      return impl
     }
 
     this.drivers.set(driver, {

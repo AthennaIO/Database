@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { debug } from '#src/debug'
 import { Module, Path } from '@athenna/common'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
@@ -70,27 +71,24 @@ export class MigrationSource {
     const connection = source.Migration.connection()
     const database = new DatabaseImpl({ connect: false })
 
+    debug(
+      'configuring database connection %s to run migration %s',
+      connection,
+      source.Migration.name
+    )
+
     database.connectionName = connection
     database.driver = DriverFactory.fabricate(connection)
 
-    const proxyfy = method => {
-      return new Proxy(method, {
-        apply: function (fn, _, args) {
-          database.driver = database.driver.setClient(args[0])
+    const bind = (method, knex) => {
+      database.driver = database.driver.setClient(knex)
 
-          return fn.apply(migration, [database])
-        }
-      })
+      return migration[method].bind(migration)(database)
     }
 
-    /**
-     * Wrap `up`/`down` methods to change knex client by
-     * Database instance using the knex client provided
-     * in fn arguments.
-     */
     return {
-      up: proxyfy(migration.up),
-      down: proxyfy(migration.down)
+      up: knex => bind('up', knex),
+      down: knex => bind('down', knex)
     }
   }
 }

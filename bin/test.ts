@@ -12,13 +12,14 @@ import { Runner, assert, specReporter } from '@athenna/test'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 
-DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
+DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
 await Runner.setTsEnv()
   .addPlugin(assert())
   .addPlugin(command())
   .addReporter(specReporter())
   .addPath('tests/unit/**/*.ts')
+  .setForceExit()
   .setCliArgs(process.argv.slice(2))
   .setGlobalTimeout(30000)
   .run()
