@@ -8,6 +8,8 @@
  */
 
 import { Module, Path } from '@athenna/common'
+import { DatabaseImpl } from '#src/database/DatabaseImpl'
+import { DriverFactory } from '#src/factories/DriverFactory'
 import type { Migration } from '#src/database/migrations/Migration'
 
 type Source = {
@@ -63,10 +65,32 @@ export class MigrationSource {
    */
   public async getMigration(source: Source) {
     const migration = new source.Migration()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const connection = source.Migration.connection()
+    const database = new DatabaseImpl({ connect: false })
 
+    database.connectionName = connection
+    database.driver = DriverFactory.fabricate(connection)
+
+    const proxyfy = method => {
+      return new Proxy(method, {
+        apply: function (fn, _, args) {
+          database.driver = database.driver.setClient(args[0])
+
+          return fn.apply(migration, [database])
+        }
+      })
+    }
+
+    /**
+     * Wrap `up`/`down` methods to change knex client by
+     * Database instance using the knex client provided
+     * in fn arguments.
+     */
     return {
-      up: migration.up,
-      down: migration.down
+      up: proxyfy(migration.up),
+      down: proxyfy(migration.down)
     }
   }
 }

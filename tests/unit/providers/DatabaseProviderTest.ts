@@ -10,13 +10,11 @@
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { Database, DatabaseProvider, DriverFactory } from '#src'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, type Context, AfterEach, BeforeEach, Mock } from '@athenna/test'
 
 export default class DatabaseProviderTest {
   @BeforeEach()
   public async beforeEach() {
-    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
     await Config.loadAll(Path.fixtures('config'))
   }
 

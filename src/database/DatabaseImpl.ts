@@ -35,7 +35,8 @@ export class DatabaseImpl<Client = any, QB = any> {
   }
 
   public connection(
-    connection: 'postgres'
+    connection: 'postgres',
+    options?: ConnectionOptions
   ): DatabaseImpl<Knex, Knex.QueryBuilder>
 
   /**

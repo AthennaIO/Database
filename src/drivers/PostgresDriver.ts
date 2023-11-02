@@ -6,13 +6,19 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+import {
+  Exec,
+  Is,
+  Json,
+  Options,
+  type PaginatedResponse
+} from '@athenna/common'
 
 import type { Knex } from 'knex'
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import type { ConnectionOptions, Direction } from '#src/types'
 import { Transaction } from '#src/database/transactions/Transaction'
-import { Exec, Is, Json, type PaginatedResponse } from '@athenna/common'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
@@ -22,7 +28,13 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Connect to database.
    */
-  public connect(options?: ConnectionOptions): void {
+  public connect(options: ConnectionOptions = {}): void {
+    options = Options.create(options, {
+      force: false,
+      saveOnFactory: true,
+      connect: true
+    })
+
     if (this.isConnected && !options.force) {
       return
     }

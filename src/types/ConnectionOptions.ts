@@ -28,4 +28,15 @@ export type ConnectionOptions = {
    * @default true
    */
   saveOnFactory?: boolean
+
+  /**
+   * Since we are using the constructor method to create
+   * the connection, it could create the connection when
+   * we don't really want to. To avoid creating the
+   * connection is certain scenarios where you want to
+   * manipulate the driver client, set this option to `false`.
+   *
+   * @default true
+   */
+  connect?: boolean
 }

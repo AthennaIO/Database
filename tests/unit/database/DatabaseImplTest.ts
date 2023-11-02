@@ -13,13 +13,11 @@ import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'
 
 export default class DatabaseImplTest {
   @BeforeEach()
   public async beforeEach() {
-    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
     await Config.loadAll(Path.fixtures('config'))
   }
 

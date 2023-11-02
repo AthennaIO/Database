@@ -75,6 +75,15 @@ export abstract class Driver<Client = any, QB = any> {
   }
 
   /**
+   * Set a client in driver.
+   */
+  public setClient(client: Client): this {
+    this.client = client
+
+    return this
+  }
+
+  /**
    * Return the query builder of driver.
    */
   public getQueryBuilder(): QB {

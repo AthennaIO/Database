@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import type { Knex } from 'knex'
 import { Config } from '@athenna/config'
+import type { DatabaseImpl } from '#src/database/DatabaseImpl'
 
 export abstract class Migration {
   /**
@@ -22,10 +22,10 @@ export abstract class Migration {
   /**
    * Run the migrations.
    */
-  public abstract up(knex: Knex): Promise<void>
+  public abstract up(db: DatabaseImpl): Promise<void>
 
   /**
    * Reverse the migrations.
    */
-  public abstract down(knex: Knex): Promise<void>
+  public abstract down(db: DatabaseImpl): Promise<void>
 }

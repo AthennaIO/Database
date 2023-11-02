@@ -9,6 +9,10 @@
 
 import { command } from '@athenna/artisan/testing/plugins'
 import { Runner, assert, specReporter } from '@athenna/test'
+import { DriverFactory } from '#src/factories/DriverFactory'
+import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
+
+DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
 
 await Runner.setTsEnv()
   .addPlugin(assert())

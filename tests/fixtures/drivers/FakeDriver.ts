@@ -19,6 +19,10 @@ export const FakeDriver: any = {
   name: Config.get('database.default', 'postgres'),
   clone: () => FakeDriver,
   getClient: () => {},
+  setClient: client => {
+    FakeDriver.client = client
+    return FakeDriver
+  },
   getQueryBuilder: () => {},
   setQueryBuilder: () => {},
   joinByType: () => {},

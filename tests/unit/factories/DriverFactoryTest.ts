@@ -24,7 +24,6 @@ export default class DriverFactoryTest {
   @BeforeEach()
   public async beforeEach() {
     DriverFactory.drivers = Json.copy(this.originalDrivers)
-    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass })
 
     new LoggerProvider().register()
     await Config.loadAll(Path.fixtures('config'))
