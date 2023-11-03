@@ -295,7 +295,7 @@ export abstract class Driver<Client = any, QB = any> {
    * Return a single model instance or, if no results are found,
    * execute the given closure.
    */
-  public async findOr<T = any>(closure: () => Promise<T>): Promise<T> {
+  public async findOr<T = any>(closure: () => T | Promise<T>): Promise<T> {
     const data = await this.find()
 
     if (!data) {
