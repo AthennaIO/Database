@@ -378,10 +378,18 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Executes the given closure when the first argument is true.
    */
-  public abstract when(
+  public when(
     criteria: any,
-    callback: (query: this, criteriaValue?: any) => void
-  ): this
+    closure: (query: this, criteriaValue?: any) => void
+  ): this {
+    if (!criteria) {
+      return this
+    }
+
+    closure(this, criteria)
+
+    return this
+  }
 
   /**
    * Set the columns that should be selected on query.

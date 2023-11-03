@@ -473,22 +473,6 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
-   * Executes the given closure when the first argument is true.
-   */
-  public when(
-    criteria: any,
-    closure: (query: this, criteriaValue?: any) => void
-  ): this {
-    if (!criteria) {
-      return this
-    }
-
-    closure(this, criteria)
-
-    return this
-  }
-
-  /**
    * Set the columns that should be selected on query.
    */
   public select(...columns: string[]): this {

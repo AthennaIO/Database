@@ -7,10 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import { Collection, Path } from '@athenna/common'
 import { Config } from '@athenna/config'
+import { Collection, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
+import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
@@ -517,6 +518,25 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetTheSumDistinctOfAGivenColumnWhenTableGotValues({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').sumDistinct('quantity')
+
+    assert.equal(result, 10)
+  }
+
+  @Test()
+  public async shouldReturnNullWhenSumDistinctCantFindAnyValue({ assert }: Context) {
+    const result = await this.driver.table('products').sumDistinct('quantity')
+
+    assert.isNull(result)
+  }
+
+  @Test()
   public async shouldBeAbleToIncrementTheNumberOfAGivenColumnWhenTableGotValues({ assert }: Context) {
     await this.driver.table('products').createMany([
       { id: '1', quantity: 10 },
@@ -615,6 +635,34 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToExecuteSomeClosureWhenCriteriaIsTrue({ assert }: Context) {
+    const data = { id: '1', name: 'Marie Curie' }
+    await this.driver.table('users').create(data)
+
+    const result = await this.driver
+      .when(true, query => {
+        query.select('name')
+      })
+      .find()
+
+    assert.deepEqual(result, { name: 'Marie Curie' })
+  }
+
+  @Test()
+  public async shouldNotExecuteSomeClosureWhenCriteriaIsFalse({ assert }: Context) {
+    const data = { id: '1', name: 'Marie Curie' }
+    await this.driver.table('users').create(data)
+
+    const result = await this.driver
+      .when(false, query => {
+        query.select('*')
+      })
+      .find()
+
+    assert.deepEqual(result, { id: '1', name: 'Marie Curie' })
+  }
+
+  @Test()
   public async shouldBeAbleToFindData({ assert }: Context) {
     const data = { id: '1', name: 'Charles Babbage' }
     await this.driver.table('users').create(data)
@@ -663,6 +711,179 @@ export default class PostgresDriverTest {
     const result = await this.driver.table('users').collection()
 
     assert.instanceOf(result, Collection)
+  }
+
+  @Test()
+  public async shouldBeAbleToFindManyDataAndReturnPaginated({ assert }: Context) {
+    const data = [{ id: '1', name: 'Alan Turing' }]
+    await this.driver.table('users').createMany(data)
+
+    const result = await this.driver.table('users').paginate()
+
+    assert.deepEqual(result.data, data)
+    assert.deepEqual(result.meta, {
+      currentPage: 0,
+      itemCount: 1,
+      itemsPerPage: 10,
+      totalItems: 1,
+      totalPages: 1
+    })
+    assert.deepEqual(result.links, {
+      first: '/?limit=10',
+      last: '/?page=1&limit=10',
+      next: '/?page=1&limit=10',
+      previous: '/?page=0&limit=10'
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToSetDifferentUrlToFindManyDataAndReturnPaginated({ assert }: Context) {
+    const data = [{ id: '1', name: 'Alan Turing' }]
+    await this.driver.table('users').createMany(data)
+
+    const result = await this.driver.table('users').paginate(0, 10, '/users')
+
+    assert.deepEqual(result.data, data)
+    assert.deepEqual(result.meta, {
+      currentPage: 0,
+      itemCount: 1,
+      itemsPerPage: 10,
+      totalItems: 1,
+      totalPages: 1
+    })
+    assert.deepEqual(result.links, {
+      first: '/users?limit=10',
+      last: '/users?page=1&limit=10',
+      next: '/users?page=1&limit=10',
+      previous: '/users?page=0&limit=10'
+    })
+  }
+
+  @Test()
+  public async shouldReturnEmptyDataWhenPaginateMethodCantFindNothing({ assert }: Context) {
+    const result = await this.driver.table('users').paginate()
+
+    assert.isEmpty(result.data)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingDriver({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    const result = await this.driver.table('users').create(data)
+
+    assert.deepEqual(result, data)
+  }
+
+  @Test()
+  public async shouldThrowWrongMethodExceptionWhenCallingCreateWithObject({ assert }: Context) {
+    await assert.rejects(
+      () => this.driver.table('users').create([{ id: '1', name: 'Robert Kiyosaki' }] as any),
+      WrongMethodException
+    )
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateManyDataUsingDriver({ assert }: Context) {
+    const data = [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ]
+
+    const result = await this.driver.table('users').createMany(data)
+
+    assert.deepEqual(result, data)
+  }
+
+  @Test()
+  public async shouldThrowWrongMethodExceptionWhenCallingCreateManyWithObject({ assert }: Context) {
+    await assert.rejects(
+      () => this.driver.table('users').createMany({ id: '1', name: 'Robert Kiyosaki' } as any),
+      WrongMethodException
+    )
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateMethod({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    const result = await this.driver.table('users').createOrUpdate(data)
+
+    assert.deepEqual(result, data)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdateMethod({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    await this.driver.table('users').create(data)
+    const result = await this.driver.table('users').createOrUpdate({ ...data, name: 'Robert Kiyosaki Millennials' })
+
+    assert.deepEqual(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateSingleDataAndReturnSingleObject({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    await this.driver.table('users').create(data)
+    const result = await this.driver.table('users').update({ ...data, name: 'Robert Kiyosaki Millennials' })
+
+    assert.deepEqual(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateMultipleDataAndReturnAnArrayOfObjects({ assert }: Context) {
+    const data = [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ]
+
+    await this.driver.table('users').createMany(data)
+    const result = await this.driver
+      .table('users')
+      .whereIn('id', ['1', '2'])
+      .update({ name: 'Robert Kiyosaki Millennials' })
+
+    assert.deepEqual(result, [
+      { id: '1', name: 'Robert Kiyosaki Millennials' },
+      { id: '2', name: 'Robert Kiyosaki Millennials' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToDeleteDataUsingDeleteMethod({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    await this.driver.table('users').create(data)
+    await this.driver.table('users').where('id', '1').delete()
+
+    assert.isUndefined(await this.driver.table('users').where('id', '1').find())
+  }
+
+  @Test()
+  public async shouldBeAbleToChangeInWhichTableTheDriverWillPerformTheOperations({ assert }: Context) {
+    const data = { id: '1', name: 'Robert Kiyosaki' }
+
+    await this.driver.table('users').create(data)
+
+    assert.deepEqual(await this.driver.table('users').count(), '1')
+  }
+
+  @Test()
+  public async shouldThrowNotConnectedDatabaseExceptionWhenTryingToChangeTable({ assert }: Context) {
+    await this.driver.close()
+
+    await assert.rejects(() => this.driver.table('users'), NotConnectedDatabaseException)
+  }
+
+  @Test()
+  public async shouldBeAbleToDumpTheSQLQuery({ assert }: Context) {
+    Mock.when(console, 'log').return(undefined)
+
+    this.driver.table('users').select('*').dump()
+
+    assert.calledWith(console.log, { bindings: [], sql: 'select * from "users"' })
   }
 
   //   @Test()
