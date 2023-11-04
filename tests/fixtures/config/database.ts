@@ -27,6 +27,17 @@ export default {
     'not-found-driver': {
       driver: 'not-found'
     },
+    'mysql-docker': {
+      driver: 'mysql',
+      connection: {
+        host: 'localhost',
+        port: 3307,
+        user: 'root',
+        password: '12345',
+        database: 'athenna'
+      },
+      debug: false
+    },
     'postgres-docker': {
       driver: 'postgres',
       connection: {

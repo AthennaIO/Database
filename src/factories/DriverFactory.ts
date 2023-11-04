@@ -13,6 +13,7 @@ import { Config } from '@athenna/config'
 import { Exec, Options } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
 import type { DriverKey } from '#src/types/DriverKey'
+import { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
 import type { CreateConOptions } from '#src/types/CreateConOptions'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -24,10 +25,15 @@ export class DriverFactory {
   /**
    * All athenna drivers connection configuration.
    */
-  public static drivers: Map<string, DriverKey> = new Map().set('postgres', {
-    Driver: PostgresDriver,
-    client: null
-  })
+  public static drivers: Map<string, DriverKey> = new Map()
+    .set('mysql', {
+      Driver: MySqlDriver,
+      client: null
+    })
+    .set('postgres', {
+      Driver: PostgresDriver,
+      client: null
+    })
 
   /**
    * Return all available drivers.

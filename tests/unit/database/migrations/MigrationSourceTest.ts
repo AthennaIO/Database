@@ -8,11 +8,8 @@
  */
 
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
-import { UsersMigration } from '#tests/fixtures/migrations/UsersMigration'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
-import { OrdersMigration } from '#tests/fixtures/migrations/OrdersMigration'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
-import { ProductsMigration } from '#tests/fixtures/migrations/ProductsMigration'
 
 export default class MigrationSourceTest {
   @BeforeEach()
@@ -31,21 +28,18 @@ export default class MigrationSourceTest {
 
     const migrations = await new MigrationSource('fake').getMigrations()
 
-    assert.deepEqual(migrations[0].name, 'ProductsMigration.ts')
-    assert.deepEqual(migrations[0].Migration, ProductsMigration)
-    assert.deepEqual(migrations[1].name, 'UsersMigration.ts')
-    assert.deepEqual(migrations[1].Migration, UsersMigration)
+    assert.deepEqual(migrations[0].name, '2022_10_08_000005_create_countries_table.ts')
+    assert.deepEqual(migrations[1].name, '2022_10_08_000006_create_capitals_table.ts')
   }
 
   @Test()
   public async shouldBeAbleToGetAllMigrationsFromMigrationsDirAndCheckTheOnesThatShouldRun({ assert }: Context) {
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
 
-    const migrations = await new MigrationSource('postgres').getMigrations()
+    const migrations = await new MigrationSource('postgres-docker').getMigrations()
 
-    assert.lengthOf(migrations, 1)
-    assert.deepEqual(migrations[0].name, 'OrdersMigration.ts')
-    assert.deepEqual(migrations[0].Migration, OrdersMigration)
+    assert.lengthOf(migrations, 4)
+    assert.deepEqual(migrations[0].name, '2022_10_08_000000_create_uuid_function_postgres.ts')
   }
 
   @Test()
@@ -56,7 +50,7 @@ export default class MigrationSourceTest {
     const migrations = await migrationSource.getMigrations()
     const name = migrationSource.getMigrationName(migrations[0])
 
-    assert.deepEqual(name, 'ProductsMigration.ts')
+    assert.deepEqual(name, '2022_10_08_000005_create_countries_table.ts')
   }
 
   @Test()

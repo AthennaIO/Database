@@ -26,7 +26,7 @@ import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 
-export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
+export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Connect to database.
    */
@@ -160,11 +160,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * List all databases available.
    */
   public async getDatabases(): Promise<string[]> {
-    const { rows: databases } = await this.raw(
-      'SELECT datname FROM pg_database'
-    )
+    const [databases] = await this.raw('SHOW DATABASES')
 
-    return databases.map(database => database.datname)
+    return databases.map(database => database.Database)
   }
 
   /**
@@ -187,36 +185,26 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Create a new database.
    */
   public async createDatabase(database: string): Promise<void> {
-    /**
-     * Catching the error to simulate IF NOT EXISTS
-     */
-    try {
-      await this.raw('CREATE DATABASE ??', database)
-    } catch (err) {}
+    await this.raw('CREATE DATABASE IF NOT EXISTS ??', database)
   }
 
   /**
    * Drop some database.
    */
   public async dropDatabase(database: string): Promise<void> {
-    /**
-     * Catching the error to simulate IF EXISTS
-     */
-    try {
-      await this.raw('DROP DATABASE ??', database)
-    } catch (err) {}
+    await this.raw('DROP DATABASE IF EXISTS ??', database)
   }
 
   /**
    * List all tables available.
    */
   public async getTables(): Promise<string[]> {
-    const { rows: tables } = await this.raw(
-      'SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_catalog = ?',
+    const [tables] = await this.raw(
+      'SELECT table_name FROM information_schema.tables WHERE table_schema = ?',
       await this.getCurrentDatabase()
     )
 
-    return tables.map(table => table.table_name)
+    return tables.map(table => table.TABLE_NAME)
   }
 
   /**
@@ -248,7 +236,12 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * and restart the identity of the table.
    */
   public async truncate(table: string): Promise<void> {
-    await this.raw('TRUNCATE TABLE ?? CASCADE', table)
+    try {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 0')
+      await this.raw('TRUNCATE TABLE ??', table)
+    } finally {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 1')
+    }
   }
 
   /**
@@ -402,13 +395,24 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    */
   public async createMany<T = any>(
     data: Partial<T>[] = [],
-    _primaryKey: string = 'id'
+    primaryKey: string = 'id'
   ): Promise<T[]> {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    return this.qb.insert(data, '*')
+    const ids = []
+
+    const promises = data.map(data => {
+      return this.qb
+        .clone()
+        .insert(data)
+        .then(([id]) => ids.push(data[primaryKey] || id))
+    })
+
+    await Promise.all(promises)
+
+    return this.whereIn(primaryKey, ids).findMany()
   }
 
   /**
@@ -563,7 +567,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     operation?: any,
     column2?: any
   ): this {
-    return this.joinByType('fullOuterJoin', table, column1, operation, column2)
+    // TODO https://github.com/knex/knex/issues/3949
+    return this.joinByType('leftJoin', table, column1, operation, column2)
   }
 
   /**
@@ -650,8 +655,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public havingExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
     this.qb.havingExists(function () {
@@ -664,8 +669,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public havingNotExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
     this.qb.havingNotExists(function () {
@@ -762,8 +767,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public orHavingExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
     this.qb.orHavingExists(function () {
@@ -776,8 +781,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public orHavingNotExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
     this.qb.orHavingNotExists(function () {
@@ -912,8 +917,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public whereExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     this.qb.whereExists(function () {
       closure(driver.setQueryBuilder(this, { useSetQB: true }))
@@ -925,8 +930,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public whereNotExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     this.qb.whereNotExists(function () {
       closure(driver.setQueryBuilder(this, { useSetQB: true }))
@@ -1075,8 +1080,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public orWhereExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     this.qb.orWhereExists(function () {
       closure(driver.setQueryBuilder(this, { useSetQB: true }))
@@ -1088,8 +1093,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists(closure: (query: PostgresDriver) => void): this {
-    const driver = this.clone() as PostgresDriver
+  public orWhereNotExists(closure: (query: MySqlDriver) => void): this {
+    const driver = this.clone() as MySqlDriver
 
     this.qb.orWhereNotExists(function () {
       closure(driver.setQueryBuilder(this, { useSetQB: true }))

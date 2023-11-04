@@ -614,10 +614,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a where not statement in your query.
    */
-  public whereNot(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public whereNot(statement: any, value?: any): QueryBuilder {
     this.driver.whereNot(statement, value)
 
     return this
@@ -666,10 +663,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public whereILike(statement: any, value?: any): QueryBuilder {
     this.driver.whereILike(statement, value)
 
     return this
@@ -741,10 +735,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or where not statement in your query.
    */
-  public orWhereNot(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public orWhereNot(statement: any, value?: any): QueryBuilder {
     this.driver.orWhereNot(statement, value)
 
     return this
@@ -784,10 +775,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public orWhereLike(statement: any, value?: any): QueryBuilder {
     this.driver.orWhereLike(statement, value)
 
     return this
@@ -796,10 +784,7 @@ export class QueryBuilder<Client = any, QB = any> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(
-    statement: string | Record<string, any>,
-    value?: any
-  ): QueryBuilder {
+  public orWhereILike(statement: any, value?: any): QueryBuilder {
     this.driver.orWhereILike(statement, value)
 
     return this

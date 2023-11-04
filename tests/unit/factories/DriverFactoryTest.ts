@@ -40,7 +40,7 @@ export default class DriverFactoryTest {
   public shouldBeAbleToListAllAvailableDrivers({ assert }: Context) {
     const drivers = DriverFactory.availableDrivers()
 
-    assert.deepEqual(drivers, ['postgres', 'fake'])
+    assert.deepEqual(drivers, ['mysql', 'postgres', 'fake'])
   }
 
   @Test()
