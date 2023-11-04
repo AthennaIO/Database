@@ -7,12 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import { Collection, type PaginatedResponse } from '@athenna/common'
-
 import type { Knex, TableBuilder } from 'knex'
 import type { Direction, ConnectionOptions } from '#src/types'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+import { Collection, Options, type PaginatedResponse } from '@athenna/common'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
@@ -44,6 +43,12 @@ export abstract class Driver<Client = any, QB = any> {
    * The main query builder of driver.
    */
   protected qb: QB = null
+
+  /**
+   * Use set query builder instead of creating a new one
+   * using client.
+   */
+  protected useSetQB: boolean = false
 
   /**
    * Creates a new instance of the Driver.
@@ -92,8 +97,16 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a query builder in driver.
    */
-  public setQueryBuilder(queryBuilder: QB): this {
+  public setQueryBuilder(
+    queryBuilder: QB,
+    options: { useSetQB?: boolean } = {}
+  ): this {
+    options = Options.create(options, {
+      useSetQB: false
+    })
+
     this.qb = queryBuilder
+    this.useSetQB = options.useSetQB
 
     return this
   }

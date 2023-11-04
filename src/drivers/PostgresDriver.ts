@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /**
  * @athenna/database
  *
@@ -83,7 +84,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
       throw new NotConnectedDatabaseException()
     }
 
-    const query = this.client.queryBuilder().table(this.tableName)
+    const query = this.useSetQB
+      ? this.qb.table(this.tableName)
+      : this.client.queryBuilder().table(this.tableName)
 
     const handler = {
       get: (target: Knex.QueryBuilder, propertyKey: string) => {
@@ -650,8 +653,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   public havingExists(closure: (query: PostgresDriver) => void): this {
     const driver = this.clone() as PostgresDriver
 
+    // @ts-ignore
     this.qb.havingExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -663,8 +667,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   public havingNotExists(closure: (query: PostgresDriver) => void): this {
     const driver = this.clone() as PostgresDriver
 
+    // @ts-ignore
     this.qb.havingNotExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -760,8 +765,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   public orHavingExists(closure: (query: PostgresDriver) => void): this {
     const driver = this.clone() as PostgresDriver
 
+    // @ts-ignore
     this.qb.orHavingExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -773,8 +779,9 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   public orHavingNotExists(closure: (query: PostgresDriver) => void): this {
     const driver = this.clone() as PostgresDriver
 
+    // @ts-ignore
     this.qb.orHavingNotExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -784,6 +791,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Set an or having in statement in your query.
    */
   public orHavingIn(column: string, values: any[]): this {
+    // @ts-ignore
     this.qb.orHavingIn(column, values)
 
     return this
@@ -820,6 +828,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Set an or having null statement in your query.
    */
   public orHavingNull(column: string): this {
+    // @ts-ignore
     this.qb.orHavingNull(column)
 
     return this
@@ -829,6 +838,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Set an or having not null statement in your query.
    */
   public orHavingNotNull(column: string): this {
+    // @ts-ignore
     this.qb.orHavingNotNull(column)
 
     return this
@@ -910,7 +920,10 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.whereExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
+    })
+    this.qb.whereExists(function () {
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -923,7 +936,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.whereNotExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -1077,7 +1090,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orWhereExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
@@ -1090,7 +1103,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orWhereNotExists(function () {
-      closure(driver.setClient(this.client).setQueryBuilder(this))
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
 
     return this
