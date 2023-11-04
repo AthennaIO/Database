@@ -25,6 +25,7 @@ export default class PostgresDriverTest {
     this.driver.connect()
     await this.driver.dropDatabase('trx')
     await this.driver.dropTable('trx')
+    await this.driver.dropTable('rents')
     await this.driver.dropTable('users')
     await this.driver.dropTable('orders')
     await this.driver.dropTable('products')
@@ -43,6 +44,12 @@ export default class PostgresDriverTest {
     await this.driver.createTable('users', builder => {
       builder.string('id').primary()
       builder.string('name')
+      builder.timestamp('created_at').defaultTo(this.driver.getClient().fn.now())
+    })
+
+    await this.driver.createTable('rents', builder => {
+      builder.string('id').primary()
+      builder.string('user_id').references('id').inTable('users')
     })
   }
 
@@ -605,7 +612,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').findOrFail()
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -622,7 +629,7 @@ export default class PostgresDriverTest {
       return { id: '1', name: 'Marie Curie' }
     })
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -659,17 +666,17 @@ export default class PostgresDriverTest {
       })
       .find()
 
-    assert.deepEqual(result, { id: '1', name: 'Marie Curie' })
+    assert.containsSubset(result, { id: '1', name: 'Marie Curie' })
   }
 
   @Test()
-  public async shouldBeAbleToFindData({ assert }: Context) {
+  public async shouldBeAbleToFindDataUsingDriver({ assert }: Context) {
     const data = { id: '1', name: 'Charles Babbage' }
     await this.driver.table('users').create(data)
 
     const result = await this.driver.table('users').find()
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -680,13 +687,13 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToFindManyData({ assert }: Context) {
+  public async shouldBeAbleToFindManyDataUsingDriver({ assert }: Context) {
     const data = [{ id: '1', name: 'Charles Babbage' }]
     await this.driver.table('users').createMany(data)
 
     const result = await this.driver.table('users').findMany()
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -697,13 +704,13 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToFindManyDataAndReturnAsCollection({ assert }: Context) {
+  public async shouldBeAbleToFindManyDataAndReturnAsCollectionUsingDriver({ assert }: Context) {
     const data = [{ id: '1', name: 'Alan Turing' }]
     await this.driver.table('users').createMany(data)
 
     const result = await this.driver.table('users').findMany()
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -714,13 +721,13 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToFindManyDataAndReturnPaginated({ assert }: Context) {
+  public async shouldBeAbleToFindManyDataAndReturnPaginatedUsingDriver({ assert }: Context) {
     const data = [{ id: '1', name: 'Alan Turing' }]
     await this.driver.table('users').createMany(data)
 
     const result = await this.driver.table('users').paginate()
 
-    assert.deepEqual(result.data, data)
+    assert.containsSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -737,13 +744,13 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToSetDifferentUrlToFindManyDataAndReturnPaginated({ assert }: Context) {
+  public async shouldBeAbleToSetDifferentUrlToFindManyDataAndReturnPaginatedUsingDriver({ assert }: Context) {
     const data = [{ id: '1', name: 'Alan Turing' }]
     await this.driver.table('users').createMany(data)
 
     const result = await this.driver.table('users').paginate(0, 10, '/users')
 
-    assert.deepEqual(result.data, data)
+    assert.containsSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -772,7 +779,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').create(data)
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -792,7 +799,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').createMany(data)
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -809,7 +816,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').createOrUpdate(data)
 
-    assert.deepEqual(result, data)
+    assert.containsSubset(result, data)
   }
 
   @Test()
@@ -819,7 +826,7 @@ export default class PostgresDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').createOrUpdate({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.deepEqual(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -829,7 +836,7 @@ export default class PostgresDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').update({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.deepEqual(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -845,7 +852,7 @@ export default class PostgresDriverTest {
       .whereIn('id', ['1', '2'])
       .update({ name: 'Robert Kiyosaki Millennials' })
 
-    assert.deepEqual(result, [
+    assert.containsSubset(result, [
       { id: '1', name: 'Robert Kiyosaki Millennials' },
       { id: '2', name: 'Robert Kiyosaki Millennials' }
     ])
@@ -886,799 +893,1982 @@ export default class PostgresDriverTest {
     assert.calledWith(console.log, { bindings: [], sql: 'select * from "users"' })
   }
 
-  //   @Test()
-  //   public async shouldBeAbleToCreateData({ assert }: Context) {
-  //     const dataToCreate = { name: 'New User' }
-  //     const createdData = { id: '3', ...dataToCreate }
-  //     Mock.when(FakeDriver, 'create').resolve(createdData)
-
-  //     const result = await this.driver.create(dataToCreate)
-
-  //     assert.calledOnceWith(FakeDriver.create, dataToCreate)
-  //     assert.deepEqual(result, createdData)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToCreateManyData({ assert }: Context) {
-  //     const dataToCreate = [{ name: 'User One' }, { name: 'User Two' }]
-  //     const createdData = [
-  //       { id: '4', ...dataToCreate[0] },
-  //       { id: '5', ...dataToCreate[1] }
-  //     ]
-  //     Mock.when(FakeDriver, 'createMany').resolve(createdData)
-
-  //     const result = await this.driver.createMany(dataToCreate)
-
-  //     assert.calledOnceWith(FakeDriver.createMany, dataToCreate)
-  //     assert.deepEqual(result, createdData)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToCreateOrUpdateData({ assert }: Context) {
-  //     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-  //     Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
-
-  //     const result = await this.driver.createOrUpdate(dataToCreateOrUpdate)
-
-  //     assert.calledOnceWith(FakeDriver.createOrUpdate, dataToCreateOrUpdate)
-  //     assert.deepEqual(result, dataToCreateOrUpdate)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToUpdateData({ assert }: Context) {
-  //     const dataToUpdate = { name: 'Updated User' }
-  //     const updatedData = { id: '1', ...dataToUpdate }
-  //     Mock.when(FakeDriver, 'update').resolve(updatedData)
-
-  //     const result = await this.driver.update(dataToUpdate)
-
-  //     assert.calledOnceWith(FakeDriver.update, dataToUpdate)
-  //     assert.deepEqual(result, updatedData)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToDeleteData({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'delete').resolve(undefined)
-
-  //     await this.driver.delete()
-
-  //     assert.calledOnce(FakeDriver.delete)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToPerformARawQuery({ assert }: Context) {
-  //     const sqlQuery = 'SELECT * FROM users WHERE id = ?'
-  //     const bindings = [1]
-  //     const expectedResult = [{ id: '1', name: 'John Doe' }]
-  //     Mock.when(FakeDriver, 'raw').resolve(expectedResult)
-
-  //     const result = await this.driver.raw(sqlQuery, bindings)
-
-  //     assert.calledOnceWith(FakeDriver.raw, sqlQuery, bindings)
-  //     assert.deepEqual(result, expectedResult)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToChangeTheTableOfTheQueryBuilder({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'table').resolve(undefined)
-
-  //     this.driver.table('profiles')
-
-  //     assert.calledWith(FakeDriver.table, 'profiles')
-  //   }
-
-  //   @Test()
-  //   public async shouldExecuteTheGivenClosureWhenCriteriaIsTrue({ assert }: Context) {
-  //     let called = false
-
-  //     this.driver.when(true, () => {
-  //       called = true
-  //     })
-
-  //     assert.isTrue(called)
-  //   }
-
-  //   @Test()
-  //   public async shouldNotExecuteTheGivenClosureWhenCriteriaIsNotTrue({ assert }: Context) {
-  //     let called = false
-
-  //     this.driver.when(false, () => {
-  //       called = true
-  //     })
-
-  //     assert.isFalse(called)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToDumpTheQueryCrafted({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'dump').resolve(undefined)
-
-  //     this.driver.dump()
-
-  //     assert.calledOnce(FakeDriver.dump)
-  //   }
-
-  //   @Test()
-  //   public async shouldPaginateResultsAndReturnMetaDataForGivenPageAndLimit({ assert }: Context) {
-  //     const page = 1
-  //     const limit = 10
-  //     const resourceUrl = '/users'
-  //     const paginatedResult = { data: [], meta: { total: 0, perPage: limit, currentPage: page } }
-  //     Mock.when(FakeDriver, 'paginate').resolve(paginatedResult)
-
-  //     const result = await this.driver.paginate(page, limit, resourceUrl)
-
-  //     assert.calledOnceWith(FakeDriver.paginate, page, limit, resourceUrl)
-  //     assert.deepEqual(result, paginatedResult)
-  //   }
-
-  //   @Test()
-  //   public async shouldAllowSelectingSpecificColumnsFromTable({ assert }: Context) {
-  //     const columns = ['id', 'name']
-  //     Mock.when(FakeDriver, 'select').resolve(undefined)
-
-  //     this.driver.select(...columns)
-
-  //     assert.calledOnceWith(FakeDriver.select, ...columns)
-  //   }
-
-  //   @Test()
-  //   public async shouldAllowRawSqlSelectionForSpecializedQueries({ assert }: Context) {
-  //     const sql = 'COUNT(*) as userCount'
-  //     Mock.when(FakeDriver, 'selectRaw').resolve(undefined)
-
-  //     this.driver.selectRaw(sql)
-
-  //     assert.calledOnceWith(FakeDriver.selectRaw, sql)
-  //   }
-
-  //   @Test()
-  //   public async shouldJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
-  //     const tableName = 'posts'
-  //     const column1 = 'users.id'
-  //     const operation = '='
-  //     const column2 = 'posts.user_id'
-  //     Mock.when(FakeDriver, 'join').resolve(undefined)
-
-  //     this.driver.join(tableName, column1, operation, column2)
-
-  //     assert.calledOnceWith(FakeDriver.join, tableName, column1, operation, column2)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyLeftJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'leftJoin').resolve(undefined)
-
-  //     this.driver.leftJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.leftJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyRightJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'rightJoin').resolve(undefined)
-
-  //     this.driver.rightJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.rightJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyCrossJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'crossJoin').resolve(undefined)
-
-  //     this.driver.crossJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.crossJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyFullOuterJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'fullOuterJoin').resolve(undefined)
-
-  //     this.driver.fullOuterJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.fullOuterJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyLeftOuterJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'leftOuterJoin').resolve(undefined)
-
-  //     this.driver.leftOuterJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.leftOuterJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyRightOuterJoinForGivenTableAndConditions({ assert }: Context) {
-  //     const table = 'profiles'
-  //     const firstColumn = 'users.id'
-  //     const secondColumn = 'profiles.user_id'
-  //     Mock.when(FakeDriver, 'rightOuterJoin').resolve(undefined)
-
-  //     this.driver.rightOuterJoin(table, firstColumn, secondColumn)
-
-  //     assert.calledOnceWith(FakeDriver.rightOuterJoin, table, firstColumn, secondColumn)
-  //   }
-
-  //   @Test()
-  //   public async shouldApplyJoinRawForGivenTableAndConditions({ assert }: Context) {
-  //     const sql = 'NATURAL FULL JOIN users'
-  //     Mock.when(FakeDriver, 'joinRaw').resolve(undefined)
-
-  //     this.driver.joinRaw(sql)
-
-  //     assert.calledOnceWith(FakeDriver.joinRaw, sql)
-  //   }
-
-  //   @Test()
-  //   public async shouldAllowGroupingBySpecifiedColumns({ assert }: Context) {
-  //     const columns = ['account_id']
-  //     Mock.when(FakeDriver, 'groupBy').resolve(undefined)
-
-  //     this.driver.groupBy(...columns)
-
-  //     assert.calledOnceWith(FakeDriver.groupBy, ...columns)
-  //   }
-
-  //   @Test()
-  //   public async shouldAllowGroupingBySpecifiedColumnsUsingGroupByRaw({ assert }: Context) {
-  //     const sql = 'age WITH ROLLUP'
-  //     Mock.when(FakeDriver, 'groupByRaw').resolve(undefined)
-
-  //     this.driver.groupByRaw(sql)
-
-  //     assert.calledOnceWith(FakeDriver.groupByRaw, sql)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const operator = '>'
-  //     const value = 100
-  //     Mock.when(FakeDriver, 'having').resolve(undefined)
-
-  //     this.driver.having(column, operator, value)
-
-  //     assert.calledOnceWith(FakeDriver.having, column, operator, value)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingRawSQLClauseToTheQuery({ assert }: Context) {
-  //     const sql = 'id > 100'
-  //     Mock.when(FakeDriver, 'havingRaw').resolve(undefined)
-
-  //     this.driver.havingRaw(sql)
-
-  //     assert.calledOnceWith(FakeDriver.havingRaw, sql)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingExistsClauseToTheQuery({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'havingExists').resolve(undefined)
-
-  //     this.driver.havingExists(closure)
-
-  //     assert.calledOnce(FakeDriver.havingExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingNotExistsClauseToTheQuery({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'havingNotExists').resolve(undefined)
-
-  //     this.driver.havingNotExists(closure)
-
-  //     assert.calledOnce(FakeDriver.havingNotExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingInClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values = [1, 2, 3]
-  //     Mock.when(FakeDriver, 'havingIn').resolve(undefined)
-
-  //     this.driver.havingIn(column, values)
-
-  //     assert.calledOnce(FakeDriver.havingIn)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingNotInClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values = [1, 2, 3]
-  //     Mock.when(FakeDriver, 'havingNotIn').resolve(undefined)
-
-  //     this.driver.havingNotIn(column, values)
-
-  //     assert.calledOnce(FakeDriver.havingNotIn)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingBetweenClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values: [number, number] = [1, 3]
-  //     Mock.when(FakeDriver, 'havingBetween').resolve(undefined)
-
-  //     this.driver.havingBetween(column, values)
-
-  //     assert.calledOnce(FakeDriver.havingBetween)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingNotBetweenClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values: [number, number] = [1, 3]
-  //     Mock.when(FakeDriver, 'havingNotBetween').resolve(undefined)
-
-  //     this.driver.havingNotBetween(column, values)
-
-  //     assert.calledOnce(FakeDriver.havingNotBetween)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingNullClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     Mock.when(FakeDriver, 'havingNull').resolve(undefined)
-
-  //     this.driver.havingNull(column)
-
-  //     assert.calledOnce(FakeDriver.havingNull)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAHavingNotNullClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     Mock.when(FakeDriver, 'havingNotNull').resolve(undefined)
-
-  //     this.driver.havingNotNull(column)
-
-  //     assert.calledOnce(FakeDriver.havingNotNull)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     Mock.when(FakeDriver, 'orHaving').resolve(undefined)
-
-  //     this.driver.orHaving(column)
-
-  //     assert.calledOnce(FakeDriver.orHaving)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingRawSQLClauseToTheQuery({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orHavingRaw').resolve(undefined)
-
-  //     this.driver.orHavingRaw('age > 100')
-
-  //     assert.calledOnce(FakeDriver.orHavingRaw)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingExistsClauseToTheQuery({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'orHavingExists').resolve(undefined)
-
-  //     this.driver.orHavingExists(closure)
-
-  //     assert.calledOnce(FakeDriver.orHavingExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingNotExistsClauseToTheQuery({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'orHavingNotExists').resolve(undefined)
-
-  //     this.driver.orHavingNotExists(closure)
-
-  //     assert.calledOnce(FakeDriver.orHavingNotExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingInClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values = [1, 2, 3]
-  //     Mock.when(FakeDriver, 'orHavingIn').resolve(undefined)
-
-  //     this.driver.orHavingIn(column, values)
-
-  //     assert.calledOnce(FakeDriver.orHavingIn)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingNotInClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values = [1, 2, 3]
-  //     Mock.when(FakeDriver, 'orHavingNotIn').resolve(undefined)
-
-  //     this.driver.orHavingNotIn(column, values)
-
-  //     assert.calledOnce(FakeDriver.orHavingNotIn)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingBetweenClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values: [number, number] = [1, 3]
-  //     Mock.when(FakeDriver, 'orHavingBetween').resolve(undefined)
-
-  //     this.driver.orHavingBetween(column, values)
-
-  //     assert.calledOnce(FakeDriver.orHavingBetween)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingNotBetweenClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     const values: [number, number] = [1, 3]
-  //     Mock.when(FakeDriver, 'orHavingNotBetween').resolve(undefined)
-
-  //     this.driver.orHavingNotBetween(column, values)
-
-  //     assert.calledOnce(FakeDriver.orHavingNotBetween)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingNullClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     Mock.when(FakeDriver, 'orHavingNull').resolve(undefined)
-
-  //     this.driver.orHavingNull(column)
-
-  //     assert.calledOnce(FakeDriver.orHavingNull)
-  //   }
-
-  //   @Test()
-  //   public async shouldAddAnOrHavingNotNullClauseToTheQuery({ assert }: Context) {
-  //     const column = 'id'
-  //     Mock.when(FakeDriver, 'orHavingNotNull').resolve(undefined)
-
-  //     this.driver.orHavingNotNull(column)
-
-  //     assert.calledOnce(FakeDriver.orHavingNotNull)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereClause({ assert }: Context) {
-  //     const column = 'age'
-  //     const operation = '>'
-  //     const value = 18
-  //     Mock.when(FakeDriver, 'where').resolve(undefined)
-
-  //     this.driver.where(column, operation, value)
-
-  //     assert.calledOnceWith(FakeDriver.where, column, operation, value)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingRawWhereClauseForComplexConditions({ assert }: Context) {
-  //     const sql = 'age > ? AND account_id IS NOT NULL'
-  //     const bindings = [18]
-  //     Mock.when(FakeDriver, 'whereRaw').resolve(undefined)
-
-  //     this.driver.whereRaw(sql, ...bindings)
-
-  //     assert.calledOnceWith(FakeDriver.whereRaw, sql, ...bindings)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNotClause({ assert }: Context) {
-  //     const column = 'age'
-  //     const value = 18
-  //     Mock.when(FakeDriver, 'whereNot').resolve(undefined)
-
-  //     this.driver.whereNot(column, value)
-
-  //     assert.calledOnceWith(FakeDriver.whereNot, column, value)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereExistsClause({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'whereExists').resolve(undefined)
-
-  //     this.driver.whereExists(closure)
-
-  //     assert.calledOnce(FakeDriver.whereExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNotExistsClause({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'whereNotExists').resolve(undefined)
-
-  //     this.driver.whereNotExists(closure)
-
-  //     assert.calledOnce(FakeDriver.whereNotExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereLikeClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereLike').resolve(undefined)
-
-  //     this.driver.whereLike('name', 'lenon')
-
-  //     assert.calledOnceWith(FakeDriver.whereLike, 'name', 'lenon')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereILikeClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereILike').resolve(undefined)
-
-  //     this.driver.whereILike('name', 'Lenon')
-
-  //     assert.calledOnceWith(FakeDriver.whereILike, 'name', 'Lenon')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereInClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereIn').resolve(undefined)
-
-  //     this.driver.whereIn('age', [1, 2, 3])
-
-  //     assert.calledOnceWith(FakeDriver.whereIn, 'age', [1, 2, 3])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNoInClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereNotIn').resolve(undefined)
-
-  //     this.driver.whereNotIn('age', [1, 2, 3])
-
-  //     assert.calledOnceWith(FakeDriver.whereNotIn, 'age', [1, 2, 3])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereBetweenClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereBetween').resolve(undefined)
-
-  //     this.driver.whereBetween('age', [1, 10])
-
-  //     assert.calledOnceWith(FakeDriver.whereBetween, 'age', [1, 10])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNotBetweenClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereNotBetween').resolve(undefined)
-
-  //     this.driver.whereNotBetween('age', [1, 10])
-
-  //     assert.calledOnceWith(FakeDriver.whereNotBetween, 'age', [1, 10])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNullClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereNull').resolve(undefined)
-
-  //     this.driver.whereNull('age')
-
-  //     assert.calledOnceWith(FakeDriver.whereNull, 'age')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenWhereNotNullClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'whereNotNull').resolve(undefined)
-
-  //     this.driver.whereNotNull('age')
-
-  //     assert.calledOnceWith(FakeDriver.whereNotNull, 'age')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereClause({ assert }: Context) {
-  //     const column = 'age'
-  //     const operation = '>'
-  //     const value = 18
-  //     Mock.when(FakeDriver, 'orWhere').resolve(undefined)
-
-  //     this.driver.orWhere(column, operation, value)
-
-  //     assert.calledOnceWith(FakeDriver.orWhere, column, operation, value)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingRawOrWhereClauseForComplexConditions({ assert }: Context) {
-  //     const sql = 'age > ? AND account_id IS NOT NULL'
-  //     const bindings = [18]
-  //     Mock.when(FakeDriver, 'orWhereRaw').resolve(undefined)
-
-  //     this.driver.orWhereRaw(sql, ...bindings)
-
-  //     assert.calledOnceWith(FakeDriver.orWhereRaw, sql, ...bindings)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNotClause({ assert }: Context) {
-  //     const column = 'age'
-  //     const value = 18
-  //     Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
-
-  //     this.driver.orWhereNot(column, value)
-
-  //     assert.calledOnceWith(FakeDriver.orWhereNot, column, value)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereExistsClause({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'orWhereExists').resolve(undefined)
-
-  //     this.driver.orWhereExists(closure)
-
-  //     assert.calledOnce(FakeDriver.orWhereExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNotExistsClause({ assert }: Context) {
-  //     const closure = query => {
-  //       query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-  //     }
-  //     Mock.when(FakeDriver, 'orWhereNotExists').resolve(undefined)
-
-  //     this.driver.orWhereNotExists(closure)
-
-  //     assert.calledOnce(FakeDriver.orWhereNotExists)
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereLikeClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereLike').resolve(undefined)
-
-  //     this.driver.orWhereLike('name', 'lenon')
-
-  //     assert.calledOnceWith(FakeDriver.orWhereLike, 'name', 'lenon')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereILikeClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
-
-  //     this.driver.orWhereILike('name', 'Lenon')
-
-  //     assert.calledOnceWith(FakeDriver.orWhereILike, 'name', 'Lenon')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereInClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereIn').resolve(undefined)
-
-  //     this.driver.orWhereIn('age', [1, 2, 3])
-
-  //     assert.calledOnceWith(FakeDriver.orWhereIn, 'age', [1, 2, 3])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNoInClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereNotIn').resolve(undefined)
-
-  //     this.driver.orWhereNotIn('age', [1, 2, 3])
-
-  //     assert.calledOnceWith(FakeDriver.orWhereNotIn, 'age', [1, 2, 3])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereBetweenClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereBetween').resolve(undefined)
-
-  //     this.driver.orWhereBetween('age', [1, 10])
-
-  //     assert.calledOnceWith(FakeDriver.orWhereBetween, 'age', [1, 10])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNotBetweenClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereNotBetween').resolve(undefined)
-
-  //     this.driver.orWhereNotBetween('age', [1, 10])
-
-  //     assert.calledOnceWith(FakeDriver.orWhereNotBetween, 'age', [1, 10])
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNullClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereNull').resolve(undefined)
-
-  //     this.driver.orWhereNull('age')
-
-  //     assert.calledOnceWith(FakeDriver.orWhereNull, 'age')
-  //   }
-
-  //   @Test()
-  //   public async shouldFilterResultsUsingGivenOrWhereNotNullClause({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orWhereNotNull').resolve(undefined)
-
-  //     this.driver.orWhereNotNull('age')
-
-  //     assert.calledOnceWith(FakeDriver.orWhereNotNull, 'age')
-  //   }
-
-  //   @Test()
-  //   public async shouldOrderBySpecifiedColumnInGivenDirection({ assert }: Context) {
-  //     const column = 'name'
-  //     const direction = 'ASC'
-  //     Mock.when(FakeDriver, 'orderBy').resolve(undefined)
-
-  //     this.driver.orderBy(column, direction)
-
-  //     assert.calledOnceWith(FakeDriver.orderBy, column, direction)
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'latest').resolve(undefined)
-
-  //     this.driver.latest('createdAt')
-
-  //     assert.calledOnceWith(FakeDriver.latest, 'createdAt')
-  //   }
-
-  //   @Test()
-  //   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingOldest({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'oldest').resolve(undefined)
-
-  //     this.driver.oldest('createdAt')
-
-  //     assert.calledOnceWith(FakeDriver.oldest, 'createdAt')
-  //   }
-
-  //   @Test()
-  //   public async shouldOrderBySpecifiedColumnInGivenDirectionUsingRawSQL({ assert }: Context) {
-  //     Mock.when(FakeDriver, 'orderByRaw').resolve(undefined)
-
-  //     this.driver.orderByRaw('name DESC NULLS LAST')
-
-  //     assert.calledOnceWith(FakeDriver.orderByRaw, 'name DESC NULLS LAST')
-  //   }
-
-  //   @Test()
-  //   public async shouldOffsetTheResultsByGivenValue({ assert }: Context) {
-  //     const offsetValue = 10
-  //     Mock.when(FakeDriver, 'offset').resolve(undefined)
-
-  //     this.driver.offset(offsetValue)
-
-  //     assert.calledOnceWith(FakeDriver.offset, offsetValue)
-  //   }
-
-  //   @Test()
-  //   public async shouldLimitTheNumberOfResultsReturned({ assert }: Context) {
-  //     const limitValue = 10
-  //     Mock.when(FakeDriver, 'limit').resolve(undefined)
-
-  //     this.driver.limit(limitValue)
-
-  //     assert.calledOnceWith(FakeDriver.limit, limitValue)
-  //   }
+  @Test()
+  public async shouldAllowSelectingSpecificColumnsFromTable({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Alan Turing' })
+
+    const data = await this.driver.table('users').select('name').where('id', '1').findMany()
+
+    assert.deepEqual(data, [{ name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldAllowSelectingAllColumnsFromTable({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Alan Turing' })
+
+    const data = await this.driver.table('users').select('*').where('id', '1').findMany()
+
+    assert.containsSubset(data, [{ id: '1', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldAllowRawSqlSelectionForSpecializedQueries({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Alan Turing' })
+
+    const data = await this.driver.table('users').selectRaw('COUNT(*) as user_count').find()
+
+    assert.deepEqual(data, { user_count: '1' })
+  }
+
+  @Test()
+  public async shouldAllowSelectingAllColumnsFromTableUsingFrom({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Alan Turing' })
+
+    const data = await this.driver.select('*').from('users').where('id', '1').findMany()
+
+    assert.containsSubset(data, [{ id: '1', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldAllowRawSqlSelectionForSpecializedQueriesUsingFromRaw({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Alan Turing' })
+
+    const data = await this.driver.selectRaw('COUNT(*) as user_count').fromRaw('users').find()
+
+    assert.deepEqual(data, { user_count: '1' })
+  }
+
+  @Test()
+  public async shouldBeAbleToJoinAnotherTableBasedOnSpecifiedColumns({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .join('rents', 'users.id', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .join('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToJoinAnotherTableBasedOnSpecifiedFunction({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .join('rents', function () {
+        this.on('users.id', '=', 'rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToLeftJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .leftJoin('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToRightJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .rightJoin('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToCrossJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .crossJoin('rents')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToFullOuterJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .fullOuterJoin('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToLeftOuterJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .leftOuterJoin('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToRightOuterJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .rightOuterJoin('rents', 'users.id', '=', 'rents.user_id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+    ])
+  }
+
+  @Test()
+  public async shouldApplyJoinRawForGivenTableAndConditions({ assert }: Context) {
+    await this.driver.table('users').createMany([{ id: '1', name: 'Robert Kiyosaki' }])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('users.id as user_id')
+      .select('users.name as user_name')
+      .select('rents.id as rent_id')
+      .joinRaw('NATURAL FULL JOIN rents')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
+      { user_id: null, user_name: null, rent_id: '4' },
+      { user_id: null, user_name: null, rent_id: '3' },
+      { user_id: null, user_name: null, rent_id: '2' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToGroupBySpecifiedColumnsUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('rents').select('user_id').groupBy('user_id').findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '1' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToGroupByRawSpecifiedColumnsUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('rents').select('user_id').groupByRaw('user_id ORDER BY user_id').findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .having('user_id', '<=', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingClauseWithDefaultEqualOpToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .having('user_id', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .having(this.driver.raw("user_id <= '2'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingRawClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .havingRaw("user_id <= '2' ORDER BY user_id")
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .groupBy('id', 'user_id')
+      .havingExists(query => {
+        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '6', user_id: '2' },
+      { id: '2', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '1', user_id: '1' },
+      { id: '3', user_id: '1' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .havingNotExists(query => {
+        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .havingIn('name', ['Alan Turing'])
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingNotInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').groupBy('id', 'name').havingNotIn('id', ['1', '2']).findMany()
+
+    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .groupBy('id', 'name')
+      .havingBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.containsSubset(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingNotBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .groupBy('id', 'name')
+      .havingNotBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.isEmpty(data)
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .havingNull('name')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '4', name: null }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAHavingNotNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .havingNotNull('name')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .orHaving('user_id', '<=', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingClauseWithDefaultEqualOpToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .orHaving('user_id', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .orHaving(this.driver.raw("user_id <= '2'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingRawClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .groupBy('user_id')
+      .orHavingRaw("user_id <= '2' ORDER BY user_id")
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .groupBy('id', 'user_id')
+      .orHavingExists(query => {
+        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '6', user_id: '2' },
+      { id: '2', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '1', user_id: '1' },
+      { id: '3', user_id: '1' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .orHavingNotExists(query => {
+        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .orHavingIn('name', ['Alan Turing'])
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingNotInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').groupBy('id', 'name').orHavingNotIn('id', ['1', '2']).findMany()
+
+    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .groupBy('id', 'name')
+      .orHavingBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.containsSubset(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingNotBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .groupBy('id', 'name')
+      .orHavingNotBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.isEmpty(data)
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .orHavingNull('name')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '4', name: null }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrHavingNotNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .groupBy('id', 'name')
+      .orHavingNotNull('name')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .where('user_id', '=', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereClauseWithDefaultEqualOpToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('rents').select('user_id').where('user_id', '2').orderBy('user_id').findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .where(this.driver.raw("user_id = '2'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereClauseAsClosureToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .where(query => {
+        query.whereIn('user_id', [2])
+      })
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereRawClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('rents').select('user_id').whereRaw("user_id = '2'").findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .whereNot('user_id', '1')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .whereNot(this.driver.raw("user_id = '1'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotClauseAsFunctionToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .whereNot(query => {
+        query.whereIn('user_id', ['1'])
+      })
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereLikeClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereLike('name', '%Warren Buffet%')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '2', name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereILikeClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereILike('name', '%Warren Buffet%')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '2', name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .whereExists(query => {
+        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereNotExists(query => {
+        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').whereIn('name', ['Alan Turing']).findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').whereNotIn('id', ['1', '2']).findMany()
+
+    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .whereBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.containsSubset(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .whereNotBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.isEmpty(data)
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').whereNull('name').findMany()
+
+    assert.deepEqual(data, [{ id: '4', name: null }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereNotNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').whereNotNull('name').orderBy('id').findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhere('user_id', '=', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereClauseWithDefaultEqualOpToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhere('user_id', '2')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhere(this.driver.raw("user_id = '2'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereClauseAsClosureToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhere(query => {
+        query.whereIn('user_id', [2])
+      })
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereRawClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhereRaw("user_id = '2' ORDER BY user_id")
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhereNot('user_id', '1')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhereNot(this.driver.raw("user_id = '1'"))
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotClauseAsFunctionToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .orWhereNot(query => {
+        query.whereIn('user_id', ['1'])
+      })
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereLikeClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .orWhereLike('name', '%Warren Buffet%')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '2', name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereILikeClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .orWhereILike('name', '%Warren Buffet%')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '2', name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .orWhereExists(query => {
+        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .orWhereNotExists(query => {
+        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
+      })
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').orWhereIn('name', ['Alan Turing']).findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotInClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').orWhereNotIn('id', ['1', '2']).findMany()
+
+    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .orWhereBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.containsSubset(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotBetweenClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .orWhereNotBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
+      .findMany()
+
+    assert.isEmpty(data)
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').orWhereNull('name').findMany()
+
+    assert.deepEqual(data, [{ id: '4', name: null }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAOrWhereNotNullClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '1' },
+      { id: '4', user_id: '1' },
+      { id: '5', user_id: '2' },
+      { id: '6', user_id: '2' }
+    ])
+
+    const data = await this.driver.table('users').select('id', 'name').orWhereNotNull('name').orderBy('id').findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+  }
+
+  @Test()
+  public async shouldOrderBySpecifiedColumnInASCUpperCaseDirectionUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.select('name').orderBy('name', 'ASC').findMany()
+
+    assert.deepEqual(data, [{ name: 'Alan Turing' }, { name: 'Robert Kiyosaki' }, { name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldOrderBySpecifiedColumnInASCLowerCaseDirectionUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.select('name').orderBy('name', 'asc').findMany()
+
+    assert.deepEqual(data, [{ name: 'Alan Turing' }, { name: 'Robert Kiyosaki' }, { name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldOrderBySpecifiedColumnInDESCUpperCaseDirectionUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.select('name').orderBy('name', 'DESC').findMany()
+
+    assert.deepEqual(data, [{ name: 'Warren Buffet' }, { name: 'Robert Kiyosaki' }, { name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldOrderBySpecifiedColumnInDESCLowerCaseDirectionUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.select('name').orderBy('name', 'desc').findMany()
+
+    assert.deepEqual(data, [{ name: 'Warren Buffet' }, { name: 'Robert Kiyosaki' }, { name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldOrderBySpecifiedColumnInGivenDirectionUsingRawSQL({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' },
+      { id: '4', name: null }
+    ])
+
+    const data = await this.driver.table('users').select('name').orderByRaw('name DESC NULLS LAST').findMany()
+
+    assert.deepEqual(data, [
+      { name: 'Warren Buffet' },
+      { name: 'Robert Kiyosaki' },
+      { name: 'Alan Turing' },
+      { name: null }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
+    const latest = await this.driver.table('users').create({ id: '3', name: 'Alan Turing' })
+
+    const data = await this.driver.table('users').latest('created_at').find()
+
+    assert.deepEqual(latest, data)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingOldest({ assert }: Context) {
+    const oldest = await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
+    await this.driver.table('users').create({ id: '3', name: 'Alan Turing' })
+
+    const data = await this.driver.table('users').oldest('created_at').find()
+
+    assert.deepEqual(oldest, data)
+  }
+
+  @Test()
+  public async shouldOffsetTheResultsByGivenValue({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.table('users').select('name').offset(1).findMany()
+
+    assert.deepEqual(data, [{ name: 'Warren Buffet' }, { name: 'Alan Turing' }])
+  }
+
+  @Test()
+  public async shouldLimitTheResultsByGivenValue({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Alan Turing' }
+    ])
+
+    const data = await this.driver.table('users').select('name').limit(1).findMany()
+
+    assert.deepEqual(data, [{ name: 'Robert Kiyosaki' }])
+  }
 }

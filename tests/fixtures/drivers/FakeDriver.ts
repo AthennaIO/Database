@@ -9,7 +9,6 @@
 
 export const FakeDriver: any = {
   table: () => {},
-  select: () => {},
   isConnected: false,
   isSavedOnFactory: false,
   connection: '',
@@ -68,7 +67,10 @@ export const FakeDriver: any = {
   delete: () => {},
   dump: () => {},
   when: () => {},
+  select: () => {},
   selectRaw: () => {},
+  from: () => {},
+  fromRaw: () => {},
   join: () => {},
   leftJoin: () => {},
   rightJoin: () => {},

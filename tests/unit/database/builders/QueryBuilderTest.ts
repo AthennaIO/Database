@@ -377,6 +377,32 @@ export default class QueryBuilderTest {
   }
 
   @Test()
+  public async shouldAllowSelectingSpecificColumnsFromTableUsingFrom({ assert }: Context) {
+    const columns = ['id', 'name']
+    Mock.when(FakeDriver, 'select').resolve(undefined)
+    Mock.when(FakeDriver, 'from').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.select(...columns).from('users')
+
+    assert.calledOnceWith(FakeDriver.select, ...columns)
+    assert.calledOnceWith(FakeDriver.from, 'users')
+  }
+
+  @Test()
+  public async shouldAllowRawSqlSelectionForSpecializedQueriesUsingFromRaw({ assert }: Context) {
+    const sql = 'COUNT(*) as userCount'
+    Mock.when(FakeDriver, 'selectRaw').resolve(undefined)
+    Mock.when(FakeDriver, 'fromRaw').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.selectRaw(sql).fromRaw('users')
+
+    assert.calledOnceWith(FakeDriver.selectRaw, sql)
+    assert.calledOnceWith(FakeDriver.fromRaw, 'users')
+  }
+
+  @Test()
   public async shouldJoinAnotherTableBasedOnSpecifiedColumnsAndOperation({ assert }: Context) {
     const tableName = 'posts'
     const column1 = 'users.id'

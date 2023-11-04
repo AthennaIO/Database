@@ -260,6 +260,28 @@ export class QueryBuilder<Client = any, QB = any> {
   }
 
   /**
+   * Set the table that should be used on query.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public from(table: string): QueryBuilder {
+    this.driver.from(table)
+
+    return this
+  }
+
+  /**
+   * Set the table that should be used on query raw.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public fromRaw(sql: string, bindings?: any): QueryBuilder {
+    this.driver.fromRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
    * Set a join statement in your query.
    */
   public join(

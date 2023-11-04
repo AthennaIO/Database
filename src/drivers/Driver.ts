@@ -402,6 +402,20 @@ export abstract class Driver<Client = any, QB = any> {
   public abstract selectRaw(sql: string, bindings?: any): this
 
   /**
+   * Set the table that should be used on query.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public abstract from(table: string): this
+
+  /**
+   * Set the table that should be used on query raw.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public abstract fromRaw(sql: string, bindings?: any): this
+
+  /**
    * Set a join statement in your query.
    */
   public abstract join(

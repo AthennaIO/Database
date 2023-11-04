@@ -251,8 +251,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Make a raw query in database.
    */
-  public raw<T = any>(sql: string, bindings?: any): Knex.Raw<T> {
-    return this.client.raw(sql, bindings)
+  public raw<T = any>(sql: string, bindings?: any): T {
+    return this.client.raw(sql, bindings) as any
   }
 
   /**
@@ -489,6 +489,26 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
+   * Set the table that should be used on query.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public from(table: string): this {
+    this.qb.from(table)
+
+    return this
+  }
+
+  /**
+   * Set the table that should be used on query raw.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public fromRaw(sql: string, bindings?: any): this {
+    return this.from(this.raw(sql, bindings) as any)
+  }
+
+  /**
    * Set a join statement in your query.
    */
   public join(table: any, column1?: any, operation?: any, column2?: any): this {
@@ -598,14 +618,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Set a having statement in your query.
    */
   public having(column: any, operation?: any, value?: any): this {
-    if (Is.Function(column)) {
-      this.qb.having(query =>
-        column(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+    if (operation === undefined) {
+      this.qb.having(column)
 
       return this
     }
@@ -637,7 +651,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.havingExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -650,7 +664,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.havingNotExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -714,14 +728,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Set an or having statement in your query.
    */
   public orHaving(column: any, operation?: any, value?: any): this {
-    if (Is.Function(column)) {
-      this.qb.orHaving(query =>
-        column(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+    if (operation === undefined) {
+      this.qb.orHaving(column)
 
       return this
     }
@@ -753,7 +761,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orHavingExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -766,7 +774,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orHavingNotExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -902,7 +910,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.whereExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -915,7 +923,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.whereNotExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -924,26 +932,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(statement: any, value?: any): this {
-    if (Is.Function(statement)) {
-      this.qb.whereLike(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.whereLike(statement)
-
-      return this
-    }
-
-    this.qb.whereLike(statement, value)
+  public whereLike(column: string, value: any): this {
+    this.qb.whereLike(column, value)
 
     return this
   }
@@ -951,26 +941,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(statement: any, value?: any): this {
-    if (Is.Function(statement)) {
-      this.qb.whereILike(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.whereILike(statement)
-
-      return this
-    }
-
-    this.qb.whereILike(statement, value)
+  public whereILike(column: string, value: any): this {
+    this.qb.whereILike(column, value)
 
     return this
   }
@@ -1105,7 +1077,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orWhereExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -1118,7 +1090,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     const driver = this.clone() as PostgresDriver
 
     this.qb.orWhereNotExists(function () {
-      closure(driver.setQueryBuilder(this))
+      closure(driver.setClient(this.client).setQueryBuilder(this))
     })
 
     return this
@@ -1127,26 +1099,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(statement: any, value?: any): this {
-    if (Is.Function(statement)) {
-      this.qb.orWhereLike(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.orWhereLike(statement)
-
-      return this
-    }
-
-    this.qb.orWhereLike(statement, value)
+  public orWhereLike(column: any, value: any): this {
+    this.qb.orWhereLike(column, value)
 
     return this
   }
@@ -1154,26 +1108,8 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(statement: any, value?: any): this {
-    if (Is.Function(statement)) {
-      this.qb.orWhereILike(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.orWhereILike(statement)
-
-      return this
-    }
-
-    this.qb.orWhereILike(statement, value)
+  public orWhereILike(column: any, value: any): this {
+    this.qb.orWhereILike(column, value)
 
     return this
   }
@@ -1313,5 +1249,7 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     }
 
     this.qb[joinType](table, column1, operation, column2)
+
+    return this
   }
 }
