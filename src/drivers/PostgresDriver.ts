@@ -849,13 +849,11 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    */
   public where(statement: any, operation?: any, value?: any): this {
     if (Is.Function(statement)) {
-      this.qb.where(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+      const driver = this.clone()
+
+      this.qb.where(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
 
       return this
     }
@@ -882,13 +880,11 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    */
   public whereNot(statement: any, value?: any): this {
     if (Is.Function(statement)) {
-      this.qb.whereNot(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+      const driver = this.clone()
+
+      this.qb.whereNot(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
 
       return this
     }
@@ -919,9 +915,6 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   public whereExists(closure: (query: PostgresDriver) => void): this {
     const driver = this.clone() as PostgresDriver
 
-    this.qb.whereExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
     this.qb.whereExists(function () {
       closure(driver.setQueryBuilder(this, { useSetQB: true }))
     })
@@ -1019,13 +1012,11 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    */
   public orWhere(statement: any, operation?: any, value?: any): this {
     if (Is.Function(statement)) {
-      this.qb.orWhere(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+      const driver = this.clone()
+
+      this.qb.orWhere(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
 
       return this
     }
@@ -1052,13 +1043,11 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    */
   public orWhereNot(statement: any, value?: any): this {
     if (Is.Function(statement)) {
-      this.qb.orWhereNot(query =>
-        statement(
-          new PostgresDriver(this.connection, this.client).setQueryBuilder(
-            query
-          )
-        )
-      )
+      const driver = this.clone()
+
+      this.qb.orWhereNot(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
 
       return this
     }
