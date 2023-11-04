@@ -1221,37 +1221,4 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     return this
   }
-
-  /**
-   * Create a join clause by join type
-   */
-  public joinByType(
-    joinType: string,
-    table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
-  ): this {
-    if (!column1) {
-      this.qb[joinType](table)
-
-      return this
-    }
-
-    if (!operation) {
-      this.qb[joinType](table, column1)
-
-      return this
-    }
-
-    if (!column2) {
-      this.qb[joinType](table, column1, operation)
-
-      return this
-    }
-
-    this.qb[joinType](table, column1, operation, column2)
-
-    return this
-  }
 }

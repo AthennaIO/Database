@@ -140,6 +140,8 @@ export abstract class Driver<Client = any, QB = any> {
     }
 
     this.qb[joinType](table, column1, operation, column2)
+
+    return this
   }
 
   /**
