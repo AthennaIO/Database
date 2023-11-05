@@ -82,6 +82,29 @@ export default class ConnectionFactoryTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateTheConnectionToSqliteDirectly({ assert }: Context) {
+    const knexFake = Mock.fake()
+
+    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
+
+    ConnectionFactory.sqlite('sqlite')
+
+    assert.calledWith(knexFake, {
+      client: 'better-sqlite3',
+      debug: false,
+      migrations: {
+        tableName: 'migrations'
+      },
+      pool: {
+        acquireTimeoutMillis: 60000,
+        max: 20,
+        min: 2
+      },
+      useNullAsDefault: false
+    })
+  }
+
+  @Test()
   public async shouldBeAbleToCreateTheConnectionToPostgresDirectly({ assert }: Context) {
     const knexFake = Mock.fake()
 

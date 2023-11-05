@@ -14,6 +14,7 @@ import { Exec, Options } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
 import type { DriverKey } from '#src/types/DriverKey'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
+import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
 import type { CreateConOptions } from '#src/types/CreateConOptions'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -28,6 +29,10 @@ export class DriverFactory {
   public static drivers: Map<string, DriverKey> = new Map()
     .set('mysql', {
       Driver: MySqlDriver,
+      client: null
+    })
+    .set('sqlite', {
+      Driver: SqliteDriver,
       client: null
     })
     .set('postgres', {

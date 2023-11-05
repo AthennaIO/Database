@@ -24,6 +24,7 @@ export class ConnectionFactory {
     switch (driver) {
       case 'fake':
       case 'mysql':
+      case 'sqlite':
       case 'postgres':
         await client.destroy()
         break
@@ -50,6 +51,13 @@ export class ConnectionFactory {
    */
   public static mongo(con: string): Connection {
     return this.mongoose(con)
+  }
+
+  /**
+   * Create the connection with a sqlite database.
+   */
+  public static sqlite(con: string): Knex {
+    return this.knex(con, 'better-sqlite3')
   }
 
   /**

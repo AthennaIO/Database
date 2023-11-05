@@ -38,6 +38,13 @@ export default {
       },
       debug: false
     },
+    'sqlite-memory': {
+      driver: 'sqlite',
+      connection: {
+        filename: ':memory:'
+      },
+      debug: false
+    },
     'postgres-docker': {
       driver: 'postgres',
       connection: {
