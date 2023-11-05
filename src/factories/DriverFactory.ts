@@ -12,6 +12,7 @@ import { Config } from '@athenna/config'
 import { Options } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
 import type { DriverKey } from '#src/types/DriverKey'
+import { MongoDriver } from '#src/drivers/MongoDriver'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
@@ -23,6 +24,10 @@ export class DriverFactory {
    * All athenna drivers connection configuration.
    */
   public static drivers: Map<string, DriverKey> = new Map()
+    .set('mongo', {
+      Driver: MongoDriver,
+      client: null
+    })
     .set('mysql', {
       Driver: MySqlDriver,
       client: null

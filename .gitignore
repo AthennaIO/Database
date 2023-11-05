@@ -141,3 +141,4 @@ build
 .docker
 
 test.js
+mongo-memory.ts

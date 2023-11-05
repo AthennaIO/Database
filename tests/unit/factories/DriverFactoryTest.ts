@@ -38,7 +38,7 @@ export default class DriverFactoryTest {
   public shouldBeAbleToListAllAvailableDrivers({ assert }: Context) {
     const drivers = DriverFactory.availableDrivers()
 
-    assert.deepEqual(drivers, ['mysql', 'sqlite', 'postgres', 'fake'])
+    assert.deepEqual(drivers, ['mongo', 'mysql', 'sqlite', 'postgres', 'fake'])
   }
 
   @Test()

@@ -55,6 +55,15 @@ export default {
         database: 'postgres'
       },
       debug: false
+    },
+    'mongo-memory': {
+      driver: 'mongo',
+      url: 'mongodb://localhost:27017,localhost:27018,localhost:27019/admin',
+      w: 'majority',
+      replicaSet: 'rs',
+      retryWrites: true,
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     }
   }
 }
