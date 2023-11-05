@@ -8,7 +8,6 @@
  */
 
 import { debug } from '#src/debug'
-import { Log } from '@athenna/logger'
 import { Config } from '@athenna/config'
 import { Exec, Options } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
@@ -16,10 +15,8 @@ import type { DriverKey } from '#src/types/DriverKey'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
-import type { CreateConOptions } from '#src/types/CreateConOptions'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
-import { ConnectionFailedException } from '#src/exceptions/ConnectionFailedException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
 export class DriverFactory {
@@ -90,70 +87,9 @@ export class DriverFactory {
   }
 
   /**
-   * Create the connection with database using
-   * the configuration name to find the configs.
-   */
-  public static createConnection(con: string, options?: CreateConOptions): any {
-    con = this.parseConName(con)
-
-    options = Options.create(options, {
-      saveOnFactory: false
-    })
-
-    const { driver } = this.getConnectionConfig(con)
-    const driverKey = this.drivers.get(driver)
-
-    try {
-      const client = ConnectionFactory[driver](con)
-
-      if (Config.is('rc.bootLogs', true)) {
-        Log.channelOrVanilla('application').success(
-          `Successfully connected to ({yellow} ${con}) database connection`
-        )
-      }
-
-      if (!options.saveOnFactory) {
-        return client
-      }
-
-      debug('saving new connection client in factory for driver %s', driver)
-
-      driverKey.client = client
-
-      this.drivers.set(driver, driverKey)
-
-      return client
-    } catch (error) {
-      throw new ConnectionFailedException(con, driver, error)
-    }
-  }
-
-  /**
-   * Close the connection with database by con name.
-   */
-  public static async closeConnection(con: string): Promise<void> {
-    con = this.parseConName(con)
-
-    const { driver } = this.getConnectionConfig(con)
-    const driverKey = this.drivers.get(driver)
-    const client = driverKey.client
-
-    debug('closing connection for %s driver used by %s connection', driver, con)
-
-    if (!client) {
-      return
-    }
-
-    await ConnectionFactory.closeByDriver(driver, client)
-
-    driverKey.client = null
-
-    this.drivers.set(driver, driverKey)
-  }
-
-  /**
    * Close all opened connections of DriverFactory.
    */
+  // TODO Move to ConnectionFactory
   public static async closeAllConnections(): Promise<void> {
     const availableDrivers = this.availableDrivers({ onlyConnected: true })
 
@@ -168,6 +104,31 @@ export class DriverFactory {
 
       this.drivers.set(driver, driverKey)
     })
+  }
+
+  /**
+   * Verify if client is present on driver.
+   */
+  public static hasClient(driver: string): boolean {
+    return !!this.drivers.get(driver).client
+  }
+
+  /**
+   * Get client of driver.
+   */
+  public static getClient(driver: string): any {
+    return this.drivers.get(driver).client
+  }
+
+  /**
+   * Set client on driver.
+   */
+  public static setClient(driver: string, client: any): void {
+    const driverKey = this.drivers.get(driver)
+
+    driverKey.client = client
+
+    this.drivers.set(driver, driverKey)
   }
 
   /**

@@ -8,14 +8,12 @@
  */
 
 import { Json } from '@athenna/common'
-import { Log, LoggerProvider } from '@athenna/logger'
+import { LoggerProvider } from '@athenna/logger'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
-import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Test, Mock, type Context, AfterEach, BeforeEach } from '@athenna/test'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
-import { ConnectionFailedException } from '#src/exceptions/ConnectionFailedException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
 export default class DriverFactoryTest {
@@ -96,117 +94,53 @@ export default class DriverFactoryTest {
   }
 
   @Test()
-  public async shouldBeAbleToCreateConnectionWithDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'fake').return({})
+  public async shouldBeAbleToVerifyThatDriverHasClient({ assert }: Context) {
+    DriverFactory.setClient('mysql', {})
 
-    const connection = DriverFactory.createConnection('default')
+    const hasClient = DriverFactory.hasClient('mysql')
 
-    assert.deepEqual(connection, {})
+    assert.isTrue(hasClient)
   }
 
   @Test()
-  public async shouldBeAbleToCreateConnectionWithTheDefaultDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'fake').return({})
+  public async shouldBeAbleToVerifyThatDriverDoesNotHaveClient({ assert }: Context) {
+    const hasClient = DriverFactory.hasClient('mysql')
 
-    const connection = DriverFactory.createConnection('default')
-
-    assert.deepEqual(connection, {})
+    assert.isFalse(hasClient)
   }
 
   @Test()
-  public async shouldBeAbleToCreateConnectionWithPostgresDatabase({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').return({})
+  public async shouldBeAbleToGetDriverClient({ assert }: Context) {
+    DriverFactory.setClient('mysql', {})
 
-    const connection = DriverFactory.createConnection('postgres')
+    const client = DriverFactory.getClient('mysql')
 
-    assert.deepEqual(connection, {})
+    assert.deepEqual(client, {})
   }
 
   @Test()
-  public async shouldBeAbleToSaveTheCreatedConnectionIfSaveOnFactoryIsTrue({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').return({})
+  public async shouldReturnNullWhenClientDoesNotExist({ assert }: Context) {
+    const client = DriverFactory.getClient('mysql')
 
-    const connection = DriverFactory.createConnection('postgres', { saveOnFactory: true })
-
-    assert.deepEqual(connection, {})
-    assert.deepEqual(DriverFactory.drivers.get('postgres').client, {})
+    assert.isNull(client)
   }
 
   @Test()
-  public async shouldNotSaveTheCreatedConnectionIfSaveOnFactoryIsFalse({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').return({})
+  public async shouldBeAbleToSetDriverClient({ assert }: Context) {
+    DriverFactory.setClient('mysql', {})
 
-    const connection = DriverFactory.createConnection('postgres', { saveOnFactory: false })
+    const client = DriverFactory.getClient('mysql')
 
-    assert.deepEqual(connection, {})
-    assert.isNull(DriverFactory.drivers.get('postgres').client)
+    assert.deepEqual(client, {})
   }
 
   @Test()
-  public async shouldBeAbleToLogIfConnectionWasSuccessfullyCreatedWithDatabase({ assert }: Context) {
-    const logSuccessFake = Mock.fake()
-    Config.set('rc.bootLogs', true)
-    Log.when('channelOrVanilla').return({
-      success: logSuccessFake
-    })
-    Mock.when(ConnectionFactory, 'postgres').return({})
+  public async shouldBeAbleToSetDriverClientAsNull({ assert }: Context) {
+    DriverFactory.setClient('mysql', null)
 
-    const connection = DriverFactory.createConnection('postgres')
+    const client = DriverFactory.getClient('mysql')
 
-    assert.deepEqual(connection, {})
-    assert.calledWith(Log.channelOrVanilla, 'application')
-    assert.calledWith(logSuccessFake, 'Successfully connected to ({yellow} postgres) database connection')
-  }
-
-  @Test()
-  public async shouldThrowConnectionFailedExceptionIfConnectionWithDatabaseFails({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'postgres').throw(new Error('Connection failed!'))
-
-    assert.throws(() => DriverFactory.createConnection('postgres'), ConnectionFailedException)
-  }
-
-  @Test()
-  public async shouldBeAbleToCloseTheConnectionWithDefaultDatabaseWhenClientExists({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
-    DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: clientFake })
-
-    await DriverFactory.closeConnection('default')
-
-    assert.calledOnce(clientFake.destroy)
-  }
-
-  @Test()
-  public async shouldBeAbleToCloseTheConnectionWithPostgresWhenClientExists({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
-
-    await DriverFactory.closeConnection('postgres')
-
-    assert.calledOnce(clientFake.destroy)
-  }
-
-  @Test()
-  public async shouldSetTheClientToNullWhenClosingTheConnectionWithDriver({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
-
-    await DriverFactory.closeConnection('postgres')
-
-    assert.calledOnce(clientFake.destroy)
-    assert.isNull(DriverFactory.drivers.get('postgres').client)
-  }
-
-  @Test()
-  public async shouldIgnoreTheOpWhenClientIsNotDefinedInDriver() {
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver })
-
-    await DriverFactory.closeConnection('postgres')
+    assert.isNull(client)
   }
 
   @Test()

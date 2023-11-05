@@ -27,28 +27,28 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * The connection name used for this instance.
    */
-  protected connection: string = null
+  public connection: string = null
 
   /**
    * Set the table that this instance will work with.
    */
-  protected tableName: string = null
+  public tableName: string = null
 
   /**
    * Set the client of this driver.
    */
-  protected client: Client = null
+  public client: Client = null
 
   /**
    * The main query builder of driver.
    */
-  protected qb: QB = null
+  public qb: QB = null
 
   /**
    * Use set query builder instead of creating a new one
    * using client.
    */
-  protected useSetQB: boolean = false
+  public useSetQB: boolean = false
 
   /**
    * Creates a new instance of the Driver.

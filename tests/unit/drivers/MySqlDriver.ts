@@ -8,13 +8,14 @@
  */
 
 import { Config } from '@athenna/config'
-import { Collection, Exec, Path } from '@athenna/common'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
+import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup, Skip } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup, Skip } from '@athenna/test'
 
 export default class MySqlDriverTest {
   public driver = new MySqlDriver('mysql-docker')
@@ -100,7 +101,6 @@ export default class MySqlDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeConnection('mysql-docker'))
   public async shouldBeAbleToConnectToDatabaseUsingMySqlDriver({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
@@ -140,7 +140,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'mysql')
 
     await DriverFactory.closeAllConnections()
 
@@ -153,13 +153,13 @@ export default class MySqlDriverTest {
 
     driver.connect()
 
-    assert.calledOnce(DriverFactory.createConnection)
+    assert.calledOnce(ConnectionFactory.mysql)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'mysql')
 
     await DriverFactory.closeAllConnections()
 
@@ -172,13 +172,13 @@ export default class MySqlDriverTest {
 
     driver.connect({ force: true })
 
-    assert.calledTimes(DriverFactory.createConnection, 2)
+    assert.calledTimes(ConnectionFactory.mysql, 2)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
+    Mock.spy(ConnectionFactory, 'closeByDriver')
 
     await DriverFactory.closeAllConnections()
 
@@ -187,23 +187,24 @@ export default class MySqlDriverTest {
     assert.isFalse(driver.isConnected)
 
     driver.connect()
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(DriverFactory.closeConnection)
+    assert.calledOnce(ConnectionFactory.closeByDriver)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
-
     await DriverFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
+    Mock.spy(DriverFactory, 'getClient')
+
     assert.isFalse(driver.isConnected)
 
-    driver.close()
-    assert.notCalled(DriverFactory.closeConnection)
+    await driver.close()
+
+    assert.notCalled(DriverFactory.getClient)
   }
 
   @Test()
@@ -215,11 +216,10 @@ export default class MySqlDriverTest {
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
-    Mock.spy(driver.getClient(), 'destroy')
 
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(driver.getClient().destroy)
+    assert.isNull(driver.client)
   }
 
   @Test()

@@ -8,13 +8,14 @@
  */
 
 import { Config } from '@athenna/config'
+import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { SqliteDriver } from '#src/drivers/SqliteDriver'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup, Skip } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup, Skip } from '@athenna/test'
 
 export default class SqliteDriverTest {
   public driver = new SqliteDriver('sqlite-memory')
@@ -100,9 +101,8 @@ export default class SqliteDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeConnection('postgres-docker'))
   public async shouldBeAbleToConnectToDatabaseUsingSqliteDriver({ assert }: Context) {
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
@@ -115,21 +115,21 @@ export default class SqliteDriverTest {
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.isFalse(DriverFactory.availableDrivers({ onlyConnected: true }).includes('postgres'))
+    assert.isFalse(DriverFactory.availableDrivers({ onlyConnected: true }).includes('sqlite'))
   }
 
   @Test()
   public async shouldBeAbleToCallConnectMethodButWithoutConnectingToDatabase({ assert }: Context) {
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
@@ -140,11 +140,11 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'sqlite')
 
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
@@ -153,17 +153,17 @@ export default class SqliteDriverTest {
 
     driver.connect()
 
-    assert.calledOnce(DriverFactory.createConnection)
+    assert.calledOnce(ConnectionFactory.sqlite)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'sqlite')
 
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
@@ -172,54 +172,54 @@ export default class SqliteDriverTest {
 
     driver.connect({ force: true })
 
-    assert.calledTimes(DriverFactory.createConnection, 2)
+    assert.calledTimes(ConnectionFactory.sqlite, 2)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
+    Mock.spy(ConnectionFactory, 'closeByDriver')
 
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
     driver.connect()
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(DriverFactory.closeConnection)
+    assert.calledOnce(ConnectionFactory.closeByDriver)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
-
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
+
+    Mock.spy(DriverFactory, 'getClient')
 
     assert.isFalse(driver.isConnected)
 
-    driver.close()
-    assert.notCalled(DriverFactory.closeConnection)
+    await driver.close()
+
+    assert.notCalled(DriverFactory.getClient)
   }
 
   @Test()
   public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
     await DriverFactory.closeAllConnections()
 
-    const driver = new SqliteDriver('postgres-docker')
+    const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
-    Mock.spy(driver.getClient(), 'destroy')
 
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(driver.getClient().destroy)
+    assert.isNull(driver.client)
   }
 
   @Test()

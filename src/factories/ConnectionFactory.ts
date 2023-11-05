@@ -9,6 +9,7 @@
 
 import type { Knex } from 'knex'
 import { debug } from '#src/debug'
+import { Log } from '@athenna/logger'
 import { Config } from '@athenna/config'
 import type { Connection } from 'mongoose'
 import { Json, Module } from '@athenna/common'
@@ -35,6 +36,17 @@ export class ConnectionFactory {
   }
 
   /**
+   * Log that connection was created.
+   */
+  public static log(con: string): void {
+    if (Config.is('rc.bootLogs', true)) {
+      Log.channelOrVanilla('application').success(
+        `Successfully connected to ({yellow} ${con}) database connection`
+      )
+    }
+  }
+
+  /**
    * For testing purposes only.
    */
   public static fake() {}
@@ -43,28 +55,44 @@ export class ConnectionFactory {
    * Create the connection with a mysql database.
    */
   public static mysql(con: string): Knex {
-    return this.knex(con, 'mysql2')
+    const client = this.knex(con, 'mysql2')
+
+    this.log(con)
+
+    return client
   }
 
   /**
    * Create the connection with a mongo database.
    */
   public static mongo(con: string): Connection {
-    return this.mongoose(con)
+    const client = this.mongoose(con)
+
+    this.log(con)
+
+    return client
   }
 
   /**
    * Create the connection with a sqlite database.
    */
   public static sqlite(con: string): Knex {
-    return this.knex(con, 'better-sqlite3')
+    const client = this.knex(con, 'better-sqlite3')
+
+    this.log(con)
+
+    return client
   }
 
   /**
    * Create the connection with a postgres database.
    */
   public static postgres(con: string): Knex {
-    return this.knex(con, 'pg')
+    const client = this.knex(con, 'pg')
+
+    this.log(con)
+
+    return client
   }
 
   /**

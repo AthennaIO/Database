@@ -8,21 +8,15 @@
  * file that was distributed with this source code.
  */
 
-import {
-  Exec,
-  Is,
-  Json,
-  Options,
-  type PaginatedResponse
-} from '@athenna/common'
-
 import type { Knex } from 'knex'
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import type { ConnectionOptions, Direction } from '#src/types'
 import { Transaction } from '#src/database/transactions/Transaction'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
+import { Exec, Is, Options, type PaginatedResponse } from '@athenna/common'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 
@@ -45,10 +39,11 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
       return
     }
 
-    this.client = DriverFactory.createConnection(
-      this.connection,
-      Json.pick(options, ['saveOnFactory'])
-    )
+    this.client = ConnectionFactory.mysql(this.connection)
+
+    if (options.saveOnFactory) {
+      DriverFactory.setClient('mysql', this.client)
+    }
 
     this.isConnected = true
     this.isSavedOnFactory = options.saveOnFactory
@@ -64,8 +59,9 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
       return
     }
 
-    if (this.isSavedOnFactory) {
-      await DriverFactory.closeConnection(this.connection)
+    if (this.isSavedOnFactory && DriverFactory.hasClient('mysql')) {
+      await DriverFactory.getClient('mysql').destroy()
+      DriverFactory.setClient('mysql', null)
     } else {
       await this.client.destroy()
     }

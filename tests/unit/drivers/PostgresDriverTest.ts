@@ -11,6 +11,7 @@ import { Config } from '@athenna/config'
 import { Collection, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup } from '@athenna/test'
@@ -100,7 +101,6 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeConnection('postgres-docker'))
   public async shouldBeAbleToConnectToDatabaseUsingPostgresDriver({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
@@ -140,7 +140,7 @@ export default class PostgresDriverTest {
 
   @Test()
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'postgres')
 
     await DriverFactory.closeAllConnections()
 
@@ -153,13 +153,13 @@ export default class PostgresDriverTest {
 
     driver.connect()
 
-    assert.calledOnce(DriverFactory.createConnection)
+    assert.calledOnce(ConnectionFactory.postgres)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
-    Mock.spy(DriverFactory, 'createConnection')
+    Mock.spy(ConnectionFactory, 'postgres')
 
     await DriverFactory.closeAllConnections()
 
@@ -172,13 +172,13 @@ export default class PostgresDriverTest {
 
     driver.connect({ force: true })
 
-    assert.calledTimes(DriverFactory.createConnection, 2)
+    assert.calledTimes(ConnectionFactory.postgres, 2)
   }
 
   @Test()
   @Cleanup(() => DriverFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
+    Mock.spy(ConnectionFactory, 'closeByDriver')
 
     await DriverFactory.closeAllConnections()
 
@@ -187,23 +187,24 @@ export default class PostgresDriverTest {
     assert.isFalse(driver.isConnected)
 
     driver.connect()
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(DriverFactory.closeConnection)
+    assert.calledOnce(ConnectionFactory.closeByDriver)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    Mock.spy(DriverFactory, 'closeConnection')
-
     await DriverFactory.closeAllConnections()
 
     const driver = new PostgresDriver('postgres-docker')
 
+    Mock.spy(DriverFactory, 'getClient')
+
     assert.isFalse(driver.isConnected)
 
-    driver.close()
-    assert.notCalled(DriverFactory.closeConnection)
+    await driver.close()
+
+    assert.notCalled(DriverFactory.getClient)
   }
 
   @Test()
@@ -215,11 +216,10 @@ export default class PostgresDriverTest {
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
-    Mock.spy(driver.getClient(), 'destroy')
 
-    driver.close()
+    await driver.close()
 
-    assert.calledOnce(driver.getClient().destroy)
+    assert.isNull(driver.client)
   }
 
   @Test()
