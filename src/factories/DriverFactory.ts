@@ -9,13 +9,12 @@
 
 import { debug } from '#src/debug'
 import { Config } from '@athenna/config'
-import { Exec, Options } from '@athenna/common'
+import { Options } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
 import type { DriverKey } from '#src/types/DriverKey'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
-import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
@@ -84,26 +83,6 @@ export class DriverFactory {
     })
 
     return new Driver(con)
-  }
-
-  /**
-   * Close all opened connections of DriverFactory.
-   */
-  // TODO Move to ConnectionFactory
-  public static async closeAllConnections(): Promise<void> {
-    const availableDrivers = this.availableDrivers({ onlyConnected: true })
-
-    await Exec.concurrently(availableDrivers, async (driver: string) => {
-      debug('closing connection for %s driver', driver)
-
-      const driverKey = this.drivers.get(driver)
-
-      await ConnectionFactory.closeByDriver(driver, driverKey.client)
-
-      driverKey.client = null
-
-      this.drivers.set(driver, driverKey)
-    })
   }
 
   /**

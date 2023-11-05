@@ -11,6 +11,7 @@ import type { Knex } from 'knex'
 import type { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import type { Transaction } from '#src/database/transactions/Transaction'
 
@@ -81,7 +82,7 @@ export class DatabaseImpl<Client = any, QB = any> {
    * Close all the connections with all databases.
    */
   public async closeAll(): Promise<void> {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
   }
 
   /**

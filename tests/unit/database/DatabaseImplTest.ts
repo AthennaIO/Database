@@ -13,6 +13,7 @@ import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'
 
 export default class DatabaseImplTest {
@@ -80,13 +81,13 @@ export default class DatabaseImplTest {
 
   @Test()
   public async shouldBeAbleToCloseAllConnections({ assert }: Context) {
-    Mock.when(DriverFactory, 'closeAllConnections').resolve(undefined)
+    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
     Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.closeAll()
 
-    assert.calledOnce(DriverFactory.closeAllConnections)
+    assert.calledOnce(ConnectionFactory.closeAllConnections)
   }
 
   @Test()

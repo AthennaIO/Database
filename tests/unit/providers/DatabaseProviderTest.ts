@@ -9,7 +9,7 @@
 
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
-import { Database, DatabaseProvider, DriverFactory } from '#src'
+import { ConnectionFactory, Database, DatabaseProvider } from '#src'
 import { Test, type Context, AfterEach, BeforeEach, Mock } from '@athenna/test'
 
 export default class DatabaseProviderTest {
@@ -41,24 +41,24 @@ export default class DatabaseProviderTest {
 
   @Test()
   public async shouldAutomaticallyShutdownAllOpenConnectionsWhenShuttingDownTheProvider({ assert }: Context) {
-    Mock.when(DriverFactory, 'closeAllConnections').resolve(undefined)
+    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
 
     const provider = new DatabaseProvider()
 
     await provider.register()
     await provider.shutdown()
 
-    assert.calledOnce(DriverFactory.closeAllConnections)
+    assert.calledOnce(ConnectionFactory.closeAllConnections)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionIfDependencyIsNotRegisteredInTheServiceContainer({ assert }: Context) {
-    Mock.when(DriverFactory, 'closeAllConnections').resolve(undefined)
+    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
 
     const provider = new DatabaseProvider()
 
     await provider.shutdown()
 
-    assert.notCalled(DriverFactory.closeAllConnections)
+    assert.notCalled(ConnectionFactory.closeAllConnections)
   }
 }

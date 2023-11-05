@@ -12,7 +12,8 @@ import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Config } from '@athenna/config'
 import type { Connection } from 'mongoose'
-import { Json, Module } from '@athenna/common'
+import { Exec, Json, Module } from '@athenna/common'
+import { DriverFactory } from '#src/factories/DriverFactory'
 
 export class ConnectionFactory {
   /**
@@ -33,6 +34,23 @@ export class ConnectionFactory {
         await client.close()
         break
     }
+  }
+
+  /**
+   * Close all opened connections of DriverFactory.
+   */
+  public static async closeAllConnections(): Promise<void> {
+    const availableDrivers = DriverFactory.availableDrivers({
+      onlyConnected: true
+    })
+
+    await Exec.concurrently(availableDrivers, async (driver: string) => {
+      debug('closing connection for %s driver', driver)
+
+      await this.closeByDriver(driver, DriverFactory.getClient(driver))
+
+      DriverFactory.setClient(driver, null)
+    })
   }
 
   /**

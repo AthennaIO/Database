@@ -113,7 +113,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -127,7 +127,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldBeAbleToCallConnectMethodButWithoutConnectingToDatabase({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -142,7 +142,7 @@ export default class SqliteDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'sqlite')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -157,11 +157,11 @@ export default class SqliteDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeAllConnections())
+  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'sqlite')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -176,11 +176,11 @@ export default class SqliteDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeAllConnections())
+  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'closeByDriver')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -194,7 +194,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 
@@ -209,7 +209,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new SqliteDriver('sqlite-docker')
 

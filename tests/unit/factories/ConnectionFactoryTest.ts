@@ -10,6 +10,8 @@
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { Log, LoggerProvider } from '@athenna/logger'
+import { DriverFactory } from '#src/factories/DriverFactory'
+import { PostgresDriver } from '#src/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Test, Mock, type Context, BeforeEach, AfterEach } from '@athenna/test'
 
@@ -287,5 +289,18 @@ export default class ConnectionFactoryTest {
     await ConnectionFactory.closeByDriver('mongo', clientFake)
 
     assert.calledOnce(clientFake.close)
+  }
+
+  @Test()
+  public async shouldBeAbleToCloseAllOpenedConnectionsWithAllDrivers({ assert }: Context) {
+    const clientFake = {
+      destroy: Mock.fake()
+    }
+    Mock.when(DriverFactory, 'availableDrivers').return(['postgres'])
+    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
+
+    await ConnectionFactory.closeAllConnections()
+
+    assert.calledOnce(clientFake.destroy)
   }
 }

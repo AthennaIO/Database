@@ -142,17 +142,4 @@ export default class DriverFactoryTest {
 
     assert.isNull(client)
   }
-
-  @Test()
-  public async shouldBeAbleToCloseAllOpenedConnectionsWithAllDrivers({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
-    Mock.when(DriverFactory, 'availableDrivers').return(['postgres'])
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
-
-    await DriverFactory.closeAllConnections()
-
-    assert.calledOnce(clientFake.destroy)
-  }
 }

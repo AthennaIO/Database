@@ -113,7 +113,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -127,7 +127,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldBeAbleToCallConnectMethodButWithoutConnectingToDatabase({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -142,7 +142,7 @@ export default class MySqlDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'mysql')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -157,11 +157,11 @@ export default class MySqlDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeAllConnections())
+  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'mysql')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -176,11 +176,11 @@ export default class MySqlDriverTest {
   }
 
   @Test()
-  @Cleanup(() => DriverFactory.closeAllConnections())
+  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
     Mock.spy(ConnectionFactory, 'closeByDriver')
 
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -194,7 +194,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
@@ -209,7 +209,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
-    await DriverFactory.closeAllConnections()
+    await ConnectionFactory.closeAllConnections()
 
     const driver = new MySqlDriver('mysql-docker')
 
