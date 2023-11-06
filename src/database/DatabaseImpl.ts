@@ -9,6 +9,7 @@
 
 import type { Knex } from 'knex'
 import type { Driver } from '#src/drivers/Driver'
+import type { Collection, Connection } from 'mongoose'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -34,6 +35,21 @@ export class DatabaseImpl<Client = any, QB = any> {
 
     this.connect(athennaDbOpts)
   }
+
+  public connection(
+    connection: 'mongo',
+    options?: ConnectionOptions
+  ): DatabaseImpl<Connection, Collection>
+
+  public connection(
+    connection: 'mysql',
+    options?: ConnectionOptions
+  ): DatabaseImpl<Knex, Knex.QueryBuilder>
+
+  public connection(
+    connection: 'sqlite',
+    options?: ConnectionOptions
+  ): DatabaseImpl<Knex, Knex.QueryBuilder>
 
   public connection(
     connection: 'postgres',
