@@ -15,6 +15,11 @@ import { Collection, Options, type PaginatedResponse } from '@athenna/common'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
+   * Set the primary key of the driver.
+   */
+  public primaryKey: string = 'id'
+
+  /**
    * Set if this instance is connected with database.
    */
   public isConnected: boolean = false
@@ -107,6 +112,15 @@ export abstract class Driver<Client = any, QB = any> {
 
     this.qb = queryBuilder
     this.useSetQB = options.useSetQB
+
+    return this
+  }
+
+  /**
+   * Set the primary key of the driver.
+   */
+  public setPrimaryKey(primaryKey: string): this {
+    this.primaryKey = primaryKey
 
     return this
   }
@@ -349,26 +363,17 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Create a value in database.
    */
-  public abstract create<T = any>(
-    data?: Partial<T>,
-    primaryKey?: string
-  ): Promise<T>
+  public abstract create<T = any>(data?: Partial<T>): Promise<T>
 
   /**
    * Create many values in database.
    */
-  public abstract createMany<T = any>(
-    data?: Partial<T>[],
-    primaryKey?: string
-  ): Promise<T[]>
+  public abstract createMany<T = any>(data?: Partial<T>[]): Promise<T[]>
 
   /**
    * Create data or update if already exists.
    */
-  public abstract createOrUpdate<T = any>(
-    data?: Partial<T>,
-    primaryKey?: string
-  ): Promise<T | T[]>
+  public abstract createOrUpdate<T = any>(data?: Partial<T>): Promise<T | T[]>
 
   /**
    * Update a value in database.

@@ -378,15 +378,12 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Create a value in database.
    */
-  public async create<T = any>(
-    data: Partial<T> = {},
-    primaryKey: string = 'id'
-  ): Promise<T> {
+  public async create<T = any>(data: Partial<T> = {}): Promise<T> {
     if (Is.Array(data)) {
       throw new WrongMethodException('create', 'createMany')
     }
 
-    const created = await this.createMany([data], primaryKey)
+    const created = await this.createMany([data])
 
     return created[0]
   }
@@ -394,10 +391,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Create many values in database.
    */
-  public async createMany<T = any>(
-    data: Partial<T>[] = [],
-    _primaryKey: string = 'id'
-  ): Promise<T[]> {
+  public async createMany<T = any>(data: Partial<T>[] = []): Promise<T[]> {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
@@ -409,19 +403,20 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Create data or update if already exists.
    */
   public async createOrUpdate<T = any>(
-    data: Partial<T> = {},
-    primaryKey: string = 'id'
+    data: Partial<T> = {}
   ): Promise<T | T[]> {
     const query = this.qb.clone()
     const hasValue = await query.first()
 
     if (hasValue) {
-      await this.qb.where(primaryKey, hasValue[primaryKey]).update(data)
+      await this.qb
+        .where(this.primaryKey, hasValue[this.primaryKey])
+        .update(data)
 
-      return this.where(primaryKey, hasValue[primaryKey]).find()
+      return this.where(this.primaryKey, hasValue[this.primaryKey]).find()
     }
 
-    return this.create(data, primaryKey)
+    return this.create(data)
   }
 
   /**

@@ -27,6 +27,7 @@ import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatab
 import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
 
 export class MongoDriver extends Driver<Connection, Collection> {
+  public primaryKey = '_id'
   public session: ClientSession = null
 
   /**
@@ -268,8 +269,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async avg(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, avg: { $avg: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, avg: 1 } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, avg: { $avg: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, avg: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -288,8 +291,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async avgDistinct(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, set: { $addToSet: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, avg: { $avg: '$set' } } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, set: { $addToSet: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, avg: { $avg: '$set' } } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -308,8 +313,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async max(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, max: { $max: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, max: 1 } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, max: { $max: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, max: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -328,8 +335,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async min(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, min: { $min: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, min: 1 } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, min: { $min: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, min: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -348,8 +357,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async sum(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, sum: { $sum: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, sum: 1 } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, sum: { $sum: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, sum: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -368,8 +379,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async sumDistinct(column: string): Promise<string> {
     const pipeline = this.createPipeline()
 
-    pipeline.push({ $group: { _id: null, set: { $addToSet: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, sum: { $sum: '$set' } } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, set: { $addToSet: `$${column}` } }
+    })
+    pipeline.push({ $project: { [this.primaryKey]: 0, sum: { $sum: '$set' } } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -418,8 +431,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
       pipeline.push({ $match: { [column]: { $ne: null } } })
     }
 
-    pipeline.push({ $group: { _id: null, count: { $sum: 1 } } })
-    pipeline.push({ $project: { _id: 0, count: 1 } })
+    pipeline.push({ $group: { [this.primaryKey]: null, count: { $sum: 1 } } })
+    pipeline.push({ $project: { [this.primaryKey]: 0, count: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -438,8 +451,12 @@ export class MongoDriver extends Driver<Connection, Collection> {
       pipeline.push({ $match: { [column]: { $ne: null } } })
     }
 
-    pipeline.push({ $group: { _id: null, set: { $addToSet: `$${column}` } } })
-    pipeline.push({ $project: { _id: 0, count: { $size: `$set` } } })
+    pipeline.push({
+      $group: { [this.primaryKey]: null, set: { $addToSet: `$${column}` } }
+    })
+    pipeline.push({
+      $project: { [this.primaryKey]: 0, count: { $size: `$set` } }
+    })
 
     const [{ count }] = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -486,8 +503,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
       clearPipeline: false
     })
 
-    pipeline.push({ $group: { _id: null, count: { $sum: 1 } } })
-    pipeline.push({ $project: { _id: 0, count: 1 } })
+    pipeline.push({ $group: { [this.primaryKey]: null, count: { $sum: 1 } } })
+    pipeline.push({ $project: { [this.primaryKey]: 0, count: 1 } })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -503,15 +520,12 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Create a value in database.
    */
-  public async create<T = any>(
-    data: Partial<T> = {},
-    primaryKey: string = '_id'
-  ): Promise<T> {
+  public async create<T = any>(data: Partial<T> = {}): Promise<T> {
     if (Is.Array(data)) {
       throw new WrongMethodException('create', 'createMany')
     }
 
-    const created = await this.createMany([data], primaryKey)
+    const created = await this.createMany([data])
 
     return created[0]
   }
@@ -519,10 +533,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Create many values in database.
    */
-  public async createMany<T = any>(
-    data: Partial<T>[] = [],
-    primaryKey: string = '_id'
-  ): Promise<T[]> {
+  public async createMany<T = any>(data: Partial<T>[] = []): Promise<T[]> {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
@@ -537,15 +548,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
       insertedIdsArray.push(insertedIds[key])
     )
 
-    return this.whereIn(primaryKey, insertedIdsArray).findMany()
+    return this.whereIn(this.primaryKey, insertedIdsArray).findMany()
   }
 
   /**
    * Create data or update if already exists.
    */
   public async createOrUpdate<T = any>(
-    data: Partial<T> = {},
-    primaryKey: string = '_id'
+    data: Partial<T> = {}
   ): Promise<T | T[]> {
     const pipeline = this.createPipeline()
 
@@ -554,10 +564,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
     )[0]
 
     if (hasValue) {
-      return this.where(primaryKey, hasValue[primaryKey]).update(data)
+      return this.where(this.primaryKey, hasValue[this.primaryKey]).update(data)
     }
 
-    return this.create(data, primaryKey)
+    return this.create(data)
   }
 
   /**
@@ -703,13 +713,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a join statement in your query.
    */
   public join(table: any, column1?: any, operation?: any, column2?: any): this {
-    let foreignField = column2 || operation || '_id'
+    let foreignField = column2 || operation || this.primaryKey
 
     if (foreignField.includes('.')) {
       foreignField = foreignField.split('.')[1]
     }
 
-    let localField = column1 || '_id'
+    let localField = column1 || this.primaryKey
 
     if (localField.includes('.')) {
       localField = localField.split('.')[1]
@@ -805,12 +815,12 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a group by statement in your query.
    */
   public groupBy(...columns: string[]): this {
-    const $group = { _id: {} }
+    const $group = { [this.primaryKey]: {} }
 
-    columns.forEach(column => ($group._id[column] = `$${column}`))
+    columns.forEach(column => ($group[this.primaryKey][column] = `$${column}`))
 
     this.pipeline.push({ $group })
-    this.pipeline.push({ $replaceRoot: { newRoot: '$_id' } })
+    this.pipeline.push({ $replaceRoot: { newRoot: `$${this.primaryKey}` } })
 
     return this
   }
