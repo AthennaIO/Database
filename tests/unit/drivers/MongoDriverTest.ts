@@ -16,6 +16,7 @@ import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
 
 export default class MongoDriverTest {
   public driver = new MongoDriver('mongo-memory')
@@ -244,37 +245,15 @@ export default class MongoDriverTest {
     assert.isDefined(await this.driver.table('users').where('_id', '1').find())
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToRunMigrationsUsingDriver({ assert }: Context) {
-  //   await this.driver.dropTable('rents')
-  //   await this.driver.dropTable('products')
-  //   await this.driver.dropTable('users')
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunMigrations({ assert }: Context) {
+    await assert.rejects(() => this.driver.runMigrations(), NotImplementedMethodException)
+  }
 
-  //   Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
-
-  //   await this.driver.runMigrations()
-
-  //   assert.isTrue(await this.driver.hasTable('users'))
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToRollbackMigrationsUsingDriver({ assert }: Context) {
-  //   await this.driver.dropTable('rents')
-  //   await this.driver.dropTable('products')
-  //   await this.driver.dropTable('users')
-
-  //   Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
-
-  //   await this.driver.runMigrations()
-
-  //   assert.isTrue(await this.driver.hasTable('users'))
-
-  //   await this.driver.revertMigrations()
-
-  //   assert.isFalse(await this.driver.hasTable('users'))
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRevertMigrations({ assert }: Context) {
+    await assert.rejects(() => this.driver.revertMigrations(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToGetTheDatabasesOfDriver({ assert }: Context) {
@@ -304,13 +283,10 @@ export default class MongoDriverTest {
     assert.isFalse(exists)
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToCreateDatabaseUsingDriver({ assert }: Context) {
-  //   await this.driver.createDatabase('trx')
-
-  //   assert.isTrue(await this.driver.hasDatabase('trx'))
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToCreateDatabase({ assert }: Context) {
+    await assert.rejects(() => this.driver.createDatabase(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToDropDatabaseUsingDriver({ assert }: Context) {
@@ -358,13 +334,10 @@ export default class MongoDriverTest {
     assert.isFalse(exists)
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToCreateTablesUsingDriver({ assert }: Context) {
-  //   const exists = await this.driver.hasTable('orders')
-
-  //   assert.isTrue(exists)
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToCreateTable({ assert }: Context) {
+    await assert.rejects(() => this.driver.createTable(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToDropTablesUsingDriver({ assert }: Context) {
@@ -391,15 +364,10 @@ export default class MongoDriverTest {
     assert.deepEqual(await this.driver.table('orders').findMany(), [])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToExecuteRawSQLQueriesWithDriver({ assert }: Context) {
-  //   const result = await this.driver.raw('INSERT INTO orders ("id") VALUES (?), (?), (?) RETURNING *', ['1', '2', '3'])
-
-  //   assert.deepEqual(result.command, 'INSERT')
-  //   assert.deepEqual(result.rowCount, 3)
-  //   assert.deepEqual(result.rows, [{ _id: '1' }, { _id: '2' }, { _id: '3' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunRawQuery({ assert }: Context) {
+    await assert.rejects(() => this.driver.raw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToGetTheAvgOfAGivenColumnWhenTableGotValues({ assert }: Context) {
@@ -883,35 +851,20 @@ export default class MongoDriverTest {
     assert.containsSubset(data, [{ _id: '1', name: 'Alan Turing' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldAllowRawSqlSelectionForSpecializedQueries({ assert }: Context) {
-  //   await this.driver.table('users').create({ _id: '1', name: 'Alan Turing' })
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunSelectRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.selectRaw(), NotImplementedMethodException)
+  }
 
-  //   const data = await this.driver.table('users').selectRaw('COUNT(*) as user_count').find()
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunFromMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.from(), NotImplementedMethodException)
+  }
 
-  //   assert.deepEqual(data, { user_count: '1' })
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldAllowSelectingAllColumnsFromTableUsingFrom({ assert }: Context) {
-  //   await this.driver.table('users').create({ _id: '1', name: 'Alan Turing' })
-
-  //   const data = await this.driver.select('*').from('users').where('_id', '1').findMany()
-
-  //   assert.containsSubset(data, [{ _id: '1', name: 'Alan Turing' }])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldAllowRawSqlSelectionForSpecializedQueriesUsingFromRaw({ assert }: Context) {
-  //   await this.driver.table('users').create({ _id: '1', name: 'Alan Turing' })
-
-  //   const data = await this.driver.selectRaw('COUNT(*) as user_count').fromRaw('users').find()
-
-  //   assert.deepEqual(data, { user_count: '1' })
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunFromRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.fromRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToJoinAnotherTableBasedOnSpecifiedColumns({ assert }: Context) {
@@ -923,19 +876,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .join('rents', 'users.id', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').join('rents', 'users._id', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -949,19 +902,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .join('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').join('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -975,19 +928,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .leftJoin('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').leftJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -1001,19 +954,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .rightJoin('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').rightJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -1027,19 +980,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .crossJoin('rents')
-      .findMany()
+    const data = await this.driver.table('users').crossJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -1053,19 +1006,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .fullOuterJoin('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').fullOuterJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -1079,19 +1032,19 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .leftOuterJoin('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').leftOuterJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
@@ -1105,48 +1058,26 @@ export default class MongoDriverTest {
       { _id: '4', user_id: '1' }
     ])
 
-    const data = await this.driver
-      .table('users')
-      .select('users.id as user_id')
-      .select('users.name as user_name')
-      .select('rents.id as rent_id')
-      .rightOuterJoin('rents', 'users.id', '=', 'rents.user_id')
-      .findMany()
+    const data = await this.driver.table('users').rightOuterJoin('rents', 'users._id', '=', 'rents.user_id').findMany()
 
     assert.deepEqual(data, [
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '2' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '3' },
-      { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '4' }
+      {
+        _id: '1',
+        name: 'Robert Kiyosaki',
+        rents: [
+          { _id: '1', user_id: '1' },
+          { _id: '2', user_id: '1' },
+          { _id: '3', user_id: '1' },
+          { _id: '4', user_id: '1' }
+        ]
+      }
     ])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldApplyJoinRawForGivenTableAndConditions({ assert }: Context) {
-  //   await this.driver.table('users').createMany([{ _id: '1', name: 'Robert Kiyosaki' }])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('users')
-  //     .select('users.id as user_id')
-  //     .select('users.name as user_name')
-  //     .select('rents.id as rent_id')
-  //     .joinRaw('NATURAL FULL JOIN rents')
-  //     .findMany()
-
-  //   assert.deepEqual(data, [
-  //     { user_id: '1', user_name: 'Robert Kiyosaki', rent_id: '1' },
-  //     { user_id: null, user_name: null, rent_id: '4' },
-  //     { user_id: null, user_name: null, rent_id: '3' },
-  //     { user_id: null, user_name: null, rent_id: '2' }
-  //   ])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunJoinRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.joinRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToGroupBySpecifiedColumnsUsingDriver({ assert }: Context) {
@@ -1168,26 +1099,10 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToGroupByRawSpecifiedColumnsUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver.table('rents').select('user_id').groupByRaw('user_id ORDER BY user_id').findMany()
-
-  //   assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunGroupByRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.groupByRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAHavingClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -1241,94 +1156,20 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ user_id: '2' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAHavingRawClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.havingRaw(), NotImplementedMethodException)
+  }
 
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .select('user_id')
-  //     .groupBy('user_id')
-  //     .havingRaw("user_id <= '2' ORDER BY user_id")
-  //     .findMany()
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.havingExists(), NotImplementedMethodException)
+  }
 
-  //   assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .groupBy('_id', 'user_id')
-  //     .havingExists(query => {
-  //       query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [
-  //     { _id: '6', user_id: '2' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '3', user_id: '1' }
-  //   ])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' },
-  //     { _id: '3', name: 'Alan Turing' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('users')
-  //     .select('_id', 'name')
-  //     .groupBy('_id', 'name')
-  //     .havingNotExists(query => {
-  //       query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [{ _id: '3', name: 'Alan Turing' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingNotExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.havingNotExists(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -1534,94 +1375,20 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ user_id: '2' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrHavingRawClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrHavingRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.orHavingRaw(), NotImplementedMethodException)
+  }
 
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .select('user_id')
-  //     .groupBy('user_id')
-  //     .orHavingRaw("user_id <= '2' ORDER BY user_id")
-  //     .findMany()
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrHavingExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.orHavingExists(), NotImplementedMethodException)
+  }
 
-  //   assert.deepEqual(data, [{ user_id: '1' }, { user_id: '2' }])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .groupBy('_id', 'user_id')
-  //     .orHavingExists(query => {
-  //       query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [
-  //     { _id: '6', user_id: '2' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '3', user_id: '1' }
-  //   ])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' },
-  //     { _id: '3', name: 'Alan Turing' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('users')
-  //     .select('_id', 'name')
-  //     .groupBy('_id', 'name')
-  //     .orHavingNotExists(query => {
-  //       query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [{ _id: '3', name: 'Alan Turing' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrHavingNotExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.orHavingNotExists(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAOrHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -1851,26 +1618,10 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAWhereRawClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver.table('rents').select('user_id').whereRaw("user_id = '2'").findMany()
-
-  //   assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunWhereRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.whereRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAWhereNotClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -1958,66 +1709,15 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ _id: '2', name: 'Warren Buffet' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunWhereExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.whereExists(), NotImplementedMethodException)
+  }
 
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .whereExists(query => {
-  //       query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAWhereNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' },
-  //     { _id: '3', name: 'Alan Turing' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('users')
-  //     .select('_id', 'name')
-  //     .whereNotExists(query => {
-  //       query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [{ _id: '3', name: 'Alan Turing' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunWhereNotExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.whereNotExists(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAWhereInClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -2232,30 +1932,10 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrWhereRawClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .select('user_id')
-  //     .orWhereRaw("user_id = '2' ORDER BY user_id")
-  //     .findMany()
-
-  //   assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrWhereRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.orWhereRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAOrWhereNotClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -2343,66 +2023,15 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ _id: '2', name: 'Warren Buffet' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrWhereExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.orWhereExists(), NotImplementedMethodException)
+  }
 
-  //   const data = await this.driver
-  //     .table('rents')
-  //     .orWhereExists(query => {
-  //       query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-  // }
-
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldBeAbleToAddAOrWhereNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' },
-  //     { _id: '3', name: 'Alan Turing' }
-  //   ])
-  //   await this.driver.table('rents').createMany([
-  //     { _id: '1', user_id: '1' },
-  //     { _id: '2', user_id: '1' },
-  //     { _id: '3', user_id: '1' },
-  //     { _id: '4', user_id: '1' },
-  //     { _id: '5', user_id: '2' },
-  //     { _id: '6', user_id: '2' }
-  //   ])
-
-  //   const data = await this.driver
-  //     .table('users')
-  //     .select('_id', 'name')
-  //     .orWhereNotExists(query => {
-  //       query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-  //     })
-  //     .findMany()
-
-  //   assert.deepEqual(data, [{ _id: '3', name: 'Alan Turing' }])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrWhereNotExistsMethod({ assert }: Context) {
+    await assert.rejects(() => this.driver.orWhereNotExists(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAddAOrWhereInClauseToTheQueryUsingDriver({ assert }: Context) {
@@ -2568,25 +2197,10 @@ export default class MongoDriverTest {
     assert.deepEqual(data, [{ name: 'Warren Buffet' }, { name: 'Robert Kiyosaki' }, { name: 'Alan Turing' }])
   }
 
-  // TODO Throw not implemented
-  // @Test()
-  // public async shouldOrderBySpecifiedColumnInGivenDirectionUsingRawSQL({ assert }: Context) {
-  //   await this.driver.table('users').createMany([
-  //     { _id: '1', name: 'Robert Kiyosaki' },
-  //     { _id: '2', name: 'Warren Buffet' },
-  //     { _id: '3', name: 'Alan Turing' },
-  //     { _id: '4', name: null }
-  //   ])
-
-  //   const data = await this.driver.table('users').select('name').orderByRaw('name DESC NULLS LAST').findMany()
-
-  //   assert.deepEqual(data, [
-  //     { name: 'Warren Buffet' },
-  //     { name: 'Robert Kiyosaki' },
-  //     { name: 'Alan Turing' },
-  //     { name: null }
-  //   ])
-  // }
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrderByRaw({ assert }: Context) {
+    await assert.rejects(() => this.driver.orderByRaw(), NotImplementedMethodException)
+  }
 
   @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {

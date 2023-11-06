@@ -627,7 +627,27 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (!columns.includes('_id')) {
-      this.pipeline.push({ $project: { _id: 0 } })
+      const isAlreadyHide = !!this.pipeline
+        .map(step => {
+          if (!step.$project) {
+            return false
+          }
+
+          if (!step.$project._id) {
+            return false
+          }
+
+          if (step.$project._id === 0) {
+            return false
+          }
+
+          return true
+        })
+        .find(value => value === true)
+
+      if (!isAlreadyHide) {
+        this.pipeline.push({ $project: { _id: 0 } })
+      }
     }
 
     const $project = columns.reduce((previous, column) => {
