@@ -69,7 +69,7 @@
     "@athenna/artisan": "^4.15.2",
     "@athenna/common": "^4.20.0",
     "@athenna/config": "^4.7.0",
-    "@athenna/ioc": "^4.8.0",
+    "@athenna/ioc": "^4.8.1",
     "@athenna/logger": "^4.8.0",
     "@athenna/test": "^4.13.0",
     "@athenna/tsconfig": "^4.11.0",

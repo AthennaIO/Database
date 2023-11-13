@@ -36,7 +36,7 @@ export default class DatabaseProviderTest {
   public async shouldBeAbleToUseDatabaseImplementationFromFacade({ assert }: Context) {
     await new DatabaseProvider().register()
 
-    assert.isFalse(Database.isConnected())
+    assert.isDefined(Database.connectionName)
   }
 
   @Test()

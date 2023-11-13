@@ -8,65 +8,75 @@
  */
 
 import type { Knex } from 'knex'
-import type { Driver } from '#src/drivers/Driver'
-import type { Collection, Connection } from 'mongoose'
+import type { MongoDriver } from '#src/drivers/MongoDriver'
+import type { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { DriverFactory } from '#src/factories/DriverFactory'
+import type { SqliteDriver } from '#src/drivers/SqliteDriver'
+import type { Driver as DriverImpl } from '#src/drivers/Driver'
+import type { Connections, ConnectionOptions } from '#src/types'
+import type { PostgresDriver } from '#src/drivers/PostgresDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
-import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import type { Transaction } from '#src/database/transactions/Transaction'
 
-export class DatabaseImpl<Client = any, QB = any> {
+export class DatabaseImpl<Driver extends DriverImpl = any> {
   /**
    * The connection name used for this instance.
    */
-  public connectionName = Config.get('database.default')
+  public connectionName = Config.get<Connections>('database.default')
 
   /**
    * The drivers responsible for handling database operations.
    */
-  public driver: Driver<Client, QB> = null
+  public driver: Driver = null
 
   /**
    * Creates a new instance of DatabaseImpl.
    */
   public constructor(athennaDbOpts?: ConnectionOptions) {
-    this.driver = DriverFactory.fabricate(this.connectionName)
+    this.driver = DriverFactory.fabricate(this.connectionName) as Driver
 
     this.connect(athennaDbOpts)
   }
 
   public connection(
-    connection: 'mongo',
+    con: 'mongo',
     options?: ConnectionOptions
-  ): DatabaseImpl<Connection, Collection>
+  ): DatabaseImpl<MongoDriver>
 
   public connection(
-    connection: 'mysql',
+    con: 'mysql',
     options?: ConnectionOptions
-  ): DatabaseImpl<Knex, Knex.QueryBuilder>
+  ): DatabaseImpl<MySqlDriver>
 
   public connection(
-    connection: 'sqlite',
+    con: 'sqlite',
     options?: ConnectionOptions
-  ): DatabaseImpl<Knex, Knex.QueryBuilder>
+  ): DatabaseImpl<SqliteDriver>
 
   public connection(
-    connection: 'postgres',
+    con: 'postgres',
     options?: ConnectionOptions
-  ): DatabaseImpl<Knex, Knex.QueryBuilder>
+  ): DatabaseImpl<PostgresDriver>
+
+  public connection(
+    con: Connections,
+    options?: ConnectionOptions
+  ):
+    | DatabaseImpl<MongoDriver>
+    | DatabaseImpl<MySqlDriver>
+    | DatabaseImpl<SqliteDriver>
+    | DatabaseImpl<PostgresDriver>
 
   /**
    * Change the database connection.
    */
-  public connection(
-    connection: string,
-    options?: ConnectionOptions
-  ): DatabaseImpl {
-    const database = new DatabaseImpl(options)
+  public connection(con: Connections, options?: ConnectionOptions) {
+    const driver = DriverFactory.fabricate(con)
+    const database = new DatabaseImpl<typeof driver>(options)
 
-    database.connectionName = connection
-    database.driver = DriverFactory.fabricate(connection)
+    database.connectionName = con
+    database.driver = driver
 
     return database
   }
@@ -81,7 +91,7 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Connect to database.
    */
-  public connect(options?: ConnectionOptions): DatabaseImpl<Client, QB> {
+  public connect(options?: ConnectionOptions): DatabaseImpl<Driver> {
     this.driver.connect(options)
 
     return this
@@ -104,21 +114,21 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Return the client of driver.
    */
-  public getClient(): Client {
+  public getClient() {
     return this.driver.getClient()
   }
 
   /**
    * Return the query builder of driver.
    */
-  public getQueryBuilder(): QB {
+  public getQueryBuilder() {
     return this.driver.getQueryBuilder()
   }
 
   /**
    * Create a new transaction.
    */
-  public async startTransaction(): Promise<Transaction<Client, QB>> {
+  public async startTransaction(): Promise<Transaction<Driver>> {
     return this.driver.startTransaction()
   }
 
@@ -220,7 +230,7 @@ export class DatabaseImpl<Client = any, QB = any> {
   /**
    * Creates a new instance of QueryBuilder for this table.
    */
-  public table(table: string | any): QueryBuilder<Client, QB> {
-    return new QueryBuilder<Client, QB>(this.driver, table)
+  public table(table: string | any): QueryBuilder<Driver> {
+    return new QueryBuilder(this.driver, table)
   }
 }

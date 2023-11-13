@@ -15,6 +15,7 @@ import type { DriverKey } from '#src/types/DriverKey'
 import { MongoDriver } from '#src/drivers/MongoDriver'
 import { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { SqliteDriver } from '#src/drivers/SqliteDriver'
+import type { Connections } from '#src/types/Connections'
 import { PostgresDriver } from '#src/drivers/PostgresDriver'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
@@ -63,6 +64,14 @@ export class DriverFactory {
 
     return availableDrivers
   }
+
+  public static fabricate(con: 'mongo'): MongoDriver
+  public static fabricate(con: 'mysql'): MySqlDriver
+  public static fabricate(con: 'sqlite'): SqliteDriver
+  public static fabricate(con: 'postgres'): PostgresDriver
+  public static fabricate(
+    con: Connections
+  ): MongoDriver | MySqlDriver | SqliteDriver | PostgresDriver
 
   /**
    * Fabricate a new connection with some database driver.

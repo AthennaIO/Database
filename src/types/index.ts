@@ -8,4 +8,7 @@
  */
 
 export * from '#src/types/Direction'
+export * from '#src/types/Connections'
 export * from '#src/types/ConnectionOptions'
+export * from '#src/types/columns/ColumnType'
+export * from '#src/types/columns/ColumnOptions'
