@@ -14,6 +14,7 @@ import { Database } from '#src/facades/Database'
 import { Column } from '#src/models/annotations/Column'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
 
 class User extends Model {
@@ -180,13 +181,24 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToFindDataUsingFindOrFail({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
-    Mock.when(FakeDriver, 'findOrFail').resolve(expectedData)
+    Mock.when(FakeDriver, 'find').resolve(expectedData)
 
     const queryBuilder = User.query()
     const result = await queryBuilder.findOrFail()
 
-    assert.calledOnce(FakeDriver.findOrFail)
+    assert.calledOnce(FakeDriver.find)
     assert.deepEqual(result, expectedData)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldThrownNotFoundDataExceptionWhenFindOrFailReturnsUndefined({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+
+    const queryBuilder = User.query()
+
+    await assert.rejects(() => queryBuilder.findOrFail(), NotFoundDataException)
+    assert.calledOnce(FakeDriver.find)
   }
 
   @Test()
