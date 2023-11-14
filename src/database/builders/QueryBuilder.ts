@@ -117,7 +117,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   }
 
   /**
-   * Return a single model instance or, if no results are found,
+   * Return a single data or, if no results are found,
    * execute the given closure.
    */
   public async findOr(callback: () => Promise<T>): Promise<T> {

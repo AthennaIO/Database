@@ -10,6 +10,7 @@
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { Test, Mock, AfterEach, type Context } from '@athenna/test'
+import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
 export default class QueryBuilderTest {
   @AfterEach()
@@ -165,7 +166,30 @@ export default class QueryBuilderTest {
   }
 
   @Test()
+  public async shouldThrownNotFoundDataExceptionWhenFindOrFailReturnsUndefined({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+
+    await assert.rejects(() => queryBuilder.findOrFail(), NotFoundDataException)
+    assert.calledOnce(FakeDriver.find)
+  }
+
+  @Test()
   public async shouldBeAbleToFindDataOrExecuteTheCallback({ assert }: Context) {
+    const expectedData = { id: '1', name: 'John Doe' }
+    const callback = async () => expectedData
+    Mock.when(FakeDriver, 'findOr').resolve(expectedData)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    const result = await queryBuilder.findOr(callback)
+
+    assert.calledOnceWith(FakeDriver.findOr, callback)
+    assert.deepEqual(result, expectedData)
+  }
+
+  @Test()
+  public async shouldReturnClosureDataWhenDataIsUndefined({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
     const callback = async () => expectedData
     Mock.when(FakeDriver, 'findOr').resolve(expectedData)

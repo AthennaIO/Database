@@ -18,6 +18,10 @@ import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
 
 class User extends Model {
+  public static connection() {
+    return 'fake'
+  }
+
   @Column()
   public id: string
 
@@ -204,14 +208,27 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToFindDataOrExecuteTheCallback({ assert }: Context) {
     const expectedData = { id: '1', name: 'John Doe' }
-    const callback = async () => expectedData
-    Mock.when(FakeDriver, 'findOr').resolve(expectedData)
+    const callback = async () => null
+    Mock.when(FakeDriver, 'find').resolve(expectedData)
 
     const queryBuilder = User.query()
     const result = await queryBuilder.findOr(callback)
 
-    assert.calledOnceWith(FakeDriver.findOr, callback)
+    assert.calledOnce(FakeDriver.find)
     assert.deepEqual(result, expectedData)
+  }
+
+  @Test()
+  public async shouldReturnClosureDataWhenDataIsUndefined({ assert }: Context) {
+    const expectedData = { id: '1', name: 'John Doe' }
+    const callback = async () => expectedData
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.findOr(callback)
+
+    assert.deepEqual(result, expectedData)
+    assert.calledOnce(FakeDriver.find)
   }
 
   @Test()

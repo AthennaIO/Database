@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+
 export const FakeDriver: any = {
   table: () => {},
   isConnected: false,
@@ -54,7 +56,15 @@ export const FakeDriver: any = {
   decrement: () => {},
   count: () => {},
   countDistinct: () => {},
-  findOrFail: () => {},
+  findOrFail: async () => {
+    const data = await FakeDriver.find()
+
+    if (!data) {
+      throw new NotFoundDataException('fake')
+    }
+
+    return data
+  },
   findOr: () => {},
   find: () => {},
   findMany: () => {},

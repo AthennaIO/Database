@@ -18,7 +18,7 @@ export class ModelQueryBuilder<
   D extends Driver = any
 > extends QueryBuilder<M, D> {
   private Model: new () => M
-  private generator: ModelGenerator
+  private generator: ModelGenerator<M>
 
   public constructor(model: typeof Model, driver: D) {
     super(driver, model.table())
@@ -46,6 +46,20 @@ export class ModelQueryBuilder<
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       throw new NotFoundDataException(this.Model.connection())
+    }
+
+    return data
+  }
+
+  /**
+   * Return a single data or, if no results are found,
+   * execute the given closure.
+   */
+  public async findOr<T = M>(closure: () => T | Promise<T>): Promise<T> {
+    const data = (await this.find()) as T
+
+    if (!data) {
+      return closure()
     }
 
     return data
