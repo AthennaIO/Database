@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Collection, Is } from '@athenna/common'
 import type { Model } from '#src/models/Model'
 import type { Driver } from '#src/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
@@ -17,13 +18,15 @@ export class ModelQueryBuilder<
   M extends Model = any,
   D extends Driver = any
 > extends QueryBuilder<M, D> {
-  private Model: new () => M
+  private Model: typeof Model
   private generator: ModelGenerator<M>
 
   public constructor(model: typeof Model, driver: D) {
     super(driver, model.table())
 
-    this.Model = model as unknown as new () => M
+    this.setPrimaryKey(model.schema().getMainPrimaryKey()?.name || 'id')
+
+    this.Model = model
     this.generator = new ModelGenerator<M>(this.Model as any)
   }
 
@@ -63,5 +66,84 @@ export class ModelQueryBuilder<
     }
 
     return data
+  }
+
+  /**
+   * Find many values in database.
+   */
+  public async findMany() {
+    const data = await super.findMany()
+
+    return this.generator.generateMany(data)
+  }
+
+  /**
+   * Find many values in database and return
+   * as a collection instance.
+   */
+  public async collection() {
+    const data = await super.findMany()
+    const models = await this.generator.generateMany(data)
+
+    return new Collection(models)
+  }
+
+  /**
+   * Create a value in database.
+   */
+  public async create(data: Partial<M>) {
+    const created = await this.createMany([data])
+
+    return created[0]
+  }
+
+  /**
+   * Create many values in database.
+   */
+  public async createMany(data: Partial<M>[]) {
+    const created = await super.createMany(data)
+
+    return this.generator.generateMany(created)
+  }
+
+  /**
+   * Create or update a value in database.
+   */
+  public async createOrUpdate(data: Partial<M>) {
+    const created = await super.createOrUpdate(data)
+
+    if (Is.Array(created)) {
+      return this.generator.generateMany(created)
+    }
+
+    return this.generator.generateOne(created)
+  }
+
+  /**
+   * Update a value in database.
+   */
+  public async update(data: Partial<M>) {
+    const updated = await super.update(data)
+
+    if (Is.Array(updated)) {
+      return this.generator.generateMany(updated)
+    }
+
+    return this.generator.generateOne(updated)
+  }
+
+  /**
+   * Delete or soft delete a value in database.
+   */
+  public async delete(force = false): Promise<void> {
+    const column = this.Model.schema().getSoftDeleteColumn()
+
+    if (!column || force) {
+      await super.delete()
+
+      return
+    }
+
+    await this.update({ [column.property]: new Date() } as any)
   }
 }

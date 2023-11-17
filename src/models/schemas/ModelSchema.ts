@@ -23,6 +23,34 @@ export class ModelSchema<M extends Model = any> {
   }
 
   /**
+   * Get the column options of the main primary key.
+   */
+  public getMainPrimaryKey(): ColumnOptions {
+    const columns = Annotation.getColumnsMeta(this.Model)
+    let options = columns.find(c => c.isMainPrimary)
+
+    if (!options) {
+      options = columns.find(c => c.name === 'id')
+    }
+
+    if (!options) {
+      options = columns.find(c => c.name === '_id')
+    }
+
+    return options
+  }
+
+  /**
+   * Get the column options where column has isDeleteDate
+   * as true.
+   */
+  public getSoftDeleteColumn(): ColumnOptions {
+    const columns = Annotation.getColumnsMeta(this.Model)
+
+    return columns.find(c => c.isDeleteDate)
+  }
+
+  /**
    * Get the column options by the column database name.
    */
   public getColumnByName(column: string): ColumnOptions {

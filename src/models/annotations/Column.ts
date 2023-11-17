@@ -28,6 +28,7 @@ export function Column(
       isHidden: false,
       isUnique: false,
       isNullable: true,
+      isMainPrimary: false,
       isCreateDate: false,
       isUpdateDate: false,
       isDeleteDate: false
@@ -36,6 +37,10 @@ export function Column(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.property = key
+
+    if (options.isMainPrimary) {
+      options.isPrimary = true
+    }
 
     const Target = target.constructor
 

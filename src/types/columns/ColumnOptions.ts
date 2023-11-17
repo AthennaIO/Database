@@ -89,6 +89,19 @@ export type ColumnOptions = {
   isNullable?: boolean
 
   /**
+   * Set if this column is the main primary key that
+   * should be used when performing create queries to
+   * database.
+   *
+   * Your class can only have one column option with
+   * isMainPrimary set as true. If you set isMainPrimary
+   * as true, Athenna will set isPrimary as true by default.
+   *
+   * @default false
+   */
+  isMainPrimary?: boolean
+
+  /**
    * Set if the column is createdAt field.
    * Columns with `isCreateDate` as `true`
    * will automatically be set with `new Date()`

@@ -40,6 +40,16 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   }
 
   /**
+   * Set the driver primary key that will be used
+   * when creating new data.
+   */
+  public setPrimaryKey(primaryKey: string): this {
+    this.driver.setPrimaryKey(primaryKey)
+
+    return this
+  }
+
+  /**
    * Calculate the average of a given column.
    */
   public async avg(column: string): Promise<string> {
@@ -201,7 +211,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a new table to work with in query builder.
    */
-  public table(tableName: string): QueryBuilder<T> {
+  public table(tableName: string): this {
     this.driver.table(tableName)
 
     return this
@@ -212,8 +222,8 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    */
   public when(
     criteria: any,
-    closure: (query: QueryBuilder<T>, criteriaValue: any) => void
-  ): QueryBuilder<T> {
+    closure: (query: this, criteriaValue: any) => void
+  ): this {
     if (criteria) {
       closure(this, criteria)
 
@@ -226,7 +236,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Log in console the actual query built.
    */
-  public dump(): QueryBuilder<T> {
+  public dump(): this {
     this.driver.dump()
 
     return this
@@ -235,7 +245,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set the columns that should be selected on query.
    */
-  public select(...columns: string[]): QueryBuilder<T> {
+  public select(...columns: string[]): this {
     this.driver.select(...columns)
 
     return this
@@ -244,7 +254,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set the columns that should be selected on query raw.
    */
-  public selectRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public selectRaw(sql: string, bindings?: any): this {
     this.driver.selectRaw(sql, bindings)
 
     return this
@@ -255,7 +265,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public from(table: string): QueryBuilder<T> {
+  public from(table: string): this {
     this.driver.from(table)
 
     return this
@@ -266,7 +276,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public fromRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public fromRaw(sql: string, bindings?: any): this {
     this.driver.fromRaw(sql, bindings)
 
     return this
@@ -280,7 +290,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.join(tableName, column1, operation, column2)
 
     return this
@@ -294,7 +304,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.leftJoin(tableName, column1, operation, column2)
 
     return this
@@ -308,7 +318,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.rightJoin(tableName, column1, operation, column2)
 
     return this
@@ -322,7 +332,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.crossJoin(tableName, column1, operation, column2)
 
     return this
@@ -336,7 +346,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.fullOuterJoin(tableName, column1, operation, column2)
 
     return this
@@ -350,7 +360,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.leftOuterJoin(tableName, column1, operation, column2)
 
     return this
@@ -364,7 +374,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     column1?: any,
     operation?: any,
     column2?: any
-  ): QueryBuilder<T> {
+  ): this {
     this.driver.rightOuterJoin(tableName, column1, operation, column2)
 
     return this
@@ -373,7 +383,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a join raw statement in your query.
    */
-  public joinRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public joinRaw(sql: string, bindings?: any): this {
     this.driver.joinRaw(sql, bindings)
 
     return this
@@ -382,7 +392,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a group by statement in your query.
    */
-  public groupBy(...columns: string[]): QueryBuilder<T> {
+  public groupBy(...columns: string[]): this {
     this.driver.groupBy(...columns)
 
     return this
@@ -391,7 +401,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a group by raw statement in your query.
    */
-  public groupByRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public groupByRaw(sql: string, bindings?: any): this {
     this.driver.groupByRaw(sql, bindings)
 
     return this
@@ -400,11 +410,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having statement in your query.
    */
-  public having(
-    column: string,
-    operation?: string | any,
-    value?: any
-  ): QueryBuilder<T> {
+  public having(column: string, operation?: string | any, value?: any): this {
     this.driver.having(column, operation, value)
 
     return this
@@ -413,7 +419,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having raw statement in your query.
    */
-  public havingRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public havingRaw(sql: string, bindings?: any): this {
     this.driver.havingRaw(sql, bindings)
 
     return this
@@ -422,7 +428,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public havingExists(closure: (query: Driver) => void): this {
     this.driver.havingExists(closure)
 
     return this
@@ -431,7 +437,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public havingNotExists(closure: (query: Driver) => void): this {
     this.driver.havingNotExists(closure)
 
     return this
@@ -440,7 +446,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having in statement in your query.
    */
-  public havingIn(column: string, values: any[]): QueryBuilder<T> {
+  public havingIn(column: string, values: any[]): this {
     this.driver.havingIn(column, values)
 
     return this
@@ -449,7 +455,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having not in statement in your query.
    */
-  public havingNotIn(column: string, values: any[]): QueryBuilder<T> {
+  public havingNotIn(column: string, values: any[]): this {
     this.driver.havingNotIn(column, values)
 
     return this
@@ -458,7 +464,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having between statement in your query.
    */
-  public havingBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public havingBetween(column: string, values: [any, any]): this {
     this.driver.havingBetween(column, values)
 
     return this
@@ -467,7 +473,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having not between statement in your query.
    */
-  public havingNotBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public havingNotBetween(column: string, values: [any, any]): this {
     this.driver.havingNotBetween(column, values)
 
     return this
@@ -476,7 +482,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having null statement in your query.
    */
-  public havingNull(column: string): QueryBuilder<T> {
+  public havingNull(column: string): this {
     this.driver.havingNull(column)
 
     return this
@@ -485,7 +491,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a having not null statement in your query.
    */
-  public havingNotNull(column: string): QueryBuilder<T> {
+  public havingNotNull(column: string): this {
     this.driver.havingNotNull(column)
 
     return this
@@ -494,11 +500,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having statement in your query.
    */
-  public orHaving(
-    column: string,
-    operation?: string | any,
-    value?: any
-  ): QueryBuilder<T> {
+  public orHaving(column: string, operation?: string | any, value?: any): this {
     this.driver.orHaving(column, operation, value)
 
     return this
@@ -507,7 +509,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having raw statement in your query.
    */
-  public orHavingRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public orHavingRaw(sql: string, bindings?: any): this {
     this.driver.orHavingRaw(sql, bindings)
 
     return this
@@ -516,7 +518,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public orHavingExists(closure: (query: Driver) => void): this {
     this.driver.orHavingExists(closure)
 
     return this
@@ -525,7 +527,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public orHavingNotExists(closure: (query: Driver) => void): this {
     this.driver.orHavingNotExists(closure)
 
     return this
@@ -534,7 +536,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having in statement in your query.
    */
-  public orHavingIn(column: string, values: any[]): QueryBuilder<T> {
+  public orHavingIn(column: string, values: any[]): this {
     this.driver.orHavingIn(column, values)
 
     return this
@@ -543,7 +545,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having not in statement in your query.
    */
-  public orHavingNotIn(column: string, values: any[]): QueryBuilder<T> {
+  public orHavingNotIn(column: string, values: any[]): this {
     this.driver.orHavingNotIn(column, values)
 
     return this
@@ -552,7 +554,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having between statement in your query.
    */
-  public orHavingBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public orHavingBetween(column: string, values: [any, any]): this {
     this.driver.orHavingBetween(column, values)
 
     return this
@@ -561,10 +563,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having not between statement in your query.
    */
-  public orHavingNotBetween(
-    column: string,
-    values: [any, any]
-  ): QueryBuilder<T> {
+  public orHavingNotBetween(column: string, values: [any, any]): this {
     this.driver.orHavingNotBetween(column, values)
 
     return this
@@ -573,7 +572,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having null statement in your query.
    */
-  public orHavingNull(column: string): QueryBuilder<T> {
+  public orHavingNull(column: string): this {
     this.driver.orHavingNull(column)
 
     return this
@@ -582,7 +581,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or having not null statement in your query.
    */
-  public orHavingNotNull(column: string): QueryBuilder<T> {
+  public orHavingNotNull(column: string): this {
     this.driver.orHavingNotNull(column)
 
     return this
@@ -591,7 +590,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where statement in your query.
    */
-  public where(statement: any, operation?: any, value?: any): QueryBuilder<T> {
+  public where(statement: any, operation?: any, value?: any): this {
     this.driver.where(statement, operation, value)
 
     return this
@@ -600,7 +599,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where not statement in your query.
    */
-  public whereNot(statement: any, value?: any): QueryBuilder<T> {
+  public whereNot(statement: any, value?: any): this {
     this.driver.whereNot(statement, value)
 
     return this
@@ -609,7 +608,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where raw statement in your query.
    */
-  public whereRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public whereRaw(sql: string, bindings?: any): this {
     this.driver.whereRaw(sql, bindings)
 
     return this
@@ -618,7 +617,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public whereExists(closure: (query: Driver) => void): this {
     this.driver.whereExists(closure)
 
     return this
@@ -627,7 +626,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public whereNotExists(closure: (query: Driver) => void): this {
     this.driver.whereNotExists(closure)
 
     return this
@@ -636,7 +635,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(statement: any, value?: any): QueryBuilder<T> {
+  public whereLike(statement: any, value?: any): this {
     this.driver.whereLike(statement, value)
 
     return this
@@ -645,7 +644,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(statement: any, value?: any): QueryBuilder<T> {
+  public whereILike(statement: any, value?: any): this {
     this.driver.whereILike(statement, value)
 
     return this
@@ -654,7 +653,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where in statement in your query.
    */
-  public whereIn(column: string, values: any[]): QueryBuilder<T> {
+  public whereIn(column: string, values: any[]): this {
     this.driver.whereIn(column, values)
 
     return this
@@ -663,7 +662,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where not in statement in your query.
    */
-  public whereNotIn(column: string, values: any[]): QueryBuilder<T> {
+  public whereNotIn(column: string, values: any[]): this {
     this.driver.whereNotIn(column, values)
 
     return this
@@ -672,7 +671,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where between statement in your query.
    */
-  public whereBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public whereBetween(column: string, values: [any, any]): this {
     this.driver.whereBetween(column, values)
 
     return this
@@ -681,7 +680,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where not between statement in your query.
    */
-  public whereNotBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public whereNotBetween(column: string, values: [any, any]): this {
     this.driver.whereNotBetween(column, values)
 
     return this
@@ -690,7 +689,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where null statement in your query.
    */
-  public whereNull(column: string): QueryBuilder<T> {
+  public whereNull(column: string): this {
     this.driver.whereNull(column)
 
     return this
@@ -699,7 +698,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a where not null statement in your query.
    */
-  public whereNotNull(column: string): QueryBuilder<T> {
+  public whereNotNull(column: string): this {
     this.driver.whereNotNull(column)
 
     return this
@@ -708,11 +707,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(
-    statement: any,
-    operation?: any,
-    value?: any
-  ): QueryBuilder<T> {
+  public orWhere(statement: any, operation?: any, value?: any): this {
     this.driver.orWhere(statement, operation, value)
 
     return this
@@ -721,7 +716,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where not statement in your query.
    */
-  public orWhereNot(statement: any, value?: any): QueryBuilder<T> {
+  public orWhereNot(statement: any, value?: any): this {
     this.driver.orWhereNot(statement, value)
 
     return this
@@ -730,7 +725,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set a or where raw statement in your query.
    */
-  public orWhereRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public orWhereRaw(sql: string, bindings?: any): this {
     this.driver.orWhereRaw(sql, bindings)
 
     return this
@@ -739,7 +734,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public orWhereExists(closure: (query: Driver) => void): this {
     this.driver.orWhereExists(closure)
 
     return this
@@ -748,7 +743,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists(closure: (query: Driver) => void): QueryBuilder<T> {
+  public orWhereNotExists(closure: (query: Driver) => void): this {
     this.driver.orWhereNotExists(closure)
 
     return this
@@ -757,7 +752,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(statement: any, value?: any): QueryBuilder<T> {
+  public orWhereLike(statement: any, value?: any): this {
     this.driver.orWhereLike(statement, value)
 
     return this
@@ -766,7 +761,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(statement: any, value?: any): QueryBuilder<T> {
+  public orWhereILike(statement: any, value?: any): this {
     this.driver.orWhereILike(statement, value)
 
     return this
@@ -775,7 +770,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where in statement in your query.
    */
-  public orWhereIn(column: string, values: any[]): QueryBuilder<T> {
+  public orWhereIn(column: string, values: any[]): this {
     this.driver.orWhereIn(column, values)
 
     return this
@@ -784,7 +779,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where not in statement in your query.
    */
-  public orWhereNotIn(column: string, values: any[]): QueryBuilder<T> {
+  public orWhereNotIn(column: string, values: any[]): this {
     this.driver.orWhereNotIn(column, values)
 
     return this
@@ -793,7 +788,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where between statement in your query.
    */
-  public orWhereBetween(column: string, values: [any, any]): QueryBuilder<T> {
+  public orWhereBetween(column: string, values: [any, any]): this {
     this.driver.orWhereBetween(column, values)
 
     return this
@@ -802,10 +797,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where not between statement in your query.
    */
-  public orWhereNotBetween(
-    column: string,
-    values: [any, any]
-  ): QueryBuilder<T> {
+  public orWhereNotBetween(column: string, values: [any, any]): this {
     this.driver.orWhereNotBetween(column, values)
 
     return this
@@ -814,7 +806,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where null statement in your query.
    */
-  public orWhereNull(column: string): QueryBuilder<T> {
+  public orWhereNull(column: string): this {
     this.driver.orWhereNull(column)
 
     return this
@@ -823,7 +815,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an or where not null statement in your query.
    */
-  public orWhereNotNull(column: string): QueryBuilder<T> {
+  public orWhereNotNull(column: string): this {
     this.driver.orWhereNotNull(column)
 
     return this
@@ -832,10 +824,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(
-    column: string,
-    direction: Direction = 'ASC'
-  ): QueryBuilder<T> {
+  public orderBy(column: string, direction: Direction = 'ASC'): this {
     this.driver.orderBy(column, direction.toUpperCase() as Direction)
 
     return this
@@ -844,7 +833,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set an order by raw statement in your query.
    */
-  public orderByRaw(sql: string, bindings?: any): QueryBuilder<T> {
+  public orderByRaw(sql: string, bindings?: any): this {
     this.driver.orderByRaw(sql, bindings)
 
     return this
@@ -854,7 +843,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Order the results easily by the latest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public latest(column = 'createdAt'): QueryBuilder<T> {
+  public latest(column = 'createdAt'): this {
     this.driver.latest(column)
 
     return this
@@ -864,7 +853,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Order the results easily by the oldest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public oldest(column = 'createdAt'): QueryBuilder<T> {
+  public oldest(column = 'createdAt'): this {
     this.driver.oldest(column)
 
     return this
@@ -873,7 +862,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set the skip number in your query.
    */
-  public offset(number: number): QueryBuilder<T> {
+  public offset(number: number): this {
     this.driver.offset(number)
 
     return this
@@ -882,7 +871,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Set the limit number in your query.
    */
-  public limit(number: number): QueryBuilder<T> {
+  public limit(number: number): this {
     this.driver.limit(number)
 
     return this

@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { Model } from '#src/models/Model'
 import { Database } from '#src/facades/Database'
+import { Collection, Path } from '@athenna/common'
 import { Column } from '#src/models/annotations/Column'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
@@ -18,6 +18,24 @@ import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
 
 class User extends Model {
+  public static connection() {
+    return 'fake'
+  }
+
+  @Column()
+  public id: string
+
+  @Column()
+  public name: string
+
+  @Column()
+  public score: number
+
+  @Column({ isDeleteDate: true })
+  public deletedAt: Date
+}
+
+class UserNotSoftDelete extends Model {
   public static connection() {
     return 'fake'
   }
@@ -257,6 +275,7 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnce(FakeDriver.findMany)
     assert.deepEqual(result, expectedData)
+    assert.instanceOf(result[0], User)
   }
 
   @Test()
@@ -265,26 +284,27 @@ export default class ModelQueryBuilderTest {
       { id: '1', name: 'John Doe' },
       { id: '2', name: 'Jane Doe' }
     ]
-    Mock.when(FakeDriver, 'collection').resolve(expectedData)
+    Mock.when(FakeDriver, 'findMany').resolve(expectedData)
 
     const queryBuilder = User.query()
     const result = await queryBuilder.collection()
 
-    assert.calledOnce(FakeDriver.collection)
-    assert.deepEqual(result, expectedData)
+    assert.calledOnce(FakeDriver.findMany)
+    assert.instanceOf(result, Collection)
   }
 
   @Test()
   public async shouldBeAbleToCreateData({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     const createdData = { id: '3', ...dataToCreate }
-    Mock.when(FakeDriver, 'create').resolve(createdData)
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.create(dataToCreate)
 
-    assert.calledOnceWith(FakeDriver.create, dataToCreate)
+    assert.calledOnceWith(FakeDriver.createMany, [dataToCreate])
     assert.deepEqual(result, createdData)
+    assert.instanceOf(result, User)
   }
 
   @Test()
@@ -301,10 +321,11 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnceWith(FakeDriver.createMany, dataToCreate)
     assert.deepEqual(result, createdData)
+    assert.instanceOf(result[0], User)
   }
 
   @Test()
-  public async shouldBeAbleToCreateOrUpdateData({ assert }: Context) {
+  public async shouldBeAbleToCreateOrUpdateDataResolvingObject({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
     Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
 
@@ -313,6 +334,23 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnceWith(FakeDriver.createOrUpdate, dataToCreateOrUpdate)
     assert.deepEqual(result, dataToCreateOrUpdate)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateOrUpdateDataResolvingArray({ assert }: Context) {
+    const dataToCreateOrUpdate = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate({ name: 'Lenon' })
+
+    assert.calledWith(FakeDriver.createOrUpdate, { name: 'Lenon' })
+    assert.deepEqual(result, dataToCreateOrUpdate)
+    assert.instanceOf(result[0], User)
   }
 
   @Test()
@@ -326,13 +364,34 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnceWith(FakeDriver.update, dataToUpdate)
     assert.deepEqual(result, updatedData)
+    assert.instanceOf(result, User)
   }
 
   @Test()
-  public async shouldBeAbleToDeleteData({ assert }: Context) {
+  public async shouldBeAbleToSoftDeleteData({ assert }: Context) {
     Mock.when(FakeDriver, 'delete').resolve(undefined)
 
     const queryBuilder = User.query()
+    await queryBuilder.delete()
+
+    assert.notCalled(FakeDriver.delete)
+  }
+
+  @Test()
+  public async shouldBeAbleToForceDeleteDataWhenUsingSoftDelete({ assert }: Context) {
+    Mock.when(FakeDriver, 'delete').resolve(undefined)
+
+    const queryBuilder = User.query()
+    await queryBuilder.delete(true)
+
+    assert.calledOnce(FakeDriver.delete)
+  }
+
+  @Test()
+  public async shouldDeleteDataIfThereIsNotDeleteDateColumnPresentInModel({ assert }: Context) {
+    Mock.when(FakeDriver, 'delete').resolve(undefined)
+
+    const queryBuilder = UserNotSoftDelete.query()
     await queryBuilder.delete()
 
     assert.calledOnce(FakeDriver.delete)

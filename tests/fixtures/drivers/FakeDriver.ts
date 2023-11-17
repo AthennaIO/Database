@@ -11,6 +11,7 @@ import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
 export const FakeDriver: any = {
   table: () => {},
+  primaryKey: 'id',
   isConnected: false,
   isSavedOnFactory: false,
   connection: '',
@@ -26,6 +27,10 @@ export const FakeDriver: any = {
   },
   getQueryBuilder: () => {},
   setQueryBuilder: () => {},
+  setPrimaryKey: (primaryKey: string) => {
+    FakeDriver.primaryKey = primaryKey
+    return FakeDriver
+  },
   joinByType: () => {},
   connect: () => {},
   close: () => {},

@@ -96,4 +96,6 @@ export default class ModelGeneratorTest {
 
     assert.isEmpty(data)
   }
+
+  // TODO Test if isHidden option works
 }

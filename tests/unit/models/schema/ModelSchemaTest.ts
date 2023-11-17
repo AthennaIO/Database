@@ -26,6 +26,7 @@ export default class ModelSchemaTest {
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,
+      isMainPrimary: false,
       isNullable: true,
       isPrimary: false,
       isUnique: false,
@@ -61,6 +62,7 @@ export default class ModelSchemaTest {
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,
+      isMainPrimary: false,
       isNullable: true,
       isPrimary: false,
       isUnique: false,
@@ -80,5 +82,53 @@ export default class ModelSchemaTest {
     const column = new ModelSchema(User).getColumnByName('not-found')
 
     assert.isUndefined(column)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelSoftDeleteColumnOptions({ assert }: Context) {
+    class User {
+      @Column({ isDeleteDate: true })
+      public deletedAt: string
+    }
+
+    const column = new ModelSchema(User).getSoftDeleteColumn()
+
+    assert.deepEqual(column, {
+      defaultTo: null,
+      isCreateDate: false,
+      isDeleteDate: true,
+      isHidden: false,
+      isMainPrimary: false,
+      isNullable: true,
+      isPrimary: false,
+      isUnique: false,
+      isUpdateDate: false,
+      name: 'deletedAt',
+      property: 'deletedAt'
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelMainPrimaryKeyColumnOptions({ assert }: Context) {
+    class User {
+      @Column({ isMainPrimary: true })
+      public id: string
+    }
+
+    const column = new ModelSchema(User).getMainPrimaryKey()
+
+    assert.deepEqual(column, {
+      defaultTo: null,
+      isCreateDate: false,
+      isDeleteDate: false,
+      isHidden: false,
+      isNullable: true,
+      isPrimary: true,
+      isUnique: false,
+      isUpdateDate: false,
+      isMainPrimary: true,
+      name: 'id',
+      property: 'id'
+    })
   }
 }

@@ -28,6 +28,7 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: true,
+        isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
@@ -47,6 +48,7 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: false,
+        isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false
@@ -63,6 +65,7 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: false,
+        isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
@@ -88,6 +91,55 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: true,
+        isMainPrimary: false,
+        isCreateDate: false,
+        isUpdateDate: false,
+        isDeleteDate: false,
+        property: 'id'
+      }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToDefinePropertyWithColumnAnnotationAsTheMainPrimary({ assert }: Context) {
+    class User {
+      @Column({ isMainPrimary: true })
+      public id: string
+    }
+
+    assert.deepEqual(Annotation.getColumnsMeta(User), [
+      {
+        name: 'id',
+        defaultTo: null,
+        isPrimary: true,
+        isHidden: false,
+        isUnique: false,
+        isNullable: true,
+        isMainPrimary: true,
+        isCreateDate: false,
+        isUpdateDate: false,
+        isDeleteDate: false,
+        property: 'id'
+      }
+    ])
+  }
+
+  @Test()
+  public async shouldForceToSetColumnAsPrimaryKeyWhenIsMainPrimaryIsSetToTrue({ assert }: Context) {
+    class User {
+      @Column({ isPrimary: false, isMainPrimary: true })
+      public id: string
+    }
+
+    assert.deepEqual(Annotation.getColumnsMeta(User), [
+      {
+        name: 'id',
+        defaultTo: null,
+        isPrimary: true,
+        isHidden: false,
+        isUnique: false,
+        isNullable: true,
+        isMainPrimary: true,
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
