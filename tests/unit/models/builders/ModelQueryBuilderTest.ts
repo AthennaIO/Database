@@ -31,6 +31,9 @@ class User extends Model {
   @Column()
   public score: number
 
+  @Column({ name: 'rate_number' })
+  public rate: number
+
   @Column({ isDeleteDate: true })
   public deletedAt: Date
 }
@@ -106,6 +109,30 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetTheAvgOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeAvg = '200'
+    Mock.when(FakeDriver, 'avg').resolve(fakeAvg)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.avg('rate')
+
+    assert.calledWith(FakeDriver.avg, 'rate_number')
+    assert.equal(result, fakeAvg)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheAvgDistinctOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeAvg = '200'
+    Mock.when(FakeDriver, 'avgDistinct').resolve(fakeAvg)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.avgDistinct('rate')
+
+    assert.calledWith(FakeDriver.avgDistinct, 'rate_number')
+    assert.equal(result, fakeAvg)
+  }
+
+  @Test()
   public async shouldBeAbleToGetTheMaxNumberOfAGivenColumn({ assert }: Context) {
     const fakeMax = '200'
     Mock.when(FakeDriver, 'max').resolve(fakeMax)
@@ -126,6 +153,30 @@ export default class ModelQueryBuilderTest {
     const result = await queryBuilder.min('score')
 
     assert.calledWith(FakeDriver.min, 'score')
+    assert.equal(result, fakeMin)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheMaxNumberOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeMax = '200'
+    Mock.when(FakeDriver, 'max').resolve(fakeMax)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.max('rate')
+
+    assert.calledWith(FakeDriver.max, 'rate_number')
+    assert.equal(result, fakeMax)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheMinNumberOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeMin = '10'
+    Mock.when(FakeDriver, 'min').resolve(fakeMin)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.min('rate')
+
+    assert.calledWith(FakeDriver.min, 'rate_number')
     assert.equal(result, fakeMin)
   }
 
@@ -154,6 +205,30 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToSumAllNumbersOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeSum = '1000'
+    Mock.when(FakeDriver, 'sum').resolve(fakeSum)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.sum('rate')
+
+    assert.calledWith(FakeDriver.sum, 'rate_number')
+    assert.equal(result, fakeSum)
+  }
+
+  @Test()
+  public async shouldBeAbleToSumDistinctValuesOfAGivenColumnParsingColumnName({ assert }: Context) {
+    const fakeSumDistinct = '900'
+    Mock.when(FakeDriver, 'sumDistinct').resolve(fakeSumDistinct)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.sumDistinct('rate')
+
+    assert.calledWith(FakeDriver.sumDistinct, 'rate_number')
+    assert.equal(result, fakeSumDistinct)
+  }
+
+  @Test()
   public async shouldBeAbleToIncrementAValueOfAGivenColumn({ assert }: Context) {
     Mock.when(FakeDriver, 'increment').resolve(undefined)
 
@@ -176,6 +251,28 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToIncrementAValueOfAGivenColumnParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'increment').resolve(undefined)
+
+    const queryBuilder = User.query()
+    await queryBuilder.increment('rate')
+
+    assert.calledOnce(FakeDriver.increment)
+    assert.calledWith(FakeDriver.increment, 'rate_number')
+  }
+
+  @Test()
+  public async shouldBeAbleToDecrementAValueOfAGivenColumnParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'decrement').resolve(undefined)
+
+    const queryBuilder = User.query()
+    await queryBuilder.decrement('rate')
+
+    assert.calledOnce(FakeDriver.decrement)
+    assert.calledWith(FakeDriver.decrement, 'rate_number')
+  }
+
+  @Test()
   public async shouldBeAbleToCountRecords({ assert }: Context) {
     const fakeCount = '42'
     Mock.when(FakeDriver, 'count').resolve(fakeCount)
@@ -188,15 +285,51 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToCountRecordsByColumnName({ assert }: Context) {
+    const fakeCount = '42'
+    Mock.when(FakeDriver, 'count').resolve(fakeCount)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.count('id')
+
+    assert.calledOnceWith(FakeDriver.count, 'id')
+    assert.equal(result, fakeCount)
+  }
+
+  @Test()
+  public async shouldBeAbleToCountRecordsByColumnNameParsingColumnName({ assert }: Context) {
+    const fakeCount = '42'
+    Mock.when(FakeDriver, 'count').resolve(fakeCount)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.count('rate')
+
+    assert.calledOnceWith(FakeDriver.count, 'rate_number')
+    assert.equal(result, fakeCount)
+  }
+
+  @Test()
   public async shouldBeAbleToCountDistinctRecords({ assert }: Context) {
     const fakeCountDistinct = '35'
     Mock.when(FakeDriver, 'countDistinct').resolve(fakeCountDistinct)
 
     const queryBuilder = User.query()
-    const result = await queryBuilder.countDistinct('userId')
+    const result = await queryBuilder.countDistinct('id')
 
     assert.calledOnce(FakeDriver.countDistinct)
-    assert.calledWith(FakeDriver.countDistinct, 'userId')
+    assert.calledWith(FakeDriver.countDistinct, 'id')
+    assert.equal(result, fakeCountDistinct)
+  }
+
+  @Test()
+  public async shouldBeAbleToCountDistinctRecordsParsingColumnName({ assert }: Context) {
+    const fakeCountDistinct = '35'
+    Mock.when(FakeDriver, 'countDistinct').resolve(fakeCountDistinct)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.countDistinct('rate')
+
+    assert.calledOnceWith(FakeDriver.countDistinct, 'rate_number')
     assert.equal(result, fakeCountDistinct)
   }
 

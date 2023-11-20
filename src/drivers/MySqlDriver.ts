@@ -11,9 +11,9 @@
 import type { Knex } from 'knex'
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import type { ConnectionOptions, Direction } from '#src/types'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { Exec, Is, Options, type PaginatedResponse } from '@athenna/common'
@@ -509,7 +509,12 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a join statement in your query.
    */
-  public join(table: any, column1?: any, operation?: any, column2?: any): this {
+  public join(
+    table: any,
+    column1?: any,
+    operation?: Operations,
+    column2?: any
+  ): this {
     return this.joinByType('join', table, column1, operation, column2)
   }
 
@@ -519,7 +524,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public leftJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.joinByType('leftJoin', table, column1, operation, column2)
@@ -531,7 +536,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public rightJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.joinByType('rightJoin', table, column1, operation, column2)
@@ -543,7 +548,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public crossJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.joinByType('crossJoin', table, column1, operation, column2)
@@ -555,7 +560,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public fullOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     // TODO https://github.com/knex/knex/issues/3949
@@ -568,7 +573,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public leftOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.joinByType('leftOuterJoin', table, column1, operation, column2)
@@ -580,7 +585,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   public rightOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.joinByType('rightOuterJoin', table, column1, operation, column2)
@@ -616,7 +621,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having statement in your query.
    */
-  public having(column: any, operation?: any, value?: any): this {
+  public having(column: any, operation?: Operations, value?: any): this {
     if (operation === undefined) {
       this.qb.having(column)
 
@@ -728,7 +733,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having statement in your query.
    */
-  public orHaving(column: any, operation?: any, value?: any): this {
+  public orHaving(column: any, operation?: Operations, value?: any): this {
     if (operation === undefined) {
       this.qb.orHaving(column)
 
@@ -843,7 +848,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where statement in your query.
    */
-  public where(statement: any, operation?: any, value?: any): this {
+  public where(statement: any, operation?: Operations, value?: any): this {
     if (Is.Function(statement)) {
       const driver = this.clone()
 
@@ -1006,7 +1011,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(statement: any, operation?: any, value?: any): this {
+  public orWhere(statement: any, operation?: Operations, value?: any): this {
     if (Is.Function(statement)) {
       const driver = this.clone()
 

@@ -16,9 +16,9 @@ export class ModelSchema<M extends Model = any> {
    * The model class that is going to be used
    * to craft the schema.
    */
-  private Model: new () => M
+  private Model: typeof Model
 
-  public constructor(model: new () => M) {
+  public constructor(model: typeof Model) {
     this.Model = model
   }
 
@@ -53,7 +53,7 @@ export class ModelSchema<M extends Model = any> {
   /**
    * Get the column options by the column database name.
    */
-  public getColumnByName(column: string): ColumnOptions {
+  public getColumnByName(column: string | keyof M): ColumnOptions {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.name === column)
@@ -62,7 +62,7 @@ export class ModelSchema<M extends Model = any> {
   /**
    * Get the column options by the model class property.
    */
-  public getColumnByProperty(property: string): ColumnOptions {
+  public getColumnByProperty(property: string | keyof M): ColumnOptions {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.property === property)

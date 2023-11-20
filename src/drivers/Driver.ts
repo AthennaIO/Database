@@ -8,8 +8,8 @@
  */
 
 import type { Knex, TableBuilder } from 'knex'
-import type { Direction, ConnectionOptions } from '#src/types'
 import type { Transaction } from '#src/database/transactions/Transaction'
+import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Collection, Options, type PaginatedResponse } from '@athenna/common'
 
@@ -131,9 +131,9 @@ export abstract class Driver<Client = any, QB = any> {
   protected joinByType(
     joinType: string,
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this {
     if (!column1) {
       this.qb[joinType](table)
@@ -440,9 +440,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract join(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -450,9 +450,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract leftJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -460,9 +460,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract rightJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -470,9 +470,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract crossJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -480,9 +480,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract fullOuterJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -490,9 +490,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract leftOuterJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -500,9 +500,9 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract rightOuterJoin(
     table: any,
-    column1?: any,
-    operation?: any,
-    column2?: any
+    column1?: string,
+    operation?: string | Operations,
+    column2?: string
   ): this
 
   /**
@@ -523,7 +523,11 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a having statement in your query.
    */
-  public abstract having(column: any, operation?: any, value?: any): this
+  public abstract having(
+    column: any,
+    operation?: string | Operations,
+    value?: any
+  ): this
 
   /**
    * Set a having raw statement in your query.
@@ -577,7 +581,11 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set an or having statement in your query.
    */
-  public abstract orHaving(column: any, operation?: any, value?: any): this
+  public abstract orHaving(
+    column: any,
+    operation?: string | Operations,
+    value?: any
+  ): this
 
   /**
    * Set an or having raw statement in your query.
@@ -631,7 +639,11 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a where statement in your query.
    */
-  public abstract where(statement: any, operation?: any, value?: any): this
+  public abstract where(
+    statement: any,
+    operation?: string | Operations,
+    value?: any
+  ): this
 
   /**
    * Set a where not statement in your query.

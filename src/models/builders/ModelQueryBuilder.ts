@@ -7,10 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import { Collection, Is } from '@athenna/common'
 import type { Model } from '#src/models/Model'
+import { Collection, Is } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
@@ -19,15 +20,111 @@ export class ModelQueryBuilder<
   D extends Driver = any
 > extends QueryBuilder<M, D> {
   private Model: typeof Model
+  private schema: ModelSchema<M>
   private generator: ModelGenerator<M>
 
   public constructor(model: typeof Model, driver: D) {
     super(driver, model.table())
 
-    this.setPrimaryKey(model.schema().getMainPrimaryKey()?.name || 'id')
-
     this.Model = model
+    this.schema = model.schema()
     this.generator = new ModelGenerator<M>(this.Model as any)
+
+    this.setPrimaryKey(this.schema.getMainPrimaryKey()?.name || 'id')
+  }
+
+  /**
+   * Calculate the average of a given column.
+   */
+  public async avg(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.avg(name)
+  }
+
+  /**
+   * Calculate the average of a given column.
+   */
+  public async avgDistinct(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.avgDistinct(name)
+  }
+
+  /**
+   * Get the max number of a given column.
+   */
+  public async max(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.max(name)
+  }
+
+  /**
+   * Get the min number of a given column.
+   */
+  public async min(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.min(name)
+  }
+
+  /**
+   * Sum all numbers of a given column.
+   */
+  public async sum(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.sum(name)
+  }
+
+  /**
+   * Sum all numbers of a given column.
+   */
+  public async sumDistinct(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.sumDistinct(name)
+  }
+
+  /**
+   * Increment a value of a given column.
+   */
+  public async increment(column: keyof M): Promise<void> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.increment(name)
+  }
+
+  /**
+   * Decrement a value of a given column.
+   */
+  public async decrement(column: keyof M): Promise<void> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    await super.decrement(name)
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   */
+  public async count(column?: keyof M): Promise<string> {
+    if (!column) {
+      return super.count()
+    }
+
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.count(name)
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   */
+  public async countDistinct(column: keyof M): Promise<string> {
+    const { name } = this.schema.getColumnByProperty(column)
+
+    return super.countDistinct(name)
   }
 
   /**
@@ -136,7 +233,7 @@ export class ModelQueryBuilder<
    * Delete or soft delete a value in database.
    */
   public async delete(force = false): Promise<void> {
-    const column = this.Model.schema().getSoftDeleteColumn()
+    const column = this.schema.getSoftDeleteColumn()
 
     if (!column || force) {
       await super.delete()

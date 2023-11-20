@@ -17,10 +17,10 @@ import {
 
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import type { ConnectionOptions, Direction } from '#src/types'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { Connection, Collection, ClientSession } from 'mongoose'
+import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { MONGO_OPERATIONS_DICTIONARY } from '#src/constants/MongoOperationsDictionary'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
@@ -712,7 +712,12 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a join statement in your query.
    */
-  public join(table: any, column1?: any, operation?: any, column2?: any): this {
+  public join(
+    table: any,
+    column1?: any,
+    operation?: Operations,
+    column2?: any
+  ): this {
     let foreignField = column2 || operation || this.primaryKey
 
     if (foreignField.includes('.')) {
@@ -738,7 +743,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public leftJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -750,7 +755,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public rightJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -762,7 +767,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public crossJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -774,7 +779,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public fullOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -786,7 +791,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public leftOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -798,7 +803,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public rightOuterJoin(
     table: any,
     column1?: any,
-    operation?: any,
+    operation?: Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -835,7 +840,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a having statement in your query.
    */
-  public having(column: any, operation?: any, value?: any): this {
+  public having(column: any, operation?: Operations, value?: any): this {
     return this.where(column, operation, value)
   }
 
@@ -905,7 +910,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or having statement in your query.
    */
-  public orHaving(column: any, operation?: any, value?: any): this {
+  public orHaving(column: any, operation?: Operations, value?: any): this {
     return this.orWhere(column, operation, value)
   }
 
@@ -978,7 +983,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where statement in your query.
    */
-  public where(statement: any, operation?: any, value?: any): this {
+  public where(statement: any, operation?: Operations, value?: any): this {
     if (Is.Function(statement)) {
       statement(this)
 
@@ -1104,7 +1109,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(statement: any, operation?: any, value?: any): this {
+  public orWhere(statement: any, operation?: Operations, value?: any): this {
     if (Is.Function(statement)) {
       statement(this)
 

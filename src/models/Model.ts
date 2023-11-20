@@ -31,8 +31,8 @@ export class Model {
   /**
    * Create a new ModelSchema instance from your model.
    */
-  public static schema() {
-    return new ModelSchema(this)
+  public static schema<T extends typeof Model>(this: T) {
+    return new ModelSchema<InstanceType<T>>(this)
   }
 
   /**
