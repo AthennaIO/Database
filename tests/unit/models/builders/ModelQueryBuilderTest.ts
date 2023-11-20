@@ -34,6 +34,9 @@ class User extends Model {
   @Column({ name: 'rate_number' })
   public rate: number
 
+  @Column({ isCreateDate: true, name: 'created_at' })
+  public createdAt: Date
+
   @Column({ isDeleteDate: true })
   public deletedAt: Date
 }
@@ -501,6 +504,23 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToUpdateMultipleData({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, dataToUpdate)
+    assert.deepEqual(result, updatedData)
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
   public async shouldBeAbleToSoftDeleteData({ assert }: Context) {
     Mock.when(FakeDriver, 'delete').resolve(undefined)
 
@@ -603,13 +623,23 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldAllowSelectingSpecificColumnsFromTable({ assert }: Context) {
-    const columns = ['id', 'name']
+    const columns: any[] = ['id', 'name']
     Mock.when(FakeDriver, 'select').resolve(undefined)
 
     const queryBuilder = User.query()
     queryBuilder.select(...columns)
 
     assert.calledOnceWith(FakeDriver.select, ...columns)
+  }
+
+  @Test()
+  public async shouldAllowSelectingSpecificColumnsFromTableParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'select').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.select('id', 'name', 'rate')
+
+    assert.calledOnceWith(FakeDriver.select, 'id', 'name', 'rate_number')
   }
 
   @Test()
@@ -625,7 +655,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldAllowSelectingSpecificColumnsFromTableUsingFrom({ assert }: Context) {
-    const columns = ['id', 'name']
+    const columns: any[] = ['id', 'name']
     Mock.when(FakeDriver, 'select').resolve(undefined)
     Mock.when(FakeDriver, 'from').resolve(undefined)
 
@@ -633,6 +663,18 @@ export default class ModelQueryBuilderTest {
     queryBuilder.select(...columns).from('users')
 
     assert.calledOnceWith(FakeDriver.select, ...columns)
+    assert.calledOnceWith(FakeDriver.from, 'users')
+  }
+
+  @Test()
+  public async shouldAllowSelectingSpecificColumnsFromTableUsingFromParsingNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'select').resolve(undefined)
+    Mock.when(FakeDriver, 'from').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.select('id', 'name', 'rate').from('users')
+
+    assert.calledOnceWith(FakeDriver.select, 'id', 'name', 'rate_number')
     assert.calledOnceWith(FakeDriver.from, 'users')
   }
 
@@ -754,13 +796,23 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldAllowGroupingBySpecifiedColumns({ assert }: Context) {
-    const columns = ['account_id']
+    const columns: any[] = ['account_id']
     Mock.when(FakeDriver, 'groupBy').resolve(undefined)
 
     const queryBuilder = User.query()
     queryBuilder.groupBy(...columns)
 
     assert.calledOnceWith(FakeDriver.groupBy, ...columns)
+  }
+
+  @Test()
+  public async shouldAllowGroupingBySpecifiedColumnsParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'groupBy').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.groupBy('id', 'name', 'rate')
+
+    assert.calledOnceWith(FakeDriver.groupBy, 'id', 'name', 'rate_number')
   }
 
   @Test()
@@ -785,6 +837,16 @@ export default class ModelQueryBuilderTest {
     queryBuilder.having(column, operator, value)
 
     assert.calledOnceWith(FakeDriver.having, column, operator, value)
+  }
+
+  @Test()
+  public async shouldAddAHavingClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'having').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.having('rate', '>', 100)
+
+    assert.calledOnceWith(FakeDriver.having, 'rate_number', '>', 100)
   }
 
   @Test()
@@ -837,6 +899,18 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAHavingInClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    const values = [1, 2, 3]
+    Mock.when(FakeDriver, 'havingIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingIn(column, values)
+
+    assert.calledOnceWith(FakeDriver.havingIn, 'rate_number', [1, 2, 3])
+  }
+
+  @Test()
   public async shouldAddAHavingNotInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
@@ -846,6 +920,18 @@ export default class ModelQueryBuilderTest {
     queryBuilder.havingNotIn(column, values)
 
     assert.calledOnce(FakeDriver.havingNotIn)
+  }
+
+  @Test()
+  public async shouldAddAHavingNotInClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    const values = [1, 2, 3]
+    Mock.when(FakeDriver, 'havingNotIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingNotIn(column, values)
+
+    assert.calledOnceWith(FakeDriver.havingNotIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -861,6 +947,18 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAHavingBetweenClauseToTheQueryParsingColumnName({ assert }: Context) {
+    const column = 'rate'
+    const values: [number, number] = [1, 3]
+    Mock.when(FakeDriver, 'havingBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingBetween(column, values)
+
+    assert.calledOnceWith(FakeDriver.havingBetween, 'rate_number', [1, 3])
+  }
+
+  @Test()
   public async shouldAddAHavingNotBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
@@ -870,6 +968,18 @@ export default class ModelQueryBuilderTest {
     queryBuilder.havingNotBetween(column, values)
 
     assert.calledOnce(FakeDriver.havingNotBetween)
+  }
+
+  @Test()
+  public async shouldAddAHavingNotBetweenClauseToTheQueryParsingColumnName({ assert }: Context) {
+    const column = 'rate'
+    const values: [number, number] = [1, 3]
+    Mock.when(FakeDriver, 'havingNotBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingNotBetween(column, values)
+
+    assert.calledOnceWith(FakeDriver.havingNotBetween, 'rate_number', [1, 3])
   }
 
   @Test()
@@ -884,6 +994,17 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAHavingNullClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    Mock.when(FakeDriver, 'havingNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingNull(column)
+
+    assert.calledOnceWith(FakeDriver.havingNull, 'rate_number')
+  }
+
+  @Test()
   public async shouldAddAHavingNotNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     Mock.when(FakeDriver, 'havingNotNull').resolve(undefined)
@@ -895,24 +1016,48 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAHavingNotNullClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    Mock.when(FakeDriver, 'havingNotNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.havingNotNull(column)
+
+    assert.calledOnceWith(FakeDriver.havingNotNull, 'rate_number')
+  }
+
+  @Test()
   public async shouldAddAnOrHavingClauseToTheQuery({ assert }: Context) {
     const column = 'id'
+    const operator = '>'
+    const value = 100
     Mock.when(FakeDriver, 'orHaving').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orHaving(column)
+    queryBuilder.orHaving(column, operator, value)
 
-    assert.calledOnce(FakeDriver.orHaving)
+    assert.calledOnceWith(FakeDriver.orHaving, column, operator, value)
+  }
+
+  @Test()
+  public async shouldAddAnOrHavingClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'orHaving').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHaving('rate', '>', 100)
+
+    assert.calledOnceWith(FakeDriver.orHaving, 'rate_number', '>', 100)
   }
 
   @Test()
   public async shouldAddAnOrHavingRawSQLClauseToTheQuery({ assert }: Context) {
+    const sql = 'id > 100'
     Mock.when(FakeDriver, 'orHavingRaw').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orHavingRaw('age > 100')
+    queryBuilder.orHavingRaw(sql)
 
-    assert.calledOnce(FakeDriver.orHavingRaw)
+    assert.calledOnceWith(FakeDriver.orHavingRaw, sql)
   }
 
   @Test()
@@ -954,6 +1099,18 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAnOrHavingInClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    const values = [1, 2, 3]
+    Mock.when(FakeDriver, 'orHavingIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingIn(column, values)
+
+    assert.calledOnceWith(FakeDriver.orHavingIn, 'rate_number', [1, 2, 3])
+  }
+
+  @Test()
   public async shouldAddAnOrHavingNotInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
@@ -963,6 +1120,18 @@ export default class ModelQueryBuilderTest {
     queryBuilder.orHavingNotIn(column, values)
 
     assert.calledOnce(FakeDriver.orHavingNotIn)
+  }
+
+  @Test()
+  public async shouldAddAnOrHavingNotInClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    const values = [1, 2, 3]
+    Mock.when(FakeDriver, 'orHavingNotIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingNotIn(column, values)
+
+    assert.calledOnceWith(FakeDriver.orHavingNotIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -978,6 +1147,18 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAnOrHavingBetweenClauseToTheQueryParsingColumnName({ assert }: Context) {
+    const column = 'rate'
+    const values: [number, number] = [1, 3]
+    Mock.when(FakeDriver, 'orHavingBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingBetween(column, values)
+
+    assert.calledOnceWith(FakeDriver.orHavingBetween, 'rate_number', [1, 3])
+  }
+
+  @Test()
   public async shouldAddAnOrHavingNotBetweenClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values: [number, number] = [1, 3]
@@ -987,6 +1168,18 @@ export default class ModelQueryBuilderTest {
     queryBuilder.orHavingNotBetween(column, values)
 
     assert.calledOnce(FakeDriver.orHavingNotBetween)
+  }
+
+  @Test()
+  public async shouldAddAnOrHavingNotBetweenClauseToTheQueryParsingColumnName({ assert }: Context) {
+    const column = 'rate'
+    const values: [number, number] = [1, 3]
+    Mock.when(FakeDriver, 'orHavingNotBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingNotBetween(column, values)
+
+    assert.calledOnceWith(FakeDriver.orHavingNotBetween, 'rate_number', [1, 3])
   }
 
   @Test()
@@ -1001,6 +1194,17 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAnOrHavingNullClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    Mock.when(FakeDriver, 'orHavingNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingNull(column)
+
+    assert.calledOnceWith(FakeDriver.orHavingNull, 'rate_number')
+  }
+
+  @Test()
   public async shouldAddAnOrHavingNotNullClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     Mock.when(FakeDriver, 'orHavingNotNull').resolve(undefined)
@@ -1012,8 +1216,19 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAddAnOrHavingNotNullClauseToTheQueryParsingColumnNames({ assert }: Context) {
+    const column = 'rate'
+    Mock.when(FakeDriver, 'orHavingNotNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orHavingNotNull(column)
+
+    assert.calledOnceWith(FakeDriver.orHavingNotNull, 'rate_number')
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenWhereClause({ assert }: Context) {
-    const column = 'age'
+    const column = 'id'
     const operation = '>'
     const value = 18
     Mock.when(FakeDriver, 'where').resolve(undefined)
@@ -1022,6 +1237,36 @@ export default class ModelQueryBuilderTest {
     queryBuilder.where(column, operation, value)
 
     assert.calledOnceWith(FakeDriver.where, column, operation, value)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereClauseUsingObjects({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.where({ id: '18' })
+
+    assert.calledOnceWith(FakeDriver.where, { id: '18' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereClauseParsingColumn({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.where('rate', '>', 100)
+
+    assert.calledOnceWith(FakeDriver.where, 'rate_number', '>', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereClauseUsingObjectParsingColumn({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.where({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.where, { rate_number: 100 })
   }
 
   @Test()
@@ -1038,7 +1283,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldFilterResultsUsingGivenWhereNotClause({ assert }: Context) {
-    const column = 'age'
+    const column = 'id'
     const value = 18
     Mock.when(FakeDriver, 'whereNot').resolve(undefined)
 
@@ -1046,6 +1291,36 @@ export default class ModelQueryBuilderTest {
     queryBuilder.whereNot(column, value)
 
     assert.calledOnceWith(FakeDriver.whereNot, column, value)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNotClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNot({ id: '18' })
+
+    assert.calledOnceWith(FakeDriver.whereNot, { id: '18' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNotClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNot('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.whereNot, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNotClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNot({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.whereNot, { rate_number: 100 })
   }
 
   @Test()
@@ -1085,6 +1360,36 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenWhereLikeClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereLike({ name: 'lenon' })
+
+    assert.calledOnceWith(FakeDriver.whereLike, { name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereLikeClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereLike('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.whereLike, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereLikeClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereLike({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.whereLike, { rate_number: 100 })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenWhereILikeClause({ assert }: Context) {
     Mock.when(FakeDriver, 'whereILike').resolve(undefined)
 
@@ -1095,13 +1400,53 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenWhereILikeClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereILike({ name: 'Lenon' })
+
+    assert.calledOnceWith(FakeDriver.whereILike, { name: 'Lenon' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereILikeClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereILike('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.whereILike, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereILikeClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereILike({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.whereILike, { rate_number: 100 })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenWhereInClause({ assert }: Context) {
     Mock.when(FakeDriver, 'whereIn').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereIn('age', [1, 2, 3])
+    queryBuilder.whereIn('id', [1, 2, 3])
 
-    assert.calledOnceWith(FakeDriver.whereIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.whereIn, 'id', [1, 2, 3])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereInClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereIn('rate', [1, 2, 3])
+
+    assert.calledOnceWith(FakeDriver.whereIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -1109,9 +1454,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'whereNotIn').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereNotIn('age', [1, 2, 3])
+    queryBuilder.whereNotIn('id', [1, 2, 3])
 
-    assert.calledOnceWith(FakeDriver.whereNotIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.whereNotIn, 'id', [1, 2, 3])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNotInClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNotIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNotIn('rate', [1, 2, 3])
+
+    assert.calledOnceWith(FakeDriver.whereNotIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -1119,9 +1474,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'whereBetween').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereBetween('age', [1, 10])
+    queryBuilder.whereBetween('id', [1, 10])
 
-    assert.calledOnceWith(FakeDriver.whereBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.whereBetween, 'id', [1, 10])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereBetweenClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereBetween('rate', [1, 10])
+
+    assert.calledOnceWith(FakeDriver.whereBetween, 'rate_number', [1, 10])
   }
 
   @Test()
@@ -1129,9 +1494,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'whereNotBetween').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereNotBetween('age', [1, 10])
+    queryBuilder.whereNotBetween('id', [1, 10])
 
-    assert.calledOnceWith(FakeDriver.whereNotBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.whereNotBetween, 'id', [1, 10])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNotBetweenClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNotBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNotBetween('rate', [1, 10])
+
+    assert.calledOnceWith(FakeDriver.whereNotBetween, 'rate_number', [1, 10])
   }
 
   @Test()
@@ -1139,9 +1514,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'whereNull').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereNull('age')
+    queryBuilder.whereNull('id')
 
-    assert.calledOnceWith(FakeDriver.whereNull, 'age')
+    assert.calledOnceWith(FakeDriver.whereNull, 'id')
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereNullClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNull('rate')
+
+    assert.calledOnceWith(FakeDriver.whereNull, 'rate_number')
   }
 
   @Test()
@@ -1149,22 +1534,49 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'whereNotNull').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.whereNotNull('age')
+    queryBuilder.whereNotNull('id')
 
-    assert.calledOnceWith(FakeDriver.whereNotNull, 'age')
+    assert.calledOnceWith(FakeDriver.whereNotNull, 'id')
   }
 
   @Test()
-  public async shouldFilterResultsUsingGivenOrWhereClause({ assert }: Context) {
-    const column = 'age'
-    const operation = '>'
-    const value = 18
+  public async shouldFilterResultsUsingGivenWhereNotNullClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNotNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.whereNotNull('rate')
+
+    assert.calledOnceWith(FakeDriver.whereNotNull, 'rate_number')
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereClauseUsingObjects({ assert }: Context) {
     Mock.when(FakeDriver, 'orWhere').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhere(column, operation, value)
+    queryBuilder.orWhere({ id: '18' })
 
-    assert.calledOnceWith(FakeDriver.orWhere, column, operation, value)
+    assert.calledOnceWith(FakeDriver.orWhere, { id: '18' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereClauseParsingColumn({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhere').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhere('rate', '>', 100)
+
+    assert.calledOnceWith(FakeDriver.orWhere, 'rate_number', '>', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereClauseUsingObjectParsingColumn({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhere').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhere({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.orWhere, { rate_number: 100 })
   }
 
   @Test()
@@ -1181,7 +1593,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNotClause({ assert }: Context) {
-    const column = 'age'
+    const column = 'id'
     const value = 18
     Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
 
@@ -1192,9 +1604,39 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNot({ id: '18' })
+
+    assert.calledOnceWith(FakeDriver.orWhereNot, { id: '18' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNot('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.orWhereNot, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNot').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNot({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.orWhereNot, { rate_number: 100 })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenOrWhereExistsClause({ assert }: Context) {
     const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
+      query.table('profiles').select('*').orWhereRaw('users.account_id = accounts.id')
     }
     Mock.when(FakeDriver, 'orWhereExists').resolve(undefined)
 
@@ -1207,7 +1649,7 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldFilterResultsUsingGivenOrWhereNotExistsClause({ assert }: Context) {
     const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
+      query.table('profiles').select('*').orWhereRaw('users.account_id = accounts.id')
     }
     Mock.when(FakeDriver, 'orWhereNotExists').resolve(undefined)
 
@@ -1228,6 +1670,36 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenOrWhereLikeClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereLike({ name: 'lenon' })
+
+    assert.calledOnceWith(FakeDriver.orWhereLike, { name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereLikeClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereLike('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.orWhereLike, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereLikeClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereLike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereLike({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.orWhereLike, { rate_number: 100 })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenOrWhereILikeClause({ assert }: Context) {
     Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
 
@@ -1238,13 +1710,53 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenOrWhereILikeClauseUsingObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereILike({ name: 'Lenon' })
+
+    assert.calledOnceWith(FakeDriver.orWhereILike, { name: 'Lenon' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereILikeClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereILike('rate', 100)
+
+    assert.calledOnceWith(FakeDriver.orWhereILike, 'rate_number', 100)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereILikeClauseUsingObjectParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereILike').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereILike({ rate: 100 })
+
+    assert.calledOnceWith(FakeDriver.orWhereILike, { rate_number: 100 })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenOrWhereInClause({ assert }: Context) {
     Mock.when(FakeDriver, 'orWhereIn').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereIn('age', [1, 2, 3])
+    queryBuilder.orWhereIn('id', [1, 2, 3])
 
-    assert.calledOnceWith(FakeDriver.orWhereIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.orWhereIn, 'id', [1, 2, 3])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereInClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereIn('rate', [1, 2, 3])
+
+    assert.calledOnceWith(FakeDriver.orWhereIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -1252,9 +1764,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'orWhereNotIn').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereNotIn('age', [1, 2, 3])
+    queryBuilder.orWhereNotIn('id', [1, 2, 3])
 
-    assert.calledOnceWith(FakeDriver.orWhereNotIn, 'age', [1, 2, 3])
+    assert.calledOnceWith(FakeDriver.orWhereNotIn, 'id', [1, 2, 3])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotInClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNotIn').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNotIn('rate', [1, 2, 3])
+
+    assert.calledOnceWith(FakeDriver.orWhereNotIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()
@@ -1262,9 +1784,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'orWhereBetween').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereBetween('age', [1, 10])
+    queryBuilder.orWhereBetween('id', [1, 10])
 
-    assert.calledOnceWith(FakeDriver.orWhereBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.orWhereBetween, 'id', [1, 10])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereBetweenClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereBetween('rate', [1, 10])
+
+    assert.calledOnceWith(FakeDriver.orWhereBetween, 'rate_number', [1, 10])
   }
 
   @Test()
@@ -1272,9 +1804,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'orWhereNotBetween').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereNotBetween('age', [1, 10])
+    queryBuilder.orWhereNotBetween('id', [1, 10])
 
-    assert.calledOnceWith(FakeDriver.orWhereNotBetween, 'age', [1, 10])
+    assert.calledOnceWith(FakeDriver.orWhereNotBetween, 'id', [1, 10])
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotBetweenClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNotBetween').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNotBetween('rate', [1, 10])
+
+    assert.calledOnceWith(FakeDriver.orWhereNotBetween, 'rate_number', [1, 10])
   }
 
   @Test()
@@ -1282,9 +1824,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'orWhereNull').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereNull('age')
+    queryBuilder.orWhereNull('id')
 
-    assert.calledOnceWith(FakeDriver.orWhereNull, 'age')
+    assert.calledOnceWith(FakeDriver.orWhereNull, 'id')
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNullClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNull('rate')
+
+    assert.calledOnceWith(FakeDriver.orWhereNull, 'rate_number')
   }
 
   @Test()
@@ -1292,9 +1844,19 @@ export default class ModelQueryBuilderTest {
     Mock.when(FakeDriver, 'orWhereNotNull').resolve(undefined)
 
     const queryBuilder = User.query()
-    queryBuilder.orWhereNotNull('age')
+    queryBuilder.orWhereNotNull('id')
 
-    assert.calledOnceWith(FakeDriver.orWhereNotNull, 'age')
+    assert.calledOnceWith(FakeDriver.orWhereNotNull, 'id')
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereNotNullClauseParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereNotNull').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orWhereNotNull('rate')
+
+    assert.calledOnceWith(FakeDriver.orWhereNotNull, 'rate_number')
   }
 
   @Test()
@@ -1310,13 +1872,43 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldOrderBySpecifiedColumnInGivenDirectionParsingColumnName({ assert }: Context) {
+    Mock.when(FakeDriver, 'orderBy').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.orderBy('createdAt', 'asc')
+
+    assert.calledOnceWith(FakeDriver.orderBy, 'created_at', 'ASC')
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatestUsingDefaultCreatedAt({ assert }: Context) {
+    Mock.when(FakeDriver, 'latest').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.latest()
+
+    assert.calledOnceWith(FakeDriver.latest, 'created_at')
+  }
+
+  @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
     Mock.when(FakeDriver, 'latest').resolve(undefined)
 
     const queryBuilder = User.query()
     queryBuilder.latest('createdAt')
 
-    assert.calledOnceWith(FakeDriver.latest, 'createdAt')
+    assert.calledOnceWith(FakeDriver.latest, 'created_at')
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingOldestUsingDefaultCreatedAt({ assert }: Context) {
+    Mock.when(FakeDriver, 'oldest').resolve(undefined)
+
+    const queryBuilder = User.query()
+    queryBuilder.oldest()
+
+    assert.calledOnceWith(FakeDriver.oldest, 'created_at')
   }
 
   @Test()
@@ -1326,7 +1918,7 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     queryBuilder.oldest('createdAt')
 
-    assert.calledOnceWith(FakeDriver.oldest, 'createdAt')
+    assert.calledOnceWith(FakeDriver.oldest, 'created_at')
   }
 
   @Test()

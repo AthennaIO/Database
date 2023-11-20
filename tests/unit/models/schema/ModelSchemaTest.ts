@@ -131,4 +131,100 @@ export default class ModelSchemaTest {
       property: 'id'
     })
   }
+
+  @Test()
+  public async shouldBeAbleToGetAllModelColumnNamesByArrayOfModelProperties({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const columns = new ModelSchema(User).getColumnNamesByProperties(['id'])
+
+    assert.deepEqual(columns, ['_id'])
+  }
+
+  @Test()
+  public async shouldReturnThePropertiesWhenColumnNamesCannotBeFound({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const columns = new ModelSchema(User).getColumnNamesByProperties(['not-found'])
+
+    assert.deepEqual(columns, ['not-found'])
+  }
+
+  @Test()
+  public async shouldBeAbleToGetAllModelColumnPropertiesByArrayOfModelColumns({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const properties = new ModelSchema(User).getPropertiesByColumnNames(['_id'])
+
+    assert.deepEqual(properties, ['id'])
+  }
+
+  @Test()
+  public async shouldReturnTheColumnNamesWhenPropertiesCannotBeFound({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const properties = new ModelSchema(User).getPropertiesByColumnNames(['not-found'])
+
+    assert.deepEqual(properties, ['not-found'])
+  }
+
+  @Test()
+  public async shouldBeAbleToGetPropertyNameByColumnName({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const property = new ModelSchema(User).getPropertyByColumnName('_id')
+
+    assert.deepEqual(property, 'id')
+  }
+
+  @Test()
+  public async shouldReturnTheColumnNameIfThePropertyCannotBeFound({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const property = new ModelSchema(User).getPropertyByColumnName('not-found')
+
+    assert.deepEqual(property, 'not-found')
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheColumnNameByProperty({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const column = new ModelSchema(User).getColumnNameByProperty('id')
+
+    assert.deepEqual(column, '_id')
+  }
+
+  @Test()
+  public async shouldReturnThePropertyIfTheColumnNameCannotBeFound({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const column = new ModelSchema(User).getColumnNameByProperty('not-found')
+
+    assert.deepEqual(column, 'not-found')
+  }
 }

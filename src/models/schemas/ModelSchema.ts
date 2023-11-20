@@ -18,7 +18,7 @@ export class ModelSchema<M extends Model = any> {
    */
   private Model: typeof Model
 
-  public constructor(model: typeof Model) {
+  public constructor(model: any) {
     this.Model = model
   }
 
@@ -60,11 +60,51 @@ export class ModelSchema<M extends Model = any> {
   }
 
   /**
+   * Get the column options by the column database name.
+   *
+   * If property cannot be found, the column name will be used.
+   */
+  public getPropertyByColumnName(column: string | keyof M): string {
+    return this.getColumnByName(column)?.property || (column as string)
+  }
+
+  /**
+   * Get all the properties names by an array of column database names.
+   *
+   * If property cannot be found, the column name will be used.
+   */
+  public getPropertiesByColumnNames(
+    columns: string[] | Array<keyof M>
+  ): string[] {
+    return columns.map(column => this.getPropertyByColumnName(column))
+  }
+
+  /**
    * Get the column options by the model class property.
    */
   public getColumnByProperty(property: string | keyof M): ColumnOptions {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.property === property)
+  }
+
+  /**
+   * Get the column name by the model class property.
+   *
+   * If the column name cannot be found, the property will be used.
+   */
+  public getColumnNameByProperty(property: string | keyof M): string {
+    return this.getColumnByProperty(property)?.name || (property as string)
+  }
+
+  /**
+   * Get all the columns names by an array of model class properties.
+   *
+   * If the column name cannot be found, the property will be used.
+   */
+  public getColumnNamesByProperties(
+    properties: string[] | Array<keyof M>
+  ): string[] {
+    return properties.map(property => this.getColumnNameByProperty(property))
   }
 }

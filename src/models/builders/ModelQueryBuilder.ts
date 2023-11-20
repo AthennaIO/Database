@@ -10,6 +10,7 @@
 import type { Model } from '#src/models/Model'
 import { Collection, Is } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
+import type { Direction, Operations } from '#src/types'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
@@ -37,7 +38,7 @@ export class ModelQueryBuilder<
    * Calculate the average of a given column.
    */
   public async avg(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.avg(name)
   }
@@ -46,7 +47,7 @@ export class ModelQueryBuilder<
    * Calculate the average of a given column.
    */
   public async avgDistinct(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.avgDistinct(name)
   }
@@ -55,7 +56,7 @@ export class ModelQueryBuilder<
    * Get the max number of a given column.
    */
   public async max(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.max(name)
   }
@@ -64,7 +65,7 @@ export class ModelQueryBuilder<
    * Get the min number of a given column.
    */
   public async min(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.min(name)
   }
@@ -73,7 +74,7 @@ export class ModelQueryBuilder<
    * Sum all numbers of a given column.
    */
   public async sum(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.sum(name)
   }
@@ -82,7 +83,7 @@ export class ModelQueryBuilder<
    * Sum all numbers of a given column.
    */
   public async sumDistinct(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.sumDistinct(name)
   }
@@ -91,7 +92,7 @@ export class ModelQueryBuilder<
    * Increment a value of a given column.
    */
   public async increment(column: keyof M): Promise<void> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.increment(name)
   }
@@ -100,7 +101,7 @@ export class ModelQueryBuilder<
    * Decrement a value of a given column.
    */
   public async decrement(column: keyof M): Promise<void> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     await super.decrement(name)
   }
@@ -113,7 +114,7 @@ export class ModelQueryBuilder<
       return super.count()
     }
 
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.count(name)
   }
@@ -122,7 +123,7 @@ export class ModelQueryBuilder<
    * Calculate the average of a given column using distinct.
    */
   public async countDistinct(column: keyof M): Promise<string> {
-    const { name } = this.schema.getColumnByProperty(column)
+    const name = this.schema.getColumnNameByProperty(column)
 
     return super.countDistinct(name)
   }
@@ -242,5 +243,598 @@ export class ModelQueryBuilder<
     }
 
     await this.update({ [column.property]: new Date() } as any)
+  }
+
+  /**
+   * Set the columns that should be selected on query.
+   */
+  public select(...columns: Array<keyof M>): this {
+    super.select(...this.schema.getColumnNamesByProperties(columns))
+
+    return this
+  }
+
+  /**
+   * Set a group by statement in your query.
+   */
+  public groupBy(...columns: Array<keyof M>): this {
+    super.groupBy(...this.schema.getColumnNamesByProperties(columns))
+
+    return this
+  }
+
+  public having(column: keyof M): this
+  public having(column: keyof M, value: any): this
+  public having(column: keyof M, operation: Operations, value: any): this
+
+  /**
+   * Set a having statement in your query.
+   */
+  public having(
+    column: keyof M,
+    operation?: any | Operations,
+    value?: any
+  ): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.having(name, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   */
+  public havingIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   */
+  public havingNotIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingNotIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   */
+  public havingBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   */
+  public havingNotBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingNotBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   */
+  public havingNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingNull(name)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   */
+  public havingNotNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.havingNotNull(name)
+
+    return this
+  }
+
+  public orHaving(column: keyof M): this
+  public orHaving(column: keyof M, value: any): this
+  public orHaving(column: keyof M, operation: Operations, value: any): this
+
+  /**
+   * Set a orHaving statement in your query.
+   */
+  public orHaving(
+    column: keyof M,
+    operation?: any | Operations,
+    value?: any
+  ): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHaving(name, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving in statement in your query.
+   */
+  public orHavingIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving not in statement in your query.
+   */
+  public orHavingNotIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingNotIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving between statement in your query.
+   */
+  public orHavingBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving not between statement in your query.
+   */
+  public orHavingNotBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingNotBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving null statement in your query.
+   */
+  public orHavingNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingNull(name)
+
+    return this
+  }
+
+  /**
+   * Set a orHaving not null statement in your query.
+   */
+  public orHavingNotNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orHavingNotNull(name)
+
+    return this
+  }
+
+  public where(statement: Partial<M>): this
+  public where(statement: Record<string, any>): this
+  public where(key: keyof M, value: any): this
+  public where(key: keyof M, operation: Operations, value: any): this
+
+  /**
+   * Set a where statement in your query.
+   */
+  public where(
+    statement: any,
+    operation?: any | Operations,
+    value?: any
+  ): this {
+    if (!operation) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.where(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.where(name, operation, value)
+
+    return this
+  }
+
+  public whereNot(statement: Partial<M>): this
+  public whereNot(statement: Record<string, any>): this
+  public whereNot(key: keyof M, value: any): this
+
+  /**
+   * Set a where not statement in your query.
+   */
+  public whereNot(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.whereNot(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.whereNot(name, value)
+
+    return this
+  }
+
+  public whereLike(statement: Partial<M>): this
+  public whereLike(statement: Record<string, any>): this
+  public whereLike(key: keyof M, value: any): this
+
+  /**
+   * Set a where like statement in your query.
+   */
+  public whereLike(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.whereLike(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.whereLike(name, value)
+
+    return this
+  }
+
+  public whereILike(statement: Partial<M>): this
+  public whereILike(statement: Record<string, any>): this
+  public whereILike(key: keyof M, value: any): this
+
+  /**
+   * Set a where ILike statement in your query.
+   */
+  public whereILike(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.whereILike(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.whereILike(name, value)
+
+    return this
+  }
+
+  /**
+   * Set a where in statement in your query.
+   */
+  public whereIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a where not in statement in your query.
+   */
+  public whereNotIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereNotIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a where between statement in your query.
+   */
+  public whereBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a where not between statement in your query.
+   */
+  public whereNotBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereNotBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a where null statement in your query.
+   */
+  public whereNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereNull(name)
+
+    return this
+  }
+
+  /**
+   * Set a where not null statement in your query.
+   */
+  public whereNotNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereNotNull(name)
+
+    return this
+  }
+
+  public orWhere(statement: Partial<M>): this
+  public orWhere(statement: Record<string, any>): this
+  public orWhere(key: keyof M, value: any): this
+  public orWhere(key: keyof M, operation: Operations, value: any): this
+
+  /**
+   * Set a orWhere statement in your query.
+   */
+  public orWhere(
+    statement: any,
+    operation?: any | Operations,
+    value?: any
+  ): this {
+    if (!operation) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.orWhere(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.orWhere(name, operation, value)
+
+    return this
+  }
+
+  public orWhereNot(statement: Partial<M>): this
+  public orWhereNot(statement: Record<string, any>): this
+  public orWhereNot(key: keyof M, value: any): this
+
+  /**
+   * Set a orWhere not statement in your query.
+   */
+  public orWhereNot(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.orWhereNot(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.orWhereNot(name, value)
+
+    return this
+  }
+
+  public orWhereLike(statement: Partial<M>): this
+  public orWhereLike(statement: Record<string, any>): this
+  public orWhereLike(key: keyof M, value: any): this
+
+  /**
+   * Set a orWhere like statement in your query.
+   */
+  public orWhereLike(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.orWhereLike(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.orWhereLike(name, value)
+
+    return this
+  }
+
+  public orWhereILike(statement: Partial<M>): this
+  public orWhereILike(statement: Record<string, any>): this
+  public orWhereILike(key: keyof M, value: any): this
+
+  /**
+   * Set a orWhere ILike statement in your query.
+   */
+  public orWhereILike(statement: any, value?: any): this {
+    if (!value) {
+      const parsed = {}
+
+      Object.keys(statement).forEach(key => {
+        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
+      })
+
+      super.orWhereILike(parsed)
+
+      return this
+    }
+
+    const name = this.schema.getColumnNameByProperty(statement)
+
+    super.orWhereILike(name, value)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere in statement in your query.
+   */
+  public orWhereIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere not in statement in your query.
+   */
+  public orWhereNotIn(column: keyof M, values: any[]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereNotIn(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere between statement in your query.
+   */
+  public orWhereBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere not between statement in your query.
+   */
+  public orWhereNotBetween(column: keyof M, values: [any, any]): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereNotBetween(name, values)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere null statement in your query.
+   */
+  public orWhereNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereNull(name)
+
+    return this
+  }
+
+  /**
+   * Set a orWhere not null statement in your query.
+   */
+  public orWhereNotNull(column: keyof M): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereNotNull(name)
+
+    return this
+  }
+
+  /**
+   * Set an order by statement in your query.
+   */
+  public orderBy(column: keyof M, direction: Direction = 'ASC'): this {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orderBy(name, direction)
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   */
+  public latest(column?: keyof M): this {
+    if (!column) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      column = 'createdAt'
+    }
+
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.latest(name)
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   */
+  public oldest(column?: keyof M): this {
+    if (!column) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      column = 'createdAt'
+    }
+
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.oldest(name)
+
+    return this
   }
 }

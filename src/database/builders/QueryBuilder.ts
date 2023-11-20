@@ -498,7 +498,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    */
   public having(
     column: string | keyof T,
-    operation?: string | Operations,
+    operation?: any | Operations,
     value?: any
   ): this {
     this.driver.having(column, operation, value)
@@ -592,7 +592,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    */
   public orHaving(
     column: string | keyof T,
-    operation?: string | any,
+    operation?: any | Operations,
     value?: any
   ): this {
     this.driver.orHaving(column as string, operation, value)
@@ -694,7 +694,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    */
   public where(
     statement: any,
-    operation?: string | Operations,
+    operation?: any | Operations,
     value?: any
   ): this {
     this.driver.where(statement, operation, value)
@@ -832,7 +832,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    */
   public orWhere(
     statement: any,
-    operation?: string | Operations,
+    operation?: any | Operations,
     value?: any
   ): this {
     this.driver.orWhere(statement, operation, value)
