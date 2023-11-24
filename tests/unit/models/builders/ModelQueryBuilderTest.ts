@@ -22,20 +22,36 @@ class User extends Model {
     return 'fake'
   }
 
+  public static attributes(): Partial<User> {
+    return {
+      metadata1: `random-1`,
+      metadata2: `random-2`
+    }
+  }
+
   @Column()
   public id: string
 
   @Column()
   public name: string
 
-  @Column()
+  @Column({ persist: false })
   public score: number
+
+  @Column()
+  public metadata1: string
+
+  @Column({ persist: false })
+  public metadata2: string
 
   @Column({ name: 'rate_number' })
   public rate: number
 
   @Column({ isCreateDate: true, name: 'created_at' })
   public createdAt: Date
+
+  @Column({ isUpdateDate: true, name: 'updated_at' })
+  public updatedAt: Date
 
   @Column({ isDeleteDate: true })
   public deletedAt: Date
@@ -438,8 +454,73 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     const result = await queryBuilder.create(dataToCreate)
 
-    assert.calledOnceWith(FakeDriver.createMany, [dataToCreate])
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate)])
     assert.deepEqual(result, createdData)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataAndSetDefaultTimestamps({ assert }: Context) {
+    const dataToCreate = { name: 'New User' }
+    const createdData = { id: '3', ...dataToCreate }
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.create(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate)])
+    assert.deepEqual(result, createdData)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1', rate: 1 }])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.create({ rate: 1 })
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ rate_number: 1 })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldNotBeAbleToPersistColumnsWithPersistDisabledWhenUsingCreate({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
+
+    const queryBuilder = User.query()
+    await queryBuilder.create({ score: 200 })
+
+    assert.notCalledWith(FakeDriver.createMany, [Mock.match({ score: 200 })])
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateMethod({ assert }: Context) {
+    const dataToCreate = { name: 'New User' }
+    const createdData = { id: '3', ...dataToCreate }
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.create(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ ...dataToCreate, metadata1: 'random-1' })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateMethodEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToCreate = { name: 'New User' }
+    const createdData = { id: '3', ...dataToCreate }
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.create(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [
+      Mock.match({ ...dataToCreate, metadata1: 'random-1', metadata2: 'random-2' })
+    ])
     assert.instanceOf(result, User)
   }
 
@@ -455,38 +536,250 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     const result = await queryBuilder.createMany(dataToCreate)
 
-    assert.calledOnceWith(FakeDriver.createMany, dataToCreate)
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate[0]), Mock.match(dataToCreate[1])])
     assert.deepEqual(result, createdData)
     assert.instanceOf(result[0], User)
   }
 
   @Test()
-  public async shouldBeAbleToCreateOrUpdateDataResolvingObject({ assert }: Context) {
+  public async shouldBeAbleToCreateManyDataParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1', rate: 1 }])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createMany([{ rate: 1 }])
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ rate_number: 1 })])
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateManyDataAndSetDefaultTimestamps({ assert }: Context) {
+    const dataToCreate = [{ name: 'User One' }, { name: 'User Two' }]
+    const createdData = [
+      { id: '4', ...dataToCreate[0] },
+      { id: '5', ...dataToCreate[1] }
+    ]
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createMany(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [
+      Mock.match({ ...dataToCreate[0], deletedAt: null }),
+      Mock.match({ ...dataToCreate[1], deletedAt: null })
+    ])
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldNotBeAbleToPersistColumnsWithPersistDisabledWhenUsingCreateMany({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
+
+    const queryBuilder = User.query()
+    await queryBuilder.createMany([{ score: 200 }])
+
+    assert.notCalledWith(FakeDriver.createMany, [Mock.match({ score: 200 })])
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateManyMethod({ assert }: Context) {
+    const dataToCreate = [{ name: 'User One' }, { name: 'User Two' }]
+    const createdData = [
+      { id: '4', ...dataToCreate[0] },
+      { id: '5', ...dataToCreate[1] }
+    ]
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createMany(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [
+      Mock.match({ ...dataToCreate[0], metadata1: 'random-1' }),
+      Mock.match({ ...dataToCreate[1], metadata1: 'random-1' })
+    ])
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateManyMethodEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToCreate = [{ name: 'User One' }, { name: 'User Two' }]
+    const createdData = [
+      { id: '4', ...dataToCreate[0] },
+      { id: '5', ...dataToCreate[1] }
+    ]
+    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createMany(dataToCreate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [
+      Mock.match({ ...dataToCreate[0], metadata1: 'random-1', metadata2: 'random-2' }),
+      Mock.match({ ...dataToCreate[1], metadata1: 'random-1', metadata2: 'random-2' })
+    ])
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateDataResolvingObject({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
-    assert.calledOnceWith(FakeDriver.createOrUpdate, dataToCreateOrUpdate)
-    assert.deepEqual(result, dataToCreateOrUpdate)
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ name: 'Updated User' })])
     assert.instanceOf(result, User)
   }
 
   @Test()
-  public async shouldBeAbleToCreateOrUpdateDataResolvingArray({ assert }: Context) {
-    const dataToCreateOrUpdate = [
-      { id: '1', name: 'Updated User' },
-      { id: '2', name: 'Updated User' }
-    ]
-    Mock.when(FakeDriver, 'createOrUpdate').resolve(dataToCreateOrUpdate)
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateAndSetDefaultTimestamps({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
 
     const queryBuilder = User.query()
-    const result = await queryBuilder.createOrUpdate({ name: 'Lenon' })
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
-    assert.calledWith(FakeDriver.createOrUpdate, { name: 'Lenon' })
-    assert.deepEqual(result, dataToCreateOrUpdate)
-    assert.instanceOf(result[0], User)
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ name: 'Updated User', deletedAt: null })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateDataResolvingObjectParsingColumnNames({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', rate_number: 1 }
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate({ id: '1', name: 'Updated User', rate: 1 })
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ name: 'Updated User', rate_number: 1 })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateDataResolvingObjectAndIgnoringPersist({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    const queryBuilder = User.query()
+    await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.notCalledWith(FakeDriver.createMany, [Mock.match({ score: 200 })])
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateOrUpdateMethodToCreateData({
+    assert
+  }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ metadata1: 'random-1' })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateOrUpdateMethodToCreateDataEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.createMany, [Mock.match({ metadata1: 'random-1', metadata2: 'random-2' })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdate({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdateParsingColumnNames({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve({ id: '1', name: 'Updated User', rate: 1 })
+    Mock.when(FakeDriver, 'update').resolve({ id: '1', name: 'Updated User', rate: 1 })
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate({ name: 'Updated User', rate: 1 })
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User', rate_number: 1 }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdateAndSetDefaultTimestamps({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdateAndIgnorePersist({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
+    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.notCalledWith(FakeDriver.update, Mock.match({ score: 200 }))
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateOrUpdateMethodToUpdateData({
+    assert
+  }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateOrUpdateMethodToUpdateDataEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
+    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
+    Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
+    assert.instanceOf(result, User)
   }
 
   @Test()
@@ -498,8 +791,76 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
-    assert.calledOnceWith(FakeDriver.update, dataToUpdate)
+    assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
     assert.deepEqual(result, updatedData)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataAndUpdateUpdatedAtColumn({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = { id: '1', ...dataToUpdate }
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.notCalledWith(FakeDriver.update, dataToUpdate)
+    assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
+    assert.deepEqual(result, updatedData)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataAndParseColumns({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User', rate: 1 }
+    const updatedData = { id: '1', ...dataToUpdate }
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ rate_number: 1 }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataIgnoringPersistColumns({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User', score: 200 }
+    const updatedData = { id: '1', ...dataToUpdate }
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    await queryBuilder.update(dataToUpdate)
+
+    assert.notCalledWith(FakeDriver.update, Mock.match({ score: 200 }))
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingUpdateMethod({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = { id: '1', ...dataToUpdate }
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingUpdateMethodEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = { id: '1', ...dataToUpdate }
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
     assert.instanceOf(result, User)
   }
 
@@ -515,8 +876,93 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
-    assert.calledOnceWith(FakeDriver.update, dataToUpdate)
+    assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
     assert.deepEqual(result, updatedData)
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateMultipleDataAndParseColumns({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User', rate: 1 }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ rate_number: 1 }))
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateMultipleDataAndUpdateUpdatedAtColumn({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.notCalledWith(FakeDriver.update, dataToUpdate)
+    assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
+    assert.deepEqual(result, updatedData)
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateMultipleDataIgnoringPersistColumns({ assert }: Context) {
+    const dataToUpdate = { name: 'Updated User', score: 200 }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    await queryBuilder.update(dataToUpdate)
+
+    assert.notCalledWith(FakeDriver.update, Mock.match({ score: 200 }))
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingUpdateMethodToUpdateMany({
+    assert
+  }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1' }))
+    assert.instanceOf(result[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingUpdateMethodToUpdateManyEvenIfPersistIsFalse({
+    assert
+  }: Context) {
+    const dataToUpdate = { name: 'Updated User' }
+    const updatedData = [
+      { id: '1', name: 'Updated User' },
+      { id: '2', name: 'Updated User' }
+    ]
+    Mock.when(FakeDriver, 'update').resolve(updatedData)
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.update(dataToUpdate)
+
+    assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
     assert.instanceOf(result[0], User)
   }
 
@@ -1360,16 +1806,6 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
-  public async shouldFilterResultsUsingGivenWhereLikeClauseUsingObject({ assert }: Context) {
-    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
-
-    const queryBuilder = User.query()
-    queryBuilder.whereLike({ name: 'lenon' })
-
-    assert.calledOnceWith(FakeDriver.whereLike, { name: 'lenon' })
-  }
-
-  @Test()
   public async shouldFilterResultsUsingGivenWhereLikeClauseParsingColumnName({ assert }: Context) {
     Mock.when(FakeDriver, 'whereLike').resolve(undefined)
 
@@ -1377,16 +1813,6 @@ export default class ModelQueryBuilderTest {
     queryBuilder.whereLike('rate', 100)
 
     assert.calledOnceWith(FakeDriver.whereLike, 'rate_number', 100)
-  }
-
-  @Test()
-  public async shouldFilterResultsUsingGivenWhereLikeClauseUsingObjectParsingColumnName({ assert }: Context) {
-    Mock.when(FakeDriver, 'whereLike').resolve(undefined)
-
-    const queryBuilder = User.query()
-    queryBuilder.whereLike({ rate: 100 })
-
-    assert.calledOnceWith(FakeDriver.whereLike, { rate_number: 100 })
   }
 
   @Test()
@@ -1400,16 +1826,6 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
-  public async shouldFilterResultsUsingGivenWhereILikeClauseUsingObject({ assert }: Context) {
-    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
-
-    const queryBuilder = User.query()
-    queryBuilder.whereILike({ name: 'Lenon' })
-
-    assert.calledOnceWith(FakeDriver.whereILike, { name: 'Lenon' })
-  }
-
-  @Test()
   public async shouldFilterResultsUsingGivenWhereILikeClauseParsingColumnName({ assert }: Context) {
     Mock.when(FakeDriver, 'whereILike').resolve(undefined)
 
@@ -1417,16 +1833,6 @@ export default class ModelQueryBuilderTest {
     queryBuilder.whereILike('rate', 100)
 
     assert.calledOnceWith(FakeDriver.whereILike, 'rate_number', 100)
-  }
-
-  @Test()
-  public async shouldFilterResultsUsingGivenWhereILikeClauseUsingObjectParsingColumnName({ assert }: Context) {
-    Mock.when(FakeDriver, 'whereILike').resolve(undefined)
-
-    const queryBuilder = User.query()
-    queryBuilder.whereILike({ rate: 100 })
-
-    assert.calledOnceWith(FakeDriver.whereILike, { rate_number: 100 })
   }
 
   @Test()

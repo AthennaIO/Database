@@ -50,6 +50,21 @@ export default class ModelGeneratorTest {
   }
 
   @Test()
+  public async shouldNotSetPropertyInModelThatGotOptionIsHiddenAsTrueWhenUsingGeneratorOne({ assert }: Context) {
+    class User extends Model {
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isHidden: true })
+      public name?: string
+    }
+
+    const data = await new ModelGenerator(User).generateOne({ _id: '1', name: 'lenon' })
+
+    assert.deepEqual(data, { id: '1' })
+  }
+
+  @Test()
   public async shouldBeAbleToGenerateManyInstancesOfModel({ assert }: Context) {
     class User extends Model {
       @Column()
@@ -97,5 +112,18 @@ export default class ModelGeneratorTest {
     assert.isEmpty(data)
   }
 
-  // TODO Test if isHidden option works
+  @Test()
+  public async shouldNotSetPropertyInModelThatGotOptionIsHiddenAsTrueWhenUsingGenerateMany({ assert }: Context) {
+    class User extends Model {
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isHidden: true })
+      public name?: string
+    }
+
+    const data = await new ModelGenerator(User).generateMany([{ _id: '1', name: 'lenon' }])
+
+    assert.deepEqual(data, [{ id: '1' }])
+  }
 }

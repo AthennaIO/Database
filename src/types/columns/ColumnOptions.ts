@@ -89,6 +89,21 @@ export type ColumnOptions = {
   isNullable?: boolean
 
   /**
+   * Set if the column should be persisted in database
+   * when executing operation like create or update.
+   *
+   * If set as `false`, Athenna will remove this column
+   * from this kind of operation, but it will still be
+   * available in operations like `find` and `findMany`.
+   *
+   * To also remove from listing operations, set isHidden
+   * as `true`.
+   *
+   * @default true
+   */
+  persist?: boolean
+
+  /**
    * Set if this column is the main primary key that
    * should be used when performing create queries to
    * database.

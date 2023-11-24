@@ -506,7 +506,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public join(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('join', table, column1, operation, column2)
@@ -518,7 +518,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public leftJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('leftJoin', table, column1, operation, column2)
@@ -530,7 +530,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public rightJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('rightJoin', table, column1, operation, column2)
@@ -542,7 +542,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public crossJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('crossJoin', table, column1, operation, column2)
@@ -554,7 +554,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public fullOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('fullOuterJoin', table, column1, operation, column2)
@@ -566,7 +566,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public leftOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('leftOuterJoin', table, column1, operation, column2)
@@ -578,7 +578,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   public rightOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.joinByType('rightOuterJoin', table, column1, operation, column2)
@@ -610,6 +610,10 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     return this
   }
+
+  public having(column: string): this
+  public having(column: string, value: any): this
+  public having(column: string, operation: Operations, value: any): this
 
   /**
    * Set a having statement in your query.
@@ -722,6 +726,10 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     return this
   }
+
+  public orHaving(column: string): this
+  public orHaving(column: string, value: any): this
+  public orHaving(column: string, operation: Operations, value: any): this
 
   /**
    * Set an or having statement in your query.
@@ -838,6 +846,10 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
     return this
   }
 
+  public where(statement: Record<string, any>): this
+  public where(key: string, value: any): this
+  public where(key: string, operation: Operations, value: any): this
+
   /**
    * Set a where statement in your query.
    */
@@ -868,6 +880,9 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     return this
   }
+
+  public whereNot(statement: Record<string, any>): this
+  public whereNot(key: string, value: any): this
 
   /**
    * Set a where not statement in your query.
@@ -1001,6 +1016,10 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
     return this
   }
 
+  public orWhere(statement: Record<string, any>): this
+  public orWhere(key: string, value: any): this
+  public orWhere(key: string, operation: Operations, value: any): this
+
   /**
    * Set a or where statement in your query.
    */
@@ -1031,6 +1050,9 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     return this
   }
+
+  public orWhereNot(statement: Record<string, any>): this
+  public orWhereNot(key: string, value: any): this
 
   /**
    * Set an or where not statement in your query.
@@ -1095,7 +1117,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(column: any, value: any): this {
+  public orWhereLike(column: string, value: any): this {
     this.qb.orWhereLike(column, value)
 
     return this
@@ -1104,7 +1126,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: any, value: any): this {
+  public orWhereILike(column: string, value: any): this {
     this.qb.orWhereLike(column, value)
 
     return this

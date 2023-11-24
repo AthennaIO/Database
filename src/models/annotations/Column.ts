@@ -28,6 +28,7 @@ export function Column(
       isHidden: false,
       isUnique: false,
       isNullable: true,
+      persist: true,
       isMainPrimary: false,
       isCreateDate: false,
       isUpdateDate: false,

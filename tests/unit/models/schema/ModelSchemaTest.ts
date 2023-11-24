@@ -32,6 +32,7 @@ export default class ModelSchemaTest {
       isUnique: false,
       isUpdateDate: false,
       name: 'id',
+      persist: true,
       property: 'id'
     })
   }
@@ -68,6 +69,7 @@ export default class ModelSchemaTest {
       isUnique: false,
       isUpdateDate: false,
       name: '_id',
+      persist: true,
       property: 'id'
     })
   }
@@ -85,13 +87,63 @@ export default class ModelSchemaTest {
   }
 
   @Test()
-  public async shouldBeAbleToGetTheModelSoftDeleteColumnOptions({ assert }: Context) {
+  public async shouldBeAbleToGetTheModelCreatedAtColumnOptions({ assert }: Context) {
+    class User {
+      @Column({ isCreateDate: true })
+      public createdAt: string
+    }
+
+    const column = new ModelSchema(User).getCreatedAtColumn()
+
+    assert.deepEqual(column, {
+      defaultTo: null,
+      isCreateDate: true,
+      isDeleteDate: false,
+      isHidden: false,
+      isMainPrimary: false,
+      isNullable: true,
+      isPrimary: false,
+      isUnique: false,
+      isUpdateDate: false,
+      name: 'createdAt',
+      persist: true,
+      property: 'createdAt'
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelUpdatedAtColumnOptions({ assert }: Context) {
+    class User {
+      @Column({ isUpdateDate: true })
+      public updatedAt: string
+    }
+
+    const column = new ModelSchema(User).getUpdatedAtColumn()
+
+    assert.deepEqual(column, {
+      defaultTo: null,
+      isCreateDate: false,
+      isDeleteDate: false,
+      isHidden: false,
+      isMainPrimary: false,
+      isNullable: true,
+      isPrimary: false,
+      isUnique: false,
+      isUpdateDate: true,
+      name: 'updatedAt',
+      persist: true,
+      property: 'updatedAt'
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelDeletedAtColumnOptions({ assert }: Context) {
     class User {
       @Column({ isDeleteDate: true })
       public deletedAt: string
     }
 
-    const column = new ModelSchema(User).getSoftDeleteColumn()
+    const column = new ModelSchema(User).getDeletedAtColumn()
 
     assert.deepEqual(column, {
       defaultTo: null,
@@ -104,6 +156,7 @@ export default class ModelSchemaTest {
       isUnique: false,
       isUpdateDate: false,
       name: 'deletedAt',
+      persist: true,
       property: 'deletedAt'
     })
   }
@@ -128,8 +181,33 @@ export default class ModelSchemaTest {
       isUpdateDate: false,
       isMainPrimary: true,
       name: 'id',
+      persist: true,
       property: 'id'
     })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelMainPrimaryKeyNameDirectly({ assert }: Context) {
+    class User {
+      @Column({ name: '_id', isMainPrimary: true })
+      public id: string
+    }
+
+    const column = new ModelSchema(User).getMainPrimaryKeyName()
+
+    assert.deepEqual(column, '_id')
+  }
+
+  @Test()
+  public async shouldBeAbleToGetTheModelMainPrimaryKeyPropertyDirectly({ assert }: Context) {
+    class User {
+      @Column({ name: '_id', isMainPrimary: true })
+      public id: string
+    }
+
+    const column = new ModelSchema(User).getMainPrimaryKeyProperty()
+
+    assert.deepEqual(column, 'id')
   }
 
   @Test()
@@ -226,5 +304,86 @@ export default class ModelSchemaTest {
     const column = new ModelSchema(User).getColumnNameByProperty('not-found')
 
     assert.deepEqual(column, 'not-found')
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNames({ assert }: Context) {
+    class User {
+      @Column({ name: '_id' })
+      public id: string
+    }
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1 })
+
+    assert.deepEqual(parsed, { _id: 1 })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndGetOnlyTheOnesThatShouldBePersisted({
+    assert
+  }: Context) {
+    class User {
+      @Column({ name: '_id', persist: true })
+      public id: string
+
+      @Column({ persist: false })
+      public name: string
+    }
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1 }, { cleanPersist: true })
+
+    assert.deepEqual(parsed, { _id: 1 })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndSetDefaultAttributes({ assert }: Context) {
+    class User {
+      @Column({ name: '_id', persist: true })
+      public id: string
+    }
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames({}, { attributes: { id: 2 } })
+
+    assert.deepEqual(parsed, { _id: 2 })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndStillSetDefaultAttributesInColumnsWithPersistDisabled({
+    assert
+  }: Context) {
+    class User {
+      @Column({ name: '_id', persist: true })
+      public id: string
+
+      @Column({ persist: false })
+      public name: string
+    }
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames(
+      { id: 1 },
+      { cleanPersist: true, attributes: { name: 'lenon' } }
+    )
+
+    assert.deepEqual(parsed, { _id: 1, name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndDefaultAttributesShouldChangeValuesThatCouldntBePersisted({
+    assert
+  }: Context) {
+    class User {
+      @Column({ name: '_id', persist: true })
+      public id: string
+
+      @Column({ persist: false })
+      public name: string
+    }
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames(
+      { id: 1, name: 'txsoura' },
+      { cleanPersist: true, attributes: { id: 2, name: 'lenon' } }
+    )
+
+    assert.deepEqual(parsed, { _id: 1, name: 'lenon' })
   }
 }

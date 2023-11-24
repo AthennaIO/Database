@@ -715,7 +715,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public join(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     let foreignField = column2 || operation || this.primaryKey
@@ -743,7 +743,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public leftJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -755,7 +755,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public rightJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -767,7 +767,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public crossJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -779,7 +779,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public fullOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -791,7 +791,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public leftOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -803,7 +803,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public rightOuterJoin(
     table: any,
     column1?: any,
-    operation?: Operations,
+    operation?: any | Operations,
     column2?: any
   ): this {
     return this.join(table, column1, operation, column2)
@@ -836,6 +836,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public groupByRaw(): this {
     throw new NotImplementedMethodException(this.groupByRaw.name, 'mongo')
   }
+
+  public having(column: string): this
+  public having(column: string, value: any): this
+  public having(column: string, operation: Operations, value: any): this
 
   /**
    * Set a having statement in your query.
@@ -906,6 +910,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public havingNotNull(column: string): this {
     return this.whereNotNull(column)
   }
+
+  public orHaving(column: string): this
+  public orHaving(column: string, value: any): this
+  public orHaving(column: string, operation: Operations, value: any): this
 
   /**
    * Set an or having statement in your query.
@@ -980,6 +988,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
     return this.whereNotNull(column)
   }
 
+  public where(statement: Record<string, any>): this
+  public where(key: string, value: any): this
+  public where(key: string, operation: Operations, value: any): this
+
   /**
    * Set a where statement in your query.
    */
@@ -1009,6 +1021,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
 
     return this
   }
+
+  public whereNot(statement: Record<string, any>): this
+  public whereNot(key: string, value: any): this
 
   /**
    * Set a where not statement in your query.
@@ -1106,6 +1121,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
     return this
   }
 
+  public orWhere(statement: Record<string, any>): this
+  public orWhere(key: string, value: any): this
+  public orWhere(key: string, operation: Operations, value: any): this
+
   /**
    * Set a or where statement in your query.
    */
@@ -1132,6 +1151,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
 
     return this
   }
+
+  public orWhereNot(statement: Record<string, any>): this
+  public orWhereNot(key: string, value: any): this
 
   /**
    * Set an or where not statement in your query.
@@ -1164,14 +1186,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(column: any, value: any): this {
+  public orWhereLike(column: string, value: any): this {
     return this.orWhere(column, 'like', value)
   }
 
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: any, value: any): this {
+  public orWhereILike(column: string, value: any): this {
     return this.orWhere(column, 'ilike', value)
   }
 

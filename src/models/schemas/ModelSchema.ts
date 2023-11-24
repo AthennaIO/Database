@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Options } from '@athenna/common'
 import type { Model } from '#src/models/Model'
 import type { ColumnOptions } from '#src/types'
 import { Annotation } from '#src/helpers/Annotation'
@@ -41,10 +42,94 @@ export class ModelSchema<M extends Model = any> {
   }
 
   /**
+   * Get the main primary key column name.
+   */
+  public getMainPrimaryKeyName(): string {
+    const options = this.getMainPrimaryKey()
+
+    // TODO Validate if need to verify if using mongo
+    return options?.name || 'id'
+  }
+
+  /**
+   * Get the main primary key property.
+   */
+  public getMainPrimaryKeyProperty(): string {
+    const options = this.getMainPrimaryKey()
+
+    // TODO Validate if need to verify if using mongo
+    return options?.property || 'id'
+  }
+
+  /**
+   * Convert an object using properties to database use
+   * column names.
+   */
+  public propertiesToColumnNames(
+    data: Partial<M>,
+    options: { attributes?: Record<string, any>; cleanPersist?: boolean } = {}
+  ) {
+    options = Options.create(options, {
+      attributes: {},
+      cleanPersist: false
+    })
+
+    const parsed = {}
+
+    Object.keys(data).forEach(key => {
+      const column = this.getColumnByProperty(key) || {
+        name: key,
+        persist: false
+      }
+
+      if (!column.persist && options.cleanPersist) {
+        return
+      }
+
+      parsed[column.name] = data[key]
+    })
+
+    Object.keys(options.attributes).forEach(key => {
+      const column = this.getColumnByProperty(key) || {
+        name: key,
+        persist: false
+      }
+
+      if (parsed[column.name] !== undefined) {
+        return
+      }
+
+      parsed[column.name] = options.attributes[key]
+    })
+
+    return parsed
+  }
+
+  /**
+   * Get the column options where column has isCreateDate
+   * as true.
+   */
+  public getCreatedAtColumn(): ColumnOptions {
+    const columns = Annotation.getColumnsMeta(this.Model)
+
+    return columns.find(c => c.isCreateDate)
+  }
+
+  /**
+   * Get the column options where column has isUpdateDate
+   * as true.
+   */
+  public getUpdatedAtColumn(): ColumnOptions {
+    const columns = Annotation.getColumnsMeta(this.Model)
+
+    return columns.find(c => c.isUpdateDate)
+  }
+
+  /**
    * Get the column options where column has isDeleteDate
    * as true.
    */
-  public getSoftDeleteColumn(): ColumnOptions {
+  public getDeletedAtColumn(): ColumnOptions {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.isDeleteDate)

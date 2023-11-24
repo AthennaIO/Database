@@ -29,6 +29,14 @@ export class Model {
   }
 
   /**
+   * Set the default values that should be set when creating or
+   * updating the model.
+   */
+  public static attributes(): Record<string, unknown> {
+    return {}
+  }
+
+  /**
    * Create a new ModelSchema instance from your model.
    */
   public static schema<T extends typeof Model>(this: T) {

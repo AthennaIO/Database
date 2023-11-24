@@ -23,6 +23,8 @@ export class ModelQueryBuilder<
   private Model: typeof Model
   private schema: ModelSchema<M>
   private generator: ModelGenerator<M>
+  private primaryKeyName: string
+  private primaryKeyProperty: keyof M
 
   public constructor(model: typeof Model, driver: D) {
     super(driver, model.table())
@@ -30,8 +32,10 @@ export class ModelQueryBuilder<
     this.Model = model
     this.schema = model.schema()
     this.generator = new ModelGenerator<M>(this.Model as any)
+    this.primaryKeyName = this.schema.getMainPrimaryKeyName()
+    this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
-    this.setPrimaryKey(this.schema.getMainPrimaryKey()?.name || 'id')
+    this.setPrimaryKey(this.primaryKeyName)
   }
 
   /**
@@ -199,6 +203,33 @@ export class ModelQueryBuilder<
    * Create many values in database.
    */
   public async createMany(data: Partial<M>[]) {
+    data = data.map(d => {
+      const date = new Date()
+      const createdAt = this.schema.getCreatedAtColumn()
+      const updatedAt = this.schema.getUpdatedAtColumn()
+      const deletedAt = this.schema.getDeletedAtColumn()
+      const attributes = this.Model.attributes()
+
+      const parsed = this.schema.propertiesToColumnNames(d, {
+        attributes,
+        cleanPersist: true
+      })
+
+      if (createdAt && parsed[createdAt.name] === undefined) {
+        parsed[createdAt.name] = date
+      }
+
+      if (updatedAt && parsed[updatedAt.name] === undefined) {
+        parsed[updatedAt.name] = date
+      }
+
+      if (deletedAt && parsed[deletedAt.name] === undefined) {
+        parsed[deletedAt.name] = null
+      }
+
+      return parsed
+    })
+
     const created = await super.createMany(data)
 
     return this.generator.generateMany(created)
@@ -208,20 +239,35 @@ export class ModelQueryBuilder<
    * Create or update a value in database.
    */
   public async createOrUpdate(data: Partial<M>) {
-    const created = await super.createOrUpdate(data)
+    const hasValue = await this.find()
 
-    if (Is.Array(created)) {
-      return this.generator.generateMany(created)
+    if (hasValue) {
+      const pk = this.primaryKeyProperty
+
+      return this.where(pk, hasValue[pk]).update(data)
     }
 
-    return this.generator.generateOne(created)
+    return this.create(data)
   }
 
   /**
    * Update a value in database.
    */
   public async update(data: Partial<M>) {
-    const updated = await super.update(data)
+    const date = new Date()
+    const updatedAt = this.schema.getUpdatedAtColumn()
+    const attributes = this.Model.attributes()
+
+    const parsed = this.schema.propertiesToColumnNames(data, {
+      attributes,
+      cleanPersist: true
+    })
+
+    if (updatedAt && parsed[updatedAt.name] === undefined) {
+      parsed[updatedAt.name] = date
+    }
+
+    const updated = await super.update(parsed)
 
     if (Is.Array(updated)) {
       return this.generator.generateMany(updated)
@@ -234,7 +280,7 @@ export class ModelQueryBuilder<
    * Delete or soft delete a value in database.
    */
   public async delete(force = false): Promise<void> {
-    const column = this.schema.getSoftDeleteColumn()
+    const column = this.schema.getDeletedAtColumn()
 
     if (!column || force) {
       await super.delete()
@@ -447,11 +493,7 @@ export class ModelQueryBuilder<
     value?: any
   ): this {
     if (!operation) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.where(parsed)
 
@@ -474,11 +516,7 @@ export class ModelQueryBuilder<
    */
   public whereNot(statement: any, value?: any): this {
     if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.whereNot(parsed)
 
@@ -492,54 +530,22 @@ export class ModelQueryBuilder<
     return this
   }
 
-  public whereLike(statement: Partial<M>): this
-  public whereLike(statement: Record<string, any>): this
-  public whereLike(key: keyof M, value: any): this
-
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(statement: any, value?: any): this {
-    if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
-
-      super.whereLike(parsed)
-
-      return this
-    }
-
-    const name = this.schema.getColumnNameByProperty(statement)
+  public whereLike(column: keyof M, value: any): this {
+    const name = this.schema.getColumnNameByProperty(column)
 
     super.whereLike(name, value)
 
     return this
   }
 
-  public whereILike(statement: Partial<M>): this
-  public whereILike(statement: Record<string, any>): this
-  public whereILike(key: keyof M, value: any): this
-
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(statement: any, value?: any): this {
-    if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
-
-      super.whereILike(parsed)
-
-      return this
-    }
-
-    const name = this.schema.getColumnNameByProperty(statement)
+  public whereILike(column: keyof M, value: any): this {
+    const name = this.schema.getColumnNameByProperty(column)
 
     super.whereILike(name, value)
 
@@ -626,11 +632,7 @@ export class ModelQueryBuilder<
     value?: any
   ): this {
     if (!operation) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhere(parsed)
 
@@ -653,11 +655,7 @@ export class ModelQueryBuilder<
    */
   public orWhereNot(statement: any, value?: any): this {
     if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereNot(parsed)
 
@@ -680,11 +678,7 @@ export class ModelQueryBuilder<
    */
   public orWhereLike(statement: any, value?: any): this {
     if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereLike(parsed)
 
@@ -707,11 +701,7 @@ export class ModelQueryBuilder<
    */
   public orWhereILike(statement: any, value?: any): this {
     if (!value) {
-      const parsed = {}
-
-      Object.keys(statement).forEach(key => {
-        parsed[this.schema.getColumnNameByProperty(key)] = statement[key]
-      })
+      const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereILike(parsed)
 

@@ -32,7 +32,8 @@ export default class ColumnTest {
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
-        property: 'id'
+        property: 'id',
+        persist: true
       }
     ])
   }
@@ -51,7 +52,8 @@ export default class ColumnTest {
         isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
-        isDeleteDate: false
+        isDeleteDate: false,
+        persist: true
       })
       public id: string
     }
@@ -69,7 +71,8 @@ export default class ColumnTest {
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
-        property: 'id'
+        property: 'id',
+        persist: true
       }
     ])
   }
@@ -95,7 +98,8 @@ export default class ColumnTest {
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
-        property: 'id'
+        property: 'id',
+        persist: true
       }
     ])
   }
@@ -119,7 +123,8 @@ export default class ColumnTest {
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
-        property: 'id'
+        property: 'id',
+        persist: true
       }
     ])
   }
@@ -143,7 +148,8 @@ export default class ColumnTest {
         isCreateDate: false,
         isUpdateDate: false,
         isDeleteDate: false,
-        property: 'id'
+        property: 'id',
+        persist: true
       }
     ])
   }

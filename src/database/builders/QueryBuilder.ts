@@ -742,28 +742,20 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
     return this
   }
 
-  public whereLike(statement: Partial<T>): this
-  public whereLike(statement: Record<string, any>): this
-  public whereLike(key: string | keyof T, value: any): this
-
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(statement: any, value?: any): this {
-    this.driver.whereLike(statement, value)
+  public whereLike(column: string | keyof T, value: any): this {
+    this.driver.whereLike(column, value)
 
     return this
   }
 
-  public whereILike(statement: Partial<T>): this
-  public whereILike(statement: Record<string, any>): this
-  public whereILike(key: string | keyof T, value: any): this
-
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(statement: any, value?: any): this {
-    this.driver.whereILike(statement, value)
+  public whereILike(column: string | keyof T, value: any): this {
+    this.driver.whereILike(column, value)
 
     return this
   }
