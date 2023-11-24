@@ -35,6 +35,12 @@ export class ModelQueryBuilder<
     this.primaryKeyName = this.schema.getMainPrimaryKeyName()
     this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
+    const deletedAtColumn = this.schema.getDeletedAtColumn()
+
+    if (deletedAtColumn) {
+      this.whereNull(deletedAtColumn.property as any)
+    }
+
     this.setPrimaryKey(this.primaryKeyName)
   }
 

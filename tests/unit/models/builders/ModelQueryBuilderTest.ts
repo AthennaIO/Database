@@ -977,6 +977,26 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldAutomaticallySetWhereNullDeletedAtClauseWhenIsDeleteDateColumnOptionIsTrue({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereNull').return(undefined)
+
+    User.query()
+
+    assert.calledOnceWith(FakeDriver.whereNull, 'deletedAt')
+  }
+
+  @Test()
+  public async shouldNotSetWhereNullDeletedAtClauseWhenModelDontHaveColumnWithIsDeleteDateColumnOptionAsTrue({
+    assert
+  }: Context) {
+    Mock.when(FakeDriver, 'whereNull').return(undefined)
+
+    UserNotSoftDelete.query()
+
+    assert.notCalled(FakeDriver.whereNull)
+  }
+
+  @Test()
   public async shouldBeAbleToForceDeleteDataWhenUsingSoftDelete({ assert }: Context) {
     Mock.when(FakeDriver, 'delete').resolve(undefined)
 
@@ -1922,7 +1942,7 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     queryBuilder.whereNull('id')
 
-    assert.calledOnceWith(FakeDriver.whereNull, 'id')
+    assert.calledWith(FakeDriver.whereNull, 'id')
   }
 
   @Test()
@@ -1932,7 +1952,7 @@ export default class ModelQueryBuilderTest {
     const queryBuilder = User.query()
     queryBuilder.whereNull('rate')
 
-    assert.calledOnceWith(FakeDriver.whereNull, 'rate_number')
+    assert.calledWith(FakeDriver.whereNull, 'rate_number')
   }
 
   @Test()
