@@ -8,69 +8,14 @@
  */
 
 import { Config } from '@athenna/config'
-import { Model } from '#src/models/Model'
 import { Database } from '#src/facades/Database'
 import { Collection, Path } from '@athenna/common'
-import { Column } from '#src/models/annotations/Column'
+import { User } from '#tests/fixtures/models/User'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { UserNotSoftDelete } from '#tests/fixtures/models/UserNotSoftDelete'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
-
-class User extends Model {
-  public static connection() {
-    return 'fake'
-  }
-
-  public static attributes(): Partial<User> {
-    return {
-      metadata1: `random-1`,
-      metadata2: `random-2`
-    }
-  }
-
-  @Column()
-  public id: string
-
-  @Column()
-  public name: string
-
-  @Column({ persist: false })
-  public score: number
-
-  @Column()
-  public metadata1: string
-
-  @Column({ persist: false })
-  public metadata2: string
-
-  @Column({ name: 'rate_number' })
-  public rate: number
-
-  @Column({ isCreateDate: true, name: 'created_at' })
-  public createdAt: Date
-
-  @Column({ isUpdateDate: true, name: 'updated_at' })
-  public updatedAt: Date
-
-  @Column({ isDeleteDate: true })
-  public deletedAt: Date
-}
-
-class UserNotSoftDelete extends Model {
-  public static connection() {
-    return 'fake'
-  }
-
-  @Column()
-  public id: string
-
-  @Column()
-  public name: string
-
-  @Column()
-  public score: number
-}
 
 export default class ModelQueryBuilderTest {
   @BeforeEach()

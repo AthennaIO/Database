@@ -1,0 +1,51 @@
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import { Model } from '#src/models/Model'
+import { Column } from '#src/models/annotations/Column'
+
+export class User extends Model {
+  public static connection() {
+    return 'fake'
+  }
+
+  public static attributes(): Partial<User> {
+    return {
+      metadata1: `random-1`,
+      metadata2: `random-2`
+    }
+  }
+
+  @Column()
+  public id: string
+
+  @Column()
+  public name: string
+
+  @Column({ persist: false })
+  public score: number
+
+  @Column()
+  public metadata1: string
+
+  @Column({ persist: false })
+  public metadata2: string
+
+  @Column({ name: 'rate_number' })
+  public rate: number
+
+  @Column({ isCreateDate: true, name: 'created_at' })
+  public createdAt: Date
+
+  @Column({ isUpdateDate: true, name: 'updated_at' })
+  public updatedAt: Date
+
+  @Column({ isDeleteDate: true })
+  public deletedAt: Date
+}
