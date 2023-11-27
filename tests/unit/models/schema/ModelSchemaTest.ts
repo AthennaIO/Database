@@ -7,9 +7,12 @@
  * file that was distributed with this source code.
  */
 
+import { Model } from '#src/models/Model'
 import { Test, type Context } from '@athenna/test'
+import { HasOne } from '#src/models/annotations/HasOne'
 import { Column } from '#src/models/annotations/Column'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
 export default class ModelSchemaTest {
   @Test()
@@ -385,5 +388,103 @@ export default class ModelSchemaTest {
     )
 
     assert.deepEqual(parsed, { _id: 1, name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesEvenIfPropertiesAreNotSet({ assert }: Context) {
+    class User {}
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1, name: 'lenon' })
+
+    assert.deepEqual(parsed, { id: 1, name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesWithDefaultAttributesEvenIfPropertiesAreNotSet({
+    assert
+  }: Context) {
+    class User {}
+
+    const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1 }, { attributes: { name: 'lenon' } })
+
+    assert.deepEqual(parsed, { id: 1, name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetAHasOneRelationOptionByClassPropertyName({ assert }: Context) {
+    class Profile extends Model {}
+    class User extends Model {
+      @HasOne(Profile)
+      public profile: Profile
+    }
+
+    const relation = new ModelSchema(User).getRelationByProperty('profile')
+
+    assert.deepEqual(relation, {
+      foreignKey: 'userId',
+      model: Profile,
+      primaryKey: 'id',
+      property: 'profile',
+      type: 'hasOne',
+      isIncluded: false
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncludeAHasOneRelationByClassPropertyName({ assert }: Context) {
+    class Profile extends Model {}
+    class User extends Model {
+      @HasOne(Profile)
+      public profile: Profile
+    }
+
+    const schema = new ModelSchema(User)
+    const relation = schema.includeRelation('profile')
+
+    assert.deepEqual(schema.relations, [
+      {
+        closure: undefined,
+        foreignKey: 'userId',
+        model: Profile,
+        primaryKey: 'id',
+        property: 'profile',
+        type: 'hasOne',
+        isIncluded: true
+      }
+    ])
+    assert.deepEqual(relation, {
+      closure: undefined,
+      foreignKey: 'userId',
+      model: Profile,
+      primaryKey: 'id',
+      property: 'profile',
+      type: 'hasOne',
+      isIncluded: true
+    })
+  }
+
+  @Test()
+  public async shouldThrowNotImplementedRelationExceptionIfTryingToIncludeARelationThatIsNotPresentInModel({
+    assert
+  }: Context) {
+    class Profile extends Model {}
+    class User extends Model {
+      @HasOne(Profile)
+      public profile: Profile
+    }
+
+    const schema = new ModelSchema(User)
+
+    assert.throws(() => schema.includeRelation('not-found'), NotImplementedRelationException)
+    assert.deepEqual(schema.relations, [
+      {
+        foreignKey: 'userId',
+        model: Profile,
+        primaryKey: 'id',
+        property: 'profile',
+        type: 'hasOne',
+        isIncluded: false
+      }
+    ])
   }
 }

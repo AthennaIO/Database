@@ -7,4 +7,4 @@
  * file that was distributed with this source code.
  */
 
-export type Connections = 'mongo' | 'mysql' | 'sqlite' | 'postgres'
+export type Connections = 'mongo' | 'mysql' | 'sqlite' | 'postgres' | string

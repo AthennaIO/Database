@@ -34,7 +34,9 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    * Creates a new instance of DatabaseImpl.
    */
   public constructor(athennaDbOpts?: ConnectionOptions) {
-    this.driver = DriverFactory.fabricate(this.connectionName) as Driver
+    this.driver = DriverFactory.fabricate(
+      this.connectionName
+    ) as unknown as Driver
 
     this.connect(athennaDbOpts)
   }
@@ -230,7 +232,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
   /**
    * Creates a new instance of QueryBuilder for this table.
    */
-  public table(table: string | any): QueryBuilder<Driver> {
+  public table<T = any>(table: string | any): QueryBuilder<T, Driver> {
     return new QueryBuilder(this.driver, table)
   }
 }

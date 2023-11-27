@@ -31,7 +31,7 @@ export class ModelQueryBuilder<
 
     this.Model = model
     this.schema = model.schema()
-    this.generator = new ModelGenerator<M>(this.Model as any)
+    this.generator = new ModelGenerator<M>(this.Model as any, this.schema)
     this.primaryKeyName = this.schema.getMainPrimaryKeyName()
     this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
@@ -295,6 +295,37 @@ export class ModelQueryBuilder<
     }
 
     await this.update({ [column.property]: new Date() } as any)
+  }
+
+  /**
+   * Eager load a relation in your query.
+   */
+  // TODO Try to find a way to type relation only with relation props.
+  // TODO Try to find a way to type closure model query builder with
+  // relation model.
+  public with(
+    relation: keyof M,
+    closure?: (query: ModelQueryBuilder) => any
+  ): this {
+    this.schema.includeRelation(relation, closure)
+
+    return this
+  }
+
+  /**
+   * Executes the given closure when the first argument is true.
+   */
+  public when(
+    criteria: any,
+    closure: (query: this, criteriaValue: any) => void | Promise<void>
+  ): this {
+    if (criteria) {
+      closure(this, criteria)
+
+      return this
+    }
+
+    return this
   }
 
   /**

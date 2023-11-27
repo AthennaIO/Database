@@ -7,5 +7,6 @@
  * file that was distributed with this source code.
  */
 
-export const COLUMNS_KEY = 'database:columns:options'
-export const HAS_ONE_KEY = 'database:hasOne:options'
+import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
+
+export type RelationOptions = HasOneOptions

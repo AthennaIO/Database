@@ -9,10 +9,23 @@
 
 import { Options } from '@athenna/common'
 import type { Model } from '#src/models/Model'
-import type { ColumnOptions } from '#src/types'
 import { Annotation } from '#src/helpers/Annotation'
+import type { ColumnOptions, RelationOptions } from '#src/types'
+import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
+import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
 export class ModelSchema<M extends Model = any> {
+  /**
+   * Save the columns defined by @Column annotation.
+   */
+  public columns: ColumnOptions[]
+
+  /**
+   * Save the relations defined by \@HasOne, \@BelongsTo,
+   * \@HasMany and \@ManyToMany annotations.
+   */
+  public relations: RelationOptions[]
+
   /**
    * The model class that is going to be used
    * to craft the schema.
@@ -21,21 +34,22 @@ export class ModelSchema<M extends Model = any> {
 
   public constructor(model: any) {
     this.Model = model
+    this.columns = Annotation.getColumnsMeta(model)
+    this.relations = Annotation.getRelationsMeta(model)
   }
 
   /**
    * Get the column options of the main primary key.
    */
   public getMainPrimaryKey(): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
-    let options = columns.find(c => c.isMainPrimary)
+    let options = this.columns.find(c => c.isMainPrimary)
 
     if (!options) {
-      options = columns.find(c => c.name === 'id')
+      options = this.columns.find(c => c.name === 'id')
     }
 
     if (!options) {
-      options = columns.find(c => c.name === '_id')
+      options = this.columns.find(c => c.name === '_id')
     }
 
     return options
@@ -168,9 +182,7 @@ export class ModelSchema<M extends Model = any> {
    * Get the column options by the model class property.
    */
   public getColumnByProperty(property: string | keyof M): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
-
-    return columns.find(c => c.property === property)
+    return this.columns.find(c => c.property === property)
   }
 
   /**
@@ -191,5 +203,51 @@ export class ModelSchema<M extends Model = any> {
     properties: string[] | Array<keyof M>
   ): string[] {
     return properties.map(property => this.getColumnNameByProperty(property))
+  }
+
+  /**
+   * Get the relation by the class property name.
+   */
+  public getRelationByProperty(property: string | keyof M) {
+    return this.relations.find(c => c.property === property)
+  }
+
+  /**
+   * Return the relation options only from relations
+   * that are included.
+   */
+  public getIncludedRelations(): RelationOptions[] {
+    return this.relations.filter(r => r.isIncluded)
+  }
+
+  /**
+   * Include a relation by setting the isIncluded
+   * option to true.
+   */
+  public includeRelation(
+    property: string | keyof M,
+    closure?: (query: ModelQueryBuilder) => any
+  ) {
+    // TODO
+    // if (relation.includes('.')) {}
+    const model = this.Model.name
+    const options = this.getRelationByProperty(property)
+
+    if (!options) {
+      throw new NotImplementedRelationException(
+        property as string,
+        model,
+        this.relations.map(r => r.property).join(', ')
+      )
+    }
+
+    const i = this.relations.indexOf(options)
+
+    options.isIncluded = true
+    options.closure = closure
+
+    this.relations[i] = options
+
+    return options
   }
 }

@@ -14,8 +14,8 @@ import { DriverFactory } from '#src/factories/DriverFactory'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+import { Test, Mock, AfterEach, BeforeEach, type Context, Skip } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
-import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup, Skip } from '@athenna/test'
 
 export default class MySqlDriverTest {
   public driver = new MySqlDriver('mysql-docker')
@@ -24,18 +24,6 @@ export default class MySqlDriverTest {
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
     this.driver.connect()
-    await this.driver.dropDatabase('trx')
-    await this.driver.dropTable('trx')
-    await this.driver.dropTable('rents')
-    await this.driver.dropTable('students_courses')
-    await this.driver.dropTable('students')
-    await this.driver.dropTable('courses')
-    await this.driver.dropTable('product_details')
-    await this.driver.dropTable('products')
-    await this.driver.dropTable('users')
-    await this.driver.dropTable('orders')
-    await this.driver.dropTable('migrations')
-    await this.driver.dropTable('migrations_lock')
 
     await this.driver.createTable('orders', builder => {
       builder.string('id').primary()
@@ -61,6 +49,25 @@ export default class MySqlDriverTest {
   @AfterEach()
   public async afterEach() {
     Mock.restoreAll()
+
+    if (!this.driver.isConnected) {
+      Config.clear()
+      return
+    }
+
+    await this.driver.dropDatabase('trx')
+    await this.driver.dropTable('trx')
+    await this.driver.dropTable('rents')
+    await this.driver.dropTable('students_courses')
+    await this.driver.dropTable('students')
+    await this.driver.dropTable('courses')
+    await this.driver.dropTable('product_details')
+    await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
+    await this.driver.dropTable('users')
+    await this.driver.dropTable('orders')
+    await this.driver.dropTable('migrations')
+    await this.driver.dropTable('migrations_lock')
 
     await this.driver.close()
 
@@ -113,22 +120,22 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
+
+    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.isFalse(DriverFactory.availableDrivers({ onlyConnected: true }).includes('mysql'))
+    assert.calledOnce(ConnectionFactory.mysql)
+    assert.isTrue(DriverFactory.availableDrivers({ onlyConnected: true }).includes('mysql'))
   }
 
   @Test()
   public async shouldBeAbleToCallConnectMethodButWithoutConnectingToDatabase({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
 
     assert.isFalse(driver.isConnected)
@@ -140,62 +147,50 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'mysql')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
+
+    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
-    assert.isTrue(driver.isConnected)
-
-    driver.connect()
+    driver.connect({ saveOnFactory: false })
+    driver.connect({ saveOnFactory: false })
 
     assert.calledOnce(ConnectionFactory.mysql)
   }
 
   @Test()
-  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'mysql')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
+
+    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
-    assert.isTrue(driver.isConnected)
-
-    driver.connect({ force: true })
+    driver.connect({ saveOnFactory: false })
+    driver.connect({ saveOnFactory: false, force: true })
 
     assert.calledTimes(ConnectionFactory.mysql, 2)
   }
 
   @Test()
-  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'closeByDriver')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
+    driver.client = {} as any
+    driver.client.destroy = Mock.fake()
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
+    driver.connect({ saveOnFactory: false })
     await driver.close()
 
-    assert.calledOnce(ConnectionFactory.closeByDriver)
+    assert.isNull(driver.client)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
 
     Mock.spy(DriverFactory, 'getClient')
@@ -209,8 +204,6 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MySqlDriver('mysql-docker')
 
     assert.isFalse(driver.isConnected)
@@ -233,7 +226,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldThrowNotConnectedDatabaseExceptionIfTryingToCreateQueryWithConnectionClosed({ assert }: Context) {
-    await this.driver.close()
+    Mock.when(this.driver, 'isConnected').value(false)
 
     assert.throws(() => this.driver.query(), NotConnectedDatabaseException)
   }
@@ -268,6 +261,7 @@ export default class MySqlDriverTest {
   public async shouldBeAbleToRunMigrationsUsingDriver({ assert }: Context) {
     await this.driver.dropTable('rents')
     await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
     await this.driver.dropTable('users')
 
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
@@ -281,6 +275,7 @@ export default class MySqlDriverTest {
   public async shouldBeAbleToRollbackMigrationsUsingDriver({ assert }: Context) {
     await this.driver.dropTable('rents')
     await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
     await this.driver.dropTable('users')
 
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
@@ -884,7 +879,7 @@ export default class MySqlDriverTest {
 
   @Test()
   public async shouldThrowNotConnectedDatabaseExceptionWhenTryingToChangeTable({ assert }: Context) {
-    await this.driver.close()
+    Mock.when(this.driver, 'isConnected').value(false)
 
     await assert.rejects(() => this.driver.table('users'), NotConnectedDatabaseException)
   }

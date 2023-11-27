@@ -64,6 +64,11 @@ export default class ModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetModelAttributes({ assert }: Context) {
+    assert.deepEqual(Model.attributes(), {})
+  }
+
+  @Test()
   public async shouldBeAbleToGenerateAnInstanceOfModelSchemaFromModelClass({ assert }: Context) {
     assert.instanceOf(Model.schema(), ModelSchema)
   }

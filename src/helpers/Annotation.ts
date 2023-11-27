@@ -7,8 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { COLUMNS_KEY } from '#src/constants/MetadataKeys'
+import { COLUMNS_KEY, HAS_ONE_KEY } from '#src/constants/MetadataKeys'
 import type { ColumnOptions } from '#src/types/columns/ColumnOptions'
+import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
 
 export class Annotation {
   public static getColumnsMeta(target: any): ColumnOptions[] {
@@ -21,5 +22,21 @@ export class Annotation {
     columns.push(options)
 
     Reflect.defineMetadata(COLUMNS_KEY, columns, target)
+  }
+
+  public static getRelationsMeta(target: any): HasOneOptions[] {
+    return [...this.getHasOnesMeta(target)]
+  }
+
+  public static getHasOnesMeta(target: any): HasOneOptions[] {
+    return Reflect.getMetadata(HAS_ONE_KEY, target) || []
+  }
+
+  public static defineHasOneMeta(target: any, options: HasOneOptions) {
+    const hasOnes = Reflect.getMetadata(HAS_ONE_KEY, target) || []
+
+    hasOnes.push(options)
+
+    Reflect.defineMetadata(HAS_ONE_KEY, hasOnes, target)
   }
 }

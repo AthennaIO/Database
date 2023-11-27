@@ -10,7 +10,7 @@
 import { Exception } from '@athenna/common'
 
 export class NotImplementedMethodException extends Exception {
-  constructor(method: string, driver: string) {
+  public constructor(method: string, driver: string) {
     super({
       status: 500,
       code: 'E_NOT_IMPLEMENTED_METHOD_ERROR',

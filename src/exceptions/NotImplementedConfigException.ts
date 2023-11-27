@@ -10,7 +10,7 @@
 import { Path, Exception, Is } from '@athenna/common'
 
 export class NotImplementedConfigException extends Exception {
-  constructor(con: string) {
+  public constructor(con: string) {
     let help = ''
 
     const connections = Config.get('database.connections')

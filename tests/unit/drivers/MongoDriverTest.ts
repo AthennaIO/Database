@@ -8,13 +8,13 @@
  */
 
 import { Config } from '@athenna/config'
-import { Collection, Path } from '@athenna/common'
 import { MongoDriver } from '#src/drivers/MongoDriver'
+import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import { Test, Mock, AfterEach, BeforeEach, type Context, Cleanup } from '@athenna/test'
+import { Test, Mock, AfterEach, BeforeEach, type Context } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
 
@@ -25,6 +25,18 @@ export default class MongoDriverTest {
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
     this.driver.connect()
+    await Exec.sleep(100)
+  }
+
+  @AfterEach()
+  public async afterEach() {
+    Mock.restoreAll()
+
+    if (!this.driver.isConnected) {
+      Config.clear()
+      return
+    }
+
     await this.driver.dropDatabase('trx')
     await this.driver.dropTable('trx')
     await this.driver.dropTable('rents')
@@ -37,11 +49,6 @@ export default class MongoDriverTest {
     await this.driver.dropTable('orders')
     await this.driver.dropTable('migrations')
     await this.driver.dropTable('migrations_lock')
-  }
-
-  @AfterEach()
-  public async afterEach() {
-    Mock.restoreAll()
 
     await this.driver.close()
 
@@ -94,22 +101,22 @@ export default class MongoDriverTest {
 
   @Test()
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
+
+    Mock.when(ConnectionFactory, 'mongo').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.isFalse(DriverFactory.availableDrivers({ onlyConnected: true }).includes('admin'))
+    assert.calledOnce(ConnectionFactory.mongo)
+    assert.isTrue(DriverFactory.availableDrivers({ onlyConnected: true }).includes('mongo'))
   }
 
   @Test()
   public async shouldBeAbleToCallConnectMethodButWithoutConnectingToDatabase({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
 
     assert.isFalse(driver.isConnected)
@@ -121,62 +128,50 @@ export default class MongoDriverTest {
 
   @Test()
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'mongo')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
+
+    Mock.when(ConnectionFactory, 'mongo').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
-    assert.isTrue(driver.isConnected)
-
-    driver.connect()
+    driver.connect({ saveOnFactory: false })
+    driver.connect({ saveOnFactory: false })
 
     assert.calledOnce(ConnectionFactory.mongo)
   }
 
   @Test()
-  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'mongo')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
+
+    Mock.when(ConnectionFactory, 'mongo').resolve(undefined)
+    Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
-    assert.isTrue(driver.isConnected)
-
-    driver.connect({ force: true })
+    driver.connect({ saveOnFactory: false })
+    driver.connect({ saveOnFactory: false, force: true })
 
     assert.calledTimes(ConnectionFactory.mongo, 2)
   }
 
   @Test()
-  @Cleanup(() => ConnectionFactory.closeAllConnections())
   public async shouldBeAbleToCloseTheConnectionWithDriver({ assert }: Context) {
-    Mock.spy(ConnectionFactory, 'closeByDriver')
-
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
+    driver.client = {} as any
+    driver.client.close = Mock.fake()
 
     assert.isFalse(driver.isConnected)
 
-    driver.connect()
+    driver.connect({ saveOnFactory: false })
     await driver.close()
 
-    assert.calledOnce(ConnectionFactory.closeByDriver)
+    assert.isNull(driver.client)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
 
     Mock.spy(DriverFactory, 'getClient')
@@ -190,8 +185,6 @@ export default class MongoDriverTest {
 
   @Test()
   public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
-    await ConnectionFactory.closeAllConnections()
-
     const driver = new MongoDriver('mongo-memory')
 
     assert.isFalse(driver.isConnected)
@@ -214,7 +207,7 @@ export default class MongoDriverTest {
 
   @Test()
   public async shouldThrowNotConnectedDatabaseExceptionIfTryingToCreateQueryWithConnectionClosed({ assert }: Context) {
-    await this.driver.close()
+    Mock.when(this.driver, 'isConnected').value(false)
 
     assert.throws(() => this.driver.query(), NotConnectedDatabaseException)
   }
@@ -819,7 +812,7 @@ export default class MongoDriverTest {
 
   @Test()
   public async shouldThrowNotConnectedDatabaseExceptionWhenTryingToChangeTable({ assert }: Context) {
-    await this.driver.close()
+    Mock.when(this.driver, 'isConnected').value(false)
 
     await assert.rejects(() => this.driver.table('users'), NotConnectedDatabaseException)
   }

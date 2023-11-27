@@ -13,3 +13,6 @@ export * from '#src/types/Connections'
 export * from '#src/types/ConnectionOptions'
 export * from '#src/types/columns/ColumnType'
 export * from '#src/types/columns/ColumnOptions'
+
+export * from '#src/types/relations/HasOneOptions'
+export * from '#src/types/relations/RelationOptions'
