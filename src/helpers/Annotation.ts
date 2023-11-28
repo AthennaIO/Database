@@ -10,12 +10,14 @@
 import {
   COLUMNS_KEY,
   HAS_ONE_KEY,
+  HAS_MANY_KEY,
   BELONGS_TO_KEY
 } from '#src/constants/MetadataKeys'
 import type {
   RelationOptions,
   ColumnOptions,
   HasOneOptions,
+  HasManyOptions,
   BelongsToOptions
 } from '#src/types'
 
@@ -33,7 +35,11 @@ export class Annotation {
   }
 
   public static getRelationsMeta(target: any): RelationOptions[] {
-    return [...this.getHasOnesMeta(target), ...this.getBelongsToMeta(target)]
+    return [
+      ...this.getHasOnesMeta(target),
+      ...this.getHasManyMeta(target),
+      ...this.getBelongsToMeta(target)
+    ]
   }
 
   public static getHasOnesMeta(target: any): HasOneOptions[] {
@@ -41,11 +47,23 @@ export class Annotation {
   }
 
   public static defineHasOneMeta(target: any, options: HasOneOptions) {
-    const hasOnes = Reflect.getMetadata(HAS_ONE_KEY, target) || []
+    const hasOne = Reflect.getMetadata(HAS_ONE_KEY, target) || []
 
-    hasOnes.push(options)
+    hasOne.push(options)
 
-    Reflect.defineMetadata(HAS_ONE_KEY, hasOnes, target)
+    Reflect.defineMetadata(HAS_ONE_KEY, hasOne, target)
+  }
+
+  public static getHasManyMeta(target: any): HasManyOptions[] {
+    return Reflect.getMetadata(HAS_MANY_KEY, target) || []
+  }
+
+  public static defineHasManyMeta(target: any, options: HasManyOptions) {
+    const hasMany = Reflect.getMetadata(HAS_MANY_KEY, target) || []
+
+    hasMany.push(options)
+
+    Reflect.defineMetadata(HAS_MANY_KEY, hasMany, target)
   }
 
   public static getBelongsToMeta(target: any): BelongsToOptions[] {
@@ -53,10 +71,10 @@ export class Annotation {
   }
 
   public static defineBelongsToMeta(target: any, options: BelongsToOptions) {
-    const hasOnes = Reflect.getMetadata(BELONGS_TO_KEY, target) || []
+    const belongsTo = Reflect.getMetadata(BELONGS_TO_KEY, target) || []
 
-    hasOnes.push(options)
+    belongsTo.push(options)
 
-    Reflect.defineMetadata(BELONGS_TO_KEY, hasOnes, target)
+    Reflect.defineMetadata(BELONGS_TO_KEY, belongsTo, target)
   }
 }

@@ -8,13 +8,11 @@
  */
 
 import { Model } from '#src/models/Model'
+import { User } from '#tests/fixtures/models/e2e/User'
 import { Column } from '#src/models/annotations/Column'
-import { HasOne } from '#src/models/annotations/HasOne'
-import { HasMany } from '#src/models/annotations/HasMany'
-import { Product } from '#tests/fixtures/models/e2e/Product'
-import { Profile } from '#tests/fixtures/models/e2e/Profile'
+import { BelongsTo } from '#src/models/annotations/BelongsTo'
 
-export class User extends Model {
+export class Product extends Model {
   public static connection() {
     return 'postgres-docker'
   }
@@ -22,11 +20,11 @@ export class User extends Model {
   @Column()
   public id: number
 
-  @HasOne(() => Profile)
-  public profile: Profile
+  @Column()
+  public userId: number
 
-  @HasMany(() => Product)
-  public products: Product[]
+  @BelongsTo(() => User)
+  public user: User
 
   @Column({ isCreateDate: true })
   public createdAt: Date
