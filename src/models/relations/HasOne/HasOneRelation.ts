@@ -18,7 +18,8 @@ export class HasOneRelation {
     model: Model,
     relation: HasOneOptions
   ): Promise<any> {
-    model[relation.property] = await relation.model
+    model[relation.property] = await relation
+      .model()
       .query()
       .where(relation.foreignKey as never, model[relation.primaryKey])
       .when(relation.closure, relation.closure)
@@ -35,7 +36,8 @@ export class HasOneRelation {
     relation: HasOneOptions
   ): Promise<any[]> {
     const primaryValues = models.map(model => model[relation.primaryKey])
-    const results = await relation.model
+    const results = await relation
+      .model()
       .query()
       .whereIn(relation.foreignKey as never, primaryValues)
       .when(relation.closure, relation.closure)

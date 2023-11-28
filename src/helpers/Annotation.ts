@@ -7,9 +7,17 @@
  * file that was distributed with this source code.
  */
 
-import { COLUMNS_KEY, HAS_ONE_KEY } from '#src/constants/MetadataKeys'
-import type { ColumnOptions } from '#src/types/columns/ColumnOptions'
-import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
+import {
+  COLUMNS_KEY,
+  HAS_ONE_KEY,
+  BELONGS_TO_KEY
+} from '#src/constants/MetadataKeys'
+import type {
+  RelationOptions,
+  ColumnOptions,
+  HasOneOptions,
+  BelongsToOptions
+} from '#src/types'
 
 export class Annotation {
   public static getColumnsMeta(target: any): ColumnOptions[] {
@@ -24,8 +32,8 @@ export class Annotation {
     Reflect.defineMetadata(COLUMNS_KEY, columns, target)
   }
 
-  public static getRelationsMeta(target: any): HasOneOptions[] {
-    return [...this.getHasOnesMeta(target)]
+  public static getRelationsMeta(target: any): RelationOptions[] {
+    return [...this.getHasOnesMeta(target), ...this.getBelongsToMeta(target)]
   }
 
   public static getHasOnesMeta(target: any): HasOneOptions[] {
@@ -38,5 +46,17 @@ export class Annotation {
     hasOnes.push(options)
 
     Reflect.defineMetadata(HAS_ONE_KEY, hasOnes, target)
+  }
+
+  public static getBelongsToMeta(target: any): BelongsToOptions[] {
+    return Reflect.getMetadata(BELONGS_TO_KEY, target) || []
+  }
+
+  public static defineBelongsToMeta(target: any, options: BelongsToOptions) {
+    const hasOnes = Reflect.getMetadata(BELONGS_TO_KEY, target) || []
+
+    hasOnes.push(options)
+
+    Reflect.defineMetadata(BELONGS_TO_KEY, hasOnes, target)
   }
 }

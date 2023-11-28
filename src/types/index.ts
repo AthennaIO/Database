@@ -15,4 +15,5 @@ export * from '#src/types/columns/ColumnType'
 export * from '#src/types/columns/ColumnOptions'
 
 export * from '#src/types/relations/HasOneOptions'
+export * from '#src/types/relations/BelongsToOptions'
 export * from '#src/types/relations/RelationOptions'

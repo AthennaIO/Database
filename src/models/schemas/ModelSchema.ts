@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Options } from '@athenna/common'
+import { Json, Options } from '@athenna/common'
 import type { Model } from '#src/models/Model'
 import { Annotation } from '#src/helpers/Annotation'
 import type { ColumnOptions, RelationOptions } from '#src/types'
@@ -34,8 +34,8 @@ export class ModelSchema<M extends Model = any> {
 
   public constructor(model: any) {
     this.Model = model
-    this.columns = Annotation.getColumnsMeta(model)
-    this.relations = Annotation.getRelationsMeta(model)
+    this.columns = Json.copy(Annotation.getColumnsMeta(model))
+    this.relations = Json.copy(Annotation.getRelationsMeta(model))
   }
 
   /**

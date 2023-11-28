@@ -10,17 +10,17 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
+import { Options } from '@athenna/common'
 import type { Model } from '#src/models/Model'
-import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
-import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
+import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
 
 /**
- * Create has one relation for model class.
+ * Create belongs to relation for model class.
  */
-export function HasOne(
+export function BelongsTo(
   model: () => typeof Model,
-  options: Omit<HasOneOptions, 'type' | 'model' | 'property'> = {}
+  options: Omit<BelongsToOptions, 'type' | 'model' | 'property'> = {}
 ): PropertyDecorator {
   // TODO primaryKey and foreignKey options should respect the
   // type of main model and referenced model.
@@ -30,12 +30,12 @@ export function HasOne(
     options = Options.create(options, {
       isIncluded: false,
       primaryKey: Target.schema().getMainPrimaryKeyName(),
-      foreignKey: `${String.toCamelCase(Target.name)}Id`
+      foreignKey: undefined
     })
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.type = 'hasOne'
+    options.type = 'belongsTo'
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.model = model
@@ -43,8 +43,12 @@ export function HasOne(
     // @ts-ignore
     options.property = key
 
-    debug('Registering hasOne metadata for model %s: %o', Target.name, options)
+    debug(
+      'Registering belongsTo metadata for model %s: %o',
+      Target.name,
+      options
+    )
 
-    Annotation.defineHasOneMeta(Target, options)
+    Annotation.defineBelongsToMeta(Target, options)
   }
 }

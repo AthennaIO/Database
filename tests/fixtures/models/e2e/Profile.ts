@@ -8,7 +8,9 @@
  */
 
 import { Model } from '#src/models/Model'
+import { User } from '#tests/fixtures/models/e2e/User'
 import { Column } from '#src/models/annotations/Column'
+import { BelongsTo } from '#src/models/annotations/BelongsTo'
 
 export class Profile extends Model {
   public static connection() {
@@ -20,6 +22,9 @@ export class Profile extends Model {
 
   @Column()
   public userId: number
+
+  @BelongsTo(() => User)
+  public user: User
 
   @Column({ isCreateDate: true })
   public createdAt: Date

@@ -8,5 +8,6 @@
  */
 
 import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
+import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
 
-export type RelationOptions = HasOneOptions
+export type RelationOptions = HasOneOptions | BelongsToOptions

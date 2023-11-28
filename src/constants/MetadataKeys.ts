@@ -9,3 +9,4 @@
 
 export const COLUMNS_KEY = 'database:columns:options'
 export const HAS_ONE_KEY = 'database:hasOne:options'
+export const BELONGS_TO_KEY = 'database:belongsTo:options'

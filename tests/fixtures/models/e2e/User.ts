@@ -20,7 +20,7 @@ export class User extends Model {
   @Column()
   public id: number
 
-  @HasOne(Profile)
+  @HasOne(() => Profile)
   public profile: Profile
 
   @Column({ isCreateDate: true })

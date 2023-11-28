@@ -10,14 +10,14 @@
 import type { Model } from '#src/models/Model'
 import type { ModelQueryBuilder } from 'src/models/builders/ModelQueryBuilder.js'
 
-export type HasOneOptions = {
+export type BelongsToOptions = {
   /**
    * The relation option type.
    *
    * @readonly
-   * @default 'hasOne'
+   * @default 'belongsTo'
    */
-  type?: 'hasOne'
+  type?: 'belongsTo'
 
   /**
    * The closure that should be executed while
