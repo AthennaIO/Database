@@ -95,4 +95,24 @@ export default class HasOneRelationTest {
       }
     ])
   }
+
+  @Test()
+  public async shouldBeAbleToLoadModelsThatDontHaveARelationInDatabaseWhenUsingFind({ assert }: Context) {
+    await User.create({ id: 2, name: 'txsoura' })
+    const user = await User.query().with('profile').where('id', 2).find()
+
+    assert.instanceOf(user, User)
+    assert.isUndefined(user.profile)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadModelsThatDontHaveARelationInDatabaseWhenUsingFindMany({ assert }: Context) {
+    await User.create({ id: 2, name: 'txsoura' })
+    const users = await User.query().with('profile').orderBy('name').findMany()
+
+    assert.instanceOf(users[0], User)
+    assert.instanceOf(users[1], User)
+    assert.instanceOf(users[0].profile, Profile)
+    assert.isUndefined(users[1].profile)
+  }
 }

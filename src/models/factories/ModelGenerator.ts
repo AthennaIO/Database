@@ -13,6 +13,7 @@ import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { HasOneRelation } from '#src/models/relations/HasOne/HasOneRelation'
 import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
+import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
 
 export class ModelGenerator<M extends Model = any> {
   /**
@@ -99,8 +100,8 @@ export class ModelGenerator<M extends Model = any> {
         return HasManyRelation.load(model, relation)
       case 'belongsTo':
         return BelongsToRelation.load(model, relation)
-      // case 'belongsToMany':
-      //   return BelongsToManyRelation.load(model, relation)
+      case 'belongsToMany':
+        return BelongsToManyRelation.load(model, relation)
       default:
         return model
     }
@@ -137,8 +138,8 @@ export class ModelGenerator<M extends Model = any> {
         return HasManyRelation.loadAll(models, relation)
       case 'belongsTo':
         return BelongsToRelation.loadAll(models, relation)
-      // case 'belongsToMany':
-      //   return BelongsToManyRelation.loadAll(models, relation)
+      case 'belongsToMany':
+        return BelongsToManyRelation.loadAll(models, relation)
       default:
         return models
     }

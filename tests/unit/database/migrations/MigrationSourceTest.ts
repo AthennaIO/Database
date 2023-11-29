@@ -38,7 +38,7 @@ export default class MigrationSourceTest {
 
     const migrations = await new MigrationSource('postgres-docker').getMigrations()
 
-    assert.lengthOf(migrations, 5)
+    assert.lengthOf(migrations, 8)
     assert.deepEqual(migrations[0].name, '2022_10_08_000000_create_uuid_function_postgres.ts')
   }
 

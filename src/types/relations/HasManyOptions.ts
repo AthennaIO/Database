@@ -36,7 +36,7 @@ export type HasManyOptions = {
   property?: string
 
   /**
-   * The model that is being referenced.
+   * The relation model that is being referenced.
    *
    * @readonly
    */
@@ -54,7 +54,7 @@ export type HasManyOptions = {
 
   /**
    * The primary key is always the primary key
-   * of the parent model.
+   * of the main model.
    *
    * @default Model.schema().getMainPrimaryKey()
    */
@@ -62,9 +62,9 @@ export type HasManyOptions = {
 
   /**
    * The foreign key is the camelCase representation
-   * of the parent model name and its primary key.
+   * of the relation model name with an 'Id' at the end.
    *
-   * @default `String.toCamelCase(Model.name)Id`
+   * @default `${String.toCamelCase(RelationModel.name)}Id`
    */
   foreignKey?: string
 }

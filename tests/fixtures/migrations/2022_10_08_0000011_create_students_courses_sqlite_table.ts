@@ -9,17 +9,19 @@
 
 import { DatabaseImpl, Migration } from '#src'
 
-export class StudentMigration extends Migration {
+export class StudentCourseMigration extends Migration {
   public static connection() {
-    return 'mysql-docker'
+    return 'sqlite-memory'
   }
 
-  public tableName = 'students'
+  public tableName = 'students_courses'
 
   public async up(db: DatabaseImpl) {
     return db.createTable(this.tableName, table => {
-      table.uuid('id').primary().defaultTo(db.raw('(UUID())'))
-      table.string('name')
+      table.increments('id')
+
+      table.integer('courseId').references('id').inTable('courses')
+      table.integer('studentId').references('id').inTable('students')
     })
   }
 

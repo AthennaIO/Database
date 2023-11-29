@@ -100,4 +100,24 @@ export default class HasManyRelationTest {
       }
     ])
   }
+
+  @Test()
+  public async shouldBeAbleToLoadModelsThatDontHaveARelationInDatabaseWhenUsingFind({ assert }: Context) {
+    await User.create({ id: 2, name: 'txsoura' })
+    const user = await User.query().with('products').where('id', 2).find()
+
+    assert.instanceOf(user, User)
+    assert.isEmpty(user.products)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadModelsThatDontHaveARelationInDatabaseWhenUsingFindMany({ assert }: Context) {
+    await User.create({ id: 2, name: 'txsoura' })
+    const users = await User.query().with('products').orderBy('name').findMany()
+
+    assert.instanceOf(users[0], User)
+    assert.instanceOf(users[1], User)
+    assert.instanceOf(users[0].products[0], Product)
+    assert.isEmpty(users[1].products)
+  }
 }

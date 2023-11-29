@@ -263,6 +263,9 @@ export default class PostgresDriverTest {
     await this.driver.dropTable('products')
     await this.driver.dropTable('profiles')
     await this.driver.dropTable('users')
+    await this.driver.dropTable('courses')
+    await this.driver.dropTable('students')
+    await this.driver.dropTable('students_courses')
 
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
 

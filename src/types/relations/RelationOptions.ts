@@ -10,5 +10,10 @@
 import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
 import type { HasManyOptions } from '#src/types/relations/HasManyOptions'
 import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
+import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOptions'
 
-export type RelationOptions = HasOneOptions | HasManyOptions | BelongsToOptions
+export type RelationOptions =
+  | HasOneOptions
+  | HasManyOptions
+  | BelongsToOptions
+  | BelongsToManyOptions

@@ -24,8 +24,7 @@ export class BelongsToRelation {
     relation.foreignKey =
       relation.foreignKey || `${String.toCamelCase(relationModel.name)}Id`
 
-    model[relation.property] = await relation
-      .model()
+    model[relation.property] = await relationModel
       .query()
       .where(relation.primaryKey as never, model[relation.foreignKey])
       .when(relation.closure, relation.closure)
@@ -47,8 +46,7 @@ export class BelongsToRelation {
       relation.foreignKey || `${String.toCamelCase(relationModel.name)}Id`
 
     const foreignValues = models.map(model => model[relation.foreignKey])
-    const results = await relation
-      .model()
+    const results = await relationModel
       .query()
       .whereIn(relation.primaryKey as never, foreignValues)
       .when(relation.closure, relation.closure)

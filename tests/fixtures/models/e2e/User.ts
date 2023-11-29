@@ -22,6 +22,9 @@ export class User extends Model {
   @Column()
   public id: number
 
+  @Column()
+  public name: string
+
   @HasOne(() => Profile)
   public profile: Profile
 

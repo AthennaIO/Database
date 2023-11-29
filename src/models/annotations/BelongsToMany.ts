@@ -10,17 +10,17 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import { Options } from '@athenna/common'
+import { Options, String } from '@athenna/common'
 import type { Model } from '#src/models/Model'
 import { Annotation } from '#src/helpers/Annotation'
-import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
+import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOptions'
 
 /**
- * Create belongs to relation for model class.
+ * Create belongs to many relation for model class.
  */
-export function BelongsTo(
+export function BelongsToMany(
   model: () => typeof Model,
-  options: Omit<BelongsToOptions, 'type' | 'model' | 'property'> = {}
+  options: Omit<BelongsToManyOptions, 'type' | 'model' | 'property'> = {}
 ): PropertyDecorator {
   // TODO primaryKey and foreignKey options should respect the
   // type of main model and referenced model.
@@ -30,13 +30,16 @@ export function BelongsTo(
     options = Options.create(options, {
       isIncluded: false,
       primaryKey: Target.schema().getMainPrimaryKeyName(),
+      foreignKey: `${String.toCamelCase(String.singularize(Target.table()))}Id`,
       // To avoid import issues, the above values be set only when resolving the relation.
-      foreignKey: undefined
+      pivotTable: undefined,
+      pivotPrimaryKey: undefined,
+      pivotForeignKey: undefined
     })
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.type = 'belongsTo'
+    options.type = 'belongsToMany'
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.model = model
@@ -45,11 +48,11 @@ export function BelongsTo(
     options.property = key
 
     debug(
-      'Registering belongsTo metadata for model %s: %o',
+      'Registering belongsToMany metadata for model %s: %o',
       Target.name,
       options
     )
 
-    Annotation.defineBelongsToMeta(Target, options)
+    Annotation.defineBelongsToManyMeta(Target, options)
   }
 }

@@ -204,4 +204,9 @@ export class Model {
 
     return query.delete(force)
   }
+
+  /**
+   * The pivot data from many to many relations.
+   */
+  public pivot?: Record<string, any>
 }

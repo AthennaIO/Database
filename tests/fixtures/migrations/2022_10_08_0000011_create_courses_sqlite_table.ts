@@ -11,14 +11,14 @@ import { DatabaseImpl, Migration } from '#src'
 
 export class CourseMigration extends Migration {
   public static connection() {
-    return 'mysql-docker'
+    return 'sqlite-memory'
   }
 
   public tableName = 'courses'
 
   public async up(db: DatabaseImpl) {
     return db.createTable(this.tableName, table => {
-      table.uuid('id').primary().defaultTo(db.raw('(UUID())'))
+      table.increments('id')
       table.string('name')
     })
   }

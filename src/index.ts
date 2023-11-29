@@ -10,6 +10,10 @@
 export * from '#src/types'
 
 export * from '#src/models/Model'
+export * from '#src/models/annotations/HasOne'
+export * from '#src/models/annotations/HasMany'
+export * from '#src/models/annotations/BelongsTo'
+export * from '#src/models/annotations/BelongsToMany'
 
 export * from '#src/database/DatabaseImpl'
 export * from '#src/database/seeders/Seeder'

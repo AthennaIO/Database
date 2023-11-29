@@ -46,13 +46,7 @@ export class HasManyRelation {
     const map = new Map()
 
     results.forEach(result => {
-      if (!map.has(result[relation.foreignKey])) {
-        map.set(result[relation.foreignKey], [result])
-
-        return
-      }
-
-      const array = map.get(result[relation.foreignKey])
+      const array = map.get(result[relation.foreignKey]) || []
 
       array.push(result)
 
