@@ -8,16 +8,17 @@
  */
 
 import { Model } from '#src/models/Model'
+import { Collection } from '@athenna/common'
 import type { Connections } from '#src/types'
 import { Database } from '#src/facades/Database'
 import { User } from '#tests/fixtures/models/User'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
+import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, type Context, BeforeEach, AfterEach, Mock } from '@athenna/test'
-import { Collection } from '@athenna/common'
 
 export default class ModelTest {
   @BeforeEach()
@@ -69,8 +70,18 @@ export default class ModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetModelDefinitions({ assert }: Context) {
+    assert.deepEqual(await Model.definition(), {})
+  }
+
+  @Test()
   public async shouldBeAbleToGenerateAnInstanceOfModelSchemaFromModelClass({ assert }: Context) {
     assert.instanceOf(Model.schema(), ModelSchema)
+  }
+
+  @Test()
+  public async shouldBeAbleToGenerateAnInstanceOfModelFactoryFromModelClass({ assert }: Context) {
+    assert.instanceOf(Model.factory(), ModelFactory)
   }
 
   @Test()

@@ -7,9 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Collection, String } from '@athenna/common'
 import { Database } from '#src/facades/Database'
+import { Collection, String } from '@athenna/common'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export class Model {
@@ -37,10 +38,25 @@ export class Model {
   }
 
   /**
+   * Set the definition data that will be used when fabricating
+   * instances of your model using factories.
+   */
+  public static async definition(): Promise<Record<string, unknown>> {
+    return {}
+  }
+
+  /**
    * Create a new ModelSchema instance from your model.
    */
   public static schema<T extends typeof Model>(this: T) {
     return new ModelSchema<InstanceType<T>>(this)
+  }
+
+  /**
+   * Create a new ModelFactory instance from your model.
+   */
+  public static factory<T extends typeof Model>(this: T) {
+    return new ModelFactory<InstanceType<T>>(this)
   }
 
   /**
@@ -89,6 +105,7 @@ export class Model {
    * execute the given closure.
    */
   public static async findOr<T extends typeof Model>(
+    this: T,
     where: Partial<InstanceType<T>>,
     closure: () => any | Promise<any>
   ): Promise<InstanceType<T> | any> {

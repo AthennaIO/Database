@@ -10,8 +10,8 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import { Options, String } from '@athenna/common'
 import type { Model } from '#src/models/Model'
+import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOptions'
 

@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Json, Options } from '@athenna/common'
 import type { Model } from '#src/models/Model'
+import { Json, Options } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
 import type { ColumnOptions, RelationOptions } from '#src/types'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
