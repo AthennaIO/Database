@@ -9,6 +9,10 @@
 
 import { Model } from '#src/models/Model'
 import { Column } from '#src/models/annotations/Column'
+import { HasOne } from '#src/models/annotations/HasOne'
+import { Profile } from '#tests/fixtures/models/Profile'
+import { Product } from '#tests/fixtures/models/Product'
+import { HasMany } from '#src/models/annotations/HasMany'
 
 export class User extends Model {
   public static connection() {
@@ -39,6 +43,12 @@ export class User extends Model {
 
   @Column({ name: 'rate_number' })
   public rate: number
+
+  @HasOne(() => Profile)
+  public profile: Profile
+
+  @HasMany(() => Product)
+  public products: Product[]
 
   @Column({ isCreateDate: true, name: 'created_at' })
   public createdAt: Date

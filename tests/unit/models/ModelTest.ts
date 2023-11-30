@@ -12,6 +12,8 @@ import { Collection } from '@athenna/common'
 import type { Connections } from '#src/types'
 import { Database } from '#src/facades/Database'
 import { User } from '#tests/fixtures/models/User'
+import { Profile } from '#tests/fixtures/models/Profile'
+import { Product } from '#tests/fixtures/models/Product'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
@@ -273,5 +275,50 @@ export default class ModelTest {
     await User.delete({ id: '1' }, true)
 
     assert.calledOnce(FakeDriver.delete)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelAsJsonUsingToJSONMethod({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    const json = user.toJSON()
+
+    assert.notInstanceOf(json, User)
+    assert.deepEqual(json, { id: '1', name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelAsJsonAndAlsoObjectRelationsUsingToJSONMethod({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.profile = new Profile()
+    user.profile.id = '1'
+
+    const json = user.toJSON()
+
+    assert.notInstanceOf(json, User)
+    assert.notInstanceOf(json.profile, Profile)
+    assert.deepEqual(json, { id: '1', name: 'lenon', profile: { id: '1' } })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelAsJsonAndAlsoArrayRelationsUsingToJSONMethod({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.products = [new Product()]
+    user.products[0].id = '1'
+
+    const json = user.toJSON()
+
+    assert.notInstanceOf(json, User)
+    assert.notInstanceOf(json.products[0], Product)
+    assert.deepEqual(json, { id: '1', name: 'lenon', products: [{ id: '1' }] })
   }
 }

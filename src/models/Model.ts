@@ -8,7 +8,7 @@
  */
 
 import { Database } from '#src/facades/Database'
-import { Collection, String } from '@athenna/common'
+import { Collection, Is, String } from '@athenna/common'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
@@ -226,4 +226,35 @@ export class Model {
    * The pivot data from many to many relations.
    */
   public pivot?: Record<string, any>
+
+  /**
+   * Return a Json object from the actual subclass instance.
+   */
+  public toJSON(): Record<string, any> {
+    const _Model = this.constructor as unknown as typeof Model
+
+    const json = {}
+    const relations = _Model.schema().getRelationProperties()
+
+    /**
+     * Execute the toJSON of relations.
+     */
+    Object.keys(this).forEach(key => {
+      if (relations.includes(key)) {
+        if (Is.Array(this[key])) {
+          json[key] = this[key].map(d => (d.toJSON ? d.toJSON() : d))
+
+          return
+        }
+
+        json[key] = this[key].toJSON ? this[key].toJSON() : this[key]
+
+        return
+      }
+
+      json[key] = this[key]
+    })
+
+    return json
+  }
 }

@@ -221,6 +221,13 @@ export class ModelSchema<M extends Model = any> {
   }
 
   /**
+   * Return the relation properties.
+   */
+  public getRelationProperties(): string[] {
+    return this.relations.map(r => r.property)
+  }
+
+  /**
    * Include a relation by setting the isIncluded
    * option to true.
    */
