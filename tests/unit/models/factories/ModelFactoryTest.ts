@@ -160,7 +160,7 @@ export default class ModelFactoryTest {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
-          productId: Product.factory().returning('id') as any
+          productId: Product.factory().returningAs('id')
         }
       }
 
@@ -323,7 +323,7 @@ export default class ModelFactoryTest {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
-          productId: Product.factory().returning('id') as any
+          productId: Product.factory().returningAs('id')
         }
       }
 
@@ -501,7 +501,7 @@ export default class ModelFactoryTest {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
-          productId: Product.factory().returning('id') as any
+          productId: Product.factory().returningAs('id')
         }
       }
 
@@ -689,7 +689,7 @@ export default class ModelFactoryTest {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
-          productId: Product.factory().returning('id') as any
+          productId: Product.factory().returningAs('id')
         }
       }
 

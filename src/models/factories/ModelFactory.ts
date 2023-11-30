@@ -50,6 +50,22 @@ export class ModelFactory<M extends Model = any, R = M> {
   }
 
   /**
+   * Same as returning method, but return the type of
+   * the key of the model to avoid using "as any" or
+   * other kind of stuffs to fix the type in definition
+   * method.
+   *
+   * Only the type is modified for convenience, the real
+   * return type of this method is still the ModelFactory
+   * instance.
+   */
+  public returningAs<T extends keyof M>(key: T): M[T] {
+    this._returning = key
+
+    return this as any
+  }
+
+  /**
    * Set the soft delete state in your model to
    * fabricate deleted data.
    */
@@ -69,15 +85,8 @@ export class ModelFactory<M extends Model = any, R = M> {
     return this
   }
 
-  public count(number: 1): {
-    make(data: Partial<M>): Promise<R>
-    create(data: Partial<M>): Promise<R>
-  } & ModelFactory<M>
-
-  public count(number: number): {
-    make(data: Partial<M>): Promise<R[]>
-    create(data: Partial<M>): Promise<R[]>
-  } & ModelFactory<M>
+  public count(number: 1): ModelFactory<M, R>
+  public count(number: number): ModelFactory<M, R[]>
 
   /**
    * Set the number of models to be created.
@@ -91,7 +100,7 @@ export class ModelFactory<M extends Model = any, R = M> {
   /**
    * Make models without creating it on database.
    */
-  public async make(override: Partial<M> = {}): Promise<R | R[]> {
+  public async make(override: Partial<M> = {}): Promise<R> {
     const promises = []
 
     for (let i = 1; i <= this._count; i++) {
@@ -116,13 +125,13 @@ export class ModelFactory<M extends Model = any, R = M> {
       return data[0]
     }
 
-    return data
+    return data as R
   }
 
   /**
    * Create models creating it on database.
    */
-  public async create(override: Partial<M> = {}): Promise<R | R[]> {
+  public async create(override: Partial<M> = {}): Promise<R> {
     const promises = []
 
     for (let i = 1; i <= this._count; i++) {
@@ -136,10 +145,10 @@ export class ModelFactory<M extends Model = any, R = M> {
     }
 
     if (this._count === 1) {
-      return data[0] as any
+      return data[0] as R
     }
 
-    return data as any
+    return data as R
   }
 
   /**
