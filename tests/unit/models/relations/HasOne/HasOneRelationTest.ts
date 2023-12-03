@@ -115,4 +115,31 @@ export default class HasOneRelationTest {
     assert.instanceOf(users[0].profile, Profile)
     assert.isUndefined(users[1].profile)
   }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstance({ assert }: Context) {
+    const user = await User.query().find()
+
+    await user.load('profile')
+
+    assert.instanceOf(user, User)
+    assert.instanceOf(user.profile, Profile)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstanceAndExecuteClosure({ assert }: Context) {
+    const user = await User.query().select('id').find()
+
+    await user.load('profile', query => query.select('id', 'userId'))
+
+    assert.instanceOf(user, User)
+    assert.instanceOf(user.profile, Profile)
+    assert.deepEqual(user, {
+      id: 1,
+      profile: {
+        id: 1,
+        userId: 1
+      }
+    })
+  }
 }

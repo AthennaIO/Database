@@ -120,4 +120,44 @@ export default class HasManyRelationTest {
     assert.instanceOf(users[0].products[0], Product)
     assert.isEmpty(users[1].products)
   }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstance({ assert }: Context) {
+    const user = await User.query().find()
+
+    await user.load('products')
+
+    assert.instanceOf(user, User)
+    assert.instanceOf(user.products[0], Product)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstanceAndExecuteClosure({ assert }: Context) {
+    const user = await User.query().select('id').find()
+
+    await user.load('products', query => query.select('id', 'userId'))
+
+    assert.instanceOf(user, User)
+    assert.instanceOf(user.products[0], Product)
+    assert.deepEqual(user, {
+      id: 1,
+      products: [
+        {
+          id: 1,
+          userId: 1
+        }
+      ]
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadModelsThatDontHaveARelationInDatabaseFromInstance({ assert }: Context) {
+    await User.create({ id: 2, name: 'txsoura' })
+    const user = await User.query().where('id', 2).find()
+
+    await user.load('products')
+
+    assert.instanceOf(user, User)
+    assert.isEmpty(user.products)
+  }
 }

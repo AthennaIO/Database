@@ -152,4 +152,58 @@ export default class BelongsToRelationTest {
       }
     ])
   }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstance({ assert }: Context) {
+    const profile = await Profile.query().find()
+
+    await profile.load('user')
+
+    assert.instanceOf(profile, Profile)
+    assert.instanceOf(profile.user, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstanceAndExecuteClosure({ assert }: Context) {
+    const profile = await Profile.query().select('id', 'userId').find()
+
+    await profile.load('user', query => query.select('id'))
+
+    assert.instanceOf(profile, Profile)
+    assert.instanceOf(profile.user, User)
+    assert.deepEqual(profile, {
+      id: 1,
+      userId: 1,
+      user: {
+        id: 1
+      }
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOppositeHasManyRelationFromInstance({ assert }: Context) {
+    const product = await Product.query().find()
+
+    await product.load('user')
+
+    assert.instanceOf(product, Product)
+    assert.instanceOf(product.user, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOppositeHasManyRelationFromInstanceAndExecuteClosure({ assert }: Context) {
+    const product = await Product.query().select('id', 'userId').find()
+
+    await product.load('user', query => query.select('id'))
+
+    assert.instanceOf(product, Product)
+    assert.instanceOf(product.user, User)
+    assert.deepEqual(product, {
+      id: 1,
+      userId: 1,
+      user: {
+        id: 1
+      }
+    })
+  }
 }

@@ -307,7 +307,12 @@ export class ModelQueryBuilder<
    */
   public with<K extends ModelRelations<M>>(
     relation: K,
-    closure?: (query: ModelQueryBuilder<Extract<M[K], Model>, Driver>) => any
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<M[K] extends Model[] ? M[K][0] : M[K], Model>,
+        Driver
+      >
+    ) => any
   ): this {
     this.schema.includeRelation(relation, closure)
 

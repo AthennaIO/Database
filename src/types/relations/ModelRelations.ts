@@ -10,7 +10,7 @@
 import type { Model } from '#src/models/Model'
 
 export type RelationKeys<T> = {
-  [K in keyof T]: T[K] extends Model ? K : never
+  [K in keyof T]: T[K] extends Model | Model[] ? K : never
 }[keyof T]
 
 export type ModelRelations<T> = Extract<RelationKeys<T>, string>

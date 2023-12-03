@@ -29,9 +29,11 @@ export function BelongsToMany<T extends Model = any, R extends Model = any>(
       isIncluded: false,
       primaryKey: Target.schema().getMainPrimaryKeyName() as any,
       foreignKey: `${String.toCamelCase(Target.name)}Id` as any,
-      // To avoid import issues, the above values be set only when resolving the relation.
+      // Default value will be set later as: `${Model.table()}_${RelationModel.table()}`
       pivotTable: undefined,
+      // Default value will be set later as: Relation.schema().getMainPrimaryKeyName()
       pivotPrimaryKey: undefined,
+      // Default value will be set later as: `${String.toCamelCase(Relation.name)}Id`
       pivotForeignKey: undefined
     })
 

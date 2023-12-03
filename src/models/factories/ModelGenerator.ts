@@ -89,7 +89,7 @@ export class ModelGenerator<M extends Model = any> {
   /**
    * Include one relation to one model.
    */
-  private async includeRelation(
+  public async includeRelation(
     model: M,
     relation: RelationOptions
   ): Promise<M> {

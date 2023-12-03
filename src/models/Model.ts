@@ -7,10 +7,12 @@
  * file that was distributed with this source code.
  */
 
+import type { ModelRelations } from '#src/types'
 import { Database } from '#src/facades/Database'
 import { Collection, Is, String } from '@athenna/common'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
+import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export class Model {
@@ -258,11 +260,29 @@ export class Model {
     return json
   }
 
-  // TODO add way of including relations of relations in with method of ModelQueryBuilder
-  // TODO add has method to ModelQueryBuilder
-  // TODO add whereHas method to ModelQueryBuilder
+  /**
+   * Eager load a model relation from model instance.
+   */
+  public async load<K extends ModelRelations<this>>(
+    relation: K,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<this[K] extends Model[] ? this[K][0] : this[K], Model>
+      >
+    ) => any
+  ) {
+    const Model = this.constructor as any
+    const schema = Model.schema()
+    const generator = new ModelGenerator(Model, schema)
 
-  // TODO load method
+    await generator.includeRelation(
+      this,
+      schema.includeRelation(relation, closure)
+    )
+
+    return this[relation]
+  }
+
   // TODO save method
   // TODO fresh method
   // TODO refresh method
