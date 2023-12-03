@@ -10,7 +10,7 @@
 import type { Model } from '#src/models/Model'
 import { Json, Options } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
-import type { ColumnOptions, RelationOptions } from '#src/types'
+import type { ColumnOptions, ModelColumns, RelationOptions } from '#src/types'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
@@ -152,7 +152,7 @@ export class ModelSchema<M extends Model = any> {
   /**
    * Get the column options by the column database name.
    */
-  public getColumnByName(column: string | keyof M): ColumnOptions {
+  public getColumnByName(column: string | ModelColumns<M>): ColumnOptions {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.name === column)
@@ -163,7 +163,7 @@ export class ModelSchema<M extends Model = any> {
    *
    * If property cannot be found, the column name will be used.
    */
-  public getPropertyByColumnName(column: string | keyof M): string {
+  public getPropertyByColumnName(column: string | ModelColumns<M>): string {
     return this.getColumnByName(column)?.property || (column as string)
   }
 
@@ -173,7 +173,7 @@ export class ModelSchema<M extends Model = any> {
    * If property cannot be found, the column name will be used.
    */
   public getPropertiesByColumnNames(
-    columns: string[] | Array<keyof M>
+    columns: string[] | ModelColumns<M>[]
   ): string[] {
     return columns.map(column => this.getPropertyByColumnName(column))
   }
@@ -181,7 +181,9 @@ export class ModelSchema<M extends Model = any> {
   /**
    * Get the column options by the model class property.
    */
-  public getColumnByProperty(property: string | keyof M): ColumnOptions {
+  public getColumnByProperty(
+    property: string | ModelColumns<M>
+  ): ColumnOptions {
     return this.columns.find(c => c.property === property)
   }
 
@@ -190,7 +192,7 @@ export class ModelSchema<M extends Model = any> {
    *
    * If the column name cannot be found, the property will be used.
    */
-  public getColumnNameByProperty(property: string | keyof M): string {
+  public getColumnNameByProperty(property: string | ModelColumns<M>): string {
     return this.getColumnByProperty(property)?.name || (property as string)
   }
 
@@ -200,7 +202,7 @@ export class ModelSchema<M extends Model = any> {
    * If the column name cannot be found, the property will be used.
    */
   public getColumnNamesByProperties(
-    properties: string[] | Array<keyof M>
+    properties: string[] | ModelColumns<M>[]
   ): string[] {
     return properties.map(property => this.getColumnNameByProperty(property))
   }
@@ -208,7 +210,7 @@ export class ModelSchema<M extends Model = any> {
   /**
    * Get the relation by the class property name.
    */
-  public getRelationByProperty(property: string | keyof M) {
+  public getRelationByProperty(property: string | ModelColumns<M>) {
     return this.relations.find(c => c.property === property)
   }
 
@@ -232,7 +234,7 @@ export class ModelSchema<M extends Model = any> {
    * option to true.
    */
   public includeRelation(
-    property: string | keyof M,
+    property: string | ModelColumns<M>,
     closure?: (query: ModelQueryBuilder) => any
   ) {
     // TODO

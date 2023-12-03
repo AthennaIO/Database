@@ -18,19 +18,17 @@ import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOpt
 /**
  * Create belongs to many relation for model class.
  */
-export function BelongsToMany(
-  model: () => typeof Model,
-  options: Omit<BelongsToManyOptions, 'type' | 'model' | 'property'> = {}
-): PropertyDecorator {
-  // TODO primaryKey and foreignKey options should respect the
-  // type of main model and referenced model.
-  return (target: any, key: any) => {
-    const Target = target.constructor
+export function BelongsToMany<T extends Model = any, R extends Model = any>(
+  model: () => new () => R,
+  options: Omit<BelongsToManyOptions<T, R>, 'type' | 'model' | 'property'> = {}
+) {
+  return (target: T, key: any) => {
+    const Target = target.constructor as typeof Model
 
     options = Options.create(options, {
       isIncluded: false,
-      primaryKey: Target.schema().getMainPrimaryKeyName(),
-      foreignKey: `${String.toCamelCase(String.singularize(Target.table()))}Id`,
+      primaryKey: Target.schema().getMainPrimaryKeyName() as any,
+      foreignKey: `${String.toCamelCase(Target.name)}Id` as any,
       // To avoid import issues, the above values be set only when resolving the relation.
       pivotTable: undefined,
       pivotPrimaryKey: undefined,

@@ -257,4 +257,16 @@ export class Model {
 
     return json
   }
+
+  // TODO add way of including relations of relations in with method of ModelQueryBuilder
+  // TODO add has method to ModelQueryBuilder
+  // TODO add whereHas method to ModelQueryBuilder
+
+  // TODO load method
+  // TODO save method
+  // TODO fresh method
+  // TODO refresh method
+  // TODO isTrashed method
+  // TODO delete method
+  // TODO restore method
 }

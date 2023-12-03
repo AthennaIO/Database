@@ -6,11 +6,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 import type { Model } from '#src/models/Model'
-import type { ModelQueryBuilder } from 'src/models/builders/ModelQueryBuilder.js'
+import type { ModelColumns } from '#src/types'
+import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
-export type HasOneOptions = {
+export type HasOneOptions<T extends Model = any, R extends Model = any> = {
   /**
    * The relation option type.
    *
@@ -25,7 +25,7 @@ export type HasOneOptions = {
    *
    * @default undefined
    */
-  closure?: (query: ModelQueryBuilder) => any
+  closure?: (query: ModelQueryBuilder<R>) => any
 
   /**
    * The property name in class of the relation.
@@ -33,7 +33,7 @@ export type HasOneOptions = {
    * @readonly
    * @default key
    */
-  property?: string
+  property?: ModelColumns<T>
 
   /**
    * The relation model that is being referenced.
@@ -58,13 +58,13 @@ export type HasOneOptions = {
    *
    * @default Model.schema().getMainPrimaryKey()
    */
-  primaryKey?: string
+  primaryKey?: ModelColumns<T>
 
   /**
    * The foreign key is the camelCase representation
-   * of the relation model name with an 'Id' at the end.
+   * of the main model name with an 'Id' at the end.
    *
-   * @default `${String.toCamelCase(RelationModel.name)}Id`
+   * @default `${String.toCamelCase(Model.name)}Id`
    */
-  foreignKey?: string
+  foreignKey?: ModelColumns<R>
 }

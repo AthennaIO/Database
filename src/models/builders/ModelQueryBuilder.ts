@@ -7,10 +7,15 @@
  * file that was distributed with this source code.
  */
 
+import type {
+  Direction,
+  Operations,
+  ModelColumns,
+  ModelRelations
+} from '#src/types'
 import type { Model } from '#src/models/Model'
 import { Collection, Is } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
-import type { Direction, Operations } from '#src/types'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
@@ -24,9 +29,9 @@ export class ModelQueryBuilder<
   private schema: ModelSchema<M>
   private generator: ModelGenerator<M>
   private primaryKeyName: string
-  private primaryKeyProperty: keyof M
+  private primaryKeyProperty: ModelColumns<M>
 
-  public constructor(model: typeof Model, driver: D) {
+  public constructor(model: any, driver: D) {
     super(driver, model.table())
 
     this.Model = model
@@ -47,7 +52,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column.
    */
-  public async avg(column: keyof M): Promise<string> {
+  public async avg(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.avg(name)
@@ -56,7 +61,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column.
    */
-  public async avgDistinct(column: keyof M): Promise<string> {
+  public async avgDistinct(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.avgDistinct(name)
@@ -65,7 +70,7 @@ export class ModelQueryBuilder<
   /**
    * Get the max number of a given column.
    */
-  public async max(column: keyof M): Promise<string> {
+  public async max(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.max(name)
@@ -74,7 +79,7 @@ export class ModelQueryBuilder<
   /**
    * Get the min number of a given column.
    */
-  public async min(column: keyof M): Promise<string> {
+  public async min(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.min(name)
@@ -83,7 +88,7 @@ export class ModelQueryBuilder<
   /**
    * Sum all numbers of a given column.
    */
-  public async sum(column: keyof M): Promise<string> {
+  public async sum(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.sum(name)
@@ -92,7 +97,7 @@ export class ModelQueryBuilder<
   /**
    * Sum all numbers of a given column.
    */
-  public async sumDistinct(column: keyof M): Promise<string> {
+  public async sumDistinct(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.sumDistinct(name)
@@ -101,7 +106,7 @@ export class ModelQueryBuilder<
   /**
    * Increment a value of a given column.
    */
-  public async increment(column: keyof M): Promise<void> {
+  public async increment(column: ModelColumns<M>): Promise<void> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.increment(name)
@@ -110,7 +115,7 @@ export class ModelQueryBuilder<
   /**
    * Decrement a value of a given column.
    */
-  public async decrement(column: keyof M): Promise<void> {
+  public async decrement(column: ModelColumns<M>): Promise<void> {
     const name = this.schema.getColumnNameByProperty(column)
 
     await super.decrement(name)
@@ -119,7 +124,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async count(column?: keyof M): Promise<string> {
+  public async count(column?: ModelColumns<M>): Promise<string> {
     if (!column) {
       return super.count()
     }
@@ -132,7 +137,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async countDistinct(column: keyof M): Promise<string> {
+  public async countDistinct(column: ModelColumns<M>): Promise<string> {
     const name = this.schema.getColumnNameByProperty(column)
 
     return super.countDistinct(name)
@@ -167,7 +172,7 @@ export class ModelQueryBuilder<
    * execute the given closure.
    */
   public async findOr<T = M>(closure: () => T | Promise<T>): Promise<T> {
-    const data = (await this.find()) as T
+    const data = (await this.find()) as unknown as T
 
     if (!data) {
       return closure()
@@ -250,7 +255,7 @@ export class ModelQueryBuilder<
     if (hasValue) {
       const pk = this.primaryKeyProperty
 
-      return this.where(pk, hasValue[pk]).update(data)
+      return this.where(pk, hasValue[pk as any]).update(data)
     }
 
     return this.create(data)
@@ -300,12 +305,9 @@ export class ModelQueryBuilder<
   /**
    * Eager load a relation in your query.
    */
-  // TODO Try to find a way to type relation only with relation props.
-  // TODO Try to find a way to type closure model query builder with
-  // relation model.
-  public with(
-    relation: keyof M,
-    closure?: (query: ModelQueryBuilder) => any
+  public with<K extends ModelRelations<M>>(
+    relation: K,
+    closure?: (query: ModelQueryBuilder<Extract<M[K], Model>, Driver>) => any
   ): this {
     this.schema.includeRelation(relation, closure)
 
@@ -331,7 +333,7 @@ export class ModelQueryBuilder<
   /**
    * Set the columns that should be selected on query.
    */
-  public select(...columns: Array<keyof M>): this {
+  public select(...columns: ModelColumns<M>[]): this {
     super.select(...this.schema.getColumnNamesByProperties(columns))
 
     return this
@@ -340,21 +342,25 @@ export class ModelQueryBuilder<
   /**
    * Set a group by statement in your query.
    */
-  public groupBy(...columns: Array<keyof M>): this {
+  public groupBy(...columns: ModelColumns<M>[]): this {
     super.groupBy(...this.schema.getColumnNamesByProperties(columns))
 
     return this
   }
 
-  public having(column: keyof M): this
-  public having(column: keyof M, value: any): this
-  public having(column: keyof M, operation: Operations, value: any): this
+  public having(column: ModelColumns<M>): this
+  public having(column: ModelColumns<M>, value: any): this
+  public having(
+    column: ModelColumns<M>,
+    operation: Operations,
+    value: any
+  ): this
 
   /**
    * Set a having statement in your query.
    */
   public having(
-    column: keyof M,
+    column: ModelColumns<M>,
     operation?: any | Operations,
     value?: any
   ): this {
@@ -368,7 +374,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having in statement in your query.
    */
-  public havingIn(column: keyof M, values: any[]): this {
+  public havingIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingIn(name, values)
@@ -379,7 +385,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not in statement in your query.
    */
-  public havingNotIn(column: keyof M, values: any[]): this {
+  public havingNotIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotIn(name, values)
@@ -390,7 +396,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having between statement in your query.
    */
-  public havingBetween(column: keyof M, values: [any, any]): this {
+  public havingBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingBetween(name, values)
@@ -401,7 +407,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not between statement in your query.
    */
-  public havingNotBetween(column: keyof M, values: [any, any]): this {
+  public havingNotBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotBetween(name, values)
@@ -412,7 +418,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having null statement in your query.
    */
-  public havingNull(column: keyof M): this {
+  public havingNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNull(name)
@@ -423,7 +429,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not null statement in your query.
    */
-  public havingNotNull(column: keyof M): this {
+  public havingNotNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotNull(name)
@@ -431,15 +437,19 @@ export class ModelQueryBuilder<
     return this
   }
 
-  public orHaving(column: keyof M): this
-  public orHaving(column: keyof M, value: any): this
-  public orHaving(column: keyof M, operation: Operations, value: any): this
+  public orHaving(column: ModelColumns<M>): this
+  public orHaving(column: ModelColumns<M>, value: any): this
+  public orHaving(
+    column: ModelColumns<M>,
+    operation: Operations,
+    value: any
+  ): this
 
   /**
    * Set a orHaving statement in your query.
    */
   public orHaving(
-    column: keyof M,
+    column: ModelColumns<M>,
     operation?: any | Operations,
     value?: any
   ): this {
@@ -453,7 +463,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving in statement in your query.
    */
-  public orHavingIn(column: keyof M, values: any[]): this {
+  public orHavingIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingIn(name, values)
@@ -464,7 +474,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not in statement in your query.
    */
-  public orHavingNotIn(column: keyof M, values: any[]): this {
+  public orHavingNotIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotIn(name, values)
@@ -475,7 +485,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving between statement in your query.
    */
-  public orHavingBetween(column: keyof M, values: [any, any]): this {
+  public orHavingBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingBetween(name, values)
@@ -486,7 +496,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not between statement in your query.
    */
-  public orHavingNotBetween(column: keyof M, values: [any, any]): this {
+  public orHavingNotBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotBetween(name, values)
@@ -497,7 +507,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving null statement in your query.
    */
-  public orHavingNull(column: keyof M): this {
+  public orHavingNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNull(name)
@@ -508,7 +518,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not null statement in your query.
    */
-  public orHavingNotNull(column: keyof M): this {
+  public orHavingNotNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotNull(name)
@@ -518,8 +528,8 @@ export class ModelQueryBuilder<
 
   public where(statement: Partial<M>): this
   public where(statement: Record<string, any>): this
-  public where(key: keyof M, value: any): this
-  public where(key: keyof M, operation: Operations, value: any): this
+  public where(key: ModelColumns<M>, value: any): this
+  public where(key: ModelColumns<M>, operation: Operations, value: any): this
 
   /**
    * Set a where statement in your query.
@@ -546,7 +556,7 @@ export class ModelQueryBuilder<
 
   public whereNot(statement: Partial<M>): this
   public whereNot(statement: Record<string, any>): this
-  public whereNot(key: keyof M, value: any): this
+  public whereNot(key: ModelColumns<M>, value: any): this
 
   /**
    * Set a where not statement in your query.
@@ -570,7 +580,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(column: keyof M, value: any): this {
+  public whereLike(column: ModelColumns<M>, value: any): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereLike(name, value)
@@ -581,7 +591,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: keyof M, value: any): this {
+  public whereILike(column: ModelColumns<M>, value: any): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereILike(name, value)
@@ -592,7 +602,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where in statement in your query.
    */
-  public whereIn(column: keyof M, values: any[]): this {
+  public whereIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereIn(name, values)
@@ -603,7 +613,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not in statement in your query.
    */
-  public whereNotIn(column: keyof M, values: any[]): this {
+  public whereNotIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotIn(name, values)
@@ -614,7 +624,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where between statement in your query.
    */
-  public whereBetween(column: keyof M, values: [any, any]): this {
+  public whereBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereBetween(name, values)
@@ -625,7 +635,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not between statement in your query.
    */
-  public whereNotBetween(column: keyof M, values: [any, any]): this {
+  public whereNotBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotBetween(name, values)
@@ -636,7 +646,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where null statement in your query.
    */
-  public whereNull(column: keyof M): this {
+  public whereNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNull(name)
@@ -647,7 +657,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not null statement in your query.
    */
-  public whereNotNull(column: keyof M): this {
+  public whereNotNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotNull(name)
@@ -657,8 +667,8 @@ export class ModelQueryBuilder<
 
   public orWhere(statement: Partial<M>): this
   public orWhere(statement: Record<string, any>): this
-  public orWhere(key: keyof M, value: any): this
-  public orWhere(key: keyof M, operation: Operations, value: any): this
+  public orWhere(key: ModelColumns<M>, value: any): this
+  public orWhere(key: ModelColumns<M>, operation: Operations, value: any): this
 
   /**
    * Set a orWhere statement in your query.
@@ -685,7 +695,7 @@ export class ModelQueryBuilder<
 
   public orWhereNot(statement: Partial<M>): this
   public orWhereNot(statement: Record<string, any>): this
-  public orWhereNot(key: keyof M, value: any): this
+  public orWhereNot(key: ModelColumns<M>, value: any): this
 
   /**
    * Set a orWhere not statement in your query.
@@ -708,7 +718,7 @@ export class ModelQueryBuilder<
 
   public orWhereLike(statement: Partial<M>): this
   public orWhereLike(statement: Record<string, any>): this
-  public orWhereLike(key: keyof M, value: any): this
+  public orWhereLike(key: ModelColumns<M>, value: any): this
 
   /**
    * Set a orWhere like statement in your query.
@@ -731,7 +741,7 @@ export class ModelQueryBuilder<
 
   public orWhereILike(statement: Partial<M>): this
   public orWhereILike(statement: Record<string, any>): this
-  public orWhereILike(key: keyof M, value: any): this
+  public orWhereILike(key: ModelColumns<M>, value: any): this
 
   /**
    * Set a orWhere ILike statement in your query.
@@ -755,7 +765,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere in statement in your query.
    */
-  public orWhereIn(column: keyof M, values: any[]): this {
+  public orWhereIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereIn(name, values)
@@ -766,7 +776,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not in statement in your query.
    */
-  public orWhereNotIn(column: keyof M, values: any[]): this {
+  public orWhereNotIn(column: ModelColumns<M>, values: any[]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotIn(name, values)
@@ -777,7 +787,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere between statement in your query.
    */
-  public orWhereBetween(column: keyof M, values: [any, any]): this {
+  public orWhereBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereBetween(name, values)
@@ -788,7 +798,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not between statement in your query.
    */
-  public orWhereNotBetween(column: keyof M, values: [any, any]): this {
+  public orWhereNotBetween(column: ModelColumns<M>, values: [any, any]): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotBetween(name, values)
@@ -799,7 +809,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere null statement in your query.
    */
-  public orWhereNull(column: keyof M): this {
+  public orWhereNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNull(name)
@@ -810,7 +820,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not null statement in your query.
    */
-  public orWhereNotNull(column: keyof M): this {
+  public orWhereNotNull(column: ModelColumns<M>): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotNull(name)
@@ -821,7 +831,7 @@ export class ModelQueryBuilder<
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: keyof M, direction: Direction = 'ASC'): this {
+  public orderBy(column: ModelColumns<M>, direction: Direction = 'ASC'): this {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orderBy(name, direction)
@@ -833,7 +843,7 @@ export class ModelQueryBuilder<
    * Order the results easily by the latest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public latest(column?: keyof M): this {
+  public latest(column?: ModelColumns<M>): this {
     if (!column) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -851,7 +861,7 @@ export class ModelQueryBuilder<
    * Order the results easily by the oldest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public oldest(column?: keyof M): this {
+  public oldest(column?: ModelColumns<M>): this {
     if (!column) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

@@ -18,19 +18,17 @@ import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
 /**
  * Create has one relation for model class.
  */
-export function HasOne(
-  model: () => typeof Model,
-  options: Omit<HasOneOptions, 'type' | 'model' | 'property'> = {}
-): PropertyDecorator {
-  // TODO primaryKey and foreignKey options should respect the
-  // type of main model and referenced model.
-  return (target: any, key: any) => {
-    const Target = target.constructor
+export function HasOne<T extends Model = any, R extends Model = any>(
+  model: () => new () => R,
+  options: Omit<HasOneOptions<T, R>, 'type' | 'model' | 'property'> = {}
+) {
+  return (target: T, key: string) => {
+    const Target = target.constructor as typeof Model
 
     options = Options.create(options, {
       isIncluded: false,
-      primaryKey: Target.schema().getMainPrimaryKeyName(),
-      foreignKey: `${String.toCamelCase(Target.name)}Id`
+      primaryKey: Target.schema().getMainPrimaryKeyName() as any,
+      foreignKey: `${String.toCamelCase(Target.name)}Id` as any
     })
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

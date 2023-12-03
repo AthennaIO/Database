@@ -10,6 +10,7 @@
 export * from '#src/types'
 
 export * from '#src/models/Model'
+export * from '#src/models/annotations/Column'
 export * from '#src/models/annotations/HasOne'
 export * from '#src/models/annotations/HasMany'
 export * from '#src/models/annotations/BelongsTo'

@@ -27,9 +27,7 @@ export class BelongsToManyRelation {
     relation.pivotTable =
       relation.pivotTable || `${_Model.table()}_${RelationModel.table()}`
     relation.pivotPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
-    relation.pivotForeignKey = `${String.toCamelCase(
-      String.singularize(RelationModel.table())
-    )}Id`
+    relation.pivotForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
 
     /**
      * Using Database here because there is no PivotModel.

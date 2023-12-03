@@ -8,9 +8,10 @@
  */
 
 import type { Model } from '#src/models/Model'
+import type { ModelColumns } from '#src/types'
 import type { ModelQueryBuilder } from 'src/models/builders/ModelQueryBuilder.js'
 
-export type HasManyOptions = {
+export type HasManyOptions<T extends Model = any, R extends Model = any> = {
   /**
    * The relation option type.
    *
@@ -25,7 +26,7 @@ export type HasManyOptions = {
    *
    * @default undefined
    */
-  closure?: (query: ModelQueryBuilder) => any
+  closure?: (query: ModelQueryBuilder<R>) => any
 
   /**
    * The property name in class of the relation.
@@ -58,13 +59,13 @@ export type HasManyOptions = {
    *
    * @default Model.schema().getMainPrimaryKey()
    */
-  primaryKey?: string
+  primaryKey?: ModelColumns<T>
 
   /**
    * The foreign key is the camelCase representation
-   * of the relation model name with an 'Id' at the end.
+   * of the main model name with an 'Id' at the end.
    *
-   * @default `${String.toCamelCase(RelationModel.name)}Id`
+   * @default `${String.toCamelCase(Model.name)}Id`
    */
-  foreignKey?: string
+  foreignKey?: ModelColumns<R>
 }

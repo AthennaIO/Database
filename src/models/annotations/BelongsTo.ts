@@ -18,19 +18,18 @@ import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
 /**
  * Create belongs to relation for model class.
  */
-export function BelongsTo(
-  model: () => typeof Model,
-  options: Omit<BelongsToOptions, 'type' | 'model' | 'property'> = {}
-): PropertyDecorator {
-  // TODO primaryKey and foreignKey options should respect the
-  // type of main model and referenced model.
-  return (target: any, key: any) => {
-    const Target = target.constructor
+export function BelongsTo<T extends Model = any, R extends Model = any>(
+  model: () => new () => R,
+  options: Omit<BelongsToOptions<T, R>, 'type' | 'model' | 'property'> = {}
+) {
+  return (target: T, key: any) => {
+    const Target = target.constructor as typeof Model
 
     options = Options.create(options, {
       isIncluded: false,
-      primaryKey: Target.schema().getMainPrimaryKeyName(),
-      // To avoid import issues, the above values be set only when resolving the relation.
+      // Default will be set later as: RelationModel.schema().getMainPrimaryKeyName()
+      primaryKey: undefined,
+      // Default will be set later as: `${String.toCamelCase(RelationModel.name)}Id`
       foreignKey: undefined
     })
 

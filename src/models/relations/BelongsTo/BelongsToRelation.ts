@@ -19,13 +19,14 @@ export class BelongsToRelation {
     model: Model,
     relation: BelongsToOptions
   ): Promise<any> {
-    const relationModel = relation.model()
+    const RelationModel = relation.model()
 
+    relation.primaryKey =
+      relation.primaryKey || RelationModel.schema().getMainPrimaryKeyName()
     relation.foreignKey =
-      relation.foreignKey || `${String.toCamelCase(relationModel.name)}Id`
+      relation.foreignKey || `${String.toCamelCase(RelationModel.name)}Id`
 
-    model[relation.property] = await relationModel
-      .query()
+    model[relation.property] = await RelationModel.query()
       .where(relation.primaryKey as never, model[relation.foreignKey])
       .when(relation.closure, relation.closure)
       .find()
@@ -40,14 +41,15 @@ export class BelongsToRelation {
     models: Model[],
     relation: BelongsToOptions
   ): Promise<any[]> {
-    const relationModel = relation.model()
+    const RelationModel = relation.model()
 
+    relation.primaryKey =
+      relation.primaryKey || RelationModel.schema().getMainPrimaryKeyName()
     relation.foreignKey =
-      relation.foreignKey || `${String.toCamelCase(relationModel.name)}Id`
+      relation.foreignKey || `${String.toCamelCase(RelationModel.name)}Id`
 
     const foreignValues = models.map(model => model[relation.foreignKey])
-    const results = await relationModel
-      .query()
+    const results = await RelationModel.query()
       .whereIn(relation.primaryKey as never, foreignValues)
       .when(relation.closure, relation.closure)
       .findMany()

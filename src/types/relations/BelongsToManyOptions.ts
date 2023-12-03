@@ -8,9 +8,13 @@
  */
 
 import type { Model } from '#src/models/Model'
+import type { ModelColumns } from '#src/types'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
-export type BelongsToManyOptions = {
+export type BelongsToManyOptions<
+  T extends Model = any,
+  R extends Model = any
+> = {
   /**
    * The relation option type.
    *
@@ -25,7 +29,7 @@ export type BelongsToManyOptions = {
    *
    * @default undefined
    */
-  closure?: (query: ModelQueryBuilder) => any
+  closure?: (query: ModelQueryBuilder<R>) => any
 
   /**
    * The property name in class of the relation.
@@ -33,7 +37,7 @@ export type BelongsToManyOptions = {
    * @readonly
    * @default key
    */
-  property?: string
+  property?: ModelColumns<T>
 
   /**
    * The relation model that is being referenced.
@@ -58,14 +62,14 @@ export type BelongsToManyOptions = {
    *
    * @default Model.schema().getMainPrimaryKey()
    */
-  primaryKey?: string
+  primaryKey?: ModelColumns<T>
 
   /**
    * The foreign key is the camelCase in singular
    * representation of the main model table name with
    * 'Id' in the end.
    *
-   * @default `${String.toCamelCase(String.singularize(Model.table()))}Id`
+   * @default `${String.toCamelCase(Model.name)}Id`
    */
   foreignKey?: string
 
@@ -78,19 +82,19 @@ export type BelongsToManyOptions = {
   pivotTable?: string
 
   /**
-   * The pivot local primary key is always the primary key
+   * The pivot primary key is always the primary key
    * of the relation model.
    *
    * @default Relation.schema().getMainPrimaryKeyName()
    */
-  pivotPrimaryKey?: string
+  pivotPrimaryKey?: ModelColumns<R>
 
   /**
    * The pivot foreign key is the camelCase in singular
-   * representation of the relation model table name with
+   * representation of the relation model name with
    * an 'Id' at the end.
    *
-   * @default `${String.toCamelCase(String.singularize(RelationModel.table()))}Id`
+   * @default `${String.toCamelCase(Relation.name)}Id`
    */
   pivotForeignKey?: string
 }

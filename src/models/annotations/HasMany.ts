@@ -13,19 +13,17 @@ import { debug } from '#src/debug'
 import type { Model } from '#src/models/Model'
 import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
-import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
+import type { HasManyOptions } from '#src/types/relations/HasManyOptions'
 
 /**
  * Create has many relation for model class.
  */
-export function HasMany(
-  model: () => typeof Model,
-  options: Omit<HasOneOptions, 'type' | 'model' | 'property'> = {}
-): PropertyDecorator {
-  // TODO primaryKey and foreignKey options should respect the
-  // type of main model and referenced model.
-  return (target: any, key: any) => {
-    const Target = target.constructor
+export function HasMany<T extends Model = any, R extends Model = any>(
+  model: () => new () => R,
+  options: Omit<HasManyOptions, 'type' | 'model' | 'property'> = {}
+) {
+  return (target: T, key: any) => {
+    const Target = target.constructor as typeof Model
 
     options = Options.create(options, {
       isIncluded: false,
