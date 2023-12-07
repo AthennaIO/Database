@@ -422,9 +422,76 @@ export class Model {
     return this.setOriginal()
   }
 
-  // TODO fresh method
-  // TODO refresh method
-  // TODO isTrashed method
-  // TODO delete method
-  // TODO restore method
+  /**
+   * Create a new instance of the model from retrieving
+   * again the data from database. The existing
+   * model instance WILL NOT BE affected.
+   */
+  public async fresh() {
+    const Model = this.constructor as any
+    const primaryKey = Model.schema().getMainPrimaryKeyName()
+
+    return Model.query().where(primaryKey, this[primaryKey]).find()
+  }
+
+  /**
+   * Refresh the model instance data retrieving
+   * model data using the main primary key. The
+   * existing model instance WILL BE affected.
+   */
+  public async refresh() {
+    const Model = this.constructor as any
+    const schema = Model.schema()
+    const relations = schema.getRelationProperties()
+    const primaryKey = schema.getMainPrimaryKeyName()
+    const query = Model.query().where(primaryKey, this[primaryKey])
+
+    Object.keys(this).forEach(key => {
+      if (!relations.includes(key)) {
+        return
+      }
+
+      query.with(key)
+    })
+
+    const data = await query.find()
+
+    Object.keys(data).forEach(key => (this[key] = data[key]))
+  }
+
+  /**
+   * Verify if model is soft deleted.
+   */
+  public isTrashed(): boolean {
+    const Model = this.constructor as any
+    const deletedAt = Model.schema().getDeletedAtColumn()
+
+    return !!this[deletedAt.property]
+  }
+
+  /**
+   * Delete or soft delete your model from database.
+   */
+  public async delete(force = false) {
+    const Model = this.constructor as any
+    const primaryKey = Model.schema().getMainPrimaryKey()
+
+    await Model.query().where(primaryKey, this[primaryKey]).delete(force)
+  }
+
+  /**
+   * Restore a soft deleted model from database.
+   */
+  public async restore() {
+    const Model = this.constructor as any
+    const primaryKey = Model.schema().getMainPrimaryKey()
+
+    const restored = await Model.query()
+      .where(primaryKey, this[primaryKey])
+      .update({ deletedAt: null })
+
+    Object.keys(restored).forEach(key => (this[key] = restored[key]))
+
+    return this
+  }
 }

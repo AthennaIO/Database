@@ -495,5 +495,129 @@ export default class ModelTest {
     })
   }
 
-  // TODO Add test for other new methods of Model
+  @Test()
+  public async shouldBeAbleToGetAFreshModelInstance({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    const freshUser = await user.fresh()
+
+    user.id = '2'
+
+    assert.deepEqual(freshUser.id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToGetRefreshModelInstance({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve({ id: '2' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    await user.refresh()
+
+    assert.deepEqual(user.id, '2')
+    assert.deepEqual(user.name, 'lenon')
+  }
+
+  @Test()
+  public async shouldBeAbleToVerifyModelIsTrashed({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.deletedAt = new Date()
+
+    assert.isTrue(user.isTrashed())
+  }
+
+  @Test()
+  public async shouldBeAbleToVerifyModelIsNotTrashed({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.deletedAt = null
+
+    assert.isFalse(user.isTrashed())
+  }
+
+  @Test()
+  public async shouldBeAbleToDeleteAModelFromInstance({ assert }: Context) {
+    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    await user.delete()
+
+    assert.isDefined(user.deletedAt)
+    assert.calledOnce(FakeDriver.update)
+  }
+
+  @Test()
+  public async shouldBeAbleToForceDeleteAModelFromInstance({ assert }: Context) {
+    Mock.when(FakeDriver, 'delete').resolve(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    await user.delete(true)
+
+    assert.isNull(user.deletedAt)
+    assert.calledOnce(FakeDriver.delete)
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreAModelThatWasSoftDeleted({ assert }: Context) {
+    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    await user.delete()
+
+    assert.isDefined(user.deletedAt)
+    assert.calledOnce(FakeDriver.update)
+
+    await user.restore()
+
+    assert.isNull(user.deletedAt)
+    assert.calledTimes(FakeDriver.update, 2)
+  }
 }
