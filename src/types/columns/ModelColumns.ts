@@ -11,6 +11,6 @@ import type { Model } from '#src/models/Model'
 
 export type ColumnKeys<T> = {
   [K in keyof T]: T[K] extends Model | Model[] ? never : K
-}[keyof Omit<T, 'save' | 'load' | 'pivot' | 'toJSON'>]
+}[keyof Omit<T, 'save' | 'load' | 'original' | 'toJSON'>]
 
 export type ModelColumns<T> = Extract<ColumnKeys<T>, string>

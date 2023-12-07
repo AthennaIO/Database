@@ -29,7 +29,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateOne({ id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data, { id: '1', original: { id: '1' } })
   }
 
   @Test()
@@ -41,7 +41,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateOne({ _id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data, { id: '1', original: { id: '1' } })
   }
 
   @Test()
@@ -68,7 +68,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateOne({ _id: '1', name: 'lenon' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data, { id: '1', original: { id: '1' } })
   }
 
   @Test()
@@ -80,7 +80,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateMany([{ id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
   }
 
   @Test()
@@ -92,7 +92,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateMany([{ _id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
   }
 
   @Test()
@@ -131,7 +131,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateMany([{ _id: '1', name: 'lenon' }])
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
   }
 
   @Test()
@@ -144,10 +144,14 @@ export default class ModelGeneratorTest {
       @Column({ name: '_id' })
       public id: string
 
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
-    Mock.when(HasOneRelation, 'load').resolve({ id: '1', profile: { userId: '1' } })
+    Mock.when(HasOneRelation, 'load').resolve({
+      id: '1',
+      profile: { userId: '1' },
+      setOriginal: () => ({ id: '1', profile: { userId: '1' } })
+    })
     const schema = User.schema()
     schema.relations[0].isIncluded = true
 
@@ -179,7 +183,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, schema).generateOne({ _id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data, { id: '1', original: { id: '1' } })
   }
 
   @Test()
@@ -192,10 +196,12 @@ export default class ModelGeneratorTest {
       @Column({ name: '_id' })
       public id: string
 
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
-    Mock.when(HasOneRelation, 'loadAll').resolve([{ id: '1', profile: { userId: '1' } }])
+    Mock.when(HasOneRelation, 'loadAll').resolve([
+      { id: '1', profile: { userId: '1' }, setOriginal: () => ({ id: '1', profile: { userId: '1' } }) }
+    ])
     const schema = User.schema()
     schema.relations[0].isIncluded = true
 
@@ -214,7 +220,7 @@ export default class ModelGeneratorTest {
       @Column({ name: '_id' })
       public id: string
 
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
     Mock.when(HasOneRelation, 'loadAll').resolve([{ id: '1', profile: { userId: '1' } }])
@@ -225,6 +231,6 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, schema).generateMany([{ _id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
   }
 }

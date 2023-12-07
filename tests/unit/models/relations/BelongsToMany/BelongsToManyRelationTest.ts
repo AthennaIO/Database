@@ -64,16 +64,8 @@ export default class BelongsToManyRelationTest {
     assert.deepEqual(course, {
       id: 1,
       name: 'Math',
-      students: [
-        {
-          id: 1,
-          pivot: {
-            id: 1,
-            studentId: 1,
-            courseId: 1
-          }
-        }
-      ]
+      students: [{ id: 1, original: { id: 1 } }],
+      original: { id: 1, name: 'Math' }
     })
   }
 
@@ -98,16 +90,8 @@ export default class BelongsToManyRelationTest {
       {
         id: 1,
         name: 'Math',
-        students: [
-          {
-            id: 1,
-            pivot: {
-              id: 1,
-              studentId: 1,
-              courseId: 1
-            }
-          }
-        ]
+        students: [{ id: 1, original: { id: 1 } }],
+        original: { id: 1, name: 'Math' }
       }
     ])
   }
@@ -132,16 +116,8 @@ export default class BelongsToManyRelationTest {
     assert.deepEqual(student, {
       id: 1,
       name: 'lenon',
-      courses: [
-        {
-          id: 1,
-          pivot: {
-            id: 1,
-            studentId: 1,
-            courseId: 1
-          }
-        }
-      ]
+      courses: [{ id: 1, original: { id: 1 } }],
+      original: { id: 1, name: 'lenon' }
     })
   }
 
@@ -166,16 +142,8 @@ export default class BelongsToManyRelationTest {
       {
         id: 1,
         name: 'lenon',
-        courses: [
-          {
-            id: 1,
-            pivot: {
-              id: 1,
-              studentId: 1,
-              courseId: 1
-            }
-          }
-        ]
+        courses: [{ id: 1, original: { id: 1 } }],
+        original: { id: 1, name: 'lenon' }
       }
     ])
   }

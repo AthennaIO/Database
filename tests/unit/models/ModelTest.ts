@@ -106,7 +106,7 @@ export default class ModelTest {
 
     const data = await User.find()
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -116,7 +116,7 @@ export default class ModelTest {
 
     const data = await User.find({ id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
     assert.calledOnceWith(FakeDriver.where, { id: '1' })
   }
 
@@ -126,7 +126,7 @@ export default class ModelTest {
 
     const data = await User.findOrFail()
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -136,7 +136,7 @@ export default class ModelTest {
 
     const data = await User.findOrFail({ id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
     assert.calledOnceWith(FakeDriver.where, { id: '1' })
   }
 
@@ -153,7 +153,7 @@ export default class ModelTest {
 
     const data = await User.findOr({}, () => ({ id: '2' }))
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -163,7 +163,7 @@ export default class ModelTest {
 
     const data = await User.findOr({ id: '1' }, () => ({ id: '2' }))
 
-    assert.deepEqual(data, { id: '2' })
+    assert.deepEqual(data.id, '2')
     assert.calledOnceWith(FakeDriver.where, { id: '1' })
   }
 
@@ -173,7 +173,7 @@ export default class ModelTest {
 
     const data = await User.findMany()
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data[0].id, '1')
   }
 
   @Test()
@@ -182,7 +182,7 @@ export default class ModelTest {
 
     const data = await User.findMany({ id: '1' })
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data[0].id, '1')
   }
 
   @Test()
@@ -209,7 +209,7 @@ export default class ModelTest {
 
     const data = await User.create({ id: '1' })
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -218,7 +218,7 @@ export default class ModelTest {
 
     const data = await User.createMany([{ id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(data[0].id, '1')
   }
 
   @Test()
@@ -226,9 +226,9 @@ export default class ModelTest {
     Mock.when(FakeDriver, 'find').resolve(undefined)
     Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
 
-    const data = await User.createOrUpdate({ id: '1' }, { id: '1' })
+    const data = (await User.createOrUpdate({ id: '1' }, { id: '1' })) as User
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -236,18 +236,18 @@ export default class ModelTest {
     Mock.when(FakeDriver, 'find').resolve({ id: '1' })
     Mock.when(FakeDriver, 'update').resolve({ id: '2' })
 
-    const data = await User.createOrUpdate({ id: '1' }, { id: '2' })
+    const data = (await User.createOrUpdate({ id: '1' }, { id: '2' })) as User
 
-    assert.deepEqual(data, { id: '2' })
+    assert.deepEqual(data.id, '2')
   }
 
   @Test()
   public async shouldBeAbleToUpdateValueInDatabaseUsingUpdateMethod({ assert }: Context) {
     Mock.when(FakeDriver, 'update').resolve({ id: '1' })
 
-    const data = await User.update({ id: '1' }, { id: '1' })
+    const data = (await User.update({ id: '1' }, { id: '1' })) as User
 
-    assert.deepEqual(data, { id: '1' })
+    assert.deepEqual(data.id, '1')
   }
 
   @Test()
@@ -256,7 +256,8 @@ export default class ModelTest {
 
     const data = await User.update({ rate: 5 }, { id: '1' })
 
-    assert.deepEqual(data, [{ id: '1' }, { id: '2' }])
+    assert.deepEqual(data[0].id, '1')
+    assert.deepEqual(data[1].id, '2')
   }
 
   @Test()
@@ -321,4 +322,178 @@ export default class ModelTest {
     assert.notInstanceOf(json.products[0], Product)
     assert.deepEqual(json, { id: '1', name: 'lenon', products: [{ id: '1' }] })
   }
+
+  @Test()
+  public async shouldBeAbleToValidateThatAModelHasNotBeenPersistedInDatabase({ assert }: Context) {
+    const user = new User()
+
+    assert.isFalse(user.isPersisted())
+  }
+
+  @Test()
+  public async shouldBeAbleToValidateThatAModelHasBeenPersistedInDatabase({ assert }: Context) {
+    const user = new User().setOriginal()
+
+    assert.isTrue(user.isPersisted())
+  }
+
+  @Test()
+  public async shouldBeAbleToValidateThatAModelIsDirty({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.createdAt = new Date()
+    user.deletedAt = null
+    user.score = 5
+
+    user.setOriginal()
+
+    user.id = '2'
+    user.name = 'txsoura'
+
+    assert.isTrue(user.isDirty())
+  }
+
+  @Test()
+  public async shouldBeAbleToGetOnlyDirtyValuesOfModel({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.createdAt = new Date()
+    user.deletedAt = null
+    user.score = 5
+
+    user.setOriginal()
+
+    user.id = '2'
+    user.name = 'txsoura'
+
+    assert.deepEqual(user.dirty(), { id: '2', name: 'txsoura' })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetAllValuesAsDirtyWhenModelIsNotPersisted({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    assert.deepEqual(user.dirty(), { id: '1', name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateModelFromScratchUsingSaveMethod({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1', name: 'lenon' }])
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    await user.save()
+
+    assert.calledWith(FakeDriver.createMany, [
+      Mock.match({ id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2' })
+    ])
+    assert.containsSubset(user, {
+      id: '1',
+      name: 'lenon',
+      metadata1: 'random-1',
+      metadata2: 'random-2',
+      deletedAt: null,
+      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+    })
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateModelUsingSaveMethod({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(FakeDriver, 'update').resolve({ id: '2', name: 'txsoura' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    user.setOriginal()
+
+    user.id = '2'
+    user.name = 'txsoura'
+
+    await user.save()
+
+    assert.calledWith(
+      FakeDriver.update,
+      Mock.match({ id: '2', name: 'txsoura', metadata1: 'random-1', metadata2: 'random-2' })
+    )
+    assert.containsSubset(user, {
+      id: '2',
+      name: 'txsoura',
+      metadata1: 'random-1',
+      metadata2: 'random-2',
+      deletedAt: null,
+      original: { id: '2', name: 'txsoura', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+    })
+  }
+
+  @Test()
+  public async shouldUpdateValuesIfAttributesOrDefaultColumnValuesChangeTheModel({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(FakeDriver, 'update').resolve({ id: '1', name: 'lenon' })
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    user.setOriginal()
+
+    await user.save()
+
+    assert.calledWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
+    assert.containsSubset(user, {
+      id: '1',
+      name: 'lenon',
+      metadata1: 'random-1',
+      metadata2: 'random-2',
+      deletedAt: null,
+      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+    })
+  }
+
+  @Test()
+  public async shouldNotUpdateOrCreateTheModelIfThereAreNoDirtyValues({ assert }: Context) {
+    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(FakeDriver, 'update').resolve(undefined)
+    Mock.when(FakeDriver, 'createMany').resolve(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = null
+
+    user.setOriginal()
+
+    await user.save()
+
+    assert.notCalled(FakeDriver.update)
+    assert.notCalled(FakeDriver.createMany)
+    assert.containsSubset(user, {
+      id: '1',
+      name: 'lenon',
+      metadata1: 'random-1',
+      metadata2: 'random-2',
+      deletedAt: null,
+      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+    })
+  }
+
+  // TODO Add test for other new methods of Model
 }

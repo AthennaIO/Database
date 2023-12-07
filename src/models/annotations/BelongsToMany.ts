@@ -18,9 +18,17 @@ import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOpt
 /**
  * Create belongs to many relation for model class.
  */
-export function BelongsToMany<T extends Model = any, R extends Model = any>(
+export function BelongsToMany<
+  T extends Model = any,
+  R extends Model = any,
+  P extends Model = any
+>(
   model: () => new () => R,
-  options: Omit<BelongsToManyOptions<T, R>, 'type' | 'model' | 'property'> = {}
+  pivotModel: () => new () => P,
+  options: Omit<
+    BelongsToManyOptions<T, R, P>,
+    'type' | 'model' | 'property'
+  > = {}
 ) {
   return (target: T, key: any) => {
     const Target = target.constructor as typeof Model
@@ -43,6 +51,9 @@ export function BelongsToMany<T extends Model = any, R extends Model = any>(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.model = model
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    options.pivotModel = pivotModel
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.property = key

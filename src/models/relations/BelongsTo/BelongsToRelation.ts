@@ -13,12 +13,9 @@ import type { BelongsToOptions } from '#src/types'
 
 export class BelongsToRelation {
   /**
-   * Load a belongs to relation.
+   * Get the options with defined default values.
    */
-  public static async load(
-    model: Model,
-    relation: BelongsToOptions
-  ): Promise<any> {
+  private static options(relation: BelongsToOptions): BelongsToOptions {
     const RelationModel = relation.model()
 
     relation.primaryKey =
@@ -26,7 +23,21 @@ export class BelongsToRelation {
     relation.foreignKey =
       relation.foreignKey || `${String.toCamelCase(RelationModel.name)}Id`
 
-    model[relation.property] = await RelationModel.query()
+    return relation
+  }
+
+  /**
+   * Load a belongs to relation.
+   */
+  public static async load(
+    model: Model,
+    relation: BelongsToOptions
+  ): Promise<any> {
+    this.options(relation)
+
+    model[relation.property] = await relation
+      .model()
+      .query()
       .where(relation.primaryKey as never, model[relation.foreignKey])
       .when(relation.closure, relation.closure)
       .find()
@@ -41,15 +52,12 @@ export class BelongsToRelation {
     models: Model[],
     relation: BelongsToOptions
   ): Promise<any[]> {
-    const RelationModel = relation.model()
-
-    relation.primaryKey =
-      relation.primaryKey || RelationModel.schema().getMainPrimaryKeyName()
-    relation.foreignKey =
-      relation.foreignKey || `${String.toCamelCase(RelationModel.name)}Id`
+    this.options(relation)
 
     const foreignValues = models.map(model => model[relation.foreignKey])
-    const results = await RelationModel.query()
+    const results = await relation
+      .model()
+      .query()
       .whereIn(relation.primaryKey as never, foreignValues)
       .when(relation.closure, relation.closure)
       .findMany()

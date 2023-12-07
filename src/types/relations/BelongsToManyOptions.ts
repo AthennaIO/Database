@@ -13,7 +13,8 @@ import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export type BelongsToManyOptions<
   T extends Model = any,
-  R extends Model = any
+  R extends Model = any,
+  P extends Model = any
 > = {
   /**
    * The relation option type.
@@ -40,11 +41,21 @@ export type BelongsToManyOptions<
   property?: ModelColumns<T>
 
   /**
-   * The relation model that is being referenced.
+   * The relation model that is being referenced as
+   * a closure to protect models definition from import
+   * issues.
    *
    * @readonly
    */
   model?: () => typeof Model
+
+  /**
+   * The pivot model that will be used to save the
+   * relations between main model and relation model.
+   *
+   * @readonly
+   */
+  pivotModel?: () => typeof Model
 
   /**
    * Set if the model will be included when fetching
@@ -67,17 +78,18 @@ export type BelongsToManyOptions<
   /**
    * The foreign key is the camelCase in singular
    * representation of the main model table name with
-   * 'Id' in the end.
+   * 'Id' in the end. The foreign key will always
+   * be defined inside the pivot model.
    *
    * @default `${String.toCamelCase(Model.name)}Id`
    */
-  foreignKey?: string
+  foreignKey?: ModelColumns<P>
 
   /**
    * The pivot table is always the merge of main model
    * table name with relation model table name.
    *
-   * @default `${Model.table()}_${RelationModel.table()}`
+   * @default PivotModel.table()
    */
   pivotTable?: string
 
@@ -92,9 +104,10 @@ export type BelongsToManyOptions<
   /**
    * The pivot foreign key is the camelCase in singular
    * representation of the relation model name with
-   * an 'Id' at the end.
+   * an 'Id' at the end. The pivot foreign key will always
+   * be defined inside the pivot model.
    *
    * @default `${String.toCamelCase(Relation.name)}Id`
    */
-  pivotForeignKey?: string
+  pivotForeignKey?: ModelColumns<P>
 }

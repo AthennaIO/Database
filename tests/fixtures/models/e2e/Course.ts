@@ -11,6 +11,7 @@ import { Model } from '#src/models/Model'
 import { Student } from '#tests/fixtures/models/e2e/Student'
 import { Column } from '#src/models/annotations/Column'
 import { BelongsToMany } from '#src/models/annotations/BelongsToMany'
+import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
 
 export class Course extends Model {
   public static connection() {
@@ -23,6 +24,6 @@ export class Course extends Model {
   @Column()
   public name: string
 
-  @BelongsToMany(() => Student, { pivotTable: 'students_courses' })
+  @BelongsToMany(() => Student, () => StudentsCourses)
   public students: Student[]
 }

@@ -114,14 +114,14 @@ export class ModelGenerator<M extends Model = any> {
     const relations = this.schema.getIncludedRelations()
 
     if (!relations || !relations.length) {
-      return model
+      return model.setOriginal()
     }
 
     for (const relation of relations) {
       model = await this.includeRelation(model, relation)
     }
 
-    return model
+    return model.setOriginal()
   }
 
   /**
@@ -152,13 +152,13 @@ export class ModelGenerator<M extends Model = any> {
     const relations = this.schema.getIncludedRelations()
 
     if (!relations || !relations.length) {
-      return models
+      return models.map(model => model.setOriginal())
     }
 
     for (const relation of relations) {
       models = await this.includeRelationOfAll(models, relation)
     }
 
-    return models
+    return models.map(model => model.setOriginal())
   }
 }

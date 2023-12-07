@@ -9,10 +9,23 @@
 
 import { String } from '@athenna/common'
 import type { Model } from '#src/models/Model'
-import { Database } from '#src/facades/Database'
 import type { BelongsToManyOptions } from '#src/types'
 
 export class BelongsToManyRelation {
+  /**
+   * Get the options with defined default values.
+   */
+  private static options(relation: BelongsToManyOptions): BelongsToManyOptions {
+    const RelationModel = relation.model()
+    const PivotModel = relation.pivotModel()
+
+    relation.pivotTable = relation.pivotTable || PivotModel.table()
+    relation.pivotPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
+    relation.pivotForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
+
+    return relation
+  }
+
   /**
    * Load a belongs to many relation.
    */
@@ -20,43 +33,22 @@ export class BelongsToManyRelation {
     model: Model,
     relation: BelongsToManyOptions
   ): Promise<any> {
-    const _Model = model.constructor as typeof Model
-    const RelationModel = relation.model()
-    const connection = _Model.connection()
+    this.options(relation)
 
-    relation.pivotTable =
-      relation.pivotTable || `${_Model.table()}_${RelationModel.table()}`
-    relation.pivotPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
-    relation.pivotForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
-
-    /**
-     * Using Database here because there is no PivotModel.
-     */
-    const pivotTableData = await Database.connection(connection)
-      .table(relation.pivotTable)
-      .where(relation.foreignKey, model[relation.primaryKey])
+    const pivotData = await relation
+      .pivotModel()
+      .query()
+      .where(relation.foreignKey as never, model[relation.primaryKey])
       .findMany()
 
-    const relationIds = pivotTableData.map(d => d[relation.pivotForeignKey])
+    const relationIds = pivotData.map(d => d[relation.pivotForeignKey])
 
-    model[relation.property] = await RelationModel.query()
+    model[relation.property] = await relation
+      .model()
+      .query()
       .whereIn(relation.pivotPrimaryKey as never, relationIds)
       .when(relation.closure, relation.closure)
       .findMany()
-
-    /**
-     * Get the pivot table array data and set
-     * in the respective relation model.
-     */
-    model[relation.property].map(model => {
-      model.pivot =
-        pivotTableData.find(
-          data =>
-            data[relation.pivotForeignKey] === model[relation.pivotPrimaryKey]
-        ) || {}
-
-      return model
-    })
 
     return model
   }
@@ -68,61 +60,41 @@ export class BelongsToManyRelation {
     models: Model[],
     relation: BelongsToManyOptions
   ): Promise<any[]> {
-    // TODO Improve the code below
-
-    const _Model = models[0].constructor as typeof Model
-    const RelationModel = relation.model()
-    const connection = _Model.connection()
-
-    relation.pivotTable =
-      relation.pivotTable || `${_Model.table()}_${RelationModel.table()}`
-    relation.pivotPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
-    relation.pivotForeignKey = `${String.toCamelCase(
-      String.singularize(RelationModel.table())
-    )}Id`
+    this.options(relation)
 
     const primaryKeys = models.map(m => m[relation.primaryKey])
-
-    /**
-     * Using Database here because there is no PivotModel.
-     */
-    const pivotTableData = await Database.connection(connection)
-      .table(relation.pivotTable)
-      .whereIn(relation.foreignKey, primaryKeys)
+    const pivotData = await relation
+      .pivotModel()
+      .query()
+      .whereIn(relation.foreignKey as never, primaryKeys)
       .findMany()
 
-    const pivotTableMap = new Map()
+    const pivotDataMap = new Map()
     const pivotForeignKeys = []
 
-    pivotTableData.forEach(data => {
+    pivotData.forEach(data => {
       pivotForeignKeys.push(data[relation.pivotForeignKey])
 
-      const array = pivotTableMap.get(data[relation.foreignKey]) || []
+      const array = pivotDataMap.get(data[relation.foreignKey]) || []
 
       array.push(data[relation.pivotForeignKey])
 
-      pivotTableMap.set(data[relation.foreignKey], array)
+      pivotDataMap.set(data[relation.foreignKey], array)
     })
 
-    const results = await RelationModel.query()
+    const results = await relation
+      .model()
+      .query()
       .whereIn(relation.pivotPrimaryKey as never, pivotForeignKeys)
       .when(relation.closure, relation.closure)
       .findMany()
 
     const map = new Map()
 
-    results.forEach(result => {
-      result.pivot =
-        pivotTableData.find(
-          data =>
-            data[relation.pivotForeignKey] === result[relation.pivotPrimaryKey]
-        ) || {}
-
-      map.set(result[relation.pivotPrimaryKey], result)
-    })
+    results.forEach(result => map.set(result[relation.pivotPrimaryKey], result))
 
     return models.map(model => {
-      const ids = pivotTableMap.get(model[relation.primaryKey]) || []
+      const ids = pivotDataMap.get(model[relation.primaryKey]) || []
 
       model[relation.property] = ids.map(id => map.get(id))
 

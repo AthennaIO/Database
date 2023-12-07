@@ -7,10 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import type { ModelRelations } from '#src/types'
+import equal from 'fast-deep-equal'
 import { Database } from '#src/facades/Database'
-import { Collection, Is, String } from '@athenna/common'
+import type { ModelRelations } from '#src/types'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { Collection, Is, Json, String } from '@athenna/common'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
@@ -225,9 +226,40 @@ export class Model {
   }
 
   /**
-   * The pivot data from many to many relations.
+   * The original model values when it was fetched
+   * from database. If is undefined, means that model
+   * is a fresh instance and is not available in database
+   * yet.
    */
-  public pivot?: Record<string, any>
+  private original?: Record<string, any>
+
+  /**
+   * Set the original model values by deep copying
+   * the model state.
+   */
+  public setOriginal(): this {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    this.original = {}
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    Object.keys(Json.copy(Json.omit(this, ['original']))).forEach(key => {
+      const value = this[key]
+
+      if (Is.Array(value) && value[0]?.original) {
+        return
+      }
+
+      if (value && value.original) {
+        return
+      }
+
+      this.original[key] = value
+    })
+
+    return this
+  }
 
   /**
    * Return a Json object from the actual subclass instance.
@@ -242,6 +274,10 @@ export class Model {
      * Execute the toJSON of relations.
      */
     Object.keys(this).forEach(key => {
+      if (key === 'original') {
+        return
+      }
+
       if (relations.includes(key)) {
         if (Is.Array(this[key])) {
           json[key] = this[key].map(d => (d.toJSON ? d.toJSON() : d))
@@ -283,7 +319,109 @@ export class Model {
     return this[relation]
   }
 
-  // TODO save method
+  /**
+   * Validate if model is persisted in database
+   * or if it's a fresh instance.
+   */
+  public isPersisted(): boolean {
+    return !!this.original
+  }
+
+  /**
+   * Get values only that are different from
+   * the original property to avoid updating
+   * data that was not changed.
+   */
+  public dirty() {
+    if (!this.isPersisted()) {
+      return this
+    }
+
+    const dirty: Record<string, any> = {}
+
+    Object.keys(this).forEach(key => {
+      if (key === 'original') {
+        return
+      }
+
+      if (equal(this.original[key], this[key])) {
+        return
+      }
+
+      dirty[key] = Json.copy(this[key])
+    })
+
+    return dirty
+  }
+
+  /**
+   * Validate if model has been changed from
+   * it initial state when it was retrieved from
+   * database.
+   */
+  public isDirty(): boolean {
+    return Object.keys(this.dirty()).length > 0
+  }
+
+  /**
+   * Save the changes done in the model in database.
+   */
+  public async save() {
+    const Model = this.constructor as any
+    const schema = Model.schema()
+    const primaryKey = schema.getMainPrimaryKeyName()
+    const date = new Date()
+    const createdAt = schema.getCreatedAtColumn()
+    const updatedAt = schema.getUpdatedAtColumn()
+    const deletedAt = schema.getDeletedAtColumn()
+    const attributes = Model.attributes()
+
+    Object.keys(attributes).forEach(key => {
+      if (this[key]) {
+        return
+      }
+
+      this[key] = attributes[key]
+    })
+
+    if (createdAt && this[createdAt.property] === undefined) {
+      this[createdAt.property] = date
+    }
+
+    if (updatedAt && this[updatedAt.property] === undefined) {
+      this[updatedAt.property] = date
+    }
+
+    if (deletedAt && this[deletedAt.property] === undefined) {
+      this[deletedAt.property] = null
+    }
+
+    const data = this.dirty()
+
+    if (!this.isPersisted()) {
+      const created = await Model.create(data)
+
+      Object.keys(created).forEach(key => (this[key] = created[key]))
+
+      return this.setOriginal()
+    }
+
+    /**
+     * Means data is not dirty because there are any
+     * value that is different from original prop.
+     */
+    if (!Object.keys(data).length) {
+      return this
+    }
+
+    const where = { [primaryKey]: this[primaryKey] }
+    const updated = await Model.update(where, data)
+
+    Object.keys(updated).forEach(key => (this[key] = updated[key]))
+
+    return this.setOriginal()
+  }
+
   // TODO fresh method
   // TODO refresh method
   // TODO isTrashed method

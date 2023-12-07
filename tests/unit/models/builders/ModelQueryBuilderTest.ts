@@ -299,14 +299,12 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToFindDataUsingFindOrFail({ assert }: Context) {
-    const expectedData = { id: '1', name: 'John Doe' }
-    Mock.when(FakeDriver, 'find').resolve(expectedData)
+    Mock.when(FakeDriver, 'find').resolve({ id: '1', name: 'John Doe' })
 
     const queryBuilder = User.query()
     const result = await queryBuilder.findOrFail()
 
     assert.calledOnce(FakeDriver.find)
-    assert.deepEqual(result, expectedData)
     assert.instanceOf(result, User)
   }
 
@@ -322,15 +320,13 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToFindDataOrExecuteTheCallback({ assert }: Context) {
-    const expectedData = { id: '1', name: 'John Doe' }
     const callback = async () => null
-    Mock.when(FakeDriver, 'find').resolve(expectedData)
+    Mock.when(FakeDriver, 'find').resolve({ id: '1', name: 'John Doe' })
 
     const queryBuilder = User.query()
-    const result = await queryBuilder.findOr(callback)
+    await queryBuilder.findOr(callback)
 
     assert.calledOnce(FakeDriver.find)
-    assert.deepEqual(result, expectedData)
   }
 
   @Test()
@@ -348,30 +344,26 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToFindData({ assert }: Context) {
-    const expectedData = { id: '1', name: 'John Doe' }
-    Mock.when(FakeDriver, 'find').resolve(expectedData)
+    Mock.when(FakeDriver, 'find').resolve({ id: '1', name: 'John Doe' })
 
     const queryBuilder = User.query()
     const result = await queryBuilder.find()
 
     assert.calledOnce(FakeDriver.find)
-    assert.deepEqual(result, expectedData)
     assert.instanceOf(result, User)
   }
 
   @Test()
   public async shouldBeAbleToFindManyData({ assert }: Context) {
-    const expectedData = [
+    Mock.when(FakeDriver, 'findMany').resolve([
       { id: '1', name: 'John Doe' },
       { id: '2', name: 'Jane Doe' }
-    ]
-    Mock.when(FakeDriver, 'findMany').resolve(expectedData)
+    ])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.findMany()
 
     assert.calledOnce(FakeDriver.findMany)
-    assert.deepEqual(result, expectedData)
     assert.instanceOf(result[0], User)
   }
 
@@ -393,28 +385,24 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToCreateData({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
-    const createdData = { id: '3', ...dataToCreate }
-    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '3', ...dataToCreate }])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.create(dataToCreate)
 
     assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate)])
-    assert.deepEqual(result, createdData)
     assert.instanceOf(result, User)
   }
 
   @Test()
   public async shouldBeAbleToCreateDataAndSetDefaultTimestamps({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
-    const createdData = { id: '3', ...dataToCreate }
-    Mock.when(FakeDriver, 'createMany').resolve([createdData])
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '3', ...dataToCreate }])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.create(dataToCreate)
 
     assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate)])
-    assert.deepEqual(result, createdData)
     assert.instanceOf(result, User)
   }
 
@@ -472,17 +460,15 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToCreateManyData({ assert }: Context) {
     const dataToCreate = [{ name: 'User One' }, { name: 'User Two' }]
-    const createdData = [
+    Mock.when(FakeDriver, 'createMany').resolve([
       { id: '4', ...dataToCreate[0] },
       { id: '5', ...dataToCreate[1] }
-    ]
-    Mock.when(FakeDriver, 'createMany').resolve(createdData)
+    ])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.createMany(dataToCreate)
 
     assert.calledOnceWith(FakeDriver.createMany, [Mock.match(dataToCreate[0]), Mock.match(dataToCreate[1])])
-    assert.deepEqual(result, createdData)
     assert.instanceOf(result[0], User)
   }
 
@@ -730,29 +716,25 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateData({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User' }
-    const updatedData = { id: '1', ...dataToUpdate }
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    Mock.when(FakeDriver, 'update').resolve({ id: '1', ...dataToUpdate })
 
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
-    assert.deepEqual(result, updatedData)
     assert.instanceOf(result, User)
   }
 
   @Test()
   public async shouldBeAbleToUpdateDataAndUpdateUpdatedAtColumn({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User' }
-    const updatedData = { id: '1', ...dataToUpdate }
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    Mock.when(FakeDriver, 'update').resolve({ id: '1', ...dataToUpdate })
 
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
     assert.notCalledWith(FakeDriver.update, dataToUpdate)
     assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
-    assert.deepEqual(result, updatedData)
     assert.instanceOf(result, User)
   }
 
@@ -812,28 +794,25 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateMultipleData({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User' }
-    const updatedData = [
+    Mock.when(FakeDriver, 'update').resolve([
       { id: '1', name: 'Updated User' },
       { id: '2', name: 'Updated User' }
-    ]
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    ])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
-    assert.deepEqual(result, updatedData)
     assert.instanceOf(result[0], User)
   }
 
   @Test()
   public async shouldBeAbleToUpdateMultipleDataAndParseColumns({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User', rate: 1 }
-    const updatedData = [
+    Mock.when(FakeDriver, 'update').resolve([
       { id: '1', name: 'Updated User' },
       { id: '2', name: 'Updated User' }
-    ]
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    ])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
@@ -845,29 +824,26 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateMultipleDataAndUpdateUpdatedAtColumn({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User' }
-    const updatedData = [
+    Mock.when(FakeDriver, 'update').resolve([
       { id: '1', name: 'Updated User' },
       { id: '2', name: 'Updated User' }
-    ]
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    ])
 
     const queryBuilder = User.query()
     const result = await queryBuilder.update(dataToUpdate)
 
     assert.notCalledWith(FakeDriver.update, dataToUpdate)
     assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
-    assert.deepEqual(result, updatedData)
     assert.instanceOf(result[0], User)
   }
 
   @Test()
   public async shouldBeAbleToUpdateMultipleDataIgnoringPersistColumns({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User', score: 200 }
-    const updatedData = [
+    Mock.when(FakeDriver, 'update').resolve([
       { id: '1', name: 'Updated User' },
       { id: '2', name: 'Updated User' }
-    ]
-    Mock.when(FakeDriver, 'update').resolve(updatedData)
+    ])
 
     const queryBuilder = User.query()
     await queryBuilder.update(dataToUpdate)

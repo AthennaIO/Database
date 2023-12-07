@@ -10,10 +10,10 @@
 import { Model } from '#src/models/Model'
 import { Column } from '#src/models/annotations/Column'
 import { Course } from '#tests/fixtures/models/e2e/Course'
-import { BelongsToMany } from '#src/models/annotations/BelongsToMany'
-import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
+import { Student } from '#tests/fixtures/models/e2e/Student'
+import { BelongsTo } from '#src/models/annotations/BelongsTo'
 
-export class Student extends Model {
+export class StudentsCourses extends Model {
   public static connection() {
     return 'postgres-docker'
   }
@@ -22,8 +22,14 @@ export class Student extends Model {
   public id: number
 
   @Column()
-  public name: string
+  public courseId: number
 
-  @BelongsToMany(() => Course, () => StudentsCourses)
-  public courses: Course[]
+  @BelongsTo(() => Course)
+  public course: Course
+
+  @Column()
+  public studentId: number
+
+  @BelongsTo(() => Student)
+  public student: Student
 }

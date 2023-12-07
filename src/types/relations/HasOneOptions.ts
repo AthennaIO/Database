@@ -36,7 +36,9 @@ export type HasOneOptions<T extends Model = any, R extends Model = any> = {
   property?: ModelColumns<T>
 
   /**
-   * The relation model that is being referenced.
+   * The relation model that is being referenced as
+   * a closure to protect models definition from import
+   * issues.
    *
    * @readonly
    */
