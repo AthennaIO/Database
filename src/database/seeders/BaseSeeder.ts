@@ -7,9 +7,11 @@
  * file that was distributed with this source code.
  */
 
+import { type DatabaseImpl } from '#src/database/DatabaseImpl'
+
 export abstract class BaseSeeder {
   /**
    * Run the database seeders.
    */
-  public abstract run(): void | Promise<void>
+  public abstract run(db?: DatabaseImpl): void | Promise<void>
 }
