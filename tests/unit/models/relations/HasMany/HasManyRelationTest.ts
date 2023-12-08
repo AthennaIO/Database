@@ -25,7 +25,6 @@ export default class HasManyRelationTest {
 
     await pg.runMigrations()
 
-    // TODO Use model factories instead
     await pg.table('users').create({ id: 1, name: 'lenon', email: 'lenonsec7@gmail.com' })
     await pg.table('profiles').create({ id: 1, userId: 1 })
     await pg.table('products').create({ id: 1, userId: 1 })

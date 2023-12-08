@@ -86,10 +86,6 @@ export class ConnectionFactory {
   public static mongo(con: string): Connection {
     const client = this.mongoose(con)
 
-    // TODO Move to @athenna/common: `sleepSync`
-    // const start = Date.now()
-    // while (Date.now() - start < 500);
-
     this.log(con)
 
     return client

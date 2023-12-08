@@ -23,6 +23,18 @@ export default class MakeMigrationCommandTest extends BaseCommandTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateAMigrationFileWithDifferentDestination({ assert, command }: Context) {
+    const output = await command.run('make:migration TestMigration', {
+      path: Path.fixtures('consoles/dest-import-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ MAKING MIGRATION ]')
+    output.assertLogged('[  success  ] Migration "TestMigration" successfully created.')
+    assert.isTrue(await File.exists(Path.fixtures('storage/migrations/TestMigration.ts')))
+  }
+
+  @Test()
   public async shouldThrowAnExceptionWhenTheFileAlreadyExists({ command }: Context) {
     await command.run('make:migration TestMigration')
     const output = await command.run('make:migration TestMigration')

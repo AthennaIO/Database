@@ -9,18 +9,16 @@
 
 import { Config } from '@athenna/config'
 import { ViewProvider } from '@athenna/view'
-import { DriverFactory } from '#src/factories/DriverFactory'
-import { DatabaseProvider } from '#src/providers/DatabaseProvider'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Artisan, ConsoleKernel, ArtisanProvider } from '@athenna/artisan'
 
 new ViewProvider().register()
 new ArtisanProvider().register()
-new DatabaseProvider().register()
 
 await Config.loadAll(Path.fixtures('config'))
 
-DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
+Config.set('rc.commands.make:model.destination', './tests/fixtures/storage/models')
+Config.set('rc.commands.make:seeder.destination', './tests/fixtures/storage/seeders')
+Config.set('rc.commands.make:migration.destination', './tests/fixtures/storage/migrations')
 
 Path.mergeDirs({
   app: 'tests/fixtures/storage/app',

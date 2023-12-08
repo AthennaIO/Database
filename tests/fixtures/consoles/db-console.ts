@@ -23,9 +23,8 @@ await Config.loadAll(Path.fixtures('config'))
 DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
 Path.mergeDirs({
-  app: 'tests/fixtures/storage/app',
-  seeders: 'tests/fixtures/storage/database/seeders',
-  migrations: 'tests/fixtures/storage/database/migrations'
+  seeders: 'tests/fixtures/database/seeders',
+  migrations: 'tests/fixtures/database/migrations'
 })
 
 await new ConsoleKernel().registerCommands()

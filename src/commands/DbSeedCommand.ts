@@ -13,8 +13,8 @@ import { BaseCommand, Option } from '@athenna/artisan'
 
 export class DbSeedCommand extends BaseCommand {
   @Option({
-    default: 'default',
-    signature: 'classes...',
+    default: [],
+    signature: '--classes <classes...>',
     description: 'Specify the classes names that should run.'
   })
   public classes: string[]
@@ -42,11 +42,11 @@ export class DbSeedCommand extends BaseCommand {
     const task = this.logger.task()
 
     seeds.forEach(Seed => {
-      if (this.classes.length && !this.classes.includes(Seed.name)) {
+      if (this.classes?.length && !this.classes.includes(Seed.name)) {
         return
       }
 
-      task.addPromise(`Running "${Seed.name}" seeder`, new Seed().run(DB))
+      task.addPromise(`Running "${Seed.name}" seeder`, () => new Seed().run(DB))
     })
 
     await task.run().finally(() => DB.close())

@@ -23,6 +23,18 @@ export default class MakeSeederCommandTest extends BaseCommandTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateASeederFileWithDifferentDestination({ assert, command }: Context) {
+    const output = await command.run('make:seeder TestSeeder', {
+      path: Path.fixtures('consoles/dest-import-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ MAKING SEEDER ]')
+    output.assertLogged('[  success  ] Seeder "TestSeeder" successfully created.')
+    assert.isTrue(await File.exists(Path.fixtures('storage/seeders/TestSeeder.ts')))
+  }
+
+  @Test()
   public async shouldThrowAnExceptionWhenTheFileAlreadyExists({ command }: Context) {
     await command.run('make:seeder TestSeeder')
     const output = await command.run('make:seeder TestSeeder')

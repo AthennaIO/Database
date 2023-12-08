@@ -191,9 +191,24 @@
   },
   "athenna": {
     "commands": {
-      "make:model": "#src/commands/MakeModelCommand",
-      "make:seeder": "#src/commands/MakeSeederCommand",
-      "make:migration": "#src/commands/MakeMigrationCommand"
+      "migration:run": {
+        "path": "#src/commands/MigrationRunCommand"
+      },
+      "migration:revert": {
+        "path": "#src/commands/MigrationRevertCommand"
+      },
+      "db:seed": {
+        "path": "#src/commands/DbSeedCommand"
+      },
+      "make:model": {
+        "path": "#src/commands/MakeModelCommand"
+      },
+      "make:seeder": {
+        "path": "#src/commands/MakeSeederCommand"
+      },
+      "make:migration": {
+        "path": "#src/commands/MakeMigrationCommand"
+      }
     },
     "templates": {
       "migration": "./templates/migration.edge",

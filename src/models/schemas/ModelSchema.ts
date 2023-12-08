@@ -61,7 +61,6 @@ export class ModelSchema<M extends BaseModel = any> {
   public getMainPrimaryKeyName(): string {
     const options = this.getMainPrimaryKey()
 
-    // TODO Validate if need to verify if using mongo
     return options?.name || 'id'
   }
 
@@ -71,7 +70,6 @@ export class ModelSchema<M extends BaseModel = any> {
   public getMainPrimaryKeyProperty(): string {
     const options = this.getMainPrimaryKey()
 
-    // TODO Validate if need to verify if using mongo
     return options?.property || 'id'
   }
 
@@ -237,8 +235,6 @@ export class ModelSchema<M extends BaseModel = any> {
     property: string | ModelColumns<M>,
     closure?: (query: ModelQueryBuilder) => any
   ) {
-    // TODO
-    // if (relation.includes('.')) {}
     const model = this.Model.name
     const options = this.getRelationByProperty(property)
 

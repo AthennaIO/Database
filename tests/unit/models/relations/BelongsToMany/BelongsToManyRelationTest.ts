@@ -26,7 +26,6 @@ export default class BelongsToManyRelationTest {
     await pg.revertMigrations()
     await pg.runMigrations()
 
-    // TODO Use model factories instead
     await pg.table('students').create({ id: 1, name: 'lenon' })
     await pg.table('courses').create({ id: 1, name: 'Math' })
     await pg.table('students_courses').create({ id: 1, studentId: 1, courseId: 1 })
