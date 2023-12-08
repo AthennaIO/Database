@@ -50,6 +50,12 @@
     "./package": "./package.json",
     "./package.json": "./package.json",
     "./testing/plugins": "./src/testing/plugins/index.js",
+    "./commands/DbSeedCommand": "./src/commands/DbSeedCommand.js",
+    "./commands/MakeMigrationCommand": "./src/commands/MakeMigrationCommand.js",
+    "./commands/MakeModelCommand": "./src/commands/MakeModelCommand.js",
+    "./commands/MakeSeederCommand": "./src/commands/MakeSeederCommand.js",
+    "./commands/MigrationRevertCommand": "./src/commands/MigrationRevertCommand.js",
+    "./commands/MigrationRunCommand": "./src/commands/MigrationRunCommand.js",
     "./providers/DatabaseProvider": "./src/providers/DatabaseProvider.js"
   },
   "imports": {

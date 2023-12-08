@@ -620,4 +620,9 @@ export default class ModelTest {
     assert.isNull(user.deletedAt)
     assert.calledTimes(FakeDriver.update, 2)
   }
+
+  @Test()
+  public async shouldBeAbleToUseFakerProperty({ assert }: Context) {
+    assert.isTrue(BaseModel.faker.internet.email().includes('@'))
+  }
 }
