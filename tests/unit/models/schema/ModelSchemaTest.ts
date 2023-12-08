@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Test, type Context } from '@athenna/test'
 import { HasOne } from '#src/models/annotations/HasOne'
 import { Column } from '#src/models/annotations/Column'
@@ -412,8 +412,8 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetAHasOneRelationOptionByClassPropertyName({ assert }: Context) {
-    class Profile extends Model {}
-    class User extends Model {
+    class Profile extends BaseModel {}
+    class User extends BaseModel {
       @HasOne(Profile)
       public profile: Profile
     }
@@ -432,8 +432,8 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToIncludeAHasOneRelationByClassPropertyName({ assert }: Context) {
-    class Profile extends Model {}
-    class User extends Model {
+    class Profile extends BaseModel {}
+    class User extends BaseModel {
       @HasOne(Profile)
       public profile: Profile
     }
@@ -467,8 +467,8 @@ export default class ModelSchemaTest {
   public async shouldThrowNotImplementedRelationExceptionIfTryingToIncludeARelationThatIsNotPresentInModel({
     assert
   }: Context) {
-    class Profile extends Model {}
-    class User extends Model {
+    class Profile extends BaseModel {}
+    class User extends BaseModel {
       @HasOne(Profile)
       public profile: Profile
     }

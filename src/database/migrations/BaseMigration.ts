@@ -10,7 +10,7 @@
 import { Config } from '@athenna/config'
 import type { DatabaseImpl } from '#src/database/DatabaseImpl'
 
-export abstract class Migration {
+export abstract class BaseMigration {
   /**
    * Define the database connection that the
    * migration will use.

@@ -1,6 +1,6 @@
-import { Model, Column } from '@athenna/database'
+import { Column, BaseModel } from '@athenna/database'
 
-export class {{ namePascal }} extends Model {
+export class {{ namePascal }} extends BaseModel {
   @Column()
   public id: number
 

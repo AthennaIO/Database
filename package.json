@@ -189,5 +189,16 @@
       ]
     }
   },
-  "athenna": {}
+  "athenna": {
+    "commands": {
+      "make:model": "#src/commands/MakeModelCommand",
+      "make:seeder": "#src/commands/MakeSeederCommand",
+      "make:migration": "#src/commands/MakeMigrationCommand"
+    },
+    "templates": {
+      "migration": "./templates/migration.edge",
+      "model": "./templates/model.edge",
+      "seeder": "./templates/seeder.edge"
+    }
+  }
 }

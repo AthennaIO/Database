@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-export abstract class Seeder {
+export abstract class BaseSeeder {
   /**
    * Run the database seeders.
    */

@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { DatabaseImpl, Migration } from '#src'
+import { DatabaseImpl, BaseMigration } from '#src'
 
-export class StudentMigration extends Migration {
+export class StudentMigration extends BaseMigration {
   public static connection() {
     return 'sqlite-memory'
   }

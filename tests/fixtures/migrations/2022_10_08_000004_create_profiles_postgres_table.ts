@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { DatabaseImpl, Migration } from '#src'
+import { DatabaseImpl, BaseMigration } from '#src'
 
-export class ProfileMigration extends Migration {
+export class ProfileMigration extends BaseMigration {
   public static connection() {
     return 'postgres-docker'
   }

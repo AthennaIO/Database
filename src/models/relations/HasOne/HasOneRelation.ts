@@ -7,15 +7,15 @@
  * file that was distributed with this source code.
  */
 
-import type { Model } from '#src/models/Model'
 import type { HasOneOptions } from '#src/types'
+import type { BaseModel } from '#src/models/BaseModel'
 
 export class HasOneRelation {
   /**
    * Load a has one relation.
    */
   public static async load(
-    model: Model,
+    model: BaseModel,
     relation: HasOneOptions
   ): Promise<any> {
     model[relation.property] = await relation
@@ -32,7 +32,7 @@ export class HasOneRelation {
    * Load all models that has one relation.
    */
   public static async loadAll(
-    models: Model[],
+    models: BaseModel[],
     relation: HasOneOptions
   ): Promise<any[]> {
     const primaryValues = models.map(model => model[relation.primaryKey])

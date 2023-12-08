@@ -13,19 +13,19 @@ import type {
   ModelColumns,
   ModelRelations
 } from '#src/types'
-import type { Model } from '#src/models/Model'
 import { Collection, Is } from '@athenna/common'
 import type { Driver } from '#src/drivers/Driver'
+import type { BaseModel } from '#src/models/BaseModel'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
 export class ModelQueryBuilder<
-  M extends Model = any,
+  M extends BaseModel = any,
   D extends Driver = any
 > extends QueryBuilder<M, D> {
-  private Model: typeof Model
+  private Model: typeof BaseModel
   private schema: ModelSchema<M>
   private generator: ModelGenerator<M>
   private primaryKeyName: string
@@ -309,7 +309,7 @@ export class ModelQueryBuilder<
     relation: K,
     closure?: (
       query: ModelQueryBuilder<
-        Extract<M[K] extends Model[] ? M[K][0] : M[K], Model>,
+        Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
         Driver
       >
     ) => any

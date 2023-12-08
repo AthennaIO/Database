@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 
-export class UserNotSoftDelete extends Model {
+export class UserNotSoftDelete extends BaseModel {
   public static connection() {
     return 'fake'
   }

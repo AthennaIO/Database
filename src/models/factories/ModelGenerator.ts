@@ -7,15 +7,15 @@
  * file that was distributed with this source code.
  */
 
-import type { Model } from '#src/models/Model'
 import type { RelationOptions } from '#src/types'
+import type { BaseModel } from '#src/models/BaseModel'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { HasOneRelation } from '#src/models/relations/HasOne/HasOneRelation'
 import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
 import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
 
-export class ModelGenerator<M extends Model = any> {
+export class ModelGenerator<M extends BaseModel = any> {
   /**
    * The model that will be generated instances
    * from.

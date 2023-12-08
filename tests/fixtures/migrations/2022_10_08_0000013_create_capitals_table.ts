@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { DatabaseImpl, Migration } from '#src'
+import { DatabaseImpl, BaseMigration } from '#src'
 
-export class CapitalMigration extends Migration {
+export class CapitalMigration extends BaseMigration {
   public tableName = 'capitals'
 
   public async up(db: DatabaseImpl) {

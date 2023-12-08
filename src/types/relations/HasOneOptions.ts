@@ -6,11 +6,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-import type { Model } from '#src/models/Model'
+
 import type { ModelColumns } from '#src/types'
+import type { BaseModel } from '#src/models/BaseModel'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
-export type HasOneOptions<T extends Model = any, R extends Model = any> = {
+export type HasOneOptions<
+  T extends BaseModel = any,
+  R extends BaseModel = any
+> = {
   /**
    * The relation option type.
    *
@@ -42,7 +46,7 @@ export type HasOneOptions<T extends Model = any, R extends Model = any> = {
    *
    * @readonly
    */
-  model?: () => typeof Model
+  model?: () => typeof BaseModel
 
   /**
    * Set if the model will be included when fetching

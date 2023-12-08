@@ -7,13 +7,13 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 import { Course } from '#tests/fixtures/models/e2e/Course'
 import { BelongsToMany } from '#src/models/annotations/BelongsToMany'
 import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
 
-export class Student extends Model {
+export class Student extends BaseModel {
   public static connection() {
     return 'postgres-docker'
   }

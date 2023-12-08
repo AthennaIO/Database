@@ -10,13 +10,22 @@
 import equal from 'fast-deep-equal'
 import { Database } from '#src/facades/Database'
 import type { ModelRelations } from '#src/types'
+import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Collection, Is, Json, String } from '@athenna/common'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
-export class Model {
+export class BaseModel {
+  /**
+   * The faker instance to create fake data in
+   * definition instance.
+   */
+  public static get faker(): Faker {
+    return faker
+  }
+
   /**
    * Set the connection name that model will use
    * to access database.
@@ -51,21 +60,21 @@ export class Model {
   /**
    * Create a new ModelSchema instance from your model.
    */
-  public static schema<T extends typeof Model>(this: T) {
+  public static schema<T extends typeof BaseModel>(this: T) {
     return new ModelSchema<InstanceType<T>>(this)
   }
 
   /**
    * Create a new ModelFactory instance from your model.
    */
-  public static factory<T extends typeof Model>(this: T) {
+  public static factory<T extends typeof BaseModel>(this: T) {
     return new ModelFactory<InstanceType<T>>(this)
   }
 
   /**
    * Create a query builder for the model.
    */
-  public static query<T extends typeof Model>(this: T) {
+  public static query<T extends typeof BaseModel>(this: T) {
     const driver = Database.connection(this.connection()).driver
 
     return new ModelQueryBuilder<InstanceType<T>, typeof driver>(this, driver)
@@ -74,7 +83,7 @@ export class Model {
   /**
    * Find a value in database.
    */
-  public static async find<T extends typeof Model>(
+  public static async find<T extends typeof BaseModel>(
     this: T,
     where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>> {
@@ -90,7 +99,7 @@ export class Model {
   /**
    * Find a value in database or throw exception if undefined.
    */
-  public static async findOrFail<T extends typeof Model>(
+  public static async findOrFail<T extends typeof BaseModel>(
     this: T,
     where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>> {
@@ -107,7 +116,7 @@ export class Model {
    * Return a single data or, if no results are found,
    * execute the given closure.
    */
-  public static async findOr<T extends typeof Model>(
+  public static async findOr<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
     closure: () => any | Promise<any>
@@ -124,7 +133,7 @@ export class Model {
   /**
    * Find many values in database.
    */
-  public static async findMany<T extends typeof Model>(
+  public static async findMany<T extends typeof BaseModel>(
     this: T,
     where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>[]> {
@@ -141,7 +150,7 @@ export class Model {
    * Find many values in database and return
    * as a collection instance.
    */
-  public static async collection<T extends typeof Model>(
+  public static async collection<T extends typeof BaseModel>(
     this: T,
     where?: Partial<InstanceType<T>>
   ): Promise<Collection<InstanceType<T>>> {
@@ -157,7 +166,7 @@ export class Model {
   /**
    * Create a value in database.
    */
-  public static async create<T extends typeof Model>(
+  public static async create<T extends typeof BaseModel>(
     this: T,
     data: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>> {
@@ -167,7 +176,7 @@ export class Model {
   /**
    * Create many values in database.
    */
-  public static async createMany<T extends typeof Model>(
+  public static async createMany<T extends typeof BaseModel>(
     this: T,
     data: Partial<InstanceType<T>>[]
   ): Promise<InstanceType<T>[]> {
@@ -177,7 +186,7 @@ export class Model {
   /**
    * Create or update a value in database.
    */
-  public static async createOrUpdate<T extends typeof Model>(
+  public static async createOrUpdate<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
     data: Partial<InstanceType<T>>
@@ -194,7 +203,7 @@ export class Model {
   /**
    * Update a value in database.
    */
-  public static async update<T extends typeof Model>(
+  public static async update<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
     data: Partial<InstanceType<T>>
@@ -211,7 +220,7 @@ export class Model {
   /**
    * Delete or soft delete a value in database.
    */
-  public static async delete<T extends typeof Model>(
+  public static async delete<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
     force = false
@@ -265,7 +274,7 @@ export class Model {
    * Return a Json object from the actual subclass instance.
    */
   public toJSON(): Record<string, any> {
-    const _Model = this.constructor as unknown as typeof Model
+    const _Model = this.constructor as unknown as typeof BaseModel
 
     const json = {}
     const relations = _Model.schema().getRelationProperties()
@@ -303,7 +312,7 @@ export class Model {
     relation: K,
     closure?: (
       query: ModelQueryBuilder<
-        Extract<this[K] extends Model[] ? this[K][0] : this[K], Model>
+        Extract<this[K] extends BaseModel[] ? this[K][0] : this[K], BaseModel>
       >
     ) => any
   ) {

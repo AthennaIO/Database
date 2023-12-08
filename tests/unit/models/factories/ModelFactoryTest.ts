@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 import { Test, type Context, Mock, BeforeEach } from '@athenna/test'
 
@@ -19,7 +19,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -31,7 +31,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -43,7 +43,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneTrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -59,7 +59,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneUntrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -77,7 +77,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeOneInstanceOfModelReturningTheFullInstanceWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -93,7 +93,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneTrashedInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -110,7 +110,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeOneInstanceOfModelReturningTheIdValueOnlyWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -125,7 +125,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeOneInstanceOfModelUsingDefinitionModelMethod({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1'
@@ -145,7 +145,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeOneInstancesOfModelSettingAnotherModelFactoryUsingDefinitionModelMethod({
     assert
   }: Context) {
-    class Product extends Model {
+    class Product extends BaseModel {
       public static async definition(): Promise<Partial<Product>> {
         return {
           id: '1'
@@ -156,7 +156,7 @@ export default class ModelFactoryTest {
       public id: string
     }
 
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
@@ -178,7 +178,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyInstancesOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -190,7 +190,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyInstancesOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -202,7 +202,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyTrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -220,7 +220,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyUntrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -238,7 +238,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeManyInstanceOfModelReturningTheFullInstanceWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -256,7 +256,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyTrashedInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -273,7 +273,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeManyInstanceOfModelReturningTheIdValueOnlyWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -288,7 +288,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToMakeManyInstancesOfModelUsingDefinitionModelMethod({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1'
@@ -308,7 +308,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToMakeManyInstancesOfModelSettingAnotherModelFactoryUsingDefinitionModelMethod({
     assert
   }: Context) {
-    class Product extends Model {
+    class Product extends BaseModel {
       public static async definition(): Promise<Partial<Product>> {
         return {
           id: '1'
@@ -319,7 +319,7 @@ export default class ModelFactoryTest {
       public id: string
     }
 
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
@@ -344,7 +344,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -358,7 +358,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -372,7 +372,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneTrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -390,7 +390,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneUntrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -410,7 +410,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateOneInstanceOfModelReturningTheFullInstanceWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -428,7 +428,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneTrashedInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -447,7 +447,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateOneInstanceOfModelReturningTheIdValueOnlyWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -464,7 +464,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOneInstanceOfModelUsingDefinitionModelMethod({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1'
@@ -486,7 +486,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateOneInstancesOfModelSettingAnotherModelFactoryUsingDefinitionModelMethod({
     assert
   }: Context) {
-    class Product extends Model {
+    class Product extends BaseModel {
       public static async definition(): Promise<Partial<Product>> {
         return {
           id: '1'
@@ -497,7 +497,7 @@ export default class ModelFactoryTest {
       public id: string
     }
 
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',
@@ -522,7 +522,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyInstancesOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -536,7 +536,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyInstancesOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -550,7 +550,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyTrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -573,7 +573,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyUntrashedInstanceOfModelReturningTheFullInstance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -593,7 +593,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateManyInstanceOfModelReturningTheFullInstanceWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -613,7 +613,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyTrashedInstanceOfModelReturningTheIdValueOnly({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -635,7 +635,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateManyInstanceOfModelReturningTheIdValueOnlyWithTrashedEvenIfModelDontHaveDeleteDateColumn({
     assert
   }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
 
@@ -652,7 +652,7 @@ export default class ModelFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateManyInstancesOfModelUsingDefinitionModelMethod({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1'
@@ -674,7 +674,7 @@ export default class ModelFactoryTest {
   public async shouldBeAbleToCreateManyInstancesOfModelSettingAnotherModelFactoryUsingDefinitionModelMethod({
     assert
   }: Context) {
-    class Product extends Model {
+    class Product extends BaseModel {
       public static async definition(): Promise<Partial<Product>> {
         return {
           id: '1'
@@ -685,7 +685,7 @@ export default class ModelFactoryTest {
       public id: string
     }
 
-    class User extends Model {
+    class User extends BaseModel {
       public static async definition(): Promise<Partial<User>> {
         return {
           id: '1',

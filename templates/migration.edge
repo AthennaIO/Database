@@ -1,8 +1,8 @@
 import { Config } from '@athenna/config'
-import { Migration } from '@athenna/database'
+import { BaseMigration, type DatabaseImpl } from '@athenna/database'
 
-export class {{ nameMigrationClass }} extends Migration {
-  public tableName = '{{ nameMigrationTable }}'
+export class {{ namePascal }} extends BaseMigration {
+  public tableName = '{{ nameTable }}'
 
   public async up(db: DatabaseImpl) {
     return db.createTable(this.tableName, builder => {

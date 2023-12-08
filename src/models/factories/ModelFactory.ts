@@ -8,14 +8,14 @@
  */
 
 import { debug } from '#src/debug'
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 
-export class ModelFactory<M extends Model = any, R = M> {
+export class ModelFactory<M extends BaseModel = any, R = M> {
   /**
    * The model that will be used to fabricate
    * instances from.
    */
-  private Model: typeof Model
+  private Model: typeof BaseModel
 
   /**
    * The number of models to be created.
@@ -32,7 +32,7 @@ export class ModelFactory<M extends Model = any, R = M> {
    */
   private _returning: keyof M | '*' = '*'
 
-  public constructor(model: typeof Model) {
+  public constructor(model: typeof BaseModel) {
     this.Model = model
   }
 

@@ -7,14 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import type { Model } from '#src/models/Model'
 import { Json, Options } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
+import type { BaseModel } from '#src/models/BaseModel'
 import type { ColumnOptions, ModelColumns, RelationOptions } from '#src/types'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
-export class ModelSchema<M extends Model = any> {
+export class ModelSchema<M extends BaseModel = any> {
   /**
    * Save the columns defined by @Column annotation.
    */
@@ -30,7 +30,7 @@ export class ModelSchema<M extends Model = any> {
    * The model class that is going to be used
    * to craft the schema.
    */
-  private Model: typeof Model
+  private Model: typeof BaseModel
 
   public constructor(model: any) {
     this.Model = model

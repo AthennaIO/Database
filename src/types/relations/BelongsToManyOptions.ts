@@ -7,14 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import type { Model } from '#src/models/Model'
 import type { ModelColumns } from '#src/types'
+import type { BaseModel } from '#src/models/BaseModel'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export type BelongsToManyOptions<
-  T extends Model = any,
-  R extends Model = any,
-  P extends Model = any
+  T extends BaseModel = any,
+  R extends BaseModel = any,
+  P extends BaseModel = any
 > = {
   /**
    * The relation option type.
@@ -47,7 +47,7 @@ export type BelongsToManyOptions<
    *
    * @readonly
    */
-  model?: () => typeof Model
+  model?: () => typeof BaseModel
 
   /**
    * The pivot model that will be used to save the
@@ -55,7 +55,7 @@ export type BelongsToManyOptions<
    *
    * @readonly
    */
-  pivotModel?: () => typeof Model
+  pivotModel?: () => typeof BaseModel
 
   /**
    * Set if the model will be included when fetching

@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import type { Model } from '#src/models/Model'
+import type { BaseModel } from '#src/models/BaseModel'
 
 export type RelationKeys<T> = {
-  [K in keyof T]: T[K] extends Model | Model[] ? K : never
+  [K in keyof T]: T[K] extends BaseModel | BaseModel[] ? K : never
 }[keyof T]
 
 export type ModelRelations<T> = Extract<RelationKeys<T>, string>

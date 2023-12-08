@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
 import { Collection } from '@athenna/common'
 import type { Connections } from '#src/types'
 import { Database } from '#src/facades/Database'
+import { BaseModel } from '#src/models/BaseModel'
 import { User } from '#tests/fixtures/models/User'
 import { Profile } from '#tests/fixtures/models/Profile'
 import { Product } from '#tests/fixtures/models/Product'
@@ -40,12 +40,12 @@ export default class ModelTest {
   public async shouldBeAbleToGetTheConnectionThatModelIsUsing({ assert }: Context) {
     Config.set('database.default', 'postgres')
 
-    assert.deepEqual(Model.connection(), 'postgres')
+    assert.deepEqual(BaseModel.connection(), 'postgres')
   }
 
   @Test()
   public async shouldBeAbleToSetAValueForConnectionUsingInheritance({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       public static connection(): Connections {
         return 'mongo'
       }
@@ -56,39 +56,39 @@ export default class ModelTest {
 
   @Test()
   public async shouldBeAbleToGetTheDefaultModelTable({ assert }: Context) {
-    assert.deepEqual(Model.table(), 'models')
+    assert.deepEqual(BaseModel.table(), 'base_models')
   }
 
   @Test()
   public async shouldBeAbleToGetTheDefaultModelTableWhenUsingInheritance({ assert }: Context) {
-    class User extends Model {}
+    class User extends BaseModel {}
 
     assert.deepEqual(User.table(), 'users')
   }
 
   @Test()
   public async shouldBeAbleToGetModelAttributes({ assert }: Context) {
-    assert.deepEqual(Model.attributes(), {})
+    assert.deepEqual(BaseModel.attributes(), {})
   }
 
   @Test()
   public async shouldBeAbleToGetModelDefinitions({ assert }: Context) {
-    assert.deepEqual(await Model.definition(), {})
+    assert.deepEqual(await BaseModel.definition(), {})
   }
 
   @Test()
   public async shouldBeAbleToGenerateAnInstanceOfModelSchemaFromModelClass({ assert }: Context) {
-    assert.instanceOf(Model.schema(), ModelSchema)
+    assert.instanceOf(BaseModel.schema(), ModelSchema)
   }
 
   @Test()
   public async shouldBeAbleToGenerateAnInstanceOfModelFactoryFromModelClass({ assert }: Context) {
-    assert.instanceOf(Model.factory(), ModelFactory)
+    assert.instanceOf(BaseModel.factory(), ModelFactory)
   }
 
   @Test()
   public async shouldBeAbleToGenerateAnInstanceOfModelQueryBuilderFromModelClass({ assert }: Context) {
-    assert.instanceOf(Model.query(), ModelQueryBuilder)
+    assert.instanceOf(BaseModel.query(), ModelQueryBuilder)
   }
 
   @Test()
@@ -96,7 +96,7 @@ export default class ModelTest {
     Config.set('database.default', 'mongo-memory')
     Database.spy()
 
-    assert.instanceOf(Model.query(), ModelQueryBuilder)
+    assert.instanceOf(BaseModel.query(), ModelQueryBuilder)
     assert.calledWith(Database.connection, 'mongo-memory')
   }
 

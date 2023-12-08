@@ -8,8 +8,8 @@
  */
 
 import { String } from '@athenna/common'
-import type { Model } from '#src/models/Model'
 import type { BelongsToOptions } from '#src/types'
+import type { BaseModel } from '#src/models/BaseModel'
 
 export class BelongsToRelation {
   /**
@@ -30,7 +30,7 @@ export class BelongsToRelation {
    * Load a belongs to relation.
    */
   public static async load(
-    model: Model,
+    model: BaseModel,
     relation: BelongsToOptions
   ): Promise<any> {
     this.options(relation)
@@ -49,7 +49,7 @@ export class BelongsToRelation {
    * Load all models that belongs to relation.
    */
   public static async loadAll(
-    models: Model[],
+    models: BaseModel[],
     relation: BelongsToOptions
   ): Promise<any[]> {
     this.options(relation)

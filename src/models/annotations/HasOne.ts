@@ -10,20 +10,20 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import type { Model } from '#src/models/Model'
 import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
+import type { BaseModel } from '#src/models/BaseModel'
 import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
 
 /**
  * Create has one relation for model class.
  */
-export function HasOne<T extends Model = any, R extends Model = any>(
+export function HasOne<T extends BaseModel = any, R extends BaseModel = any>(
   model: () => new () => R,
   options: Omit<HasOneOptions<T, R>, 'type' | 'model' | 'property'> = {}
 ) {
   return (target: T, key: string) => {
-    const Target = target.constructor as typeof Model
+    const Target = target.constructor as typeof BaseModel
 
     options = Options.create(options, {
       isIncluded: false,

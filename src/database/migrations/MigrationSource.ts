@@ -11,11 +11,11 @@ import { debug } from '#src/debug'
 import { Module, Path } from '@athenna/common'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import type { Migration } from '#src/database/migrations/Migration'
+import type { BaseMigration } from '#src/database/migrations/BaseMigration'
 
 type Source = {
   name: string
-  Migration: new (...args: any[]) => Migration
+  Migration: new (...args: any[]) => BaseMigration
 }
 
 export class MigrationSource {
@@ -28,7 +28,7 @@ export class MigrationSource {
   /**
    * Verify if migration is able to run by connection.
    */
-  private isAbleToRun(migration: typeof Migration): boolean {
+  private isAbleToRun(migration: typeof BaseMigration): boolean {
     return migration.connection() === this.connection
   }
 

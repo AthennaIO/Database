@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { HasOne } from '#src/models/annotations/HasOne'
 import { Column } from '#src/models/annotations/Column'
 import { Test, type Context, Mock, BeforeEach } from '@athenna/test'
@@ -22,7 +22,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateOneInstanceOfModel({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -34,7 +34,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateOneInstanceOfModelMappingToCorrectColumnName({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -46,7 +46,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldReturnUndefinedWhenTryingToGenerateOneModelWithUndefinedData({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -58,7 +58,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldNotSetPropertyInModelThatGotOptionIsHiddenAsTrueWhenUsingGeneratorOne({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 
@@ -73,7 +73,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateManyInstancesOfModel({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -85,7 +85,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateManyInstancesOfModelMappingToCorrectColumnName({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -97,7 +97,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldReturnEmptyArrayWhenTryingToGenerateManyModelWithUndefinedData({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -109,7 +109,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldReturnEmptyArrayWhenTryingToGenerateManyModelWithEmptyArrayData({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -121,7 +121,7 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldNotSetPropertyInModelThatGotOptionIsHiddenAsTrueWhenUsingGenerateMany({ assert }: Context) {
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 
@@ -136,11 +136,11 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateOneModelAndIncludeAHasOneRelation({ assert }: Context) {
-    class Profile extends Model {
+    class Profile extends BaseModel {
       @Column()
       public userId: string
     }
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 
@@ -162,11 +162,11 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldReturnTheModelIfRelationTypeDoesNotExist({ assert }: Context) {
-    class Profile extends Model {
+    class Profile extends BaseModel {
       @Column()
       public userId: string
     }
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 
@@ -188,11 +188,11 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldBeAbleToGenerateManyModelAndIncludeAHasOneRelation({ assert }: Context) {
-    class Profile extends Model {
+    class Profile extends BaseModel {
       @Column()
       public userId: string
     }
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 
@@ -212,11 +212,11 @@ export default class ModelGeneratorTest {
 
   @Test()
   public async shouldReturnTheModelsIfRelationTypeDoesNotExist({ assert }: Context) {
-    class Profile extends Model {
+    class Profile extends BaseModel {
       @Column()
       public userId: string
     }
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
 

@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Test, type Context } from '@athenna/test'
 import { Annotation } from '#src/helpers/Annotation'
 import { HasOne } from '#src/models/annotations/HasOne'
@@ -16,9 +16,9 @@ import { Column } from '#src/models/annotations/Column'
 export default class HasOneTest {
   @Test()
   public async shouldBeAbleToDefinePropertyWithHasOneAnnotation({ assert }: Context) {
-    class Profile extends Model {}
+    class Profile extends BaseModel {}
 
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ isMainPrimary: true })
       public id: string
 
@@ -40,9 +40,9 @@ export default class HasOneTest {
 
   @Test()
   public async shouldBeAbleToDefinePropertyWithHasOneAnnotationWithCustomValue({ assert }: Context) {
-    class Profile extends Model {}
+    class Profile extends BaseModel {}
 
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ isMainPrimary: true })
       public id: string
 
@@ -64,9 +64,9 @@ export default class HasOneTest {
 
   @Test()
   public async shouldNotBeAbleToChangeClassPropertyEvenBypassingTypeScript({ assert }: Context) {
-    class Profile extends Model {}
+    class Profile extends BaseModel {}
 
-    class User extends Model {
+    class User extends BaseModel {
       @Column({ isMainPrimary: true })
       public id: string
 

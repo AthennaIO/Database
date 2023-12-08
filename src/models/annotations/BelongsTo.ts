@@ -11,19 +11,19 @@ import 'reflect-metadata'
 
 import { debug } from '#src/debug'
 import { Options } from '@athenna/common'
-import type { Model } from '#src/models/Model'
 import { Annotation } from '#src/helpers/Annotation'
+import type { BaseModel } from '#src/models/BaseModel'
 import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
 
 /**
  * Create belongs to relation for model class.
  */
-export function BelongsTo<T extends Model = any, R extends Model = any>(
+export function BelongsTo<T extends BaseModel = any, R extends BaseModel = any>(
   model: () => new () => R,
   options: Omit<BelongsToOptions<T, R>, 'type' | 'model' | 'property'> = {}
 ) {
   return (target: T, key: any) => {
-    const Target = target.constructor as typeof Model
+    const Target = target.constructor as typeof BaseModel
 
     options = Options.create(options, {
       isIncluded: false,

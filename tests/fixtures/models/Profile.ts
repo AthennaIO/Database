@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { Model } from '#src/models/Model'
+import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 
-export class Profile extends Model {
+export class Profile extends BaseModel {
   public static connection() {
     return 'fake'
   }
