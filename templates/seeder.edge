@@ -1,10 +1,5 @@
-import { Seeder } from '@athenna/database'
+import { BaseSeeder, type DatabaseImpl } from '@athenna/database'
 
-export class {{ namePascal }} extends Seeder {
-    /**
-     * Run the database seeders.
-     *
-     * @return {Promise<void>}
-     */
-    async run() {}
+export class {{ namePascal }} extends BaseSeeder {
+  public async run(db: DatabaseImpl) {}
 }

@@ -1,35 +1,15 @@
-import { Migration } from '@athenna/database'
+import { BaseMigration, type DatabaseImpl } from '@athenna/database'
 
-export class {{ nameMigrationClass }} extends Migration {
-     /**
-      * Define the database connection to run the migration.
-      *
-      * @return {string}
-      */
-     static get connection() {
-        return 'default'
-     }
+export class {{ namePascal }} extends BaseMigration {
+  public tableName = '{{ nameTable }}'
 
-    /**
-     * Run the migration.
-     *
-     * @param {import('knex').Knex} knex
-     * @return {Promise<void>}
-     */
-    async up({ schema }) {
-        return schema.createTable('{{ nameMigrationTable }}', table => {
-          table.increments('id')
-          table.timestamps(true, true, true)
-        })
-    }
+  public async up(db: DatabaseImpl) {
+    return db.createTable(this.tableName, builder => {
+      builder.increments('id')
+    })
+  }
 
-    /**
-     * Reverse the migration.
-     *
-     * @param {import('knex').Knex} knex
-     * @return {Promise<void>}
-     */
-    async down({ schema }) {
-         return schema.dropTableIfExists('{{ nameMigrationTable }}')
-    }
+  public async down(db: DatabaseImpl) {
+    return db.dropTable(this.tableName)
+  }
 }
