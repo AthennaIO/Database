@@ -114,6 +114,16 @@ out
 .yarn/install-state.gz
 .pnp.*
 
+# Compiled code
+dist
+build
+*.js
+*.d.ts
+*.js.map
+!tests/fixtures/**/*.js
+!tests/fixtures/**/*.d.ts
+!tests/fixtures/**/*.js.map
+
 # IDE
 .idea
 .fleet
@@ -131,3 +141,4 @@ out
 .docker
 
 test.js
+mongo-memory.ts
