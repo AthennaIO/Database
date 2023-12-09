@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: athenna_postgres
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_ROOT_PASSWORD: 12345
