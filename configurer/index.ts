@@ -24,6 +24,41 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       return new File(`./database`).copy(Path.config(`database.${ext}`))
     })
 
+    task.addPromise('Update commands of .athennarc.json', () => {
+      return this.rc
+        .setTo(
+          'commands',
+          'make:model',
+          '@athenna/database/commands/MakeModelCommand'
+        )
+        .setTo(
+          'commands',
+          'make:seeder',
+          '@athenna/database/commands/MakeSeederCommand'
+        )
+        .setTo(
+          'commands',
+          'make:migration',
+          '@athenna/database/commands/MakeMigrationCommand'
+        )
+        .setTo(
+          'commands',
+          'db:seed',
+          '@athenna/database/commands/DbSeedCommand'
+        )
+        .setTo(
+          'commands',
+          'migration:run',
+          '@athenna/database/commands/MigrationRunCommand'
+        )
+        .setTo(
+          'commands',
+          'migration:revert',
+          '@athenna/database/commands/MigrationRevertCommand'
+        )
+        .save()
+    })
+
     task.addPromise('Update providers of .athennarc.json', () => {
       return this.rc
         .pushTo('providers', '@athenna/database/providers/DatabaseProvider')
@@ -65,32 +100,37 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         .then(() => new File(Path.pwd('.env.example'), '').append(envs))
     })
 
-    if (connection === 'sqlite') {
-      return task.run()
+    if (connection !== 'sqlite') {
+      task.addPromise('Add service to docker-compose.yml file', async () => {
+        const hasDockerCompose = await File.exists(
+          Path.pwd('docker-compose.yml')
+        )
+
+        if (hasDockerCompose) {
+          const docker = await new File(
+            Path.pwd('docker-compose.yml')
+          ).getContentAsYaml()
+
+          docker.services[connection] = await Module.get(
+            import(`./docker/${connection}/service.ts`)
+          )
+
+          return new File(Path.pwd('docker-compose.yml')).setContent(
+            Parser.objectToYamlString(docker)
+          )
+        }
+
+        return new File(`./docker/${connection}/file.yml`).copy(
+          Path.pwd('docker-compose.yml')
+        )
+      })
     }
 
-    task.addPromise('Add service to docker-compose.yml file', async () => {
-      const hasDockerCompose = await File.exists(Path.pwd('docker-compose.yml'))
-
-      if (hasDockerCompose) {
-        const docker = await new File(
-          Path.pwd('docker-compose.yml')
-        ).getContentAsYaml()
-
-        docker.services[connection] = await Module.get(
-          import(`./docker/${connection}/service.ts`)
-        )
-
-        return new File(Path.pwd('docker-compose.yml')).setContent(
-          Parser.objectToYamlString(docker)
-        )
-      }
-
-      return new File(`./docker/${connection}/file.yml`).copy(
-        Path.pwd('docker-compose.yml')
-      )
-    })
-
     await task.run()
+
+    console.log()
+    this.logger.success(
+      'Successfully configured ({dim,yellow}) @athenna/database library'
+    )
   }
 }
