@@ -175,5 +175,18 @@ export default class DatabaseConfigurer extends BaseConfigurer {
     this.logger.success(
       'Successfully configured ({dim,yellow} @athenna/database) library'
     )
+
+    const libraries = {
+      mysql: 'knex mysql2',
+      postgres: 'knex pg',
+      sqlite: 'knex better-sqlite3',
+      mongo: 'mongoose'
+    }
+
+    this.logger
+      .instruction()
+      .head('Run following commands to get started:')
+      .add(`npm install ${libraries[connection]}`)
+      .render()
   }
 }
