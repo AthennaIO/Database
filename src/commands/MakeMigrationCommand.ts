@@ -17,6 +17,8 @@ export class MakeMigrationCommand extends BaseCommand {
   })
   public name: string
 
+  public tableName: string
+
   public static signature(): string {
     return 'make:migration'
   }
@@ -28,9 +30,18 @@ export class MakeMigrationCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ MAKING MIGRATION ])\n')
 
+    const namePascal = String.toPascalCase(this.name)
+
+    this.tableName = String.pluralize(
+      namePascal
+        .replace('Migration', '')
+        .replace('Migrations', '')
+        .toLowerCase()
+    )
+
     const file = await this.generator
       .path(this.getFilePath())
-      .properties({ nameTable: String.pluralize(this.name) })
+      .properties({ nameTable: this.tableName })
       .template('migration')
       .setNameProperties(true)
       .make()
@@ -44,7 +55,16 @@ export class MakeMigrationCommand extends BaseCommand {
    * Get the file path where it will be generated.
    */
   private getFilePath(): string {
-    return this.getDestinationPath().concat(`${sep}${this.name}.${Path.ext()}`)
+    let [date, time] = new Date().toISOString().split('T')
+
+    date = date.replace(/-/g, '_')
+    time = time.split('.')[0].replace(/:/g, '')
+
+    const name = `${sep}${date}_${time}_create_${
+      this.tableName
+    }_table.${Path.ext()}`
+
+    return this.getDestinationPath().concat(name)
   }
 
   /**
