@@ -9,7 +9,8 @@
 
 import { sep } from 'node:path'
 import { Rc } from '@athenna/config'
-import { Exec, File, Folder, Path } from '@athenna/common'
+import { LoggerProvider } from '@athenna/logger'
+import { File, Folder, Path } from '@athenna/common'
 import DatabaseConfigurer from '../../../configurer/index.js'
 import { Test, type Context, Mock, AfterEach, BeforeEach } from '@athenna/test'
 
@@ -19,6 +20,7 @@ export default class DatabaseConfigurerTest {
 
   @BeforeEach()
   public async beforeEach() {
+    new LoggerProvider().register()
     await Rc.setFile(Path.pwd('package.json'))
     await new Folder(Path.fixtures('storage')).load()
     process.chdir(Path.fixtures('storage'))
@@ -26,6 +28,7 @@ export default class DatabaseConfigurerTest {
 
   @AfterEach()
   public async afterEach() {
+    ioc.reconstruct()
     Mock.restoreAll()
     process.chdir(this.cwd)
     await Folder.safeRemove(Path.fixtures('storage'))
@@ -36,7 +39,6 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForMySqlDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mysql')
 
     await configurer.configure()
@@ -48,7 +50,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install knex mysql2')
     assert.deepEqual(
       dockerComposeFile,
       'version: "3"\n\nservices:\n  mysql:\n    container_name: athenna_mysql\n    image: mysql\n    ports:\n      - "3306:3306"\n    environment:\n      MYSQL_DATABASE: athenna\n      MYSQL_ROOT_PASSWORD: root\n      MYSQL_ALLOW_EMPTY_PASSWORD: \'yes\'\n'
@@ -68,7 +69,6 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToUpdateDockerComposeFileWhenItAlreadyExistWhenRunningMySqlConfigurer({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mysql')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(
@@ -84,7 +84,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install knex mysql2')
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  mysql:\n    container_name: athenna_mysql\n    image: mysql\n    ports:\n      - '3306:3306'\n    environment:\n      MYSQL_DATABASE: athenna\n      MYSQL_ROOT_PASSWORD: root\n      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'\n"
@@ -104,7 +103,6 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForPostgresDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('postgres')
 
     await configurer.configure()
@@ -116,7 +114,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install knex pg')
     assert.deepEqual(
       dockerComposeFile,
       'version: "3"\n\nservices:\n  postgres:\n    container_name: athenna_postgres\n    image: postgres\n    ports:\n      - "5432:5432"\n    environment:\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: 12345\n      POSTGRES_ROOT_PASSWORD: 12345\n'
@@ -138,7 +135,6 @@ export default class DatabaseConfigurerTest {
   }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('postgres')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(
@@ -154,7 +150,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install knex pg')
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  postgres:\n    container_name: athenna_postgres\n    image: postgres\n    ports:\n      - '5432:5432'\n    environment:\n      POSTGRES_DB: athenna\n      POSTGRES_USER: root\n      POSTGRES_PASSWORD: root\n      POSTGRES_ROOT_PASSWORD: root\n"
@@ -174,7 +169,6 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForMongoDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mongo')
 
     await configurer.configure()
@@ -186,7 +180,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install mongoose')
     assert.deepEqual(
       dockerComposeFile,
       'version: "3"\n\nservices:\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - "27017:27017"\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n'
@@ -198,7 +191,6 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToUpdateDockerComposeFileWhenItAlreadyExistWhenRunningMongoConfigurer({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
-    Mock.when(Exec, 'command').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mongo')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(
@@ -214,7 +206,6 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
     assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
-    assert.calledWith(Exec.command, 'npm install mongoose')
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - '27017:27017'\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n"
