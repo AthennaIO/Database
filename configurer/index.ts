@@ -59,6 +59,26 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         .save()
     })
 
+    task.addPromise('Update templates of .athennarc.json', () => {
+      return this.rc
+        .setTo(
+          'templates',
+          'model',
+          'node_modules/@athenna/database/templates/model.edge'
+        )
+        .setTo(
+          'templates',
+          'seeder',
+          'node_modules/@athenna/database/templates/seeder.edge'
+        )
+        .setTo(
+          'templates',
+          'migration',
+          'node_modules/@athenna/database/templates/migration.edge'
+        )
+        .save()
+    })
+
     task.addPromise('Update providers of .athennarc.json', () => {
       return this.rc
         .pushTo('providers', '@athenna/database/providers/DatabaseProvider')

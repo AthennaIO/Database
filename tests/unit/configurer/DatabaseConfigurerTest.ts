@@ -15,6 +15,7 @@ import { Test, type Context, Mock, AfterEach, BeforeEach } from '@athenna/test'
 
 export default class DatabaseConfigurerTest {
   private cwd = process.cwd()
+  private pjson = new File(Path.pwd('package.json')).getContentAsStringSync()
 
   @BeforeEach()
   public async beforeEach() {
@@ -28,6 +29,7 @@ export default class DatabaseConfigurerTest {
     Mock.restoreAll()
     process.chdir(this.cwd)
     await Folder.safeRemove(Path.fixtures('storage'))
+    await new File(Path.pwd('package.json')).setContent(this.pjson)
   }
 
   @Test()
