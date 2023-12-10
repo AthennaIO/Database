@@ -10,7 +10,7 @@ export class {{ namePascal }} extends BaseModel {
 
   public static async definition(): Promise<Partial<{{ namePascal }}>> {
     return {
-      id: this.faker.datatype.number()
+      id: this.faker.number.int()
     }
   }
 }

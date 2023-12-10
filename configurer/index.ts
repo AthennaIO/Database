@@ -43,21 +43,18 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'make:migration',
           '@athenna/database/commands/MakeMigrationCommand'
         )
-        .setTo(
-          'commands',
-          'db:seed',
-          '@athenna/database/commands/DbSeedCommand'
-        )
-        .setTo(
-          'commands',
-          'migration:run',
-          '@athenna/database/commands/MigrationRunCommand'
-        )
-        .setTo(
-          'commands',
-          'migration:revert',
-          '@athenna/database/commands/MigrationRevertCommand'
-        )
+        .setTo('commands', 'db:seed', {
+          path: '@athenna/database/commands/DbSeedCommand',
+          loadApp: true
+        })
+        .setTo('commands', 'migration:run', {
+          path: '@athenna/database/commands/MigrationRunCommand',
+          loadApp: true
+        })
+        .setTo('commands', 'migration:revert', {
+          path: '@athenna/database/commands/MigrationRevertCommand',
+          loadApp: true
+        })
         .save()
     })
 
