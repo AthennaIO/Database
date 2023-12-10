@@ -378,7 +378,7 @@ export class BaseModel {
   public async save() {
     const Model = this.constructor as any
     const schema = Model.schema()
-    const primaryKey = schema.getMainPrimaryKeyName()
+    const primaryKey = schema.getMainPrimaryKeyProperty()
     const date = new Date()
     const createdAt = schema.getCreatedAtColumn()
     const updatedAt = schema.getUpdatedAtColumn()
@@ -438,7 +438,7 @@ export class BaseModel {
    */
   public async fresh() {
     const Model = this.constructor as any
-    const primaryKey = Model.schema().getMainPrimaryKeyName()
+    const primaryKey = Model.schema().getMainPrimaryKeyProperty()
 
     return Model.query().where(primaryKey, this[primaryKey]).find()
   }
@@ -452,7 +452,7 @@ export class BaseModel {
     const Model = this.constructor as any
     const schema = Model.schema()
     const relations = schema.getRelationProperties()
-    const primaryKey = schema.getMainPrimaryKeyName()
+    const primaryKey = schema.getMainPrimaryKeyProperty()
     const query = Model.query().where(primaryKey, this[primaryKey])
 
     Object.keys(this).forEach(key => {
@@ -483,7 +483,7 @@ export class BaseModel {
    */
   public async delete(force = false) {
     const Model = this.constructor as any
-    const primaryKey = Model.schema().getMainPrimaryKey()
+    const primaryKey = Model.schema().getMainPrimaryKeyProperty()
 
     await Model.query().where(primaryKey, this[primaryKey]).delete(force)
   }
@@ -493,7 +493,7 @@ export class BaseModel {
    */
   public async restore() {
     const Model = this.constructor as any
-    const primaryKey = Model.schema().getMainPrimaryKey()
+    const primaryKey = Model.schema().getMainPrimaryKeyProperty()
 
     const restored = await Model.query()
       .where(primaryKey, this[primaryKey])
