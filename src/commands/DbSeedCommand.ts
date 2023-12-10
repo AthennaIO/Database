@@ -8,8 +8,8 @@
  */
 
 import { Module, Path } from '@athenna/common'
-import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
+import { DatabaseImpl } from '#src/database/DatabaseImpl'
 
 export class DbSeedCommand extends BaseCommand {
   @Option({
@@ -37,7 +37,7 @@ export class DbSeedCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ SEEDING DATABASE ])\n')
 
-    const DB = Database.connection(this.connection).connect()
+    const DB = new DatabaseImpl().connection(this.connection).connect()
     const seeds = await Module.getAllFrom(Path.seeders())
     const task = this.logger.task()
 
