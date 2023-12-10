@@ -1,7 +1,7 @@
 import { BaseMigration, type DatabaseImpl } from '@athenna/database'
 
 export class {{ namePascal }} extends BaseMigration {
-  public tableName = '{{ nameTable }}'
+  public tableName = '{{ tableName }}'
 
   public async up(db: DatabaseImpl) {
     return db.createTable(this.tableName, builder => {
