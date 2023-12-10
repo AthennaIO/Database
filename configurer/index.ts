@@ -150,7 +150,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
 
     console.log()
     this.logger.success(
-      'Successfully configured ({dim,yellow}) @athenna/database library'
+      'Successfully configured ({dim,yellow} @athenna/database) library'
     )
   }
 }
