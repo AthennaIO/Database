@@ -30,7 +30,12 @@ export class MakeMigrationCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ MAKING MIGRATION ])\n')
 
+    const nameUp = this.name.toUpperCase()
+    const nameCamel = String.toCamelCase(this.name)
+    const namePlural = String.pluralize(this.name)
     const namePascal = String.toPascalCase(this.name)
+    const namePluralCamel = String.toCamelCase(String.pluralize(this.name))
+    const namePluralPascal = String.toPascalCase(String.pluralize(this.name))
 
     this.tableName = String.pluralize(
       namePascal
@@ -41,9 +46,16 @@ export class MakeMigrationCommand extends BaseCommand {
 
     const file = await this.generator
       .path(this.getFilePath())
-      .properties({ nameTable: this.tableName })
+      .properties({
+        nameUp,
+        nameCamel,
+        namePlural,
+        namePascal,
+        namePluralCamel,
+        namePluralPascal,
+        tableName: this.tableName
+      })
       .template('migration')
-      .setNameProperties(true)
       .make()
 
     this.logger.success(
