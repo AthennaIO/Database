@@ -21,7 +21,7 @@ Config.set('rc.commands.make:seeder.destination', './tests/fixtures/storage/seed
 Config.set('rc.commands.make:migration.destination', './tests/fixtures/storage/migrations')
 
 Path.mergeDirs({
-  app: 'tests/fixtures/storage/app',
+  models: 'tests/fixtures/storage/app/models',
   seeders: 'tests/fixtures/storage/database/seeders',
   migrations: 'tests/fixtures/storage/database/migrations'
 })

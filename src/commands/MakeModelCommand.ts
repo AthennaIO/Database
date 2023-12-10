@@ -50,7 +50,7 @@ export class MakeModelCommand extends BaseCommand {
   private getDestinationPath(): string {
     let destination = Config.get(
       'rc.commands.make:model.destination',
-      Path.app('models')
+      Path.models()
     )
 
     if (!isAbsolute(destination)) {
