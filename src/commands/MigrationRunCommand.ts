@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
+import { DatabaseImpl } from '#src/database/DatabaseImpl'
 
 export class MigrationRunCommand extends BaseCommand {
   @Option({
@@ -29,7 +29,7 @@ export class MigrationRunCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ RUNNING MIGRATIONS ])\n')
 
-    const DB = Database.connection(this.connection).connect()
+    const DB = new DatabaseImpl().connection(this.connection).connect()
     const dbName = await DB.getCurrentDatabase()
 
     await DB.runMigrations().finally(() => DB.close())
