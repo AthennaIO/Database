@@ -7,9 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import yaml from 'js-yaml'
-import { File, Module, Path } from '@athenna/common'
 import { BaseConfigurer } from '@athenna/artisan'
+import { File, Module, Parser, Path } from '@athenna/common'
 
 export default class DatabaseConfigurer extends BaseConfigurer {
   public async configure() {
@@ -74,16 +73,16 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       const hasDockerCompose = await File.exists(Path.pwd('docker-compose.yml'))
 
       if (hasDockerCompose) {
-        const docker: any = yaml.load(
-          await new File(Path.pwd('docker-compose.yml')).getContentAsString()
-        )
+        const docker = await new File(
+          Path.pwd('docker-compose.yml')
+        ).getContentAsYaml()
 
         docker.services[connection] = await Module.get(
           import(`./docker/${connection}/service.ts`)
         )
 
         return new File(Path.pwd('docker-compose.yml')).setContent(
-          yaml.dump(docker)
+          Parser.objectToYamlString(docker)
         )
       }
 
