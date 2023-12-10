@@ -9,6 +9,7 @@
 
 import { sep } from 'node:path'
 import { Rc } from '@athenna/config'
+import { LoggerProvider } from '@athenna/logger'
 import { File, Folder, Path } from '@athenna/common'
 import DatabaseConfigurer from '../../../configurer/index.js'
 import { Test, type Context, Mock, AfterEach, BeforeEach } from '@athenna/test'
@@ -19,6 +20,7 @@ export default class DatabaseConfigurerTest {
 
   @BeforeEach()
   public async beforeEach() {
+    new LoggerProvider().register()
     await Rc.setFile(Path.pwd('package.json'))
     await new Folder(Path.fixtures('storage')).load()
     process.chdir(Path.fixtures('storage'))
@@ -26,6 +28,7 @@ export default class DatabaseConfigurerTest {
 
   @AfterEach()
   public async afterEach() {
+    ioc.reconstruct()
     Mock.restoreAll()
     process.chdir(this.cwd)
     await Folder.safeRemove(Path.fixtures('storage'))
