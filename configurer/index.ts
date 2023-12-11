@@ -84,27 +84,6 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         .save()
     })
 
-    if (connection === 'mongo') {
-      task.addPromise('Install mongoose library', () => {
-        return Exec.command('npm install mongoose', { cwd: Path.pwd() })
-      })
-    } else {
-      const libraries = {
-        mysql: 'mysql2',
-        sqlite: 'better-sqlite3',
-        postgres: 'pg'
-      }
-
-      task.addPromise(
-        `Install knex and ${libraries[connection]} libraries`,
-        () => {
-          return Exec.command(`npm install knex ${libraries[connection]}`, {
-            cwd: Path.pwd()
-          })
-        }
-      )
-    }
-
     task.addPromise('Update .env, .env.test and .env.example', () => {
       let envs = ''
 
@@ -184,6 +163,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       .instruction()
       .head('Run following commands to get started:')
       .add(`npm install ${libraries[connection]}`)
+      .add(`docker-compose up -d`)
       .render()
   }
 }
