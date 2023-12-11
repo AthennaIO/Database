@@ -8,7 +8,7 @@
  */
 
 import { BaseConfigurer } from '@athenna/artisan'
-import { Exec, File, Module, Parser, Path } from '@athenna/common'
+import { File, Module, Parser, Path } from '@athenna/common'
 
 export default class DatabaseConfigurer extends BaseConfigurer {
   public async configure() {
