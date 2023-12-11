@@ -12,8 +12,6 @@ import { File, Module, Parser, Path } from '@athenna/common'
 
 export default class DatabaseConfigurer extends BaseConfigurer {
   public async configure() {
-    console.log()
-
     const connection = await this.prompt.list(
       'What will be your default connection?',
       ['mysql', 'postgres', 'sqlite', 'mongo']
