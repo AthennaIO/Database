@@ -61,6 +61,7 @@ export class BaseModel {
    * Create a new ModelSchema instance from your model.
    */
   public static schema<T extends typeof BaseModel>(this: T) {
+    // TODO Create sync implementation
     return new ModelSchema<InstanceType<T>>(this)
   }
 

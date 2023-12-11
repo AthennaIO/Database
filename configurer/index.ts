@@ -8,12 +8,10 @@
  */
 
 import { BaseConfigurer } from '@athenna/artisan'
-import { Exec, File, Module, Parser, Path } from '@athenna/common'
+import { File, Module, Parser, Path } from '@athenna/common'
 
 export default class DatabaseConfigurer extends BaseConfigurer {
   public async configure() {
-    console.log()
-
     const connection = await this.prompt.list(
       'What will be your default connection?',
       ['mysql', 'postgres', 'sqlite', 'mongo']
@@ -83,27 +81,6 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         .pushTo('providers', '@athenna/database/providers/DatabaseProvider')
         .save()
     })
-
-    if (connection === 'mongo') {
-      task.addPromise('Install mongoose library', () => {
-        return Exec.command('npm install mongoose', { cwd: Path.pwd() })
-      })
-    } else {
-      const libraries = {
-        mysql: 'mysql2',
-        sqlite: 'better-sqlite3',
-        postgres: 'pg'
-      }
-
-      task.addPromise(
-        `Install knex and ${libraries[connection]} libraries`,
-        () => {
-          return Exec.command(`npm install knex ${libraries[connection]}`, {
-            cwd: Path.pwd()
-          })
-        }
-      )
-    }
 
     task.addPromise('Update .env, .env.test and .env.example', () => {
       let envs = ''
@@ -184,6 +161,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       .instruction()
       .head('Run following commands to get started:')
       .add(`npm install ${libraries[connection]}`)
+      .add(`docker-compose up -d`)
       .render()
   }
 }
