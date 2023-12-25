@@ -59,7 +59,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetModelColumnByProperty({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -87,7 +87,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnUndefinedWhenSearchingByPropertyAndDoesNotExist({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -99,7 +99,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetModelColumnByDatabaseColumnName({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -127,7 +127,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnUndefinedWhenSearchingByDatabaseColumnNameAndDoesNotExist({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column()
       public id: string
     }
@@ -139,7 +139,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelCreatedAtColumnOptions({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ isCreateDate: true })
       public createdAt: Date
     }
@@ -167,7 +167,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelUpdatedAtColumnOptions({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ isUpdateDate: true })
       public updatedAt: Date
     }
@@ -195,7 +195,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelDeletedAtColumnOptions({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ isDeleteDate: true })
       public deletedAt: Date
     }
@@ -223,7 +223,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelMainPrimaryKeyColumnOptions({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ isMainPrimary: true })
       public id: string
     }
@@ -251,7 +251,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelMainPrimaryKeyNameDirectly({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', isMainPrimary: true })
       public id: string
     }
@@ -263,7 +263,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheModelMainPrimaryKeyPropertyDirectly({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', isMainPrimary: true })
       public id: string
     }
@@ -275,7 +275,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetAllModelColumnNamesByArrayOfModelProperties({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -287,7 +287,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnThePropertiesWhenColumnNamesCannotBeFound({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -299,7 +299,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetAllModelColumnPropertiesByArrayOfModelColumns({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -311,7 +311,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnTheColumnNamesWhenPropertiesCannotBeFound({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -323,7 +323,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetPropertyNameByColumnName({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -335,7 +335,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnTheColumnNameIfThePropertyCannotBeFound({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -347,7 +347,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToGetTheColumnNameByProperty({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -359,7 +359,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldReturnThePropertyIfTheColumnNameCannotBeFound({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -371,7 +371,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNames({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id' })
       public id: string
     }
@@ -385,7 +385,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndGetOnlyTheOnesThatShouldBePersisted({
     assert
   }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', persist: true })
       public id: string
 
@@ -400,7 +400,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndSetDefaultAttributes({ assert }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', persist: true })
       public id: string
     }
@@ -414,7 +414,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndStillSetDefaultAttributesInColumnsWithPersistDisabled({
     assert
   }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', persist: true })
       public id: string
 
@@ -434,7 +434,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesAndDefaultAttributesShouldChangeValuesThatCouldntBePersisted({
     assert
   }: Context) {
-    class User {
+    class User extends BaseModel {
       @Column({ name: '_id', persist: true })
       public id: string
 
@@ -452,7 +452,7 @@ export default class ModelSchemaTest {
 
   @Test()
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesEvenIfPropertiesAreNotSet({ assert }: Context) {
-    class User {}
+    class User extends BaseModel {}
 
     const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1, name: 'lenon' })
 
@@ -463,7 +463,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToParseAnObjectUsingPropertiesToColumnNamesWithDefaultAttributesEvenIfPropertiesAreNotSet({
     assert
   }: Context) {
-    class User {}
+    class User extends BaseModel {}
 
     const parsed = new ModelSchema(User).propertiesToColumnNames({ id: 1 }, { attributes: { name: 'lenon' } })
 
