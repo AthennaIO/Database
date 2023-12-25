@@ -21,6 +21,12 @@ export function Column(
   options: Omit<ColumnOptions, 'property'> = {}
 ): PropertyDecorator {
   return (target: any, key: any) => {
+    let hasSetName = false
+
+    if (options.name) {
+      hasSetName = true
+    }
+
     options = Options.create(options, {
       name: AthennaString.toCamelCase(key),
       type: Reflect.getMetadata('design:type', target, key),
@@ -44,6 +50,13 @@ export function Column(
 
     if (options.isMainPrimary) {
       options.isPrimary = true
+    }
+
+    const connection = Target.connection()
+    const driver = Config.get(`database.connections.${connection}.driver`)
+
+    if (!hasSetName && options.name === 'id' && driver === 'mongo') {
+      options.name = '_id'
     }
 
     const Target = target.constructor
