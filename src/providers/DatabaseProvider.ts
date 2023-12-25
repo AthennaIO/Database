@@ -18,17 +18,15 @@ export class DatabaseProvider extends ServiceProvider {
 
     const paths = Config.get('rc.models', [])
     const promises = paths.map(path => {
-      return Module.getFromWithAlias(path, 'App/Models').then(
-        ({ alias, module }) => {
-          this.container.transient(alias, module)
+      return Module.resolve(path, Config.get('rc.parentURL')).then(Model => {
+        this.container.transient(`App/Models/${Model.name}`, Model)
 
-          if (!module.sync()) {
-            return
-          }
-
-          return module.schema().sync()
+        if (!Model.sync()) {
+          return
         }
-      )
+
+        return Model.schema().sync()
+      })
     })
 
     await Promise.all(promises)

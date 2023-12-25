@@ -9,6 +9,7 @@
 
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
+import { User } from '#tests/fixtures/sync/User'
 import { ConnectionFactory, Database, DatabaseProvider } from '#src'
 import { Test, type Context, AfterEach, BeforeEach, Mock } from '@athenna/test'
 
@@ -60,5 +61,29 @@ export default class DatabaseProviderTest {
     await provider.shutdown()
 
     assert.notCalled(ConnectionFactory.closeAllConnections)
+  }
+
+  @Test()
+  public async shouldRegisterModelsInAthennaRcInTheContainer({ assert }: Context) {
+    Mock.when(User, 'sync').return(false)
+    Config.set('rc.models', ['#tests/fixtures/sync/User'])
+
+    await new DatabaseProvider().register()
+
+    assert.isTrue(ioc.has('App/Models/User'))
+  }
+
+  @Test()
+  public async shouldRegisterModelsInAthennaRcInTheContainerAndSyncTheSchema({ assert }: Context) {
+    const syncFake = Mock.fake()
+    Mock.when(User, 'sync').return(true)
+    Mock.when(User, 'schema').return({ sync: syncFake })
+
+    Config.set('rc.models', ['#tests/fixtures/sync/User'])
+
+    await new DatabaseProvider().register()
+
+    assert.isTrue(ioc.has('App/Models/User'))
+    assert.calledOnce(syncFake)
   }
 }
