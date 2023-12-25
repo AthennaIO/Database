@@ -608,6 +608,7 @@ export default class ModelSchemaTest {
     await User.schema().sync()
   }
 
+  @Test()
   @Cleanup(async () => {
     await Database.connection('sqlite-memory').close()
   })

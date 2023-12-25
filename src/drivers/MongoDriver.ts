@@ -168,7 +168,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
 
     this.client
       .model(schema.getModelName(), new mongoose.Schema(columns))
-      .ensureIndexes()
+      .syncIndexes()
   }
 
   /**
