@@ -30,7 +30,9 @@ export class ObjectId {
    * Validate if is a valid object id object.
    */
   public static isValidObject(objectId: any): boolean {
-    return !Is.String(objectId) && isValidObjectId(objectId)
+    return (
+      !Is.Number(objectId) && !Is.String(objectId) && isValidObjectId(objectId)
+    )
   }
 
   public constructor(value: any) {

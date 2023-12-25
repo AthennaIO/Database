@@ -81,7 +81,7 @@ export class ModelGenerator<M extends BaseModel = any> {
         return
       }
 
-      if (ObjectId.isValidObject(object[key])) {
+      if (column.type === String && ObjectId.isValidObject(object[key])) {
         object[key] = object[key].toString()
       }
 
