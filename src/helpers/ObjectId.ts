@@ -22,8 +22,15 @@ export class ObjectId {
   /**
    * Validate if is a valid object id string.
    */
-  public static isValidString(objectId: string): boolean {
+  public static isValidString(objectId: any): boolean {
     return Is.String(objectId) && this.isValid(objectId)
+  }
+
+  /**
+   * Validate if is a valid object id object.
+   */
+  public static isValidObject(objectId: any): boolean {
+    return !Is.String(objectId) && isValidObjectId(objectId)
   }
 
   public constructor(value: any) {
