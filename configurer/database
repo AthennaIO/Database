@@ -62,9 +62,7 @@ export default {
       driver: 'mongo',
       url: Env('DB_URL', 'mongodb://root:root@localhost:27017/athenna'),
       w: 'majority',
-      retryWrites: true,
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+      retryWrites: true
     }
   }
 }
