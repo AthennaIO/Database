@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Path, File } from '@athenna/common'
+import { Path } from '@athenna/common'
 import { sep, resolve, isAbsolute } from 'node:path'
 import { BaseCommand, Argument } from '@athenna/artisan'
 

@@ -52,14 +52,14 @@ export function Column(
       options.isPrimary = true
     }
 
+    const Target = target.constructor
+
     const connection = Target.connection()
     const driver = Config.get(`database.connections.${connection}.driver`)
 
     if (!hasSetName && options.name === 'id' && driver === 'mongo') {
       options.name = '_id'
     }
-
-    const Target = target.constructor
 
     debug('registering column metadata for model %s: %o', Target.name, options)
 
