@@ -204,7 +204,7 @@ export class ModelQueryBuilder<
   /**
    * Create a value in database.
    */
-  public async create(data: Partial<M>) {
+  public async create(data: Partial<M> = {}) {
     const created = await this.createMany([data])
 
     return created[0]

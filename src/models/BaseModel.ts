@@ -186,7 +186,7 @@ export class BaseModel {
    */
   public static async create<T extends typeof BaseModel>(
     this: T,
-    data: Partial<InstanceType<T>>
+    data: Partial<InstanceType<T>> = {}
   ): Promise<InstanceType<T>> {
     return this.query().create(data)
   }

@@ -395,6 +395,17 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateDataWithEmptyObject({ assert }: Context) {
+    Mock.when(FakeDriver, 'createMany').resolve([{ id: '3' }])
+
+    const queryBuilder = User.query()
+    const result = await queryBuilder.create()
+
+    assert.calledOnce(FakeDriver.createMany)
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
   public async shouldBeAbleToCreateDataAndSetDefaultTimestamps({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     Mock.when(FakeDriver, 'createMany').resolve([{ id: '3', ...dataToCreate }])
