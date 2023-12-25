@@ -35,6 +35,23 @@ export class BaseModel {
   }
 
   /**
+   * Set if model should automatically be sync with
+   * database when running DatabaseProvider.
+   *
+   * @default true
+   */
+  public static sync(): boolean {
+    const connection = this.connection()
+    const driver = Config.get(`database.connections.${connection}`)
+
+    if (driver === 'mongo') {
+      return true
+    }
+
+    return false
+  }
+
+  /**
    * Set the table name of this model instance.
    */
   public static table(): string {

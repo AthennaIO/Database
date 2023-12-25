@@ -18,7 +18,12 @@ export default class BelongsToRelationTest {
   @BeforeEach()
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
+
     new DatabaseProvider().register()
+
+    ioc.transient('App/Models/User', User)
+    ioc.transient('App/Models/Product', Product)
+    ioc.transient('App/Models/Profile', Profile)
 
     const pg = Database.connection('postgres-docker').connect()
 

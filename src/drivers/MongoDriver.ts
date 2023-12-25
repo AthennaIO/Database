@@ -17,6 +17,7 @@ import {
 
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
+import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { Connection, Collection, ClientSession } from 'mongoose'
@@ -115,6 +116,59 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     return this.client.collection(this.tableName || 'lock')
+  }
+
+  /**
+   * Sync a model schema with database.
+   */
+  public async sync(schema: ModelSchema): Promise<void> {
+    const columns: any = {}
+    const mongoose = await import('mongoose')
+
+    schema.columns.forEach(column => {
+      columns[column.name] = {}
+
+      if (column.type !== undefined) {
+        columns[column.name].type = column.type
+      }
+
+      if (column.isNullable !== undefined) {
+        columns[column.name].required = column.isNullable
+      }
+
+      if (column.length !== undefined) {
+        columns[column.name].maxLength = column.length
+      }
+
+      if (column.defaultTo !== undefined) {
+        columns[column.name].default = column.defaultTo
+      }
+
+      if (column.isIndex !== undefined) {
+        columns[column.name].index = column.isIndex
+      }
+
+      if (column.isSparse !== undefined) {
+        columns[column.name].sparse = column.isSparse
+      }
+
+      if (column.isUnique !== undefined) {
+        columns[column.name].unique = column.isUnique
+      }
+
+      if (columns[column.name].unique || columns[column.name].sparse) {
+        columns[column.name].index = true
+      }
+    })
+
+    /**
+     * Relations will not be registered because
+     * Athenna will handle them instead of mongoose.
+     */
+
+    this.client
+      .model(schema.getModelName(), new mongoose.Schema(columns))
+      .syncIndexes()
   }
 
   /**

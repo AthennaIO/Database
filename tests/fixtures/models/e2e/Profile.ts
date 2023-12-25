@@ -8,8 +8,8 @@
  */
 
 import { BaseModel } from '#src/models/BaseModel'
-import { User } from '#tests/fixtures/models/e2e/User'
 import { Column } from '#src/models/annotations/Column'
+import { type User } from '#tests/fixtures/models/e2e/User'
 import { BelongsTo } from '#src/models/annotations/BelongsTo'
 
 export class Profile extends BaseModel {
@@ -23,7 +23,7 @@ export class Profile extends BaseModel {
   @Column()
   public userId: number
 
-  @BelongsTo(() => User)
+  @BelongsTo('User')
   public user: User
 
   @Column({ isCreateDate: true })

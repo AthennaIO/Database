@@ -7,20 +7,34 @@
  * file that was distributed with this source code.
  */
 
+import { parseArgs } from 'node:util'
+import { Runner } from '@athenna/test'
 import { MongoMemory } from '#tests/helpers/MongoMemory'
 import { command } from '@athenna/artisan/testing/plugins'
-import { Runner, assert, specReporter } from '@athenna/test'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 
 DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
-await MongoMemory.start()
+const { values } = parseArgs({
+  options: {
+    'no-mongo': {
+      type: 'boolean',
+      multiple: false,
+      default: false
+    }
+  },
+  strict: false,
+  args: process.argv.slice(2)
+})
+
+if (!values['no-mongo']) {
+  await MongoMemory.start()
+}
 
 await Runner.setTsEnv()
-  .addPlugin(assert())
+  .addAssertPlugin()
   .addPlugin(command())
-  .addReporter(specReporter())
   .addPath('tests/unit/**/*.ts')
   .setForceExit()
   .setCliArgs(process.argv.slice(2))

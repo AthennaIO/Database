@@ -9,6 +9,7 @@
  */
 
 import type { Knex } from 'knex'
+import { debug } from '#src/debug'
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -98,8 +99,18 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
+   * Sync a model schema with database.
+   */
+  public async sync(): Promise<void> {
+    debug(
+      `database sync with ${MySqlDriver.name} is not available yet, use migration instead.`
+    )
+  }
+
+  /**
    * Create a new transaction.
    */
+
   public async startTransaction(): Promise<
     Transaction<Knex.Transaction, Knex.QueryBuilder>
   > {

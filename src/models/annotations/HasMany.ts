@@ -10,8 +10,8 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
+import { Is, Options, String } from '@athenna/common'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { HasManyOptions } from '#src/types/relations/HasManyOptions'
 
@@ -19,7 +19,7 @@ import type { HasManyOptions } from '#src/types/relations/HasManyOptions'
  * Create has many relation for model class.
  */
 export function HasMany<T extends BaseModel = any, R extends BaseModel = any>(
-  model: () => new () => R,
+  model: (() => new () => R) | string,
   options: Omit<HasManyOptions, 'type' | 'model' | 'property'> = {}
 ) {
   return (target: T, key: any) => {
@@ -36,12 +36,14 @@ export function HasMany<T extends BaseModel = any, R extends BaseModel = any>(
     options.type = 'hasMany'
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.model = model
+    options.model = Is.String(model)
+      ? () => ioc.safeUse(`App/Models/${model}`).constructor
+      : model
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.property = key
 
-    debug('Registering hasMany metadata for model %s: %o', Target.name, options)
+    debug('registering hasMany metadata for model %s: %o', Target.name, options)
 
     Annotation.defineHasManyMeta(Target, options)
   }

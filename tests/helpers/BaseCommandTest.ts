@@ -7,12 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { Folder } from '@athenna/common'
+import { File, Folder } from '@athenna/common'
 import { ArtisanProvider } from '@athenna/artisan'
 import { BeforeEach, AfterEach, Mock } from '@athenna/test'
 import { TestCommand } from '@athenna/artisan/testing/plugins'
 
 export class BaseCommandTest {
+  private pjson = new File(Path.pwd('package.json')).getContentSync()
+
   @BeforeEach()
   public async beforeEach() {
     new ArtisanProvider().register()
@@ -22,9 +24,11 @@ export class BaseCommandTest {
 
   @AfterEach()
   public async afterEach() {
+    Config.clear()
     Mock.restoreAll()
     ioc.reconstruct()
 
     await Folder.safeRemove(Path.fixtures('storage'))
+    await new File(Path.pwd('package.json')).setContent(this.pjson)
   }
 }

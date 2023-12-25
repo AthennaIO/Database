@@ -7,14 +7,56 @@
  * file that was distributed with this source code.
  */
 
+import { Database } from '#src/facades/Database'
 import { BaseModel } from '#src/models/BaseModel'
-import { Test, type Context } from '@athenna/test'
-import { HasOne } from '#src/models/annotations/HasOne'
 import { Column } from '#src/models/annotations/Column'
+import { HasOne } from '#src/models/annotations/HasOne'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { Test, type Context, AfterEach, BeforeEach, Cleanup } from '@athenna/test'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
 export default class ModelSchemaTest {
+  @BeforeEach()
+  public async beforeEach() {
+    await Config.loadAll(Path.fixtures('config'))
+
+    new DatabaseProvider().register()
+  }
+
+  @AfterEach()
+  public afterEach() {
+    Config.clear()
+    ioc.reconstruct()
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelNameFromSchema({ assert }: Context) {
+    class User extends BaseModel {
+      @Column()
+      public id: string
+    }
+
+    const name = new ModelSchema(User).getModelName()
+
+    assert.deepEqual(name, 'User')
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelConnectionFromSchema({ assert }: Context) {
+    Config.set('database.default', 'fake')
+    Config.set('database.connections.fake.driver', 'fake')
+
+    class User extends BaseModel {
+      @Column()
+      public id: string
+    }
+
+    const connection = new ModelSchema(User).getModelConnection()
+
+    assert.deepEqual(connection, 'fake')
+  }
+
   @Test()
   public async shouldBeAbleToGetModelColumnByProperty({ assert }: Context) {
     class User {
@@ -31,12 +73,15 @@ export default class ModelSchemaTest {
       isHidden: false,
       isMainPrimary: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: false,
       isUnique: false,
       isUpdateDate: false,
       name: 'id',
       persist: true,
-      property: 'id'
+      property: 'id',
+      type: String
     })
   }
 
@@ -68,12 +113,15 @@ export default class ModelSchemaTest {
       isHidden: false,
       isMainPrimary: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: false,
       isUnique: false,
       isUpdateDate: false,
       name: '_id',
       persist: true,
-      property: 'id'
+      property: 'id',
+      type: String
     })
   }
 
@@ -93,7 +141,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToGetTheModelCreatedAtColumnOptions({ assert }: Context) {
     class User {
       @Column({ isCreateDate: true })
-      public createdAt: string
+      public createdAt: Date
     }
 
     const column = new ModelSchema(User).getCreatedAtColumn()
@@ -105,12 +153,15 @@ export default class ModelSchemaTest {
       isHidden: false,
       isMainPrimary: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: false,
       isUnique: false,
       isUpdateDate: false,
       name: 'createdAt',
       persist: true,
-      property: 'createdAt'
+      property: 'createdAt',
+      type: Date
     })
   }
 
@@ -118,7 +169,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToGetTheModelUpdatedAtColumnOptions({ assert }: Context) {
     class User {
       @Column({ isUpdateDate: true })
-      public updatedAt: string
+      public updatedAt: Date
     }
 
     const column = new ModelSchema(User).getUpdatedAtColumn()
@@ -130,12 +181,15 @@ export default class ModelSchemaTest {
       isHidden: false,
       isMainPrimary: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: false,
       isUnique: false,
       isUpdateDate: true,
       name: 'updatedAt',
       persist: true,
-      property: 'updatedAt'
+      property: 'updatedAt',
+      type: Date
     })
   }
 
@@ -143,7 +197,7 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToGetTheModelDeletedAtColumnOptions({ assert }: Context) {
     class User {
       @Column({ isDeleteDate: true })
-      public deletedAt: string
+      public deletedAt: Date
     }
 
     const column = new ModelSchema(User).getDeletedAtColumn()
@@ -155,12 +209,15 @@ export default class ModelSchemaTest {
       isHidden: false,
       isMainPrimary: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: false,
       isUnique: false,
       isUpdateDate: false,
       name: 'deletedAt',
       persist: true,
-      property: 'deletedAt'
+      property: 'deletedAt',
+      type: Date
     })
   }
 
@@ -179,13 +236,16 @@ export default class ModelSchemaTest {
       isDeleteDate: false,
       isHidden: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       isPrimary: true,
       isUnique: false,
       isUpdateDate: false,
       isMainPrimary: true,
       name: 'id',
       persist: true,
-      property: 'id'
+      property: 'id',
+      type: String
     })
   }
 
@@ -414,53 +474,39 @@ export default class ModelSchemaTest {
   public async shouldBeAbleToGetAHasOneRelationOptionByClassPropertyName({ assert }: Context) {
     class Profile extends BaseModel {}
     class User extends BaseModel {
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
 
     const relation = new ModelSchema(User).getRelationByProperty('profile')
 
-    assert.deepEqual(relation, {
-      foreignKey: 'userId',
-      model: Profile,
-      primaryKey: 'id',
-      property: 'profile',
-      type: 'hasOne',
-      isIncluded: false
-    })
+    assert.isFalse(relation.isIncluded)
+    assert.isUndefined(relation.closure)
+    assert.deepEqual(relation.type, 'hasOne')
+    assert.deepEqual(relation.model(), Profile)
+    assert.deepEqual(relation.primaryKey, 'id')
+    assert.deepEqual(relation.property, 'profile')
+    assert.deepEqual(relation.foreignKey, 'userId')
   }
 
   @Test()
   public async shouldBeAbleToIncludeAHasOneRelationByClassPropertyName({ assert }: Context) {
     class Profile extends BaseModel {}
     class User extends BaseModel {
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
 
     const schema = new ModelSchema(User)
     const relation = schema.includeRelation('profile')
 
-    assert.deepEqual(schema.relations, [
-      {
-        closure: undefined,
-        foreignKey: 'userId',
-        model: Profile,
-        primaryKey: 'id',
-        property: 'profile',
-        type: 'hasOne',
-        isIncluded: true
-      }
-    ])
-    assert.deepEqual(relation, {
-      closure: undefined,
-      foreignKey: 'userId',
-      model: Profile,
-      primaryKey: 'id',
-      property: 'profile',
-      type: 'hasOne',
-      isIncluded: true
-    })
+    assert.isTrue(relation.isIncluded)
+    assert.isUndefined(relation.closure)
+    assert.deepEqual(relation.type, 'hasOne')
+    assert.deepEqual(relation.model(), Profile)
+    assert.deepEqual(relation.primaryKey, 'id')
+    assert.deepEqual(relation.property, 'profile')
+    assert.deepEqual(relation.foreignKey, 'userId')
   }
 
   @Test()
@@ -469,22 +515,119 @@ export default class ModelSchemaTest {
   }: Context) {
     class Profile extends BaseModel {}
     class User extends BaseModel {
-      @HasOne(Profile)
+      @HasOne(() => Profile)
       public profile: Profile
     }
 
     const schema = new ModelSchema(User)
+    const meta = schema.relations[0]
 
     assert.throws(() => schema.includeRelation('not-found'), NotImplementedRelationException)
-    assert.deepEqual(schema.relations, [
-      {
-        foreignKey: 'userId',
-        model: Profile,
-        primaryKey: 'id',
-        property: 'profile',
-        type: 'hasOne',
-        isIncluded: false
+    assert.isFalse(meta.isIncluded)
+    assert.deepEqual(meta.type, 'hasOne')
+    assert.deepEqual(meta.model(), Profile)
+    assert.deepEqual(meta.primaryKey, 'id')
+    assert.deepEqual(meta.property, 'profile')
+    assert.deepEqual(meta.foreignKey, 'userId')
+  }
+
+  @Test()
+  @Cleanup(async () => {
+    await Database.connection('mongo-memory').dropTable('users')
+    await Database.connection('mongo-memory').close()
+  })
+  public async shouldBeAbleToSyncModelWithMongoDatabase({ assert }: Context) {
+    class User extends BaseModel {
+      public static connection() {
+        return 'mongo-memory'
       }
-    ])
+
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isUnique: true })
+      public email: string
+    }
+
+    await User.schema().sync()
+
+    const user = await User.create({ email: 'jlenon7@gmail.com' })
+
+    assert.isDefined(user.id)
+    assert.isDefined(user.email)
+
+    /**
+     * Validate that unique index is working fine.
+     */
+    await assert.rejects(async () => await User.create({ email: 'jlenon7@gmail.com' }))
+  }
+
+  @Test()
+  @Cleanup(async () => {
+    await Database.connection('mysql-docker').close()
+  })
+  public async shouldBeAbleToSyncModelWithMySqlDatabase() {
+    class User extends BaseModel {
+      public static connection() {
+        return 'mysql-docker'
+      }
+
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isUnique: true })
+      public email: string
+    }
+
+    /**
+     * Not implemented yet.
+     */
+    await User.schema().sync()
+  }
+
+  @Test()
+  @Cleanup(async () => {
+    await Database.connection('postgres-docker').close()
+  })
+  public async shouldBeAbleToSyncModelWithPostgresDatabase() {
+    class User extends BaseModel {
+      public static connection() {
+        return 'postgres-docker'
+      }
+
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isUnique: true })
+      public email: string
+    }
+
+    /**
+     * Not implemented yet.
+     */
+    await User.schema().sync()
+  }
+
+  @Test()
+  @Cleanup(async () => {
+    await Database.connection('sqlite-memory').close()
+  })
+  public async shouldBeAbleToSyncModelWithSqliteDatabase() {
+    class User extends BaseModel {
+      public static connection() {
+        return 'sqlite-memory'
+      }
+
+      @Column({ name: '_id' })
+      public id: string
+
+      @Column({ isUnique: true })
+      public email: string
+    }
+
+    /**
+     * Not implemented yet.
+     */
+    await User.schema().sync()
   }
 }

@@ -10,8 +10,8 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import { Options, String } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
+import { Is, Options, String } from '@athenna/common'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOptions'
 
@@ -23,8 +23,8 @@ export function BelongsToMany<
   R extends BaseModel = any,
   P extends BaseModel = any
 >(
-  model: () => new () => R,
-  pivotModel: () => new () => P,
+  model: (() => new () => R) | string,
+  pivotModel: (() => new () => P) | string,
   options: Omit<
     BelongsToManyOptions<T, R, P>,
     'type' | 'model' | 'property'
@@ -50,16 +50,20 @@ export function BelongsToMany<
     options.type = 'belongsToMany'
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.model = model
+    options.model = Is.String(model)
+      ? () => ioc.safeUse(`App/Models/${model}`).constructor
+      : model
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.pivotModel = pivotModel
+    options.pivotModel = Is.String(pivotModel)
+      ? () => ioc.safeUse(`App/Models/${pivotModel}`).constructor
+      : pivotModel
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.property = key
 
     debug(
-      'Registering belongsToMany metadata for model %s: %o',
+      'registering belongsToMany metadata for model %s: %o',
       Target.name,
       options
     )

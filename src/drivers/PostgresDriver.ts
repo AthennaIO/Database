@@ -9,6 +9,7 @@
  */
 
 import type { Knex } from 'knex'
+import { debug } from '#src/debug'
 import { Driver } from '#src/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -95,6 +96,15 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     }
 
     return new Proxy(query, handler)
+  }
+
+  /**
+   * Sync a model schema with database.
+   */
+  public async sync(): Promise<void> {
+    debug(
+      `database sync with ${PostgresDriver.name} is not available yet, use migration instead.`
+    )
   }
 
   /**
