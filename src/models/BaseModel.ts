@@ -42,7 +42,7 @@ export class BaseModel {
    */
   public static sync(): boolean {
     const connection = this.connection()
-    const driver = Config.get(`database.connections.${connection}`)
+    const driver = Config.get(`database.connections.${connection}.driver`)
 
     if (driver === 'mongo') {
       return true
