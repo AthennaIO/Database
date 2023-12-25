@@ -23,6 +23,18 @@ export default class MakeModelCommandTest extends BaseCommandTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateAModelFileForMongo({ assert, command }: Context) {
+    const output = await command.run('make:model TestModel', {
+      path: Path.fixtures('consoles/mongo-model-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ MAKING MODEL ]')
+    output.assertLogged('[  success  ] Model "TestModel" successfully created.')
+    assert.isTrue(await File.exists(Path.fixtures('storage/app/models/TestModel.ts')))
+  }
+
+  @Test()
   public async shouldBeAbleToCreateAModelFileWithDifferentDestination({ assert, command }: Context) {
     const output = await command.run('make:model TestModel', {
       path: Path.fixtures('consoles/dest-import-console.ts')

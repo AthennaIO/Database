@@ -28,9 +28,17 @@ export class MakeModelCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ MAKING MODEL ])\n')
 
+    const connection = Config.get('database.default')
+    const driver = Config.get(`database.connections.${connection}.driver`)
+    let template = 'model'
+
+    if (driver === 'mongo') {
+      template = 'model-mongo'
+    }
+
     const file = await this.generator
       .path(this.getFilePath())
-      .template('model')
+      .template(template)
       .setNameProperties(true)
       .make()
 
