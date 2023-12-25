@@ -48,19 +48,6 @@ export class BaseModel {
       return true
     }
 
-    if (
-      Config.is('app.environment', [
-        'prod',
-        'production',
-        'stage',
-        'staging',
-        'homolog',
-        'homologation'
-      ])
-    ) {
-      return false
-    }
-
     return false
   }
 
