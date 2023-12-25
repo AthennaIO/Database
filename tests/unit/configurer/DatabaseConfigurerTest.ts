@@ -184,7 +184,7 @@ export default class DatabaseConfigurerTest {
       dockerComposeFile,
       "version: '3'\n\nservices:\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - '27017:27017'\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n"
     )
-    assert.deepEqual(envFile, `\nDB_CONNECTION=mongo\n` + 'DB_URL=mongodb://root:root@localhost:27017/athenna\n')
+    assert.deepEqual(envFile, `\nDB_CONNECTION=mongo\n` + 'DB_URL=mongodb://root:root@localhost:27017/admin\n')
   }
 
   @Test()
@@ -210,6 +210,6 @@ export default class DatabaseConfigurerTest {
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - '27017:27017'\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n"
     )
-    assert.deepEqual(envFile, `\nDB_CONNECTION=mongo\n` + 'DB_URL=mongodb://root:root@localhost:27017/athenna\n')
+    assert.deepEqual(envFile, `\nDB_CONNECTION=mongo\n` + 'DB_URL=mongodb://root:root@localhost:27017/admin\n')
   }
 }
