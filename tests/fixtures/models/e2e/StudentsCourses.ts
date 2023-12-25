@@ -9,9 +9,9 @@
 
 import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
-import { Course } from '#tests/fixtures/models/e2e/Course'
-import { Student } from '#tests/fixtures/models/e2e/Student'
 import { BelongsTo } from '#src/models/annotations/BelongsTo'
+import { type Course } from '#tests/fixtures/models/e2e/Course'
+import { type Student } from '#tests/fixtures/models/e2e/Student'
 
 export class StudentsCourses extends BaseModel {
   public static connection() {
@@ -24,12 +24,12 @@ export class StudentsCourses extends BaseModel {
   @Column()
   public courseId: number
 
-  @BelongsTo(() => Course)
+  @BelongsTo('Course')
   public course: Course
 
   @Column()
   public studentId: number
 
-  @BelongsTo(() => Student)
+  @BelongsTo('Student')
   public student: Student
 }

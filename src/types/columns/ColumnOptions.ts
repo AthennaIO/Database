@@ -89,6 +89,20 @@ export type ColumnOptions = {
   isNullable?: boolean
 
   /**
+   * Set if the column is an index in database.
+   *
+   * @default false
+   */
+  isIndex?: boolean
+
+  /**
+   * Set if the column is sparse in database.
+   *
+   * @default false
+   */
+  isSparse?: boolean
+
+  /**
    * Set if the column should be persisted in database
    * when executing operation like create or update.
    *

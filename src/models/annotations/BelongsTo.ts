@@ -10,7 +10,7 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
-import { Options } from '@athenna/common'
+import { Is, Options } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
@@ -19,7 +19,7 @@ import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
  * Create belongs to relation for model class.
  */
 export function BelongsTo<T extends BaseModel = any, R extends BaseModel = any>(
-  model: () => new () => R,
+  model: (() => new () => R) | string,
   options: Omit<BelongsToOptions<T, R>, 'type' | 'model' | 'property'> = {}
 ) {
   return (target: T, key: any) => {
@@ -38,13 +38,15 @@ export function BelongsTo<T extends BaseModel = any, R extends BaseModel = any>(
     options.type = 'belongsTo'
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    options.model = model
+    options.model = Is.String(model)
+      ? () => ioc.safeUse(`App/Models/${model}`).constructor
+      : model
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     options.property = key
 
     debug(
-      'Registering belongsTo metadata for model %s: %o',
+      'registering belongsTo metadata for model %s: %o',
       Target.name,
       options
     )

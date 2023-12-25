@@ -11,13 +11,19 @@ import { Database } from '#src/facades/Database'
 import { Course } from '#tests/fixtures/models/e2e/Course'
 import { Student } from '#tests/fixtures/models/e2e/Student'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
 import { Test, type Context, BeforeEach, AfterEach, Mock } from '@athenna/test'
 
 export default class BelongsToManyRelationTest {
   @BeforeEach()
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
+
     new DatabaseProvider().register()
+
+    ioc.transient('App/Models/Course', Course)
+    ioc.transient('App/Models/Student', Student)
+    ioc.transient('App/Models/StudentsCourses', StudentsCourses)
 
     const pg = Database.connection('postgres-docker').connect()
 

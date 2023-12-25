@@ -8,10 +8,9 @@
  */
 
 import { BaseModel } from '#src/models/BaseModel'
-import { Student } from '#tests/fixtures/models/e2e/Student'
 import { Column } from '#src/models/annotations/Column'
+import { type Student } from '#tests/fixtures/models/e2e/Student'
 import { BelongsToMany } from '#src/models/annotations/BelongsToMany'
-import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
 
 export class Course extends BaseModel {
   public static connection() {
@@ -24,6 +23,6 @@ export class Course extends BaseModel {
   @Column()
   public name: string
 
-  @BelongsToMany(() => Student, () => StudentsCourses)
+  @BelongsToMany('Student', 'StudentsCourses')
   public students: Student[]
 }

@@ -1,4 +1,6 @@
 {
   "extends": "@athenna/tsconfig/tsconfig.lib.json",
-  "compilerOptions": {}
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
+  }
 }

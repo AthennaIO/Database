@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { Config } from '@athenna/config'
 import { ViewProvider } from '@athenna/view'
+import { Rc, Config } from '@athenna/config'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
@@ -20,6 +20,7 @@ new DatabaseProvider().register()
 
 await Config.loadAll(Path.fixtures('config'))
 
+Rc.setFile(Path.pwd('package.json'))
 DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
 Path.mergeDirs({

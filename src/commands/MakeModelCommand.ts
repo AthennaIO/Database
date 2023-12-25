@@ -35,6 +35,14 @@ export class MakeModelCommand extends BaseCommand {
       .make()
 
     this.logger.success(`Model ({yellow} "${file.name}") successfully created.`)
+
+    const importPath = this.getImportPath(file.name)
+
+    await this.rc.pushTo('models', importPath).save()
+
+    this.logger.success(
+      `Athenna RC updated: ({dim,yellow} [ models += "${importPath}" ])`
+    )
   }
 
   /**
@@ -58,5 +66,17 @@ export class MakeModelCommand extends BaseCommand {
     }
 
     return destination
+  }
+
+  /**
+   * Get the import path that should be registered in RC file.
+   */
+  private getImportPath(fileName: string): string {
+    const destination = this.getDestinationPath()
+
+    return `${destination
+      .replace(Path.pwd(), '')
+      .replace(/\\/g, '/')
+      .replace('/', '#')}/${fileName}`
   }
 }

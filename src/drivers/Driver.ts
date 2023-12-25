@@ -12,6 +12,7 @@ import type { Transaction } from '#src/database/transactions/Transaction'
 import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Collection, Options, type PaginatedResponse } from '@athenna/common'
+import type { ModelSchema } from 'src/models/schemas/ModelSchema.js'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
@@ -172,6 +173,11 @@ export abstract class Driver<Client = any, QB = any> {
    * Creates a new instance of query builder.
    */
   public abstract query(): QB
+
+  /**
+   * Sync a model schema with the driver.
+   */
+  public abstract sync(schema: ModelSchema): Promise<void>
 
   /**
    * Create a new transaction.

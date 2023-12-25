@@ -27,5 +27,8 @@ export * from '#src/drivers/Driver'
 export * from '#src/factories/DriverFactory'
 export * from '#src/factories/ConnectionFactory'
 
+export * from '#src/helpers/Annotation'
+export * from '#src/helpers/ObjectId'
+
 export * from '#src/facades/Database'
 export * from '#src/providers/DatabaseProvider'

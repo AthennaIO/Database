@@ -12,7 +12,7 @@ import { Test, type Context } from '@athenna/test'
 import { Annotation } from '#src/helpers/Annotation'
 import { Column } from '#src/models/annotations/Column'
 
-export default class ColumnTest {
+export default class ColumnAnnotationTest {
   @Test()
   public async shouldBeAbleToDefinePropertyWithColumnAnnotation({ assert }: Context) {
     class User {
@@ -24,6 +24,9 @@ export default class ColumnTest {
       {
         name: 'id',
         defaultTo: null,
+        type: String,
+        isIndex: false,
+        isSparse: false,
         isPrimary: false,
         isHidden: false,
         isUnique: false,
@@ -49,6 +52,8 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: false,
+        isIndex: false,
+        isSparse: false,
         isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
@@ -67,6 +72,8 @@ export default class ColumnTest {
         isHidden: false,
         isUnique: false,
         isNullable: false,
+        isIndex: false,
+        isSparse: false,
         isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
@@ -90,10 +97,13 @@ export default class ColumnTest {
       {
         name: 'id',
         defaultTo: null,
+        type: String,
         isPrimary: false,
         isHidden: false,
         isUnique: false,
         isNullable: true,
+        isIndex: false,
+        isSparse: false,
         isMainPrimary: false,
         isCreateDate: false,
         isUpdateDate: false,
@@ -115,10 +125,13 @@ export default class ColumnTest {
       {
         name: 'id',
         defaultTo: null,
+        type: String,
         isPrimary: true,
         isHidden: false,
         isUnique: false,
         isNullable: true,
+        isIndex: false,
+        isSparse: false,
         isMainPrimary: true,
         isCreateDate: false,
         isUpdateDate: false,
@@ -139,11 +152,14 @@ export default class ColumnTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
+        type: String,
         defaultTo: null,
         isPrimary: true,
         isHidden: false,
         isUnique: false,
         isNullable: true,
+        isIndex: false,
+        isSparse: false,
         isMainPrimary: true,
         isCreateDate: false,
         isUpdateDate: false,

@@ -119,7 +119,7 @@ export class ConnectionFactory {
   public static mongoose(con: string) {
     const mongoose = this.getMongoose()
     const configs = Config.get(`database.connections.${con}`, {})
-    const options = Json.omit(configs, ['url', 'driver'])
+    const options = Json.omit(configs, ['url', 'driver', 'sync'])
 
     debug('creating new connection using Mongoose. Options defined: %o', {
       url: configs.url,
@@ -147,7 +147,7 @@ export class ConnectionFactory {
       },
       debug: false,
       useNullAsDefault: false,
-      ...Json.omit(configs, ['driver'])
+      ...Json.omit(configs, ['driver', 'sync'])
     }
 
     debug('creating new connection using Knex. Options defined: %o', options)

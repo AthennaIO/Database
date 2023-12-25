@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { ObjectId } from '#src/helpers/ObjectId'
 import type { RelationOptions } from '#src/types'
 import type { BaseModel } from '#src/models/BaseModel'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
@@ -78,6 +79,10 @@ export class ModelGenerator<M extends BaseModel = any> {
 
       if (!column || column.isHidden) {
         return
+      }
+
+      if (object[key] instanceof ObjectId) {
+        object[key] = object[key].toString()
       }
 
       model[column.property] = object[key]

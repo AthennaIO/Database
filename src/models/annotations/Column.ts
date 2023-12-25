@@ -23,11 +23,14 @@ export function Column(
   return (target: any, key: any) => {
     options = Options.create(options, {
       name: AthennaString.toCamelCase(key),
+      type: Reflect.getMetadata('design:type', target, key),
       defaultTo: null,
       isPrimary: false,
       isHidden: false,
       isUnique: false,
       isNullable: true,
+      isIndex: false,
+      isSparse: false,
       persist: true,
       isMainPrimary: false,
       isCreateDate: false,
@@ -45,7 +48,7 @@ export function Column(
 
     const Target = target.constructor
 
-    debug('Registering column metadata for model %s: %o', Target.name, options)
+    debug('registering column metadata for model %s: %o', Target.name, options)
 
     Annotation.defineColumnMeta(Target, options)
   }

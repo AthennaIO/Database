@@ -8,6 +8,8 @@
  */
 
 import { Json, Options } from '@athenna/common'
+import { ObjectId } from '#src/helpers/ObjectId'
+import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { ColumnOptions, ModelColumns, RelationOptions } from '#src/types'
@@ -36,6 +38,50 @@ export class ModelSchema<M extends BaseModel = any> {
     this.Model = model
     this.columns = Json.copy(Annotation.getColumnsMeta(model))
     this.relations = Json.copy(Annotation.getRelationsMeta(model))
+  }
+
+  /**
+   * Sync the database creating migrations
+   * or schemas in the database connection.
+   */
+  public async sync(): Promise<void> {
+    await this.getModelDriver().sync(this)
+  }
+
+  /**
+   * Get the model name set for the schema.
+   */
+  public getModelName(): string {
+    return this.Model.name
+  }
+
+  /**
+   * Get the model table set for the schema.
+   */
+  public getModelTable(): string {
+    return this.Model.table()
+  }
+
+  /**
+   * Get the model driver.
+   */
+  public getModelDriver() {
+    const connection = this.getModelConnection()
+
+    return Database.connection(connection).connect().driver
+  }
+
+  /**
+   * Get the model connection name.
+   */
+  public getModelConnection(): string {
+    const connection = this.Model.connection()
+
+    if (connection === 'default') {
+      return Config.get('database.default')
+    }
+
+    return connection
   }
 
   /**
@@ -98,6 +144,10 @@ export class ModelSchema<M extends BaseModel = any> {
         return
       }
 
+      if (ObjectId.isValidString(data[key])) {
+        data[key] = new ObjectId(data[key])
+      }
+
       parsed[column.name] = data[key]
     })
 
@@ -109,6 +159,10 @@ export class ModelSchema<M extends BaseModel = any> {
 
       if (parsed[column.name] !== undefined) {
         return
+      }
+
+      if (ObjectId.isValidString(options.attributes[key])) {
+        options.attributes[key] = new ObjectId(options.attributes[key])
       }
 
       parsed[column.name] = options.attributes[key]
@@ -145,6 +199,14 @@ export class ModelSchema<M extends BaseModel = any> {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.find(c => c.isDeleteDate)
+  }
+
+  /**
+   * Validate that model has createdAt and updatedAt
+   * column defined.
+   */
+  public hasTimestamps(): boolean {
+    return !!this.getCreatedAtColumn() && !!this.getUpdatedAtColumn()
   }
 
   /**
