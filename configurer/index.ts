@@ -89,7 +89,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         case 'mongo':
           envs =
             '\nDB_CONNECTION=mongo\n' +
-            'DB_URL=mongodb://root:root@localhost:27017/athenna\n'
+            'DB_URL=mongodb://root:root@localhost:27017/admin\n'
           break
         case 'sqlite':
           envs =

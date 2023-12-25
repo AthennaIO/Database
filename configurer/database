@@ -60,7 +60,7 @@ export default {
 
     mongo: {
       driver: 'mongo',
-      url: Env('DB_URL', 'mongodb://root:root@localhost:27017/athenna'),
+      url: Env('DB_URL', 'mongodb://root:root@localhost:27017/admin'),
       w: 'majority',
       retryWrites: true
     }

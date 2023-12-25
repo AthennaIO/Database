@@ -1,0 +1,16 @@
+import { Column, BaseModel } from '@athenna/database'
+
+export class {{ namePascal }} extends BaseModel {
+  @Column({ name: '_id' })
+  public id: string
+
+  public static attributes(): Partial<{{ namePascal }}> {
+    return {}
+  }
+
+  public static async definition(): Promise<Partial<{{ namePascal }}>> {
+    return {
+      id: this.faker.database.mongodbObjectId()
+    }
+  }
+}
