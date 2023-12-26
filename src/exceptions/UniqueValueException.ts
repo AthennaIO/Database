@@ -11,8 +11,8 @@ import { Exception } from '@athenna/common'
 
 export class UniqueValueException extends Exception {
   public constructor(records: Record<string, any>) {
-    let values = Object.values(records)
-    let properties = Object.keys(records)
+    let values: any = Object.values(records)
+    let properties: any = Object.keys(records)
 
     if (properties.length > 1) {
       values = values.join(', ')
@@ -23,7 +23,7 @@ export class UniqueValueException extends Exception {
     }
 
     super({
-      status: 500,
+      status: 400,
       code: 'E_UNIQUE_VALUE_ERROR',
       message: `The properties [${properties}] is unique in database and cannot be replicated.`,
       help: `Your properties [${properties}] has the option isUnique set to true in it's model, meaning that the values [${values}] could not be used because there is another record with it in your database. Try creating your record with a different value, or set the isUnique property to false.`
