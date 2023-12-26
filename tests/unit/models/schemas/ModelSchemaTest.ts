@@ -630,4 +630,24 @@ export default class ModelSchemaTest {
      */
     await User.schema().sync()
   }
+
+  @Test()
+  public async shouldBeAbleToGetAllColumnsWhereUniqueIsTrue({ assert }: Context) {
+    class User extends BaseModel {
+      @Column({ isUnique: true })
+      public id: string
+
+      @Column()
+      public name: string
+
+      @Column({ isUnique: true })
+      public email: string
+    }
+
+    const columns = User.schema()
+      .getAllUniqueColumns()
+      .map(column => column.property)
+
+    assert.deepEqual(columns, ['id', 'email'])
+  }
 }

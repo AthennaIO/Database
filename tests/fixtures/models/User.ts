@@ -32,6 +32,9 @@ export class User extends BaseModel {
   @Column()
   public name: string
 
+  @Column({ isUnique: true })
+  public email: string
+
   @Column({ persist: false })
   public score: number
 

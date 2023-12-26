@@ -19,6 +19,7 @@ import type { BaseModel } from '#src/models/BaseModel'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
+import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
 export class ModelQueryBuilder<
@@ -214,32 +215,36 @@ export class ModelQueryBuilder<
    * Create many values in database.
    */
   public async createMany(data: Partial<M>[]) {
-    data = data.map(d => {
-      const date = new Date()
-      const createdAt = this.schema.getCreatedAtColumn()
-      const updatedAt = this.schema.getUpdatedAtColumn()
-      const deletedAt = this.schema.getDeletedAtColumn()
-      const attributes = this.Model.attributes()
+    data = await Promise.all(
+      data.map(async d => {
+        const date = new Date()
+        const createdAt = this.schema.getCreatedAtColumn()
+        const updatedAt = this.schema.getUpdatedAtColumn()
+        const deletedAt = this.schema.getDeletedAtColumn()
+        const attributes = this.Model.attributes()
 
-      const parsed = this.schema.propertiesToColumnNames(d, {
-        attributes,
-        cleanPersist: true
+        const parsed = this.schema.propertiesToColumnNames(d, {
+          attributes,
+          cleanPersist: true
+        })
+
+        if (createdAt && parsed[createdAt.name] === undefined) {
+          parsed[createdAt.name] = date
+        }
+
+        if (updatedAt && parsed[updatedAt.name] === undefined) {
+          parsed[updatedAt.name] = date
+        }
+
+        if (deletedAt && parsed[deletedAt.name] === undefined) {
+          parsed[deletedAt.name] = null
+        }
+
+        await this.verifyUnique(parsed)
+
+        return parsed
       })
-
-      if (createdAt && parsed[createdAt.name] === undefined) {
-        parsed[createdAt.name] = date
-      }
-
-      if (updatedAt && parsed[updatedAt.name] === undefined) {
-        parsed[updatedAt.name] = date
-      }
-
-      if (deletedAt && parsed[deletedAt.name] === undefined) {
-        parsed[deletedAt.name] = null
-      }
-
-      return parsed
-    })
+    )
 
     const created = await super.createMany(data)
 
@@ -277,6 +282,8 @@ export class ModelQueryBuilder<
     if (updatedAt && parsed[updatedAt.name] === undefined) {
       parsed[updatedAt.name] = date
     }
+
+    await this.verifyUnique(parsed, true)
 
     const updated = await super.update(parsed)
 
@@ -878,5 +885,41 @@ export class ModelQueryBuilder<
     super.oldest(name)
 
     return this
+  }
+
+  /**
+   * Verify that columns with isUnique property
+   * can be created in database.
+   */
+  private async verifyUnique(data: any, isUpdate = false) {
+    const records = {}
+
+    for (const column of this.schema.getAllUniqueColumns()) {
+      const value = data[column.name]
+
+      if (isUpdate) {
+        const data = await this.Model.query()
+          .where(column.name as any, value)
+          .findMany()
+
+        if (data.length > 1) {
+          records[column.property] = value
+
+          continue
+        }
+      }
+
+      const isDuplicated = !!(await this.Model.query()
+        .where(column.name as any, value)
+        .find())
+
+      if (isDuplicated) {
+        records[column.property] = value
+      }
+    }
+
+    if (!Is.Empty(records)) {
+      throw new UniqueValueException(records)
+    }
   }
 }
