@@ -13,6 +13,7 @@ import { Collection, Path } from '@athenna/common'
 import { User } from '#tests/fixtures/models/User'
 import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { UserNotSoftDelete } from '#tests/fixtures/models/UserNotSoftDelete'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
@@ -406,6 +407,13 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldNotBeAbleToCreateDataWhenIsUniqueIsDefined({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve({ id: '3' })
+
+    await assert.rejects(() => User.query().create(), UniqueValueException)
+  }
+
+  @Test()
   public async shouldBeAbleToCreateDataAndSetDefaultTimestamps({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     Mock.when(FakeDriver, 'createMany').resolve([{ id: '3', ...dataToCreate }])
@@ -647,10 +655,12 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateDataUsingCreateOrUpdate({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
     Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').return(dataToCreateOrUpdate)
+
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User' }))
@@ -659,10 +669,12 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToUpdateDataUsingCreateOrUpdateParsingColumnNames({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1', name: 'Updated User', rate: 1 })
     Mock.when(FakeDriver, 'update').resolve({ id: '1', name: 'Updated User', rate: 1 })
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').resolve({ id: '1', name: 'Updated User', rate: 1 })
+
     const result = await queryBuilder.createOrUpdate({ name: 'Updated User', rate: 1 })
 
     assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User', rate_number: 1 }))
@@ -672,10 +684,12 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateDataUsingCreateOrUpdateAndSetDefaultTimestamps({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
     Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').resolve(dataToCreateOrUpdate)
+
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match({ name: 'Updated User' }))
@@ -685,10 +699,12 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateDataUsingCreateOrUpdateAndIgnorePersist({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
-    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
     Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').resolve(dataToCreateOrUpdate)
+
     await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
     assert.notCalledWith(FakeDriver.update, Mock.match({ score: 200 }))
@@ -699,10 +715,12 @@ export default class ModelQueryBuilderTest {
     assert
   }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
     Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').resolve(dataToCreateOrUpdate)
+
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1' }))
@@ -714,10 +732,12 @@ export default class ModelQueryBuilderTest {
     assert
   }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
-    Mock.when(FakeDriver, 'find').resolve(dataToCreateOrUpdate)
     Mock.when(FakeDriver, 'update').resolve(dataToCreateOrUpdate)
 
     const queryBuilder = User.query()
+
+    Mock.when(queryBuilder, 'find').resolve(dataToCreateOrUpdate)
+
     const result = await queryBuilder.createOrUpdate(dataToCreateOrUpdate)
 
     assert.calledOnceWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
@@ -734,6 +754,13 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnceWith(FakeDriver.update, Mock.match(dataToUpdate))
     assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldNotBeAbleToUpdateDataWhenIsUniqueIsDefined({ assert }: Context) {
+    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+
+    await assert.rejects(() => User.query().update({ id: '1' }), UniqueValueException)
   }
 
   @Test()

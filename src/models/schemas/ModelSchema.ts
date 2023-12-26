@@ -202,6 +202,15 @@ export class ModelSchema<M extends BaseModel = any> {
   }
 
   /**
+   * Get all columns where unique option is true.
+   */
+  public getAllUniqueColumns(): ColumnOptions[] {
+    const columns = Annotation.getColumnsMeta(this.Model)
+
+    return columns.filter(column => column.isUnique)
+  }
+
+  /**
    * Validate that model has createdAt and updatedAt
    * column defined.
    */
