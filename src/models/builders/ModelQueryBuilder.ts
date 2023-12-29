@@ -960,7 +960,7 @@ export class ModelQueryBuilder<
     for (const column of this.schema.getAllUniqueColumns()) {
       const value = data[column.name]
 
-      if (!value) {
+      if (value === undefined) {
         continue
       }
 
