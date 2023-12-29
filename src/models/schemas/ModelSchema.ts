@@ -124,7 +124,7 @@ export class ModelSchema<M extends BaseModel = any> {
    * column names.
    */
   public propertiesToColumnNames(
-    data: Partial<M>,
+    data: Partial<M> | ModelColumns<M>,
     options: { attributes?: Record<string, any>; cleanPersist?: boolean } = {}
   ) {
     options = Options.create(options, {
@@ -141,6 +141,10 @@ export class ModelSchema<M extends BaseModel = any> {
       }
 
       if (!column.persist && options.cleanPersist) {
+        return
+      }
+
+      if (data[key] === undefined) {
         return
       }
 

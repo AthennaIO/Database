@@ -314,6 +314,15 @@ export abstract class Driver<Client = any, QB = any> {
   public abstract countDistinct(column?: string): Promise<string>
 
   /**
+   * Find a value in database and return as boolean.
+   */
+  public async exists(): Promise<boolean> {
+    const data = await this.find()
+
+    return !!data
+  }
+
+  /**
    * Find a value in database or throw exception if undefined.
    */
   public async findOrFail<T = any>(): Promise<T> {
