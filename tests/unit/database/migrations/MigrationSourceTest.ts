@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { Test, Mock, AfterEach, type Context, BeforeEach } from '@athenna/test'
 

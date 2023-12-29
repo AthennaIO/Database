@@ -14,14 +14,13 @@ import { Profile } from '#tests/fixtures/models/Profile'
 import { Product } from '#tests/fixtures/models/Product'
 import { HasMany } from '#src/models/annotations/HasMany'
 
-export class User extends BaseModel {
+export class UserNoUnique extends BaseModel {
   public static connection() {
     return 'fake'
   }
 
-  public static attributes(): Partial<User> {
+  public static attributes(): Partial<UserNoUnique> {
     return {
-      email: this.faker.internet.email(),
       metadata1: `random-1`,
       metadata2: `random-2`
     }
@@ -32,9 +31,6 @@ export class User extends BaseModel {
 
   @Column()
   public name: string
-
-  @Column({ isUnique: true, isNullable: false })
-  public email: string
 
   @Column({ persist: false })
   public score: number

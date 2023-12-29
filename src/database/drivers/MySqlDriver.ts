@@ -10,7 +10,7 @@
 
 import type { Knex } from 'knex'
 import { debug } from '#src/debug'
-import { Driver } from '#src/drivers/Driver'
+import { Driver } from '#src/database/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'

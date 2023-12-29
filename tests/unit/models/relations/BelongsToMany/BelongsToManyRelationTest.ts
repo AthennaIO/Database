@@ -25,7 +25,7 @@ export default class BelongsToManyRelationTest {
     ioc.transient('App/Models/Student', Student)
     ioc.transient('App/Models/StudentsCourses', StudentsCourses)
 
-    const pg = Database.connection('postgres-docker').connect()
+    const pg = Database.connection('postgres-docker')
 
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
 

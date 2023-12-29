@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { Test, Mock, AfterEach, type Context } from '@athenna/test'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'

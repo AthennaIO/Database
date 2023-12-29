@@ -8,7 +8,7 @@
  */
 
 import type { Knex } from 'knex'
-import type { Driver } from '#src/drivers/Driver'
+import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 
 export class Transaction<Client = any, QB = any> {

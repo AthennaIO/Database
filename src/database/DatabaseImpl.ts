@@ -8,16 +8,17 @@
  */
 
 import type { Knex } from 'knex'
-import type { MongoDriver } from '#src/drivers/MongoDriver'
-import type { MySqlDriver } from '#src/drivers/MySqlDriver'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import type { SqliteDriver } from '#src/drivers/SqliteDriver'
-import type { Driver as DriverImpl } from '#src/drivers/Driver'
 import type { Connections, ConnectionOptions } from '#src/types'
-import type { PostgresDriver } from '#src/drivers/PostgresDriver'
+import type { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import type { MongoDriver } from '#src/database/drivers/MongoDriver'
+import type { MySqlDriver } from '#src/database/drivers/MySqlDriver'
+import type { SqliteDriver } from '#src/database/drivers/SqliteDriver'
+import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 import type { Transaction } from '#src/database/transactions/Transaction'
+import type { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 
 export class DatabaseImpl<Driver extends DriverImpl = any> {
   /**
@@ -62,6 +63,11 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
   ): DatabaseImpl<PostgresDriver>
 
   public connection(
+    con: 'fake',
+    options?: ConnectionOptions
+  ): DatabaseImpl<typeof FakeDriver>
+
+  public connection(
     con: Connections,
     options?: ConnectionOptions
   ):
@@ -69,6 +75,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
     | DatabaseImpl<MySqlDriver>
     | DatabaseImpl<SqliteDriver>
     | DatabaseImpl<PostgresDriver>
+    | DatabaseImpl<typeof FakeDriver>
 
   /**
    * Change the database connection.
@@ -80,7 +87,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
     database.connectionName = con
     database.driver = driver
 
-    return database
+    return database.connect(options)
   }
 
   /**

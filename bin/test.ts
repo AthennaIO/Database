@@ -11,10 +11,6 @@ import { parseArgs } from 'node:util'
 import { Runner } from '@athenna/test'
 import { MongoMemory } from '#tests/helpers/MongoMemory'
 import { command } from '@athenna/artisan/testing/plugins'
-import { DriverFactory } from '#src/factories/DriverFactory'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
-
-DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
 const { values } = parseArgs({
   options: {

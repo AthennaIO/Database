@@ -9,9 +9,7 @@
 
 import { ViewProvider } from '@athenna/view'
 import { Rc, Config } from '@athenna/config'
-import { DriverFactory } from '#src/factories/DriverFactory'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
 import { Artisan, ConsoleKernel, ArtisanProvider } from '@athenna/artisan'
 
 new ViewProvider().register()
@@ -21,7 +19,6 @@ new DatabaseProvider().register()
 await Config.loadAll(Path.fixtures('config'))
 
 Rc.setFile(Path.pwd('package.json'))
-DriverFactory.drivers.set('fake', { Driver: FakeDriverClass, client: null })
 
 Path.mergeDirs({
   models: 'tests/fixtures/storage/app/models',

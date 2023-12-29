@@ -10,7 +10,7 @@
 import { Config } from '@athenna/config'
 import { Collection, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { PostgresDriver } from '#src/drivers/PostgresDriver'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'

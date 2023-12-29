@@ -14,13 +14,14 @@ import type {
   ModelRelations
 } from '#src/types'
 import { Collection, Is } from '@athenna/common'
-import type { Driver } from '#src/drivers/Driver'
+import type { Driver } from '#src/database/drivers/Driver'
 import type { BaseModel } from '#src/models/BaseModel'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+import { NullableValueException } from '#src/exceptions/NullableValueException'
 
 export class ModelQueryBuilder<
   M extends BaseModel = any,
@@ -31,6 +32,9 @@ export class ModelQueryBuilder<
   private generator: ModelGenerator<M>
   private primaryKeyName: string
   private primaryKeyProperty: ModelColumns<M>
+  private isToSetAttributes: boolean = true
+  private isToValidateUnique: boolean = true
+  private isToValidateNullable: boolean = true
 
   public constructor(model: any, driver: D) {
     super(driver, model.table())
@@ -221,7 +225,7 @@ export class ModelQueryBuilder<
         const createdAt = this.schema.getCreatedAtColumn()
         const updatedAt = this.schema.getUpdatedAtColumn()
         const deletedAt = this.schema.getDeletedAtColumn()
-        const attributes = this.Model.attributes()
+        const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
 
         const parsed = this.schema.propertiesToColumnNames(d, {
           attributes,
@@ -240,7 +244,8 @@ export class ModelQueryBuilder<
           parsed[deletedAt.name] = null
         }
 
-        await this.verifyUnique(parsed)
+        this.validateNullable(parsed)
+        await this.validateUnique(parsed)
 
         return parsed
       })
@@ -272,7 +277,7 @@ export class ModelQueryBuilder<
   public async update(data: Partial<M>) {
     const date = new Date()
     const updatedAt = this.schema.getUpdatedAtColumn()
-    const attributes = this.Model.attributes()
+    const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
 
     const parsed = this.schema.propertiesToColumnNames(data, {
       attributes,
@@ -283,7 +288,7 @@ export class ModelQueryBuilder<
       parsed[updatedAt.name] = date
     }
 
-    await this.verifyUnique(parsed, true)
+    await this.validateUnique(parsed, true)
 
     const updated = await super.update(parsed)
 
@@ -307,6 +312,36 @@ export class ModelQueryBuilder<
     }
 
     await this.update({ [column.property]: new Date() } as any)
+  }
+
+  /**
+   * Enable/disable setting the default attributes properties
+   * when creating/updating models.
+   */
+  public setAttributes(value: boolean) {
+    this.isToSetAttributes = value
+
+    return this
+  }
+
+  /**
+   * Enable/disable the `isUnique` property validation of
+   * models columns.
+   */
+  public uniqueValidation(value: boolean): this {
+    this.isToValidateUnique = value
+
+    return this
+  }
+
+  /**
+   * Enable/disable the `isNullable` property validation of
+   * models columns.
+   */
+  public nullableValidation(value: boolean): this {
+    this.isToValidateNullable = value
+
+    return this
   }
 
   /**
@@ -888,10 +923,38 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Verify that columns with `isNullable` property
+   * can be created in database.
+   */
+  private validateNullable(data: any) {
+    if (!this.isToValidateNullable) {
+      return
+    }
+
+    const records = []
+
+    for (const column of this.schema.getAllNotNullableColumns()) {
+      const value = data[column.name]
+
+      if (value === undefined || value === null) {
+        records.push(column.property)
+      }
+    }
+
+    if (!Is.Empty(records)) {
+      throw new NullableValueException(records)
+    }
+  }
+
+  /**
    * Verify that columns with isUnique property
    * can be created in database.
    */
-  private async verifyUnique(data: any, isUpdate = false) {
+  private async validateUnique(data: any, isUpdate = false) {
+    if (!this.isToValidateUnique) {
+      return
+    }
+
     const records = {}
 
     for (const column of this.schema.getAllUniqueColumns()) {
@@ -899,7 +962,7 @@ export class ModelQueryBuilder<
 
       if (isUpdate) {
         const data = await this.Model.query()
-          .where(column.name as any, value)
+          .where(column.name as never, value)
           .findMany()
 
         if (data.length > 1) {
@@ -910,7 +973,7 @@ export class ModelQueryBuilder<
       }
 
       const isDuplicated = !!(await this.Model.query()
-        .where(column.name as any, value)
+        .where(column.name as never, value)
         .find())
 
       if (isDuplicated) {

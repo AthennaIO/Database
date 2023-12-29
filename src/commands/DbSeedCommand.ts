@@ -37,7 +37,7 @@ export class DbSeedCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ SEEDING DATABASE ])\n')
 
-    const DB = Database.connection(this.connection).connect()
+    const DB = Database.connection(this.connection)
     const seeds = await Module.getAllFrom(Path.seeders())
     const task = this.logger.task()
 

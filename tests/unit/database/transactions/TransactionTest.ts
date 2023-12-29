@@ -9,8 +9,8 @@
 
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'

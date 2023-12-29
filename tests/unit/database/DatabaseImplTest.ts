@@ -11,7 +11,7 @@ import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'
@@ -41,7 +41,7 @@ export default class DatabaseImplTest {
   public async shouldBeAbleToValidateThatDatabaseIsConnected({ assert }: Context) {
     Mock.when(FakeDriver, 'isConnected').value(true)
 
-    const database = new DatabaseImpl().connect()
+    const database = new DatabaseImpl()
     const isConnected = database.isConnected()
 
     assert.isTrue(isConnected)
@@ -55,14 +55,14 @@ export default class DatabaseImplTest {
     const database = new DatabaseImpl().connection('postgres')
 
     assert.calledTimesWith(DriverFactory.fabricate, 3, 'postgres')
-    assert.calledTimes(database.driver.connect, 2)
+    assert.calledTimes(database.driver.connect, 3)
   }
 
   @Test()
   public async shouldBeAbleToCloseTheConnectionWithDefaultDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'close').resolve(undefined)
 
-    const database = new DatabaseImpl().connect()
+    const database = new DatabaseImpl()
     await database.close()
 
     assert.calledOnce(database.driver.close)
