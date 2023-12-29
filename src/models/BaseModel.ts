@@ -9,7 +9,7 @@
 
 import equal from 'fast-deep-equal'
 import { Database } from '#src/facades/Database'
-import type { ModelRelations } from '#src/types'
+import type { ModelColumns, ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Collection, Is, Json, String } from '@athenna/common'
@@ -156,7 +156,7 @@ export class BaseModel {
    */
   public static async find<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<InstanceType<T>>
+    where?: Partial<ModelColumns<T>>
   ): Promise<InstanceType<T>> {
     const query = this.query()
 
@@ -168,11 +168,27 @@ export class BaseModel {
   }
 
   /**
+   * Find a value in database.
+   */
+  public static async exists<T extends typeof BaseModel>(
+    this: T,
+    where?: Partial<ModelColumns<T>>
+  ): Promise<boolean> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.exists()
+  }
+
+  /**
    * Find a value in database or throw exception if undefined.
    */
   public static async findOrFail<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<InstanceType<T>>
+    where?: Partial<ModelColumns<T>>
   ): Promise<InstanceType<T>> {
     const query = this.query()
 
@@ -189,7 +205,7 @@ export class BaseModel {
    */
   public static async findOr<T extends typeof BaseModel>(
     this: T,
-    where: Partial<InstanceType<T>>,
+    where: Partial<ModelColumns<T>>,
     closure: () => any | Promise<any>
   ): Promise<InstanceType<T> | any> {
     const query = this.query()
@@ -206,7 +222,7 @@ export class BaseModel {
    */
   public static async findMany<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<InstanceType<T>>
+    where?: Partial<ModelColumns<T>>
   ): Promise<InstanceType<T>[]> {
     const query = this.query()
 
@@ -223,7 +239,7 @@ export class BaseModel {
    */
   public static async collection<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<InstanceType<T>>
+    where?: Partial<ModelColumns<T>>
   ): Promise<Collection<InstanceType<T>>> {
     const query = this.query()
 
@@ -239,9 +255,9 @@ export class BaseModel {
    */
   public static async create<T extends typeof BaseModel>(
     this: T,
-    data: Partial<InstanceType<T>> = {}
+    data: Partial<ModelColumns<T>> = {}
   ): Promise<InstanceType<T>> {
-    return this.query().create(data)
+    return this.query().create(data as any)
   }
 
   /**
@@ -249,9 +265,9 @@ export class BaseModel {
    */
   public static async createMany<T extends typeof BaseModel>(
     this: T,
-    data: Partial<InstanceType<T>>[]
+    data: Partial<ModelColumns<T>>[]
   ): Promise<InstanceType<T>[]> {
-    return this.query().createMany(data)
+    return this.query().createMany(data as any[])
   }
 
   /**
@@ -259,8 +275,8 @@ export class BaseModel {
    */
   public static async createOrUpdate<T extends typeof BaseModel>(
     this: T,
-    where: Partial<InstanceType<T>>,
-    data: Partial<InstanceType<T>>
+    where: Partial<ModelColumns<T>>,
+    data: Partial<ModelColumns<T>>
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -268,7 +284,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.createOrUpdate(data)
+    return query.createOrUpdate(data as any)
   }
 
   /**
@@ -276,8 +292,8 @@ export class BaseModel {
    */
   public static async update<T extends typeof BaseModel>(
     this: T,
-    where: Partial<InstanceType<T>>,
-    data: Partial<InstanceType<T>>
+    where: Partial<ModelColumns<T>>,
+    data: Partial<ModelColumns<T>>
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -285,7 +301,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.update(data)
+    return query.update(data as any)
   }
 
   /**
@@ -293,7 +309,7 @@ export class BaseModel {
    */
   public static async delete<T extends typeof BaseModel>(
     this: T,
-    where: Partial<InstanceType<T>>,
+    where: Partial<ModelColumns<T>>,
     force = false
   ): Promise<void> {
     const query = this.query()

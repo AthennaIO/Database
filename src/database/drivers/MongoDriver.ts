@@ -299,7 +299,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
       await this.client.dropCollection(table)
     } catch (err) {
       debug('error happened while dropping table %s in MongoDriver: %o', err)
-      console.log('error while dropping table ' + table, err)
     }
   }
 

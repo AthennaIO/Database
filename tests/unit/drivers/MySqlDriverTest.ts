@@ -683,6 +683,16 @@ export default class MySqlDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToValidateThatDataExistsUsingDriver({ assert }: Context) {
+    const data = { _id: '1', name: 'Charles Babbage' }
+    await this.driver.table('users').create(data)
+
+    const result = await this.driver.table('users').exists()
+
+    assert.isTrue(result)
+  }
+
+  @Test()
   public async shouldReturnUndefinedWhenFindMethodCantFindNothing({ assert }: Context) {
     const result = await this.driver.table('users').find()
 

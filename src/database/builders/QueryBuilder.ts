@@ -9,8 +9,8 @@
 
 import type { Operations } from '#src/types/Operations'
 import type { Direction, ModelColumns } from '#src/types'
-import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 import type { Collection, PaginatedResponse } from '@athenna/common'
+import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 
 export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
@@ -145,6 +145,13 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   }
 
   /**
+   * Find a value in database and return as boolean.
+   */
+  public async exists(): Promise<boolean> {
+    return this.driver.exists()
+  }
+
+  /**
    * Find many values in database.
    */
   public async findMany(): Promise<T[]> {
@@ -172,29 +179,33 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Create a value in database.
    */
-  public async create(data?: Partial<T>): Promise<T> {
-    return this.driver.create(data)
+  public async create(data?: Partial<T> | ModelColumns<T>): Promise<T> {
+    return this.driver.create(data as Partial<T>)
   }
 
   /**
    * Create many values in database.
    */
-  public async createMany(data?: Partial<T>[]): Promise<T[]> {
-    return this.driver.createMany(data)
+  public async createMany(
+    data?: Partial<T>[] | ModelColumns<T>[]
+  ): Promise<T[]> {
+    return this.driver.createMany(data as Partial<T>[])
   }
 
   /**
    * Create data or update if already exists.
    */
-  public async createOrUpdate(data?: Partial<T>): Promise<T | T[]> {
-    return this.driver.createOrUpdate(data)
+  public async createOrUpdate(
+    data?: Partial<T> | ModelColumns<T>
+  ): Promise<T | T[]> {
+    return this.driver.createOrUpdate(data as Partial<T>)
   }
 
   /**
    * Update data in database.
    */
-  public async update(data: Partial<T>): Promise<T | T[]> {
-    return this.driver.update(data)
+  public async update(data: Partial<T> | ModelColumns<T>): Promise<T | T[]> {
+    return this.driver.update(data as Partial<T>)
   }
 
   /**

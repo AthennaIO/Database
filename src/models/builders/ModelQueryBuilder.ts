@@ -14,8 +14,8 @@ import type {
   ModelRelations
 } from '#src/types'
 import { Collection, Is } from '@athenna/common'
-import type { Driver } from '#src/database/drivers/Driver'
 import type { BaseModel } from '#src/models/BaseModel'
+import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
@@ -209,7 +209,7 @@ export class ModelQueryBuilder<
   /**
    * Create a value in database.
    */
-  public async create(data: Partial<M> = {}) {
+  public async create(data: ModelColumns<M> = {} as any) {
     const created = await this.createMany([data])
 
     return created[0]
@@ -218,8 +218,8 @@ export class ModelQueryBuilder<
   /**
    * Create many values in database.
    */
-  public async createMany(data: Partial<M>[]) {
-    data = await Promise.all(
+  public async createMany(data: ModelColumns<M>[]) {
+    data = (await Promise.all(
       data.map(async d => {
         const date = new Date()
         const createdAt = this.schema.getCreatedAtColumn()
@@ -249,7 +249,7 @@ export class ModelQueryBuilder<
 
         return parsed
       })
-    )
+    )) as any[]
 
     const created = await super.createMany(data)
 
@@ -268,7 +268,7 @@ export class ModelQueryBuilder<
       return this.where(pk, hasValue[pk as any]).update(data)
     }
 
-    return this.create(data)
+    return this.create(data as any)
   }
 
   /**
@@ -972,9 +972,9 @@ export class ModelQueryBuilder<
         }
       }
 
-      const isDuplicated = !!(await this.Model.query()
+      const isDuplicated = await this.Model.query()
         .where(column.name as never, value)
-        .find())
+        .exists()
 
       if (isDuplicated) {
         records[column.property] = value

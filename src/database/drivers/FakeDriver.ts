@@ -325,6 +325,13 @@ export class FakeDriver {
   }
 
   /**
+   * Find a value in database.
+   */
+  public static async exists(): Promise<boolean> {
+    return true
+  }
+
+  /**
    * Find a value in database or fail.
    */
   public static async findOrFail(): Promise<any> {
