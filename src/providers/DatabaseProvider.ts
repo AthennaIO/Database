@@ -14,7 +14,7 @@ import { DatabaseImpl } from '#src/database/DatabaseImpl'
 export class DatabaseProvider extends ServiceProvider {
   public async register() {
     this.container.instance('athennaDbOpts', undefined)
-    this.container.singleton('Athenna/Core/Database', DatabaseImpl)
+    this.container.transient('Athenna/Core/Database', DatabaseImpl)
 
     const paths = Config.get('rc.models', [])
     const promises = paths.map(path => {
