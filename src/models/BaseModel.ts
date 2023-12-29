@@ -9,7 +9,7 @@
 
 import equal from 'fast-deep-equal'
 import { Database } from '#src/facades/Database'
-import type { ModelColumns, ModelRelations } from '#src/types'
+import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Collection, Is, Json, String } from '@athenna/common'
@@ -156,7 +156,7 @@ export class BaseModel {
    */
   public static async find<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<ModelColumns<T>>
+    where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>> {
     const query = this.query()
 
@@ -172,7 +172,7 @@ export class BaseModel {
    */
   public static async exists<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<ModelColumns<T>>
+    where?: Partial<InstanceType<T>>
   ): Promise<boolean> {
     const query = this.query()
 
@@ -188,7 +188,7 @@ export class BaseModel {
    */
   public static async findOrFail<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<ModelColumns<T>>
+    where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>> {
     const query = this.query()
 
@@ -205,7 +205,7 @@ export class BaseModel {
    */
   public static async findOr<T extends typeof BaseModel>(
     this: T,
-    where: Partial<ModelColumns<T>>,
+    where: Partial<InstanceType<T>>,
     closure: () => any | Promise<any>
   ): Promise<InstanceType<T> | any> {
     const query = this.query()
@@ -222,7 +222,7 @@ export class BaseModel {
    */
   public static async findMany<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<ModelColumns<T>>
+    where?: Partial<InstanceType<T>>
   ): Promise<InstanceType<T>[]> {
     const query = this.query()
 
@@ -239,7 +239,7 @@ export class BaseModel {
    */
   public static async collection<T extends typeof BaseModel>(
     this: T,
-    where?: Partial<ModelColumns<T>>
+    where?: Partial<InstanceType<T>>
   ): Promise<Collection<InstanceType<T>>> {
     const query = this.query()
 
@@ -255,9 +255,9 @@ export class BaseModel {
    */
   public static async create<T extends typeof BaseModel>(
     this: T,
-    data: Partial<ModelColumns<T>> = {}
+    data: Partial<InstanceType<T>> = {}
   ): Promise<InstanceType<T>> {
-    return this.query().create(data as any)
+    return this.query().create(data)
   }
 
   /**
@@ -265,9 +265,9 @@ export class BaseModel {
    */
   public static async createMany<T extends typeof BaseModel>(
     this: T,
-    data: Partial<ModelColumns<T>>[]
+    data: Partial<InstanceType<T>>[]
   ): Promise<InstanceType<T>[]> {
-    return this.query().createMany(data as any[])
+    return this.query().createMany(data)
   }
 
   /**
@@ -275,8 +275,8 @@ export class BaseModel {
    */
   public static async createOrUpdate<T extends typeof BaseModel>(
     this: T,
-    where: Partial<ModelColumns<T>>,
-    data: Partial<ModelColumns<T>>
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -284,7 +284,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.createOrUpdate(data as any)
+    return query.createOrUpdate(data)
   }
 
   /**
@@ -292,8 +292,8 @@ export class BaseModel {
    */
   public static async update<T extends typeof BaseModel>(
     this: T,
-    where: Partial<ModelColumns<T>>,
-    data: Partial<ModelColumns<T>>
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -301,7 +301,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.update(data as any)
+    return query.update(data)
   }
 
   /**
@@ -309,7 +309,7 @@ export class BaseModel {
    */
   public static async delete<T extends typeof BaseModel>(
     this: T,
-    where: Partial<ModelColumns<T>>,
+    where: Partial<InstanceType<T>>,
     force = false
   ): Promise<void> {
     const query = this.query()
