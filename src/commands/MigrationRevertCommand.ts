@@ -29,7 +29,7 @@ export class MigrationRevertCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ REVERTING MIGRATIONS ])\n')
 
-    const DB = Database.connection(this.connection).connect()
+    const DB = Database.connection(this.connection)
     const dbName = await DB.getCurrentDatabase()
 
     await DB.revertMigrations().finally(() => DB.close())

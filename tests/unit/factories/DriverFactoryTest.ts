@@ -9,9 +9,9 @@
 
 import { Json } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { PostgresDriver } from '#src/drivers/PostgresDriver'
-import { FakeDriverClass } from '#tests/fixtures/drivers/FakeDriverClass'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { Test, Mock, type Context, AfterEach, BeforeEach } from '@athenna/test'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
@@ -38,14 +38,14 @@ export default class DriverFactoryTest {
   public shouldBeAbleToListAllAvailableDrivers({ assert }: Context) {
     const drivers = DriverFactory.availableDrivers()
 
-    assert.deepEqual(drivers, ['mongo', 'mysql', 'sqlite', 'postgres', 'fake'])
+    assert.deepEqual(drivers, ['fake', 'mongo', 'mysql', 'sqlite', 'postgres'])
   }
 
   @Test()
   public shouldBeAbleToListOnlyConnectedToDatabaseDrivers({ assert }: Context) {
     const drivers = DriverFactory.availableDrivers({ onlyConnected: true })
 
-    assert.deepEqual(drivers, [])
+    assert.deepEqual(drivers, ['fake'])
   }
 
   @Test()
@@ -70,7 +70,7 @@ export default class DriverFactoryTest {
   public shouldBeAbleToFabricateTheDefaultDriverInstance({ assert }: Context) {
     const driver = DriverFactory.fabricate('default')
 
-    assert.deepEqual(driver, new FakeDriverClass())
+    assert.deepEqual(driver, new FakeDriver())
   }
 
   @Test()

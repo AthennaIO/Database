@@ -551,7 +551,7 @@ export default class ModelSchemaTest {
 
     await User.schema().sync()
 
-    const user = await User.create({ email: 'jlenon7@gmail.com' })
+    const user = await User.query().uniqueValidation(false).create({ email: 'jlenon7@gmail.com' })
 
     assert.isDefined(user.id)
     assert.isDefined(user.email)
@@ -559,7 +559,7 @@ export default class ModelSchemaTest {
     /**
      * Validate that unique index is working fine.
      */
-    await assert.rejects(async () => await User.create({ email: 'jlenon7@gmail.com' }))
+    await assert.rejects(async () => await User.query().uniqueValidation(false).create({ email: 'jlenon7@gmail.com' }))
   }
 
   @Test()
@@ -646,6 +646,26 @@ export default class ModelSchemaTest {
 
     const columns = User.schema()
       .getAllUniqueColumns()
+      .map(column => column.property)
+
+    assert.deepEqual(columns, ['id', 'email'])
+  }
+
+  @Test()
+  public async shouldBeAbleToGetAllColumnsWhereNullableIsFalse({ assert }: Context) {
+    class User extends BaseModel {
+      @Column({ isNullable: false })
+      public id: string
+
+      @Column()
+      public name: string
+
+      @Column({ isNullable: false })
+      public email: string
+    }
+
+    const columns = User.schema()
+      .getAllNotNullableColumns()
       .map(column => column.property)
 
     assert.deepEqual(columns, ['id', 'email'])

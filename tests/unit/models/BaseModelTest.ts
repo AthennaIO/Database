@@ -15,18 +15,18 @@ import { User } from '#tests/fixtures/models/User'
 import { Profile } from '#tests/fixtures/models/Profile'
 import { Product } from '#tests/fixtures/models/Product'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
-import { FakeDriver } from '#tests/fixtures/drivers/FakeDriver'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import { Test, type Context, BeforeEach, AfterEach, Mock, Skip } from '@athenna/test'
+import { Test, type Context, BeforeEach, AfterEach, Mock } from '@athenna/test'
 
 export default class BaseModelTest {
   @BeforeEach()
   public async beforeEach() {
     new DatabaseProvider().register()
     await Config.loadAll(Path.fixtures('config'))
+    Database.connection('fake')
   }
 
   @AfterEach()
@@ -34,6 +34,7 @@ export default class BaseModelTest {
     Config.clear()
     ioc.reconstruct()
     Mock.restoreAll()
+    BaseModel.setAttributes(true).uniqueValidation(true).nullableValidation(true)
   }
 
   @Test()
@@ -93,16 +94,42 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldGenerateTheInstanceDriverByConnectionForTheModelQueryBuilder({ assert }: Context) {
-    Config.set('database.default', 'mongo-memory')
     Database.spy()
 
     assert.instanceOf(BaseModel.query(), ModelQueryBuilder)
-    assert.calledWith(Database.connection, 'mongo-memory')
+    assert.calledWith(Database.connection, 'fake')
+  }
+
+  @Test()
+  public async shouldBeAbleToDisableUniqueValidationInModel({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+
+    await BaseModel.uniqueValidation(false).create()
+
+    assert.notCalled(Database.driver.find)
+  }
+
+  @Test()
+  public async shouldBeAbleToDisableNullableValidationInModel({ assert }: Context) {
+    Mock.when(Database.driver, 'createMany').resolve(undefined)
+
+    await BaseModel.nullableValidation(false).create()
+
+    assert.calledOnce(Database.driver.createMany)
+  }
+
+  @Test()
+  public async shouldBeAbleToTruncateModelTable({ assert }: Context) {
+    Mock.when(Database.driver, 'truncate').resolve(undefined)
+
+    await BaseModel.truncate()
+
+    assert.calledWith(Database.driver.truncate, 'base_models')
   }
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseUsingFindMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const data = await User.find()
 
@@ -111,18 +138,18 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingFindMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
-    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'where').return(undefined)
 
     const data = await User.find({ id: '1' })
 
     assert.deepEqual(data.id, '1')
-    assert.calledOnceWith(FakeDriver.where, { id: '1' })
+    assert.calledOnceWith(Database.driver.where, { id: '1' })
   }
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseUsingFindOrFailMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const data = await User.findOrFail()
 
@@ -131,25 +158,25 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingFindOrFailMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
-    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'where').return(undefined)
 
     const data = await User.findOrFail({ id: '1' })
 
     assert.deepEqual(data.id, '1')
-    assert.calledOnceWith(FakeDriver.where, { id: '1' })
+    assert.calledOnceWith(Database.driver.where, { id: '1' })
   }
 
   @Test()
   public async shouldThrowExceptionIfFindOrFailMethodCantFindAnyValue({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'find').resolve(undefined)
 
     await assert.rejects(() => User.findOrFail(), NotFoundDataException)
   }
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseUsingFindOrMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const data = await User.findOr({}, () => ({ id: '2' }))
 
@@ -158,18 +185,18 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingFindOrMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve(undefined)
-    Mock.when(FakeDriver, 'where').return(undefined)
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'where').return(undefined)
 
     const data = await User.findOr({ id: '1' }, () => ({ id: '2' }))
 
     assert.deepEqual(data.id, '2')
-    assert.calledOnceWith(FakeDriver.where, { id: '1' })
+    assert.calledOnceWith(Database.driver.where, { id: '1' })
   }
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseUsingFindManyMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'findMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
 
     const data = await User.findMany()
 
@@ -178,7 +205,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingFindManyMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'findMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
 
     const data = await User.findMany({ id: '1' })
 
@@ -187,7 +214,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseUsingCollectionMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'findMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
 
     const data = await User.collection()
 
@@ -196,7 +223,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingCollectionMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'findMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
 
     const data = await User.collection({ id: '1' })
 
@@ -205,7 +232,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToCreateValueInDatabaseUsingCreateMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
 
     const data = await User.create({ id: '1' })
 
@@ -214,7 +242,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToCreateManyValuesInDatabaseUsingCreateManyMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
 
     const data = await User.createMany([{ id: '1' }])
 
@@ -223,8 +252,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToCreateValueInDatabaseUsingCreateOrUpdateMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve(undefined)
-    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
 
     const data = (await User.createOrUpdate({ id: '1' }, { id: '1' })) as User
 
@@ -232,19 +261,19 @@ export default class BaseModelTest {
   }
 
   @Test()
-  @Skip('Cant find a way to mock find method for the first model instance only')
   public async shouldBeAbleToUpdateValueInDatabaseUsingCreateOrUpdateMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
-    Mock.when(FakeDriver, 'update').resolve({ id: '2' })
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'update').resolve({ id: '2' })
 
-    const data = (await User.createOrUpdate({ id: '1' }, { id: '2' })) as User
+    const data = (await User.uniqueValidation(false).createOrUpdate({ id: '1' }, { id: '2' })) as User
 
     assert.deepEqual(data.id, '2')
   }
 
   @Test()
   public async shouldBeAbleToUpdateValueInDatabaseUsingUpdateMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
 
     const data = (await User.update({ id: '1' }, { id: '1' })) as User
 
@@ -253,7 +282,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToUpdateManyValuesInDatabaseUsingUpdateMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'update').resolve([{ id: '1' }, { id: '2' }])
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve([{ id: '1' }, { id: '2' }])
 
     const data = await User.update({ rate: 5 }, { id: '1' })
 
@@ -263,20 +293,21 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToSoftDeleteValueInDatabaseUsingDeleteMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
 
     await User.delete({ id: '1' })
 
-    assert.calledOnce(FakeDriver.update)
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
   public async shouldBeAbleToForceDeleteValueInDatabaseUsingDeleteMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'delete').resolve(undefined)
+    Mock.when(Database.driver, 'delete').resolve(undefined)
 
     await User.delete({ id: '1' }, true)
 
-    assert.calledOnce(FakeDriver.delete)
+    assert.calledOnce(Database.driver.delete)
   }
 
   @Test()
@@ -386,7 +417,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToCreateModelFromScratchUsingSaveMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'createMany').resolve([{ id: '1', name: 'lenon' }])
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1', name: 'lenon' }])
 
     const user = new User()
 
@@ -395,7 +427,7 @@ export default class BaseModelTest {
 
     await user.save()
 
-    assert.calledWith(FakeDriver.createMany, [
+    assert.calledWith(Database.driver.createMany, [
       Mock.match({ id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2' })
     ])
     assert.containsSubset(user, {
@@ -410,8 +442,9 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToUpdateModelUsingSaveMethod({ assert }: Context) {
-    Mock.when(FakeDriver, 'where').return(undefined)
-    Mock.when(FakeDriver, 'update').resolve({ id: '2', name: 'txsoura' })
+    Mock.when(Database.driver, 'where').return(undefined)
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '2', name: 'txsoura' })
 
     const user = new User()
 
@@ -426,7 +459,7 @@ export default class BaseModelTest {
     await user.save()
 
     assert.calledWith(
-      FakeDriver.update,
+      Database.driver.update,
       Mock.match({ id: '2', name: 'txsoura', metadata1: 'random-1', metadata2: 'random-2' })
     )
     assert.containsSubset(user, {
@@ -441,8 +474,9 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldUpdateValuesIfAttributesOrDefaultColumnValuesChangeTheModel({ assert }: Context) {
-    Mock.when(FakeDriver, 'where').return(undefined)
-    Mock.when(FakeDriver, 'update').resolve({ id: '1', name: 'lenon' })
+    Mock.when(Database.driver, 'where').return(undefined)
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'lenon' })
 
     const user = new User()
 
@@ -453,7 +487,7 @@ export default class BaseModelTest {
 
     await user.save()
 
-    assert.calledWith(FakeDriver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
+    assert.calledWith(Database.driver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
     assert.containsSubset(user, {
       id: '1',
       name: 'lenon',
@@ -466,14 +500,15 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldNotUpdateOrCreateTheModelIfThereAreNoDirtyValues({ assert }: Context) {
-    Mock.when(FakeDriver, 'where').return(undefined)
-    Mock.when(FakeDriver, 'update').resolve(undefined)
-    Mock.when(FakeDriver, 'createMany').resolve(undefined)
+    Mock.when(Database.driver, 'where').return(undefined)
+    Mock.when(Database.driver, 'update').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve(undefined)
 
     const user = new User()
 
     user.id = '1'
     user.name = 'lenon'
+    user.email = 'lenon@athenna.io'
     user.metadata1 = 'random-1'
     user.metadata2 = 'random-2'
     user.createdAt = new Date()
@@ -484,21 +519,29 @@ export default class BaseModelTest {
 
     await user.save()
 
-    assert.notCalled(FakeDriver.update)
-    assert.notCalled(FakeDriver.createMany)
+    assert.notCalled(Database.driver.update)
+    assert.notCalled(Database.driver.createMany)
     assert.containsSubset(user, {
       id: '1',
       name: 'lenon',
+      email: 'lenon@athenna.io',
       metadata1: 'random-1',
       metadata2: 'random-2',
       deletedAt: null,
-      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+      original: {
+        id: '1',
+        name: 'lenon',
+        email: 'lenon@athenna.io',
+        metadata1: 'random-1',
+        metadata2: 'random-2',
+        deletedAt: null
+      }
     })
   }
 
   @Test()
   public async shouldBeAbleToGetAFreshModelInstance({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const user = new User()
 
@@ -519,7 +562,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToGetRefreshModelInstance({ assert }: Context) {
-    Mock.when(FakeDriver, 'find').resolve({ id: '2' })
+    Mock.when(Database.driver, 'find').resolve({ id: '2' })
 
     const user = new User()
 
@@ -559,7 +602,8 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToDeleteAModelFromInstance({ assert }: Context) {
-    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
 
     const user = new User()
 
@@ -574,12 +618,12 @@ export default class BaseModelTest {
     await user.delete()
 
     assert.isDefined(user.deletedAt)
-    assert.calledOnce(FakeDriver.update)
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
   public async shouldBeAbleToForceDeleteAModelFromInstance({ assert }: Context) {
-    Mock.when(FakeDriver, 'delete').resolve(undefined)
+    Mock.when(Database.driver, 'delete').resolve(undefined)
 
     const user = new User()
 
@@ -594,12 +638,13 @@ export default class BaseModelTest {
     await user.delete(true)
 
     assert.isNull(user.deletedAt)
-    assert.calledOnce(FakeDriver.delete)
+    assert.calledOnce(Database.driver.delete)
   }
 
   @Test()
   public async shouldBeAbleToRestoreAModelThatWasSoftDeleted({ assert }: Context) {
-    Mock.when(FakeDriver, 'update').resolve({ id: '1' })
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
 
     const user = new User()
 
@@ -614,12 +659,12 @@ export default class BaseModelTest {
     await user.delete()
 
     assert.isDefined(user.deletedAt)
-    assert.calledOnce(FakeDriver.update)
+    assert.calledOnce(Database.driver.update)
 
     await user.restore()
 
     assert.isNull(user.deletedAt)
-    assert.calledTimes(FakeDriver.update, 2)
+    assert.calledTimes(Database.driver.update, 2)
   }
 
   @Test()

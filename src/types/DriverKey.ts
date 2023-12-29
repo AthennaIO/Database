@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { Driver } from '#src/drivers/Driver'
+import type { Driver } from '#src/database/drivers/Driver'
 
 export type DriverKey = {
   Driver: new (...args: any[]) => Driver

@@ -68,7 +68,7 @@ export class ModelSchema<M extends BaseModel = any> {
   public getModelDriver() {
     const connection = this.getModelConnection()
 
-    return Database.connection(connection).connect().driver
+    return Database.connection(connection).driver
   }
 
   /**
@@ -208,6 +208,15 @@ export class ModelSchema<M extends BaseModel = any> {
     const columns = Annotation.getColumnsMeta(this.Model)
 
     return columns.filter(column => column.isUnique)
+  }
+
+  /**
+   * Get all columns where nullable option is false.
+   */
+  public getAllNotNullableColumns(): ColumnOptions[] {
+    const columns = Annotation.getColumnsMeta(this.Model)
+
+    return columns.filter(column => !column.isNullable)
   }
 
   /**

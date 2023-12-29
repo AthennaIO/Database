@@ -10,13 +10,14 @@
 import { debug } from '#src/debug'
 import { Config } from '@athenna/config'
 import { Options } from '@athenna/common'
-import type { Driver } from '#src/drivers/Driver'
 import type { DriverKey } from '#src/types/DriverKey'
-import { MongoDriver } from '#src/drivers/MongoDriver'
-import { MySqlDriver } from '#src/drivers/MySqlDriver'
-import { SqliteDriver } from '#src/drivers/SqliteDriver'
 import type { Connections } from '#src/types/Connections'
-import { PostgresDriver } from '#src/drivers/PostgresDriver'
+import type { Driver } from '#src/database/drivers/Driver'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
+import { MongoDriver } from '#src/database/drivers/MongoDriver'
+import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
+import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
@@ -25,6 +26,10 @@ export class DriverFactory {
    * All athenna drivers connection configuration.
    */
   public static drivers: Map<string, DriverKey> = new Map()
+    .set('fake', {
+      Driver: FakeDriver,
+      client: { destroy: () => {} }
+    })
     .set('mongo', {
       Driver: MongoDriver,
       client: null
@@ -69,9 +74,15 @@ export class DriverFactory {
   public static fabricate(con: 'mysql'): MySqlDriver
   public static fabricate(con: 'sqlite'): SqliteDriver
   public static fabricate(con: 'postgres'): PostgresDriver
+  public static fabricate(con: 'fake'): typeof FakeDriver
   public static fabricate(
     con: Connections
-  ): MongoDriver | MySqlDriver | SqliteDriver | PostgresDriver
+  ):
+    | MongoDriver
+    | MySqlDriver
+    | SqliteDriver
+    | PostgresDriver
+    | typeof FakeDriver
 
   /**
    * Fabricate a new connection with some database driver.

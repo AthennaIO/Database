@@ -8,7 +8,7 @@
  */
 
 import { Config } from '@athenna/config'
-import { SqliteDriver } from '#src/drivers/SqliteDriver'
+import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
 import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'

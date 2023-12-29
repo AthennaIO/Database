@@ -8,7 +8,7 @@
  */
 
 import { Config } from '@athenna/config'
-import { MySqlDriver } from '#src/drivers/MySqlDriver'
+import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
 import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'

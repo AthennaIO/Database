@@ -29,7 +29,7 @@ export class MigrationRunCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ RUNNING MIGRATIONS ])\n')
 
-    const DB = Database.connection(this.connection).connect()
+    const DB = Database.connection(this.connection)
     const dbName = await DB.getCurrentDatabase()
 
     await DB.runMigrations().finally(() => DB.close())

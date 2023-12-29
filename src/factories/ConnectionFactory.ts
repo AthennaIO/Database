@@ -72,6 +72,8 @@ export class ConnectionFactory {
   /**
    * Create the connection with a mysql database.
    */
+  // TODO Don't use connection here. Pass connection
+  // configs in here instead.
   public static mysql(con: string): Knex {
     const client = this.knex(con, 'mysql2')
 
@@ -83,6 +85,8 @@ export class ConnectionFactory {
   /**
    * Create the connection with a mongo database.
    */
+  // TODO Don't use connection here. Pass connection
+  // configs in here instead.
   public static mongo(con: string): Connection {
     const client = this.mongoose(con)
 
@@ -94,6 +98,8 @@ export class ConnectionFactory {
   /**
    * Create the connection with a sqlite database.
    */
+  // TODO Don't use connection here. Pass connection
+  // configs in here instead.
   public static sqlite(con: string): Knex {
     const client = this.knex(con, 'better-sqlite3')
 
@@ -105,6 +111,8 @@ export class ConnectionFactory {
   /**
    * Create the connection with a postgres database.
    */
+  // TODO Don't use connection here. Pass connection
+  // configs in here instead.
   public static postgres(con: string): Knex {
     const client = this.knex(con, 'pg')
 

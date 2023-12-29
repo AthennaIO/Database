@@ -16,7 +16,7 @@ export class NotConnectedDatabaseException extends Exception {
     super({
       message,
       code: 'E_NOT_CONNECTED_ERROR',
-      help: `Remember to call "await Database.connect()" method before starting performing queries.`
+      help: `Remember to call "connect()" method before starting performing queries.`
     })
   }
 }

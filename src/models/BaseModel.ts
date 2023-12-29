@@ -18,6 +18,10 @@ import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export class BaseModel {
+  private static isToSetAttributes = true
+  private static isToValidateUnique = true
+  private static isToValidateNullable = true
+
   /**
    * The faker instance to create fake data in
    * definition instance.
@@ -78,7 +82,6 @@ export class BaseModel {
    * Create a new ModelSchema instance from your model.
    */
   public static schema<T extends typeof BaseModel>(this: T) {
-    // TODO Create sync implementation
     return new ModelSchema<InstanceType<T>>(this)
   }
 
@@ -90,12 +93,62 @@ export class BaseModel {
   }
 
   /**
+   * Enable/disable setting the default attributes properties
+   * when creating/updating models.
+   */
+  public static setAttributes<T extends typeof BaseModel>(
+    this: T,
+    value: boolean
+  ) {
+    this.isToSetAttributes = value
+
+    return this
+  }
+
+  /**
+   * Enable/disable the `isUnique` property validation of
+   * models columns.
+   */
+  public static uniqueValidation<T extends typeof BaseModel>(
+    this: T,
+    value: boolean
+  ) {
+    this.isToValidateUnique = value
+
+    return this
+  }
+
+  /**
+   * Enable/disable the `isNullable` property validation of
+   * models columns.
+   */
+  public static nullableValidation<T extends typeof BaseModel>(
+    this: T,
+    value: boolean
+  ) {
+    this.isToValidateNullable = value
+
+    return this
+  }
+
+  /**
    * Create a query builder for the model.
    */
   public static query<T extends typeof BaseModel>(this: T) {
     const driver = Database.connection(this.connection()).driver
 
     return new ModelQueryBuilder<InstanceType<T>, typeof driver>(this, driver)
+      .setAttributes(this.isToSetAttributes)
+      .uniqueValidation(this.isToValidateUnique)
+      .nullableValidation(this.isToValidateNullable)
+  }
+
+  /**
+   * Remove all data inside model table
+   * and restart the identity of the table.
+   */
+  public static async truncate(): Promise<void> {
+    await Database.connection(this.connection()).truncate(this.table())
   }
 
   /**
@@ -401,7 +454,7 @@ export class BaseModel {
     const createdAt = schema.getCreatedAtColumn()
     const updatedAt = schema.getUpdatedAtColumn()
     const deletedAt = schema.getDeletedAtColumn()
-    const attributes = Model.attributes()
+    const attributes = Model.isToSetAttributes ? Model.attributes() : {}
 
     Object.keys(attributes).forEach(key => {
       if (this[key]) {

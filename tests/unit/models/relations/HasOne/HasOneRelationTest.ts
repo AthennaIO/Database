@@ -19,7 +19,7 @@ export default class HasOneRelationTest {
     await Config.loadAll(Path.fixtures('config'))
     new DatabaseProvider().register()
 
-    const pg = Database.connection('postgres-docker').connect()
+    const pg = Database.connection('postgres-docker')
 
     Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
 

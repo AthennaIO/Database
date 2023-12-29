@@ -129,7 +129,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Create a join clause by join type
    */
-  protected joinByType(
+  public joinByType(
     joinType: string,
     table: any,
     column1?: string,

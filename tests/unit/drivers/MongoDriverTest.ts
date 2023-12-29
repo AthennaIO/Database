@@ -8,9 +8,9 @@
  */
 
 import { Config } from '@athenna/config'
-import { MongoDriver } from '#src/drivers/MongoDriver'
 import { Collection, Exec, Path } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
+import { MongoDriver } from '#src/database/drivers/MongoDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'

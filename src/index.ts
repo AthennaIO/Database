@@ -9,6 +9,8 @@
 
 export * from '#src/types'
 
+export * from '#src/database/drivers/FakeDriver'
+
 export * from '#src/models/BaseModel'
 export * from '#src/models/annotations/Column'
 export * from '#src/models/annotations/HasOne'
@@ -23,7 +25,7 @@ export * from '#src/database/builders/QueryBuilder'
 export * from '#src/database/transactions/Transaction'
 export * from '#src/database/migrations/MigrationSource'
 
-export * from '#src/drivers/Driver'
+export * from '#src/database/drivers/Driver'
 export * from '#src/factories/DriverFactory'
 export * from '#src/factories/ConnectionFactory'
 

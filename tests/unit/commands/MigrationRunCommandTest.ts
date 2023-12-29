@@ -20,7 +20,7 @@ export default class MigrationRunCommandTest extends BaseCommandTest {
 
     output.assertSucceeded()
     output.assertLogged('[ RUNNING MIGRATIONS ]')
-    output.assertLogged('[  success  ] Successfully ran migrations on "undefined" database.')
+    output.assertLogged('[  success  ] Successfully ran migrations on "fake" database.')
   }
 
   @Test()
@@ -31,6 +31,6 @@ export default class MigrationRunCommandTest extends BaseCommandTest {
 
     output.assertSucceeded()
     output.assertLogged('[ RUNNING MIGRATIONS ]')
-    output.assertLogged('[  success  ] Successfully ran migrations on "undefined" database.')
+    output.assertLogged('[  success  ] Successfully ran migrations on "fake" database.')
   }
 }

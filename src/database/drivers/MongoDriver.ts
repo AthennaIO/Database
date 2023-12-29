@@ -15,7 +15,8 @@ import {
   type PaginatedResponse
 } from '@athenna/common'
 
-import { Driver } from '#src/drivers/Driver'
+import { debug } from '#src/debug'
+import { Driver } from '#src/database/drivers/Driver'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -165,7 +166,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
      * Relations will not be registered because
      * Athenna will handle them instead of mongoose.
      */
-
     this.client
       .model(schema.getModelName(), new mongoose.Schema(columns))
       .syncIndexes()
@@ -297,7 +297,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async dropTable(table: string): Promise<void> {
     try {
       await this.client.dropCollection(table)
-    } catch (err) {}
+    } catch (err) {
+      debug('error happened while dropping table %s in MongoDriver: %o', err)
+      console.log('error while dropping table ' + table, err)
+    }
   }
 
   /**

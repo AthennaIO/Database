@@ -11,7 +11,7 @@ import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { Log, LoggerProvider } from '@athenna/logger'
 import { DriverFactory } from '#src/factories/DriverFactory'
-import { PostgresDriver } from '#src/drivers/PostgresDriver'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Test, Mock, type Context, BeforeEach, AfterEach } from '@athenna/test'
 

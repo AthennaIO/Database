@@ -9,7 +9,7 @@
 
 import type { Operations } from '#src/types/Operations'
 import type { Direction, ModelColumns } from '#src/types'
-import type { Driver as DriverImpl } from '#src/drivers/Driver'
+import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 import type { Collection, PaginatedResponse } from '@athenna/common'
 
 export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
