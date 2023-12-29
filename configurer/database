@@ -63,6 +63,10 @@ export default {
       url: Env('DB_URL', 'mongodb://root:root@localhost:27017/admin'),
       w: 'majority',
       retryWrites: true
+    },
+
+    fake: {
+      driver: 'fake'
     }
   }
 }
