@@ -179,33 +179,29 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
   /**
    * Create a value in database.
    */
-  public async create(data?: Partial<T> | ModelColumns<T>): Promise<T> {
-    return this.driver.create(data as Partial<T>)
+  public async create(data?: Partial<T>): Promise<T> {
+    return this.driver.create(data)
   }
 
   /**
    * Create many values in database.
    */
-  public async createMany(
-    data?: Partial<T>[] | ModelColumns<T>[]
-  ): Promise<T[]> {
-    return this.driver.createMany(data as Partial<T>[])
+  public async createMany(data?: Partial<T>[]): Promise<T[]> {
+    return this.driver.createMany(data)
   }
 
   /**
    * Create data or update if already exists.
    */
-  public async createOrUpdate(
-    data?: Partial<T> | ModelColumns<T>
-  ): Promise<T | T[]> {
-    return this.driver.createOrUpdate(data as Partial<T>)
+  public async createOrUpdate(data?: Partial<T>): Promise<T | T[]> {
+    return this.driver.createOrUpdate(data)
   }
 
   /**
    * Update data in database.
    */
-  public async update(data: Partial<T> | ModelColumns<T>): Promise<T | T[]> {
-    return this.driver.update(data as Partial<T>)
+  public async update(data: Partial<T>): Promise<T | T[]> {
+    return this.driver.update(data)
   }
 
   /**

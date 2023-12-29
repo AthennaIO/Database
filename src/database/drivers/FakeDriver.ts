@@ -325,10 +325,12 @@ export class FakeDriver {
   }
 
   /**
-   * Find a value in database.
+   * Find a value in database and return as boolean.
    */
   public static async exists(): Promise<boolean> {
-    return true
+    const data = await this.find()
+
+    return !!data
   }
 
   /**

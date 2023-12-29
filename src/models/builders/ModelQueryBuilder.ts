@@ -209,7 +209,7 @@ export class ModelQueryBuilder<
   /**
    * Create a value in database.
    */
-  public async create(data: ModelColumns<M> = {} as any) {
+  public async create(data: Partial<M> = {}) {
     const created = await this.createMany([data])
 
     return created[0]
@@ -218,8 +218,8 @@ export class ModelQueryBuilder<
   /**
    * Create many values in database.
    */
-  public async createMany(data: ModelColumns<M>[]) {
-    data = (await Promise.all(
+  public async createMany(data: Partial<M>[]) {
+    data = await Promise.all(
       data.map(async d => {
         const date = new Date()
         const createdAt = this.schema.getCreatedAtColumn()
@@ -249,7 +249,7 @@ export class ModelQueryBuilder<
 
         return parsed
       })
-    )) as any[]
+    )
 
     const created = await super.createMany(data)
 
@@ -268,7 +268,7 @@ export class ModelQueryBuilder<
       return this.where(pk, hasValue[pk as any]).update(data)
     }
 
-    return this.create(data as any)
+    return this.create(data)
   }
 
   /**

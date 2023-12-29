@@ -235,7 +235,7 @@ export default class BaseModelTest {
     Mock.when(Database.driver, 'find').resolve(undefined)
     Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
 
-    const data = await User.create({ id: '1' })
+    const data = await User.create()
 
     assert.deepEqual(data.id, '1')
   }
