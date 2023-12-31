@@ -89,11 +89,14 @@ export default class DatabaseConfigurer extends BaseConfigurer {
         case 'mongo':
           envs =
             '\nDB_CONNECTION=mongo\n' +
+            'DB_DEBUG=false\n' +
             'DB_URL=mongodb://root:root@localhost:27017/admin\n'
           break
         case 'sqlite':
           envs =
-            '\nDB_CONNECTION=sqlite\n' + 'DB_FILENAME=./database/sqlite.db\n'
+            '\nDB_CONNECTION=sqlite\n' +
+            'DB_DEBUG=false\n' +
+            'DB_FILENAME=./database/sqlite.db\n'
           break
         default:
           // eslint-disable-next-line no-case-declarations
@@ -106,6 +109,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
             `\nDB_CONNECTION=${connection}\n` +
             'DB_HOST=localhost\n' +
             `DB_PORT=${ports[connection]}\n` +
+            'DB_DEBUG=false\n' +
             'DB_USERNAME=root\n' +
             'DB_PASSWORD=root\n' +
             'DB_DATABASE=athenna\n'
