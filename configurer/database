@@ -31,7 +31,7 @@ export default {
       connection: {
         filename: Env('DB_FILENAME', ':memory:')
       },
-      debug: false
+      debug: Env('DB_DEBUG', false)
     },
 
     mysql: {
@@ -43,7 +43,7 @@ export default {
         password: Env('DB_PASSWORD', 'root'),
         database: Env('DB_DATABASE', 'athenna')
       },
-      debug: false
+      debug: Env('DB_DEBUG', false)
     },
 
     postgres: {
@@ -55,14 +55,15 @@ export default {
         password: Env('DB_PASSWORD', 'root'),
         database: Env('DB_DATABASE', 'athenna')
       },
-      debug: false
+      debug: Env('DB_DEBUG', false)
     },
 
     mongo: {
       driver: 'mongo',
       url: Env('DB_URL', 'mongodb://root:root@localhost:27017/admin'),
       w: 'majority',
-      retryWrites: true
+      retryWrites: true,
+      debug: Env('DB_DEBUG', false)
     },
 
     fake: {

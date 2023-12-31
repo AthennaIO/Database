@@ -127,10 +127,16 @@ export class ConnectionFactory {
   public static mongoose(con: string) {
     const mongoose = this.getMongoose()
     const configs = Config.get(`database.connections.${con}`, {})
-    const options = Json.omit(configs, ['url', 'driver', 'sync'])
 
-    debug('creating new connection using Mongoose. Options defined: %o', {
+    if (configs.debug !== undefined) {
+      mongoose.set('debug', configs.debug)
+    }
+
+    const options = Json.omit(configs, ['url', 'debug', 'driver'])
+
+    debug('creating new connection using mongoose. options defined: %o', {
       url: configs.url,
+      debug: configs.debug,
       ...options
     })
 
@@ -155,10 +161,10 @@ export class ConnectionFactory {
       },
       debug: false,
       useNullAsDefault: false,
-      ...Json.omit(configs, ['driver', 'sync'])
+      ...Json.omit(configs, ['driver'])
     }
 
-    debug('creating new connection using Knex. Options defined: %o', options)
+    debug('creating new connection using Knex. options defined: %o', options)
 
     return knex.default(options)
   }
