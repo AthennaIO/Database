@@ -241,6 +241,16 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateValueInDatabaseUsingCreateMethodWithoutCleaningPersist({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
+
+    const data = await User.create({}, false)
+
+    assert.deepEqual(data.id, '1')
+  }
+
+  @Test()
   public async shouldBeAbleToCreateManyValuesInDatabaseUsingCreateManyMethod({ assert }: Context) {
     Mock.when(Database.driver, 'find').resolve(undefined)
     Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
@@ -251,11 +261,33 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateManyValuesInDatabaseUsingCreateManyMethodWithoutCleaningPersist({
+    assert
+  }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
+
+    const data = await User.createMany([{ id: '1' }], false)
+
+    assert.deepEqual(data[0].id, '1')
+  }
+
+  @Test()
   public async shouldBeAbleToCreateValueInDatabaseUsingCreateOrUpdateMethod({ assert }: Context) {
     Mock.when(Database.driver, 'find').resolve(undefined)
     Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
 
     const data = (await User.createOrUpdate({ id: '1' }, { id: '1' })) as User
+
+    assert.deepEqual(data.id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateValueInDatabaseUsingCreateOrUpdateMethodWithoutCleaningPersist({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '1' }])
+
+    const data = (await User.createOrUpdate({ id: '1' }, { id: '1' }, false)) as User
 
     assert.deepEqual(data.id, '1')
   }
@@ -276,6 +308,16 @@ export default class BaseModelTest {
     Mock.when(Database.driver, 'update').resolve({ id: '1' })
 
     const data = (await User.update({ id: '1' }, { id: '1' })) as User
+
+    assert.deepEqual(data.id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateValueInDatabaseUsingUpdateMethodWithoutCleaningPersist({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
+
+    const data = (await User.update({ id: '1' }, { id: '1' }, false)) as User
 
     assert.deepEqual(data.id, '1')
   }

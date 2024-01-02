@@ -87,7 +87,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a client in driver.
    */
-  public setClient(client: Client): this {
+  public setClient(client: Client) {
     this.client = client
 
     return this
@@ -106,7 +106,7 @@ export abstract class Driver<Client = any, QB = any> {
   public setQueryBuilder(
     queryBuilder: QB,
     options: { useSetQB?: boolean } = {}
-  ): this {
+  ) {
     options = Options.create(options, {
       useSetQB: false
     })
@@ -120,7 +120,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set the primary key of the driver.
    */
-  public setPrimaryKey(primaryKey: string): this {
+  public setPrimaryKey(primaryKey: string) {
     this.primaryKey = primaryKey
 
     return this
@@ -135,7 +135,7 @@ export abstract class Driver<Client = any, QB = any> {
     column1?: string,
     operation?: string | Operations,
     column2?: string
-  ): this {
+  ) {
     if (!column1) {
       this.qb[joinType](table)
 
@@ -415,8 +415,8 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public when(
     criteria: any,
-    closure: (query: this, criteriaValue?: any) => void
-  ): this {
+    closure: (query: this, criteriaValue?: any) => any | Promise<any>
+  ) {
     if (!criteria) {
       return this
     }

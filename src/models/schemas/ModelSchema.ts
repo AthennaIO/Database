@@ -180,9 +180,7 @@ export class ModelSchema<M extends BaseModel = any> {
    * as true.
    */
   public getCreatedAtColumn(): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
-
-    return columns.find(c => c.isCreateDate)
+    return this.columns.find(c => c.isCreateDate)
   }
 
   /**
@@ -190,9 +188,7 @@ export class ModelSchema<M extends BaseModel = any> {
    * as true.
    */
   public getUpdatedAtColumn(): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
-
-    return columns.find(c => c.isUpdateDate)
+    return this.columns.find(c => c.isUpdateDate)
   }
 
   /**
@@ -200,27 +196,47 @@ export class ModelSchema<M extends BaseModel = any> {
    * as true.
    */
   public getDeletedAtColumn(): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
+    return this.columns.find(c => c.isDeleteDate)
+  }
 
-    return columns.find(c => c.isDeleteDate)
+  /**
+   * Get all column properties as an array of string.
+   */
+  public getAllColumnProperties(options?: { removeHidden: boolean }): string[] {
+    options = Options.create(options, {
+      removeHidden: false
+    })
+
+    return this.columns
+      .map(column => {
+        if (column.isHidden && options.removeHidden) {
+          return null
+        }
+
+        return column.property
+      })
+      .filter(Boolean)
   }
 
   /**
    * Get all columns where unique option is true.
    */
   public getAllUniqueColumns(): ColumnOptions[] {
-    const columns = Annotation.getColumnsMeta(this.Model)
+    return this.columns.filter(column => column.isUnique)
+  }
 
-    return columns.filter(column => column.isUnique)
+  /**
+   * Get all columns where hidden option is true.
+   */
+  public getAllHiddenColumns(): ColumnOptions[] {
+    return this.columns.filter(column => column.isHidden)
   }
 
   /**
    * Get all columns where nullable option is false.
    */
   public getAllNotNullableColumns(): ColumnOptions[] {
-    const columns = Annotation.getColumnsMeta(this.Model)
-
-    return columns.filter(column => !column.isNullable)
+    return this.columns.filter(column => !column.isNullable)
   }
 
   /**
@@ -235,9 +251,7 @@ export class ModelSchema<M extends BaseModel = any> {
    * Get the column options by the column database name.
    */
   public getColumnByName(column: string | ModelColumns<M>): ColumnOptions {
-    const columns = Annotation.getColumnsMeta(this.Model)
-
-    return columns.find(c => c.name === column)
+    return this.columns.find(c => c.name === column)
   }
 
   /**

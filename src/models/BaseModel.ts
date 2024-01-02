@@ -255,9 +255,10 @@ export class BaseModel {
    */
   public static async create<T extends typeof BaseModel>(
     this: T,
-    data: Partial<InstanceType<T>> = {}
+    data: Partial<InstanceType<T>> = {},
+    cleanPersist = true
   ): Promise<InstanceType<T>> {
-    return this.query().create(data)
+    return this.query().create(data, cleanPersist)
   }
 
   /**
@@ -265,9 +266,10 @@ export class BaseModel {
    */
   public static async createMany<T extends typeof BaseModel>(
     this: T,
-    data: Partial<InstanceType<T>>[]
+    data: Partial<InstanceType<T>>[],
+    cleanPersist = true
   ): Promise<InstanceType<T>[]> {
-    return this.query().createMany(data)
+    return this.query().createMany(data, cleanPersist)
   }
 
   /**
@@ -276,7 +278,8 @@ export class BaseModel {
   public static async createOrUpdate<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
-    data: Partial<InstanceType<T>>
+    data: Partial<InstanceType<T>>,
+    cleanPersist = true
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -284,7 +287,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.createOrUpdate(data)
+    return query.createOrUpdate(data, cleanPersist)
   }
 
   /**
@@ -293,7 +296,8 @@ export class BaseModel {
   public static async update<T extends typeof BaseModel>(
     this: T,
     where: Partial<InstanceType<T>>,
-    data: Partial<InstanceType<T>>
+    data: Partial<InstanceType<T>>,
+    cleanPersist = true
   ): Promise<InstanceType<T> | InstanceType<T>[]> {
     const query = this.query()
 
@@ -301,7 +305,7 @@ export class BaseModel {
       query.where(where)
     }
 
-    return query.update(data)
+    return query.update(data, cleanPersist)
   }
 
   /**
@@ -333,7 +337,7 @@ export class BaseModel {
    * Set the original model values by deep copying
    * the model state.
    */
-  public setOriginal(): this {
+  public setOriginal() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     this.original = {}
@@ -462,7 +466,7 @@ export class BaseModel {
   /**
    * Save the changes done in the model in database.
    */
-  public async save() {
+  public async save(cleanPersist = true) {
     const Model = this.constructor as any
     const schema = Model.schema()
     const primaryKey = schema.getMainPrimaryKeyProperty()
@@ -495,7 +499,7 @@ export class BaseModel {
     const data = this.dirty()
 
     if (!this.isPersisted()) {
-      const created = await Model.create(data)
+      const created = await Model.create(data, cleanPersist)
 
       Object.keys(created).forEach(key => (this[key] = created[key]))
 
@@ -511,7 +515,7 @@ export class BaseModel {
     }
 
     const where = { [primaryKey]: this[primaryKey] }
-    const updated = await Model.update(where, data)
+    const updated = await Model.update(where, data, cleanPersist)
 
     Object.keys(updated).forEach(key => (this[key] = updated[key]))
 
@@ -584,7 +588,7 @@ export class BaseModel {
 
     const restored = await Model.query()
       .where(primaryKey, this[primaryKey])
-      .update({ deletedAt: null })
+      .restore()
 
     Object.keys(restored).forEach(key => (this[key] = restored[key]))
 
