@@ -69,7 +69,7 @@ export class ModelFactory<M extends BaseModel = any, R = M> {
    * Set the soft delete state in your model to
    * fabricate deleted data.
    */
-  public trashed(): this {
+  public trashed() {
     this._trashed = true
 
     return this
@@ -79,7 +79,7 @@ export class ModelFactory<M extends BaseModel = any, R = M> {
    * Remove the soft delete state in your model to
    * not fabricate deleted data.
    */
-  public untrashed(): this {
+  public untrashed() {
     this._trashed = false
 
     return this

@@ -50,7 +50,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the mongo session that should be used by the driver.
    */
-  public setSession(session: ClientSession): this {
+  public setSession(session: ClientSession) {
     this.session = session
 
     return this
@@ -660,7 +660,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the table that this query will be executed.
    */
-  public table(table: string): this {
+  public table(table: string) {
     if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
@@ -674,7 +674,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Log in console the actual query built.
    */
-  public dump(): this {
+  public dump() {
     console.log({
       where: this._where,
       orWhere: this._orWhere,
@@ -687,7 +687,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the columns that should be selected on query.
    */
-  public select(...columns: string[]): this {
+  public select(...columns: string[]) {
     if (columns.includes('*')) {
       return this
     }
@@ -743,7 +743,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the columns that should be selected on query raw.
    */
-  public selectRaw(): this {
+  public selectRaw() {
     throw new NotImplementedMethodException(this.selectRaw.name, 'mongo')
   }
 
@@ -752,7 +752,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public from(): this {
+  public from() {
     throw new NotImplementedMethodException(this.from.name, 'mongo')
   }
 
@@ -761,7 +761,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public fromRaw(): this {
+  public fromRaw() {
     throw new NotImplementedMethodException(this.selectRaw.name, 'mongo')
   }
 
@@ -773,7 +773,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     let foreignField = column2 || operation || this.primaryKey
 
     if (foreignField.includes('.')) {
@@ -801,7 +801,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
@@ -813,7 +813,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
@@ -825,7 +825,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
@@ -837,7 +837,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
@@ -849,7 +849,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
@@ -861,21 +861,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.join(table, column1, operation, column2)
   }
 
   /**
    * Set a join raw statement in your query.
    */
-  public joinRaw(): this {
+  public joinRaw() {
     throw new NotImplementedMethodException(this.joinRaw.name, 'mongo')
   }
 
   /**
    * Set a group by statement in your query.
    */
-  public groupBy(...columns: string[]): this {
+  public groupBy(...columns: string[]) {
     const $group = { [this.primaryKey]: {} }
 
     columns.forEach(column => ($group[this.primaryKey][column] = `$${column}`))
@@ -889,7 +889,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a group by raw statement in your query.
    */
-  public groupByRaw(): this {
+  public groupByRaw() {
     throw new NotImplementedMethodException(this.groupByRaw.name, 'mongo')
   }
 
@@ -900,70 +900,70 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a having statement in your query.
    */
-  public having(column: any, operation?: Operations, value?: any): this {
+  public having(column: any, operation?: Operations, value?: any) {
     return this.where(column, operation, value)
   }
 
   /**
    * Set a having raw statement in your query.
    */
-  public havingRaw(): this {
+  public havingRaw() {
     throw new NotImplementedMethodException(this.havingRaw.name, 'mongo')
   }
 
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists(): this {
+  public havingExists() {
     throw new NotImplementedMethodException(this.havingExists.name, 'mongo')
   }
 
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists(): this {
+  public havingNotExists() {
     throw new NotImplementedMethodException(this.havingNotExists.name, 'mongo')
   }
 
   /**
    * Set a having in statement in your query.
    */
-  public havingIn(column: string, values: any[]): this {
+  public havingIn(column: string, values: any[]) {
     return this.whereIn(column, values)
   }
 
   /**
    * Set a having not in statement in your query.
    */
-  public havingNotIn(column: string, values: any[]): this {
+  public havingNotIn(column: string, values: any[]) {
     return this.whereNotIn(column, values)
   }
 
   /**
    * Set a having between statement in your query.
    */
-  public havingBetween(column: string, values: [any, any]): this {
+  public havingBetween(column: string, values: [any, any]) {
     return this.whereBetween(column, values)
   }
 
   /**
    * Set a having not between statement in your query.
    */
-  public havingNotBetween(column: string, values: [any, any]): this {
+  public havingNotBetween(column: string, values: [any, any]) {
     return this.whereNotBetween(column, values)
   }
 
   /**
    * Set a having null statement in your query.
    */
-  public havingNull(column: string): this {
+  public havingNull(column: string) {
     return this.whereNull(column)
   }
 
   /**
    * Set a having not null statement in your query.
    */
-  public havingNotNull(column: string): this {
+  public havingNotNull(column: string) {
     return this.whereNotNull(column)
   }
 
@@ -974,28 +974,28 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or having statement in your query.
    */
-  public orHaving(column: any, operation?: Operations, value?: any): this {
+  public orHaving(column: any, operation?: Operations, value?: any) {
     return this.orWhere(column, operation, value)
   }
 
   /**
    * Set an or having raw statement in your query.
    */
-  public orHavingRaw(): this {
+  public orHavingRaw() {
     throw new NotImplementedMethodException(this.orHavingRaw.name, 'mongo')
   }
 
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists(): this {
+  public orHavingExists() {
     throw new NotImplementedMethodException(this.orHavingExists.name, 'mongo')
   }
 
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists(): this {
+  public orHavingNotExists() {
     throw new NotImplementedMethodException(
       this.orHavingNotExists.name,
       'mongo'
@@ -1005,42 +1005,42 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or having in statement in your query.
    */
-  public orHavingIn(column: string, values: any[]): this {
+  public orHavingIn(column: string, values: any[]) {
     return this.orWhereIn(column, values)
   }
 
   /**
    * Set an or having not in statement in your query.
    */
-  public orHavingNotIn(column: string, values: any[]): this {
+  public orHavingNotIn(column: string, values: any[]) {
     return this.orWhereNotIn(column, values)
   }
 
   /**
    * Set an or having between statement in your query.
    */
-  public orHavingBetween(column: string, values: [any, any]): this {
+  public orHavingBetween(column: string, values: [any, any]) {
     return this.orWhereBetween(column, values)
   }
 
   /**
    * Set an or having not between statement in your query.
    */
-  public orHavingNotBetween(column: string, values: [any, any]): this {
+  public orHavingNotBetween(column: string, values: [any, any]) {
     return this.orWhereNotBetween(column, values)
   }
 
   /**
    * Set an or having null statement in your query.
    */
-  public orHavingNull(column: string): this {
+  public orHavingNull(column: string) {
     return this.whereNull(column)
   }
 
   /**
    * Set an or having not null statement in your query.
    */
-  public orHavingNotNull(column: string): this {
+  public orHavingNotNull(column: string) {
     return this.whereNotNull(column)
   }
 
@@ -1051,7 +1051,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where statement in your query.
    */
-  public where(statement: any, operation?: Operations, value?: any): this {
+  public where(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
       statement(this)
 
@@ -1084,49 +1084,49 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where not statement in your query.
    */
-  public whereNot(statement: any, value?: any): this {
+  public whereNot(statement: any, value?: any) {
     return this.where(statement, '<>', value)
   }
 
   /**
    * Set a where raw statement in your query.
    */
-  public whereRaw(): this {
+  public whereRaw() {
     throw new NotImplementedMethodException(this.whereRaw.name, 'mongo')
   }
 
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists(): this {
+  public whereExists() {
     throw new NotImplementedMethodException(this.whereExists.name, 'mongo')
   }
 
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists(): this {
+  public whereNotExists() {
     throw new NotImplementedMethodException(this.whereNotExists.name, 'mongo')
   }
 
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(column: string, value: any): this {
+  public whereLike(column: string, value: any) {
     return this.where(column, 'like', value)
   }
 
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string, value: any): this {
+  public whereILike(column: string, value: any) {
     return this.where(column, 'ilike', value)
   }
 
   /**
    * Set a where in statement in your query.
    */
-  public whereIn(column: string, values: any[]): this {
+  public whereIn(column: string, values: any[]) {
     this._where[column] = { $in: values }
 
     return this
@@ -1135,7 +1135,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where not in statement in your query.
    */
-  public whereNotIn(column: string, values: any[]): this {
+  public whereNotIn(column: string, values: any[]) {
     this._where[column] = { $nin: values }
 
     return this
@@ -1144,7 +1144,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where between statement in your query.
    */
-  public whereBetween(column: string, values: [any, any]): this {
+  public whereBetween(column: string, values: [any, any]) {
     this._where[column] = { $gte: values[0], $lte: values[1] }
 
     return this
@@ -1153,7 +1153,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where not between statement in your query.
    */
-  public whereNotBetween(column: string, values: [any, any]): this {
+  public whereNotBetween(column: string, values: [any, any]) {
     this._where[column] = { $not: { $gte: values[0], $lte: values[1] } }
 
     return this
@@ -1162,7 +1162,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where null statement in your query.
    */
-  public whereNull(column: string): this {
+  public whereNull(column: string) {
     this._where[column] = null
 
     return this
@@ -1171,7 +1171,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where not null statement in your query.
    */
-  public whereNotNull(column: string): this {
+  public whereNotNull(column: string) {
     this._where[column] = { $ne: null }
 
     return this
@@ -1184,7 +1184,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(statement: any, operation?: Operations, value?: any): this {
+  public orWhere(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
       statement(this)
 
@@ -1214,49 +1214,49 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where not statement in your query.
    */
-  public orWhereNot(statement: any, value?: any): this {
+  public orWhereNot(statement: any, value?: any) {
     return this.orWhere(statement, '<>', value)
   }
 
   /**
    * Set a or where raw statement in your query.
    */
-  public orWhereRaw(): this {
+  public orWhereRaw() {
     throw new NotImplementedMethodException(this.orWhereRaw.name, 'mongo')
   }
 
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists(): this {
+  public orWhereExists() {
     throw new NotImplementedMethodException(this.orWhereExists.name, 'mongo')
   }
 
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists(): this {
+  public orWhereNotExists() {
     throw new NotImplementedMethodException(this.orWhereNotExists.name, 'mongo')
   }
 
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(column: string, value: any): this {
+  public orWhereLike(column: string, value: any) {
     return this.orWhere(column, 'like', value)
   }
 
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: string, value: any): this {
+  public orWhereILike(column: string, value: any) {
     return this.orWhere(column, 'ilike', value)
   }
 
   /**
    * Set an or where in statement in your query.
    */
-  public orWhereIn(column: string, values: any[]): this {
+  public orWhereIn(column: string, values: any[]) {
     this._orWhere.push({ [column]: { $in: values } })
 
     return this
@@ -1265,7 +1265,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where not in statement in your query.
    */
-  public orWhereNotIn(column: string, values: any[]): this {
+  public orWhereNotIn(column: string, values: any[]) {
     this._orWhere.push({ [column]: { $nin: values } })
 
     return this
@@ -1274,7 +1274,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where between statement in your query.
    */
-  public orWhereBetween(column: string, values: [any, any]): this {
+  public orWhereBetween(column: string, values: [any, any]) {
     this._orWhere.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1283,7 +1283,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where not between statement in your query.
    */
-  public orWhereNotBetween(column: string, values: [any, any]): this {
+  public orWhereNotBetween(column: string, values: [any, any]) {
     this._orWhere.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })
@@ -1294,7 +1294,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where null statement in your query.
    */
-  public orWhereNull(column: string): this {
+  public orWhereNull(column: string) {
     this._orWhere.push({ [column]: null })
 
     return this
@@ -1303,7 +1303,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where not null statement in your query.
    */
-  public orWhereNotNull(column: string): this {
+  public orWhereNotNull(column: string) {
     this._orWhere.push({ [column]: { $ne: null } })
 
     return this
@@ -1312,7 +1312,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: string, direction: Direction = 'ASC'): this {
+  public orderBy(column: string, direction: Direction = 'ASC') {
     this.pipeline.push({
       $sort: { [column]: direction.toLowerCase() === 'asc' ? 1 : -1 }
     })
@@ -1323,7 +1323,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an order by raw statement in your query.
    */
-  public orderByRaw(): this {
+  public orderByRaw() {
     throw new NotImplementedMethodException(this.orderByRaw.name, 'mongo')
   }
 
@@ -1331,7 +1331,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Order the results easily by the latest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public latest(column: string = 'createdAt'): this {
+  public latest(column: string = 'createdAt') {
     return this.orderBy(column, 'DESC')
   }
 
@@ -1339,14 +1339,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Order the results easily by the oldest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public oldest(column: string = 'createdAt'): this {
+  public oldest(column: string = 'createdAt') {
     return this.orderBy(column, 'ASC')
   }
 
   /**
    * Set the skip number in your query.
    */
-  public offset(number: number): this {
+  public offset(number: number) {
     this.pipeline.push({ $skip: number })
 
     return this
@@ -1355,7 +1355,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the limit number in your query.
    */
-  public limit(number: number): this {
+  public limit(number: number) {
     this.pipeline.push({ $limit: number })
 
     return this

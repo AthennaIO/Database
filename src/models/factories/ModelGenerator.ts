@@ -77,7 +77,7 @@ export class ModelGenerator<M extends BaseModel = any> {
     Object.keys(object).forEach(key => {
       const column = this.schema.getColumnByName(key)
 
-      if (!column || column.isHidden) {
+      if (!column) {
         return
       }
 

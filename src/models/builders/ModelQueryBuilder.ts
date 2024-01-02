@@ -13,8 +13,8 @@ import type {
   ModelColumns,
   ModelRelations
 } from '#src/types'
-import { Collection, Is } from '@athenna/common'
 import type { BaseModel } from '#src/models/BaseModel'
+import { Collection, Is, Options } from '@athenna/common'
 import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
@@ -35,6 +35,11 @@ export class ModelQueryBuilder<
   private isToSetAttributes: boolean = true
   private isToValidateUnique: boolean = true
   private isToValidateNullable: boolean = true
+  private selectColumns: string[] = []
+  private DELETED_AT_PROP: any = null
+  private DELETED_AT_NAME: any = null
+  private isSoftDelete: boolean = false
+  private hasCustomSelect: boolean = false
 
   public constructor(model: any, driver: D) {
     super(driver, model.table())
@@ -46,11 +51,17 @@ export class ModelQueryBuilder<
     this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
     const deletedAtColumn = this.schema.getDeletedAtColumn()
+    const properties = this.schema.getAllColumnProperties({
+      removeHidden: true
+    })
 
     if (deletedAtColumn) {
-      this.whereNull(deletedAtColumn.property as any)
+      this.isSoftDelete = true
+      this.DELETED_AT_NAME = deletedAtColumn.name
+      this.DELETED_AT_PROP = deletedAtColumn.property
     }
 
+    this.selectColumns = properties
     this.setPrimaryKey(this.primaryKeyName)
   }
 
@@ -58,100 +69,122 @@ export class ModelQueryBuilder<
    * Calculate the average of a given column.
    */
   public async avg(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.avg(name)
+    return super.avg(name as any)
   }
 
   /**
    * Calculate the average of a given column.
    */
   public async avgDistinct(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.avgDistinct(name)
+    return super.avgDistinct(name as any)
   }
 
   /**
    * Get the max number of a given column.
    */
   public async max(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.max(name)
+    return super.max(name as any)
   }
 
   /**
    * Get the min number of a given column.
    */
   public async min(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.min(name)
+    return super.min(name as any)
   }
 
   /**
    * Sum all numbers of a given column.
    */
   public async sum(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.sum(name)
+    return super.sum(name as any)
   }
 
   /**
    * Sum all numbers of a given column.
    */
   public async sumDistinct(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.sumDistinct(name)
+    return super.sumDistinct(name as any)
   }
 
   /**
    * Increment a value of a given column.
    */
   public async increment(column: ModelColumns<M>): Promise<void> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.increment(name)
+    return super.increment(name as any)
   }
 
   /**
    * Decrement a value of a given column.
    */
   public async decrement(column: ModelColumns<M>): Promise<void> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    await super.decrement(name)
+    await super.decrement(name as any)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
   public async count(column?: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     if (!column) {
       return super.count()
     }
 
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.count(name)
+    return super.count(name as any)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
   public async countDistinct(column: ModelColumns<M>): Promise<string> {
+    this.setInternalQueries()
+
     const name = this.schema.getColumnNameByProperty(column)
 
-    return super.countDistinct(name)
+    return super.countDistinct(name as any)
   }
 
   /**
    * Find a value in database.
    */
   public async find() {
+    this.setInternalQueries()
+
     const data = await super.find()
 
     return this.generator.generateOne(data)
@@ -190,6 +223,8 @@ export class ModelQueryBuilder<
    * Find many values in database.
    */
   public async findMany() {
+    this.setInternalQueries()
+
     const data = await super.findMany()
 
     return this.generator.generateMany(data)
@@ -200,8 +235,7 @@ export class ModelQueryBuilder<
    * as a collection instance.
    */
   public async collection() {
-    const data = await super.findMany()
-    const models = await this.generator.generateMany(data)
+    const models = await this.findMany()
 
     return new Collection(models)
   }
@@ -209,8 +243,8 @@ export class ModelQueryBuilder<
   /**
    * Create a value in database.
    */
-  public async create(data: Partial<M> = {}) {
-    const created = await this.createMany([data])
+  public async create(data: Partial<M> = {}, cleanPersist = true) {
+    const created = await this.createMany([data], cleanPersist)
 
     return created[0]
   }
@@ -218,7 +252,7 @@ export class ModelQueryBuilder<
   /**
    * Create many values in database.
    */
-  public async createMany(data: Partial<M>[]) {
+  public async createMany(data: Partial<M>[], cleanPersist = true) {
     data = await Promise.all(
       data.map(async d => {
         const date = new Date()
@@ -229,7 +263,7 @@ export class ModelQueryBuilder<
 
         const parsed = this.schema.propertiesToColumnNames(d, {
           attributes,
-          cleanPersist: true
+          cleanPersist
         })
 
         if (createdAt && parsed[createdAt.name] === undefined) {
@@ -259,29 +293,31 @@ export class ModelQueryBuilder<
   /**
    * Create or update a value in database.
    */
-  public async createOrUpdate(data: Partial<M>) {
+  public async createOrUpdate(data: Partial<M>, cleanPersist = true) {
     const hasValue = await this.find()
 
     if (hasValue) {
       const pk = this.primaryKeyProperty
 
-      return this.where(pk, hasValue[pk as any]).update(data)
+      return this.where(pk, hasValue[pk as any]).update(data, cleanPersist)
     }
 
-    return this.create(data)
+    return this.create(data, cleanPersist)
   }
 
   /**
    * Update a value in database.
    */
-  public async update(data: Partial<M>) {
+  public async update(data: Partial<M>, cleanPersist = true) {
+    this.setInternalQueries()
+
     const date = new Date()
     const updatedAt = this.schema.getUpdatedAtColumn()
     const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
 
     const parsed = this.schema.propertiesToColumnNames(data, {
       attributes,
-      cleanPersist: true
+      cleanPersist
     })
 
     if (updatedAt && parsed[updatedAt.name] === undefined) {
@@ -303,15 +339,81 @@ export class ModelQueryBuilder<
    * Delete or soft delete a value in database.
    */
   public async delete(force = false): Promise<void> {
-    const column = this.schema.getDeletedAtColumn()
+    this.setInternalQueries({ addSelect: false })
 
-    if (!column || force) {
+    if (!this.DELETED_AT_NAME || force) {
       await super.delete()
 
       return
     }
 
-    await this.update({ [column.property]: new Date() } as any)
+    await this.update({ [this.DELETED_AT_PROP]: new Date() } as any)
+  }
+
+  /**
+   * Restore one or multiple soft deleted models.
+   */
+  public async restore() {
+    this.setInternalQueries({ addSoftDelete: false })
+
+    if (!this.DELETED_AT_PROP) {
+      return
+    }
+
+    const updatedAt = this.schema.getUpdatedAtColumn()
+    const data = { [this.DELETED_AT_PROP]: null } as any
+
+    if (updatedAt) {
+      data[updatedAt.name] = new Date()
+    }
+
+    const updated = await super.update(data)
+
+    if (Is.Array(updated)) {
+      return this.generator.generateMany(updated)
+    }
+
+    return this.generator.generateOne(updated)
+  }
+
+  /**
+   * Retrieve only the values that are soft deleted in
+   * database.
+   */
+  public onlyTrashed() {
+    this.isSoftDelete = false
+
+    if (!this.DELETED_AT_PROP) {
+      return this
+    }
+
+    return this.whereNotNull(this.DELETED_AT_PROP)
+  }
+
+  /**
+   * Retrieve values that are soft deleted in database.
+   */
+  public withTrashed() {
+    this.isSoftDelete = false
+
+    if (!this.DELETED_AT_PROP) {
+      return
+    }
+
+    return this.whereNull(this.DELETED_AT_PROP).whereNotNull(
+      this.DELETED_AT_PROP
+    )
+  }
+
+  /**
+   * Select all fields that are hidden.
+   */
+  public withHidden() {
+    const properties = this.schema.getAllColumnProperties({
+      removeHidden: false
+    })
+
+    return this.select(...(properties as any))
   }
 
   /**
@@ -328,7 +430,7 @@ export class ModelQueryBuilder<
    * Enable/disable the `isUnique` property validation of
    * models columns.
    */
-  public uniqueValidation(value: boolean): this {
+  public uniqueValidation(value: boolean) {
     this.isToValidateUnique = value
 
     return this
@@ -338,7 +440,7 @@ export class ModelQueryBuilder<
    * Enable/disable the `isNullable` property validation of
    * models columns.
    */
-  public nullableValidation(value: boolean): this {
+  public nullableValidation(value: boolean) {
     this.isToValidateNullable = value
 
     return this
@@ -355,7 +457,7 @@ export class ModelQueryBuilder<
         Driver
       >
     ) => any
-  ): this {
+  ) {
     this.schema.includeRelation(relation, closure)
 
     return this
@@ -366,8 +468,8 @@ export class ModelQueryBuilder<
    */
   public when(
     criteria: any,
-    closure: (query: this, criteriaValue: any) => void | Promise<void>
-  ): this {
+    closure: (query: this, criteriaValue: any) => any | Promise<any>
+  ) {
     if (criteria) {
       closure(this, criteria)
 
@@ -380,8 +482,25 @@ export class ModelQueryBuilder<
   /**
    * Set the columns that should be selected on query.
    */
-  public select(...columns: ModelColumns<M>[]): this {
-    super.select(...this.schema.getColumnNamesByProperties(columns))
+  public select(...columns: ModelColumns<M>[]) {
+    if (!this.hasCustomSelect) {
+      this.hasCustomSelect = true
+      this.selectColumns = columns.map(c =>
+        this.schema.getColumnNameByProperty(c)
+      )
+
+      return this
+    }
+
+    columns.forEach(column => {
+      const index = this.selectColumns.indexOf(column)
+
+      if (index) {
+        return
+      }
+
+      this.selectColumns.push(this.schema.getColumnNameByProperty(column))
+    })
 
     return this
   }
@@ -389,7 +508,7 @@ export class ModelQueryBuilder<
   /**
    * Set a group by statement in your query.
    */
-  public groupBy(...columns: ModelColumns<M>[]): this {
+  public groupBy(...columns: ModelColumns<M>[]) {
     super.groupBy(...this.schema.getColumnNamesByProperties(columns))
 
     return this
@@ -410,7 +529,7 @@ export class ModelQueryBuilder<
     column: ModelColumns<M>,
     operation?: any | Operations,
     value?: any
-  ): this {
+  ) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.having(name, operation, value)
@@ -421,7 +540,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having in statement in your query.
    */
-  public havingIn(column: ModelColumns<M>, values: any[]): this {
+  public havingIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingIn(name, values)
@@ -432,7 +551,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not in statement in your query.
    */
-  public havingNotIn(column: ModelColumns<M>, values: any[]): this {
+  public havingNotIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotIn(name, values)
@@ -443,7 +562,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having between statement in your query.
    */
-  public havingBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public havingBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingBetween(name, values)
@@ -454,7 +573,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not between statement in your query.
    */
-  public havingNotBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public havingNotBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotBetween(name, values)
@@ -465,7 +584,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having null statement in your query.
    */
-  public havingNull(column: ModelColumns<M>): this {
+  public havingNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNull(name)
@@ -476,7 +595,7 @@ export class ModelQueryBuilder<
   /**
    * Set a having not null statement in your query.
    */
-  public havingNotNull(column: ModelColumns<M>): this {
+  public havingNotNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.havingNotNull(name)
@@ -499,7 +618,7 @@ export class ModelQueryBuilder<
     column: ModelColumns<M>,
     operation?: any | Operations,
     value?: any
-  ): this {
+  ) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHaving(name, operation, value)
@@ -510,7 +629,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving in statement in your query.
    */
-  public orHavingIn(column: ModelColumns<M>, values: any[]): this {
+  public orHavingIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingIn(name, values)
@@ -521,7 +640,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not in statement in your query.
    */
-  public orHavingNotIn(column: ModelColumns<M>, values: any[]): this {
+  public orHavingNotIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotIn(name, values)
@@ -532,7 +651,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving between statement in your query.
    */
-  public orHavingBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public orHavingBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingBetween(name, values)
@@ -543,7 +662,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not between statement in your query.
    */
-  public orHavingNotBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public orHavingNotBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotBetween(name, values)
@@ -554,7 +673,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving null statement in your query.
    */
-  public orHavingNull(column: ModelColumns<M>): this {
+  public orHavingNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNull(name)
@@ -565,7 +684,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orHaving not null statement in your query.
    */
-  public orHavingNotNull(column: ModelColumns<M>): this {
+  public orHavingNotNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orHavingNotNull(name)
@@ -581,11 +700,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where statement in your query.
    */
-  public where(
-    statement: any,
-    operation?: any | Operations,
-    value?: any
-  ): this {
+  public where(statement: any, operation?: any | Operations, value?: any) {
     if (!operation) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -608,7 +723,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not statement in your query.
    */
-  public whereNot(statement: any, value?: any): this {
+  public whereNot(statement: any, value?: any) {
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -627,7 +742,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(column: ModelColumns<M>, value: any): this {
+  public whereLike(column: ModelColumns<M>, value: any) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereLike(name, value)
@@ -638,7 +753,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: ModelColumns<M>, value: any): this {
+  public whereILike(column: ModelColumns<M>, value: any) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereILike(name, value)
@@ -649,7 +764,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where in statement in your query.
    */
-  public whereIn(column: ModelColumns<M>, values: any[]): this {
+  public whereIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereIn(name, values)
@@ -660,7 +775,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not in statement in your query.
    */
-  public whereNotIn(column: ModelColumns<M>, values: any[]): this {
+  public whereNotIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotIn(name, values)
@@ -671,7 +786,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where between statement in your query.
    */
-  public whereBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public whereBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereBetween(name, values)
@@ -682,7 +797,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not between statement in your query.
    */
-  public whereNotBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public whereNotBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotBetween(name, values)
@@ -693,7 +808,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where null statement in your query.
    */
-  public whereNull(column: ModelColumns<M>): this {
+  public whereNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNull(name)
@@ -704,7 +819,7 @@ export class ModelQueryBuilder<
   /**
    * Set a where not null statement in your query.
    */
-  public whereNotNull(column: ModelColumns<M>): this {
+  public whereNotNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.whereNotNull(name)
@@ -720,11 +835,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere statement in your query.
    */
-  public orWhere(
-    statement: any,
-    operation?: any | Operations,
-    value?: any
-  ): this {
+  public orWhere(statement: any, operation?: any | Operations, value?: any) {
     if (!operation) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -747,7 +858,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not statement in your query.
    */
-  public orWhereNot(statement: any, value?: any): this {
+  public orWhereNot(statement: any, value?: any) {
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -770,7 +881,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere like statement in your query.
    */
-  public orWhereLike(statement: any, value?: any): this {
+  public orWhereLike(statement: any, value?: any) {
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -793,7 +904,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere ILike statement in your query.
    */
-  public orWhereILike(statement: any, value?: any): this {
+  public orWhereILike(statement: any, value?: any) {
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -812,7 +923,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere in statement in your query.
    */
-  public orWhereIn(column: ModelColumns<M>, values: any[]): this {
+  public orWhereIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereIn(name, values)
@@ -823,7 +934,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not in statement in your query.
    */
-  public orWhereNotIn(column: ModelColumns<M>, values: any[]): this {
+  public orWhereNotIn(column: ModelColumns<M>, values: any[]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotIn(name, values)
@@ -834,7 +945,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere between statement in your query.
    */
-  public orWhereBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public orWhereBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereBetween(name, values)
@@ -845,7 +956,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not between statement in your query.
    */
-  public orWhereNotBetween(column: ModelColumns<M>, values: [any, any]): this {
+  public orWhereNotBetween(column: ModelColumns<M>, values: [any, any]) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotBetween(name, values)
@@ -856,7 +967,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere null statement in your query.
    */
-  public orWhereNull(column: ModelColumns<M>): this {
+  public orWhereNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNull(name)
@@ -867,7 +978,7 @@ export class ModelQueryBuilder<
   /**
    * Set a orWhere not null statement in your query.
    */
-  public orWhereNotNull(column: ModelColumns<M>): this {
+  public orWhereNotNull(column: ModelColumns<M>) {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotNull(name)
@@ -878,7 +989,7 @@ export class ModelQueryBuilder<
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: ModelColumns<M>, direction: Direction = 'ASC'): this {
+  public orderBy(column: ModelColumns<M>, direction: Direction = 'ASC') {
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orderBy(name, direction)
@@ -890,7 +1001,7 @@ export class ModelQueryBuilder<
    * Order the results easily by the latest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public latest(column?: ModelColumns<M>): this {
+  public latest(column?: ModelColumns<M>) {
     if (!column) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -908,7 +1019,7 @@ export class ModelQueryBuilder<
    * Order the results easily by the oldest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public oldest(column?: ModelColumns<M>): this {
+  public oldest(column?: ModelColumns<M>) {
     if (!column) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -920,6 +1031,30 @@ export class ModelQueryBuilder<
     super.oldest(name)
 
     return this
+  }
+
+  /**
+   * Set the internal selected properties and soft delete
+   * queries.
+   */
+  private setInternalQueries(options?: {
+    addSelect?: boolean
+    addSoftDelete?: boolean
+  }) {
+    options = Options.create(options, {
+      addSelect: true,
+      addSoftDelete: true
+    })
+
+    if (options.addSelect) {
+      super.select(...this.selectColumns)
+    }
+
+    if (options.addSoftDelete) {
+      super.when(this.isSoftDelete, query =>
+        query.whereNull(this.DELETED_AT_NAME as any)
+      )
+    }
   }
 
   /**

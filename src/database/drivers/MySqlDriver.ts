@@ -461,7 +461,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set the table that this query will be executed.
    */
-  public table(table: string): this {
+  public table(table: string) {
     if (!this.isConnected) {
       throw new NotConnectedDatabaseException()
     }
@@ -475,7 +475,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Log in console the actual query built.
    */
-  public dump(): this {
+  public dump() {
     console.log(this.qb.toSQL().toNative())
 
     return this
@@ -484,7 +484,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set the columns that should be selected on query.
    */
-  public select(...columns: string[]): this {
+  public select(...columns: string[]) {
     this.qb.select(...columns)
 
     return this
@@ -493,7 +493,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set the columns that should be selected on query raw.
    */
-  public selectRaw(sql: string, bindings?: any): this {
+  public selectRaw(sql: string, bindings?: any) {
     return this.select(this.raw(sql, bindings) as any)
   }
 
@@ -502,7 +502,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public from(table: string): this {
+  public from(table: string) {
     this.qb.from(table)
 
     return this
@@ -513,7 +513,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public fromRaw(sql: string, bindings?: any): this {
+  public fromRaw(sql: string, bindings?: any) {
     return this.from(this.raw(sql, bindings) as any)
   }
 
@@ -525,7 +525,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('join', table, column1, operation, column2)
   }
 
@@ -537,7 +537,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('leftJoin', table, column1, operation, column2)
   }
 
@@ -549,7 +549,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('rightJoin', table, column1, operation, column2)
   }
 
@@ -561,7 +561,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('crossJoin', table, column1, operation, column2)
   }
 
@@ -573,7 +573,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     // TODO https://github.com/knex/knex/issues/3949
     return this.joinByType('leftJoin', table, column1, operation, column2)
   }
@@ -586,7 +586,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('leftOuterJoin', table, column1, operation, column2)
   }
 
@@ -598,14 +598,14 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
     column1?: any,
     operation?: any | Operations,
     column2?: any
-  ): this {
+  ) {
     return this.joinByType('rightOuterJoin', table, column1, operation, column2)
   }
 
   /**
    * Set a join raw statement in your query.
    */
-  public joinRaw(sql: string, bindings?: any): this {
+  public joinRaw(sql: string, bindings?: any) {
     this.qb.joinRaw(sql, bindings)
 
     return this
@@ -614,7 +614,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a group by statement in your query.
    */
-  public groupBy(...columns: string[]): this {
+  public groupBy(...columns: string[]) {
     this.qb.groupBy(...columns)
 
     return this
@@ -623,7 +623,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a group by raw statement in your query.
    */
-  public groupByRaw(sql: string, bindings?: any): this {
+  public groupByRaw(sql: string, bindings?: any) {
     this.qb.groupByRaw(sql, bindings)
 
     return this
@@ -636,7 +636,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having statement in your query.
    */
-  public having(column: any, operation?: Operations, value?: any): this {
+  public having(column: any, operation?: Operations, value?: any) {
     if (operation === undefined) {
       this.qb.having(column)
 
@@ -657,7 +657,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having raw statement in your query.
    */
-  public havingRaw(sql: string, bindings?: any): this {
+  public havingRaw(sql: string, bindings?: any) {
     this.qb.havingRaw(sql, bindings)
 
     return this
@@ -666,7 +666,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists(closure: (query: MySqlDriver) => void): this {
+  public havingExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
@@ -680,7 +680,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists(closure: (query: MySqlDriver) => void): this {
+  public havingNotExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
@@ -694,7 +694,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having in statement in your query.
    */
-  public havingIn(column: string, values: any[]): this {
+  public havingIn(column: string, values: any[]) {
     this.qb.havingIn(column, values)
 
     return this
@@ -703,7 +703,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having not in statement in your query.
    */
-  public havingNotIn(column: string, values: any[]): this {
+  public havingNotIn(column: string, values: any[]) {
     this.qb.havingNotIn(column, values)
 
     return this
@@ -712,7 +712,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having between statement in your query.
    */
-  public havingBetween(column: string, values: [any, any]): this {
+  public havingBetween(column: string, values: [any, any]) {
     this.qb.havingBetween(column, values)
 
     return this
@@ -721,7 +721,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having not between statement in your query.
    */
-  public havingNotBetween(column: string, values: [any, any]): this {
+  public havingNotBetween(column: string, values: [any, any]) {
     this.qb.havingNotBetween(column, values)
 
     return this
@@ -730,7 +730,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having null statement in your query.
    */
-  public havingNull(column: string): this {
+  public havingNull(column: string) {
     this.qb.havingNull(column)
 
     return this
@@ -739,7 +739,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a having not null statement in your query.
    */
-  public havingNotNull(column: string): this {
+  public havingNotNull(column: string) {
     this.qb.havingNotNull(column)
 
     return this
@@ -752,7 +752,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having statement in your query.
    */
-  public orHaving(column: any, operation?: Operations, value?: any): this {
+  public orHaving(column: any, operation?: Operations, value?: any) {
     if (operation === undefined) {
       this.qb.orHaving(column)
 
@@ -773,7 +773,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having raw statement in your query.
    */
-  public orHavingRaw(sql: string, bindings?: any): this {
+  public orHavingRaw(sql: string, bindings?: any) {
     this.qb.orHavingRaw(sql, bindings)
 
     return this
@@ -782,7 +782,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists(closure: (query: MySqlDriver) => void): this {
+  public orHavingExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
@@ -796,7 +796,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists(closure: (query: MySqlDriver) => void): this {
+  public orHavingNotExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     // @ts-ignore
@@ -810,7 +810,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having in statement in your query.
    */
-  public orHavingIn(column: string, values: any[]): this {
+  public orHavingIn(column: string, values: any[]) {
     // @ts-ignore
     this.qb.orHavingIn(column, values)
 
@@ -820,7 +820,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having not in statement in your query.
    */
-  public orHavingNotIn(column: string, values: any[]): this {
+  public orHavingNotIn(column: string, values: any[]) {
     this.qb.orHavingNotIn(column, values)
 
     return this
@@ -829,7 +829,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having between statement in your query.
    */
-  public orHavingBetween(column: string, values: [any, any]): this {
+  public orHavingBetween(column: string, values: [any, any]) {
     this.qb.orHavingBetween(column, values)
 
     return this
@@ -838,7 +838,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having not between statement in your query.
    */
-  public orHavingNotBetween(column: string, values: [any, any]): this {
+  public orHavingNotBetween(column: string, values: [any, any]) {
     this.qb.orHavingNotBetween(column, values)
 
     return this
@@ -847,7 +847,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having null statement in your query.
    */
-  public orHavingNull(column: string): this {
+  public orHavingNull(column: string) {
     // @ts-ignore
     this.qb.orHavingNull(column)
 
@@ -857,7 +857,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or having not null statement in your query.
    */
-  public orHavingNotNull(column: string): this {
+  public orHavingNotNull(column: string) {
     // @ts-ignore
     this.qb.orHavingNotNull(column)
 
@@ -871,7 +871,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where statement in your query.
    */
-  public where(statement: any, operation?: Operations, value?: any): this {
+  public where(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
       const driver = this.clone()
 
@@ -905,7 +905,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not statement in your query.
    */
-  public whereNot(statement: any, value?: any): this {
+  public whereNot(statement: any, value?: any) {
     if (Is.Function(statement)) {
       const driver = this.clone()
 
@@ -930,7 +930,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where raw statement in your query.
    */
-  public whereRaw(sql: string, bindings?: any): this {
+  public whereRaw(sql: string, bindings?: any) {
     this.qb.whereRaw(sql, bindings)
 
     return this
@@ -939,7 +939,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists(closure: (query: MySqlDriver) => void): this {
+  public whereExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     this.qb.whereExists(function () {
@@ -952,7 +952,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists(closure: (query: MySqlDriver) => void): this {
+  public whereNotExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     this.qb.whereNotExists(function () {
@@ -965,7 +965,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where like statement in your query.
    */
-  public whereLike(column: string, value: any): this {
+  public whereLike(column: string, value: any) {
     this.qb.whereLike(column, value)
 
     return this
@@ -974,7 +974,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string, value: any): this {
+  public whereILike(column: string, value: any) {
     this.qb.whereILike(column, value)
 
     return this
@@ -983,7 +983,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where in statement in your query.
    */
-  public whereIn(column: string, values: any[]): this {
+  public whereIn(column: string, values: any[]) {
     this.qb.whereIn(column, values)
 
     return this
@@ -992,7 +992,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not in statement in your query.
    */
-  public whereNotIn(column: string, values: any[]): this {
+  public whereNotIn(column: string, values: any[]) {
     this.qb.whereNotIn(column, values)
 
     return this
@@ -1001,7 +1001,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where between statement in your query.
    */
-  public whereBetween(column: string, values: [any, any]): this {
+  public whereBetween(column: string, values: [any, any]) {
     this.qb.whereBetween(column, values)
 
     return this
@@ -1010,7 +1010,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not between statement in your query.
    */
-  public whereNotBetween(column: string, values: [any, any]): this {
+  public whereNotBetween(column: string, values: [any, any]) {
     this.qb.whereNotBetween(column, values)
 
     return this
@@ -1019,7 +1019,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where null statement in your query.
    */
-  public whereNull(column: string): this {
+  public whereNull(column: string) {
     this.qb.whereNull(column)
 
     return this
@@ -1028,7 +1028,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where not null statement in your query.
    */
-  public whereNotNull(column: string): this {
+  public whereNotNull(column: string) {
     this.qb.whereNotNull(column)
 
     return this
@@ -1041,7 +1041,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a or where statement in your query.
    */
-  public orWhere(statement: any, operation?: Operations, value?: any): this {
+  public orWhere(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
       const driver = this.clone()
 
@@ -1075,7 +1075,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not statement in your query.
    */
-  public orWhereNot(statement: any, value?: any): this {
+  public orWhereNot(statement: any, value?: any) {
     if (Is.Function(statement)) {
       const driver = this.clone()
 
@@ -1100,7 +1100,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a or where raw statement in your query.
    */
-  public orWhereRaw(sql: string, bindings?: any): this {
+  public orWhereRaw(sql: string, bindings?: any) {
     this.qb.orWhereRaw(sql, bindings)
 
     return this
@@ -1109,7 +1109,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists(closure: (query: MySqlDriver) => void): this {
+  public orWhereExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     this.qb.orWhereExists(function () {
@@ -1122,7 +1122,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists(closure: (query: MySqlDriver) => void): this {
+  public orWhereNotExists(closure: (query: MySqlDriver) => void) {
     const driver = this.clone() as MySqlDriver
 
     this.qb.orWhereNotExists(function () {
@@ -1135,7 +1135,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where like statement in your query.
    */
-  public orWhereLike(column: string, value: any): this {
+  public orWhereLike(column: string, value: any) {
     this.qb.orWhereLike(column, value)
 
     return this
@@ -1144,7 +1144,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: string, value: any): this {
+  public orWhereILike(column: string, value: any) {
     this.qb.orWhereILike(column, value)
 
     return this
@@ -1153,7 +1153,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where in statement in your query.
    */
-  public orWhereIn(column: string, values: any[]): this {
+  public orWhereIn(column: string, values: any[]) {
     this.qb.orWhereIn(column, values)
 
     return this
@@ -1162,7 +1162,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not in statement in your query.
    */
-  public orWhereNotIn(column: string, values: any[]): this {
+  public orWhereNotIn(column: string, values: any[]) {
     this.qb.orWhereNotIn(column, values)
 
     return this
@@ -1171,7 +1171,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where between statement in your query.
    */
-  public orWhereBetween(column: string, values: [any, any]): this {
+  public orWhereBetween(column: string, values: [any, any]) {
     this.qb.orWhereBetween(column, values)
 
     return this
@@ -1180,7 +1180,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not between statement in your query.
    */
-  public orWhereNotBetween(column: string, values: [any, any]): this {
+  public orWhereNotBetween(column: string, values: [any, any]) {
     this.qb.orWhereNotBetween(column, values)
 
     return this
@@ -1189,7 +1189,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where null statement in your query.
    */
-  public orWhereNull(column: string): this {
+  public orWhereNull(column: string) {
     this.qb.orWhereNull(column)
 
     return this
@@ -1198,7 +1198,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where not null statement in your query.
    */
-  public orWhereNotNull(column: string): this {
+  public orWhereNotNull(column: string) {
     this.qb.orWhereNotNull(column)
 
     return this
@@ -1207,7 +1207,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: string, direction: Direction = 'ASC'): this {
+  public orderBy(column: string, direction: Direction = 'ASC') {
     this.qb.orderBy(column, direction.toUpperCase())
 
     return this
@@ -1216,7 +1216,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an order by raw statement in your query.
    */
-  public orderByRaw(sql: string, bindings?: any): this {
+  public orderByRaw(sql: string, bindings?: any) {
     this.qb.orderByRaw(sql, bindings)
 
     return this
@@ -1226,7 +1226,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Order the results easily by the latest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public latest(column: string = 'createdAt'): this {
+  public latest(column: string = 'createdAt') {
     return this.orderBy(column, 'DESC')
   }
 
@@ -1234,14 +1234,14 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Order the results easily by the oldest date. By default, the result will
    * be ordered by the table's "createdAt" column.
    */
-  public oldest(column: string = 'createdAt'): this {
+  public oldest(column: string = 'createdAt') {
     return this.orderBy(column, 'ASC')
   }
 
   /**
    * Set the skip number in your query.
    */
-  public offset(number: number): this {
+  public offset(number: number) {
     this.qb.offset(number)
 
     return this
@@ -1250,7 +1250,7 @@ export class MySqlDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set the limit number in your query.
    */
-  public limit(number: number): this {
+  public limit(number: number) {
     this.qb.limit(number)
 
     return this

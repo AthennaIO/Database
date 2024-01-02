@@ -11,6 +11,7 @@ import { Config } from '@athenna/config'
 import { Database } from '#src/facades/Database'
 import { Collection, Path } from '@athenna/common'
 import { User } from '#tests/fixtures/models/User'
+import { Order } from '#tests/fixtures/models/Order'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { UserNotSoftDelete } from '#tests/fixtures/models/UserNotSoftDelete'
@@ -32,6 +33,24 @@ export default class ModelQueryBuilderTest {
     Config.clear()
     ioc.reconstruct()
     User.setAttributes(true).uniqueValidation(true).nullableValidation(true)
+  }
+
+  @Test()
+  public async shouldBeAbleToAutomaticallySetNoHiddenFieldsToModelQueryBuilder({ assert }: Context) {
+    Mock.when(Database.driver, 'select').resolve(undefined)
+
+    await Order.query().find()
+
+    assert.calledOnceWith(Database.driver.select, 'id')
+  }
+
+  @Test()
+  public async shouldBeAbleToSetHiddenFieldsToModelQueryBuilder({ assert }: Context) {
+    Mock.when(Database.driver, 'select').resolve(undefined)
+
+    await Order.query().withHidden().find()
+
+    assert.calledWith(Database.driver.select, 'id', 'price')
   }
 
   @Test()
@@ -427,6 +446,17 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateDataAndDoNotCleanPersist({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([{ id: '3', score: 1 }])
+
+    const result = await User.query().create({ score: 1 }, false)
+
+    assert.calledOnceWith(Database.driver.createMany, [Mock.match({ score: 1 })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
   public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateMethod({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     const createdData = { id: '3', ...dataToCreate }
@@ -599,6 +629,19 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateDataResolvingObjectWithoutCleaningPersist({
+    assert
+  }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    await User.query().uniqueValidation(false).createOrUpdate(dataToCreateOrUpdate, false)
+
+    assert.calledWith(Database.driver.createMany, [Mock.match({ score: 200 })])
+  }
+
+  @Test()
   public async shouldBeAbleToAutomaticallyDefineDefaultAttributesWhenUsingCreateOrUpdateMethodToCreateData({
     assert
   }: Context) {
@@ -627,6 +670,18 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToCreateDataUsingCreateOrUpdateWithoutCleaningPersist({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'createMany').resolve([dataToCreateOrUpdate])
+
+    const result = await User.query().uniqueValidation(false).createOrUpdate(dataToCreateOrUpdate, false)
+
+    assert.calledOnceWith(Database.driver.createMany, [Mock.match({ score: 200 })])
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
   public async shouldBeAbleToUpdateDataUsingCreateOrUpdate({ assert }: Context) {
     const dataToCreateOrUpdate = { id: '1', name: 'Updated User' }
     Mock.when(Database.driver, 'update').resolve(dataToCreateOrUpdate)
@@ -634,6 +689,17 @@ export default class ModelQueryBuilderTest {
     const result = await User.query().uniqueValidation(false).createOrUpdate(dataToCreateOrUpdate)
 
     assert.calledOnceWith(Database.driver.update, Mock.match({ name: 'Updated User' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingCreateOrUpdateWithoutCleaningPersist({ assert }: Context) {
+    const dataToCreateOrUpdate = { id: '1', name: 'Updated User', score: 200 }
+    Mock.when(Database.driver, 'update').resolve(dataToCreateOrUpdate)
+
+    const result = await User.query().uniqueValidation(false).createOrUpdate(dataToCreateOrUpdate, false)
+
+    assert.calledOnceWith(Database.driver.update, Mock.match({ name: 'Updated User', score: 200 }))
     assert.instanceOf(result, User)
   }
 
@@ -706,13 +772,23 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToUpdateData({ assert }: Context) {
-    const dataToUpdate = { name: 'Updated User' }
     Mock.when(Database.driver, 'find').resolve(undefined)
-    Mock.when(Database.driver, 'update').resolve({ id: '1', ...dataToUpdate })
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'Updated User' })
 
-    const result = await User.query().update(dataToUpdate)
+    const result = await User.query().update({ name: 'Updated User' })
 
-    assert.calledOnceWith(Database.driver.update, Mock.match(dataToUpdate))
+    assert.calledOnceWith(Database.driver.update, Mock.match({ name: 'Updated User' }))
+    assert.instanceOf(result, User)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateDataUsingUpdateMethodWithoutCleaningPersist({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'Updated User', score: 200 })
+
+    const result = await User.query().update({ name: 'Updated User', score: 200 }, false)
+
+    assert.calledOnceWith(Database.driver.update, Mock.match({ name: 'Updated User', score: 200 }))
     assert.instanceOf(result, User)
   }
 
@@ -725,25 +801,22 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToUpdateDataAndUpdateUpdatedAtColumn({ assert }: Context) {
-    const dataToUpdate = { name: 'Updated User' }
     Mock.when(Database.driver, 'find').resolve(undefined)
-    Mock.when(Database.driver, 'update').resolve({ id: '1', ...dataToUpdate })
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'Updated User' })
 
-    const result = await User.query().update(dataToUpdate)
+    const result = await User.query().update({ name: 'Updated User' })
 
-    assert.notCalledWith(Database.driver.update, dataToUpdate)
-    assert.calledOnceWith(Database.driver.update, Mock.match(dataToUpdate))
+    assert.notCalledWith(Database.driver.update, { name: 'Updated User' })
+    assert.calledOnceWith(Database.driver.update, Mock.match({ name: 'Updated User' }))
     assert.instanceOf(result, User)
   }
 
   @Test()
   public async shouldBeAbleToUpdateDataAndParseColumns({ assert }: Context) {
-    const dataToUpdate = { name: 'Updated User', rate: 1 }
-    const updatedData = { id: '1', ...dataToUpdate }
     Mock.when(Database.driver, 'find').resolve(undefined)
-    Mock.when(Database.driver, 'update').resolve(updatedData)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'Updated User', rate_number: 1 })
 
-    const result = await User.query().update(dataToUpdate)
+    const result = await User.query().update({ name: 'Updated User', rate: 1 })
 
     assert.calledOnceWith(Database.driver.update, Mock.match({ rate_number: 1 }))
     assert.instanceOf(result, User)
@@ -752,9 +825,9 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToUpdateDataIgnoringPersistColumns({ assert }: Context) {
     const dataToUpdate = { name: 'Updated User', score: 200 }
-    const updatedData = { id: '1', ...dataToUpdate }
+
     Mock.when(Database.driver, 'find').resolve(undefined)
-    Mock.when(Database.driver, 'update').resolve(updatedData)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'Updated User', score: 200 })
 
     await User.query().update(dataToUpdate)
 
@@ -899,7 +972,7 @@ export default class ModelQueryBuilderTest {
   public async shouldAutomaticallySetWhereNullDeletedAtClauseWhenIsDeleteDateColumnOptionIsTrue({ assert }: Context) {
     Mock.when(Database.driver, 'whereNull').return(undefined)
 
-    User.query()
+    await User.query().find()
 
     assert.calledOnceWith(Database.driver.whereNull, 'deletedAt')
   }
@@ -913,6 +986,42 @@ export default class ModelQueryBuilderTest {
     UserNotSoftDelete.query()
 
     assert.notCalled(Database.driver.whereNull)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetSoftDeletedData({ assert }: Context) {
+    Mock.when(Database.driver, 'whereNull').resolve(undefined)
+    Mock.when(Database.driver, 'whereNotNull').resolve(undefined)
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+
+    const result = await User.query().withTrashed().find()
+
+    assert.instanceOf(result, User)
+    assert.calledOnceWith(Database.driver.whereNull, 'deletedAt')
+    assert.calledOnceWith(Database.driver.whereNotNull, 'deletedAt')
+  }
+
+  @Test()
+  public async shouldBeAbleToGetOnlySoftDeletedData({ assert }: Context) {
+    Mock.when(Database.driver, 'whereNull').resolve(undefined)
+    Mock.when(Database.driver, 'whereNotNull').resolve(undefined)
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+
+    const result = await User.query().onlyTrashed().find()
+
+    assert.instanceOf(result, User)
+    assert.notCalled(Database.driver.whereNull)
+    assert.calledOnceWith(Database.driver.whereNotNull, 'deletedAt')
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreSoftDeletedDate({ assert }: Context) {
+    Mock.when(Database.driver, 'update').resolve({ id: '1' })
+
+    const result = await User.query().uniqueValidation(false).restore()
+
+    assert.instanceOf(result, User)
+    assert.calledOnceWith(Database.driver.update, Mock.match({ deletedAt: null }))
   }
 
   @Test()
@@ -1005,18 +1114,20 @@ export default class ModelQueryBuilderTest {
     const columns: any[] = ['id', 'name']
     Mock.when(Database.driver, 'select').resolve(undefined)
 
-    User.query().select(...columns)
+    await User.query()
+      .select(...columns)
+      .find()
 
-    assert.calledOnceWith(Database.driver.select, ...columns)
+    assert.calledWith(Database.driver.select, ...columns)
   }
 
   @Test()
   public async shouldAllowSelectingSpecificColumnsFromTableParsingColumnNames({ assert }: Context) {
     Mock.when(Database.driver, 'select').resolve(undefined)
 
-    User.query().select('id', 'name', 'rate')
+    await User.query().select('id', 'name', 'rate').find()
 
-    assert.calledOnceWith(Database.driver.select, 'id', 'name', 'rate_number')
+    assert.calledWith(Database.driver.select, 'id', 'name', 'rate_number')
   }
 
   @Test()
@@ -1035,11 +1146,12 @@ export default class ModelQueryBuilderTest {
     Mock.when(Database.driver, 'select').resolve(undefined)
     Mock.when(Database.driver, 'from').resolve(undefined)
 
-    User.query()
+    await User.query()
       .select(...columns)
       .from('users')
+      .find()
 
-    assert.calledOnceWith(Database.driver.select, ...columns)
+    assert.calledWith(Database.driver.select, ...columns)
     assert.calledOnceWith(Database.driver.from, 'users')
   }
 
@@ -1048,9 +1160,9 @@ export default class ModelQueryBuilderTest {
     Mock.when(Database.driver, 'select').resolve(undefined)
     Mock.when(Database.driver, 'from').resolve(undefined)
 
-    User.query().select('id', 'name', 'rate').from('users')
+    await User.query().select('id', 'name', 'rate').from('users').find()
 
-    assert.calledOnceWith(Database.driver.select, 'id', 'name', 'rate_number')
+    assert.calledWith(Database.driver.select, 'id', 'name', 'rate_number')
     assert.calledOnceWith(Database.driver.from, 'users')
   }
 
