@@ -7,10 +7,12 @@
  * file that was distributed with this source code.
  */
 
+import type { Relation } from '#src/types'
 import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
-import { type Student } from '#tests/fixtures/models/e2e/Student'
+import { Student } from '#tests/fixtures/models/e2e/Student'
 import { BelongsToMany } from '#src/models/annotations/BelongsToMany'
+import { StudentsCourses } from '#tests/fixtures/models/e2e/StudentsCourses'
 
 export class Course extends BaseModel {
   public static connection() {
@@ -23,6 +25,6 @@ export class Course extends BaseModel {
   @Column()
   public name: string
 
-  @BelongsToMany('Student', 'StudentsCourses')
-  public students: Student[]
+  @BelongsToMany(() => Student, () => StudentsCourses)
+  public students: Relation<Student[]>
 }
