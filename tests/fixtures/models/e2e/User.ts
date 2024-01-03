@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import type { Relation } from '#src/types'
 import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 import { HasOne } from '#src/models/annotations/HasOne'
@@ -26,10 +27,10 @@ export class User extends BaseModel {
   public name: string
 
   @HasOne(() => Profile)
-  public profile: Profile
+  public profile: Relation<Profile>
 
   @HasMany(() => Product)
-  public products: Product[]
+  public products: Relation<Product[]>
 
   @Column({ isCreateDate: true })
   public createdAt: Date

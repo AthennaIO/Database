@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import type { Relation } from '#src/types'
 import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'
 import { Course } from '#tests/fixtures/models/e2e/Course'
@@ -25,5 +26,5 @@ export class Student extends BaseModel {
   public name: string
 
   @BelongsToMany(() => Course, () => StudentsCourses)
-  public courses: Course[]
+  public courses: Relation<Course[]>
 }

@@ -743,7 +743,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set the columns that should be selected on query raw.
    */
-  public selectRaw() {
+  public selectRaw(): this {
     throw new NotImplementedMethodException(this.selectRaw.name, 'mongo')
   }
 
@@ -752,7 +752,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public from() {
+  public from(): this {
     throw new NotImplementedMethodException(this.from.name, 'mongo')
   }
 
@@ -761,7 +761,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Different from `table()` method, this method
    * doesn't change the driver table.
    */
-  public fromRaw() {
+  public fromRaw(): this {
     throw new NotImplementedMethodException(this.selectRaw.name, 'mongo')
   }
 
@@ -868,7 +868,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a join raw statement in your query.
    */
-  public joinRaw() {
+  public joinRaw(): this {
     throw new NotImplementedMethodException(this.joinRaw.name, 'mongo')
   }
 
@@ -889,7 +889,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a group by raw statement in your query.
    */
-  public groupByRaw() {
+  public groupByRaw(): this {
     throw new NotImplementedMethodException(this.groupByRaw.name, 'mongo')
   }
 
@@ -907,21 +907,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a having raw statement in your query.
    */
-  public havingRaw() {
+  public havingRaw(): this {
     throw new NotImplementedMethodException(this.havingRaw.name, 'mongo')
   }
 
   /**
    * Set a having exists statement in your query.
    */
-  public havingExists() {
+  public havingExists(): this {
     throw new NotImplementedMethodException(this.havingExists.name, 'mongo')
   }
 
   /**
    * Set a having not exists statement in your query.
    */
-  public havingNotExists() {
+  public havingNotExists(): this {
     throw new NotImplementedMethodException(this.havingNotExists.name, 'mongo')
   }
 
@@ -981,21 +981,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or having raw statement in your query.
    */
-  public orHavingRaw() {
+  public orHavingRaw(): this {
     throw new NotImplementedMethodException(this.orHavingRaw.name, 'mongo')
   }
 
   /**
    * Set an or having exists statement in your query.
    */
-  public orHavingExists() {
+  public orHavingExists(): this {
     throw new NotImplementedMethodException(this.orHavingExists.name, 'mongo')
   }
 
   /**
    * Set an or having not exists statement in your query.
    */
-  public orHavingNotExists() {
+  public orHavingNotExists(): this {
     throw new NotImplementedMethodException(
       this.orHavingNotExists.name,
       'mongo'
@@ -1091,21 +1091,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where raw statement in your query.
    */
-  public whereRaw() {
+  public whereRaw(): this {
     throw new NotImplementedMethodException(this.whereRaw.name, 'mongo')
   }
 
   /**
    * Set a where exists statement in your query.
    */
-  public whereExists() {
+  public whereExists(): this {
     throw new NotImplementedMethodException(this.whereExists.name, 'mongo')
   }
 
   /**
    * Set a where not exists statement in your query.
    */
-  public whereNotExists() {
+  public whereNotExists(): this {
     throw new NotImplementedMethodException(this.whereNotExists.name, 'mongo')
   }
 
@@ -1221,21 +1221,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a or where raw statement in your query.
    */
-  public orWhereRaw() {
+  public orWhereRaw(): this {
     throw new NotImplementedMethodException(this.orWhereRaw.name, 'mongo')
   }
 
   /**
    * Set an or where exists statement in your query.
    */
-  public orWhereExists() {
+  public orWhereExists(): this {
     throw new NotImplementedMethodException(this.orWhereExists.name, 'mongo')
   }
 
   /**
    * Set an or where not exists statement in your query.
    */
-  public orWhereNotExists() {
+  public orWhereNotExists(): this {
     throw new NotImplementedMethodException(this.orWhereNotExists.name, 'mongo')
   }
 
@@ -1323,7 +1323,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an order by raw statement in your query.
    */
-  public orderByRaw() {
+  public orderByRaw(): this {
     throw new NotImplementedMethodException(this.orderByRaw.name, 'mongo')
   }
 
