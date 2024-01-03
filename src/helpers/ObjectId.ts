@@ -7,22 +7,31 @@
  * file that was distributed with this source code.
  */
 
-import { Is } from '@athenna/common'
-import { isValidObjectId, Types } from 'mongoose'
+import { Is, Module } from '@athenna/common'
+
+const mongoose = await Module.safeImport('mongoose')
 
 export class ObjectId {
   /**
    * Validate if is a valid object id.
    */
   public static isValid(objectId: any): boolean {
+    if (!mongoose) {
+      return false
+    }
+
     // eslint-disable-next-line
-    return isValidObjectId(objectId) && new Types.ObjectId(objectId) == objectId
+    return mongoose.isValidObjectId(objectId) && new mongoose.Types.ObjectId(objectId) == objectId
   }
 
   /**
    * Validate if is a valid object id string.
    */
   public static isValidString(objectId: any): boolean {
+    if (!mongoose) {
+      return false
+    }
+
     return Is.String(objectId) && this.isValid(objectId)
   }
 
@@ -30,12 +39,18 @@ export class ObjectId {
    * Validate if is a valid object id object.
    */
   public static isValidObject(objectId: any): boolean {
+    if (!mongoose) {
+      return false
+    }
+
     return (
-      !Is.Number(objectId) && !Is.String(objectId) && isValidObjectId(objectId)
+      !Is.Number(objectId) &&
+      !Is.String(objectId) &&
+      mongoose.isValidObjectId(objectId)
     )
   }
 
   public constructor(value: any) {
-    return new Types.ObjectId(value)
+    return new mongoose.Types.ObjectId(value)
   }
 }
