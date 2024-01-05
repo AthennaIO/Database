@@ -20,8 +20,8 @@ export class BelongsToManyRelation {
     const PivotModel = relation.pivotModel()
 
     relation.pivotTable = relation.pivotTable || PivotModel.table()
-    relation.pivotPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
-    relation.pivotForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
+    relation.relationPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
+    relation.relationForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
 
     return relation
   }
@@ -41,12 +41,12 @@ export class BelongsToManyRelation {
       .where(relation.foreignKey as never, model[relation.primaryKey])
       .findMany()
 
-    const relationIds = pivotData.map(d => d[relation.pivotForeignKey])
+    const relationIds = pivotData.map(d => d[relation.relationForeignKey])
 
     model[relation.property] = await relation
       .model()
       .query()
-      .whereIn(relation.pivotPrimaryKey as never, relationIds)
+      .whereIn(relation.relationPrimaryKey as never, relationIds)
       .when(relation.closure, relation.closure)
       .findMany()
 
@@ -70,14 +70,14 @@ export class BelongsToManyRelation {
       .findMany()
 
     const pivotDataMap = new Map()
-    const pivotForeignKeys = []
+    const relationForeignKey = []
 
     pivotData.forEach(data => {
-      pivotForeignKeys.push(data[relation.pivotForeignKey])
+      relationForeignKey.push(data[relation.relationForeignKey])
 
       const array = pivotDataMap.get(data[relation.foreignKey]) || []
 
-      array.push(data[relation.pivotForeignKey])
+      array.push(data[relation.relationForeignKey])
 
       pivotDataMap.set(data[relation.foreignKey], array)
     })
@@ -85,13 +85,15 @@ export class BelongsToManyRelation {
     const results = await relation
       .model()
       .query()
-      .whereIn(relation.pivotPrimaryKey as never, pivotForeignKeys)
+      .whereIn(relation.relationPrimaryKey as never, relationForeignKey)
       .when(relation.closure, relation.closure)
       .findMany()
 
     const map = new Map()
 
-    results.forEach(result => map.set(result[relation.pivotPrimaryKey], result))
+    results.forEach(result =>
+      map.set(result[relation.relationPrimaryKey], result)
+    )
 
     return models.map(model => {
       const ids = pivotDataMap.get(model[relation.primaryKey]) || []
