@@ -204,4 +204,21 @@ export default class BelongsToRelationTest {
       original: { id: 1, userId: 1 }
     })
   }
+
+  @Test()
+  public async shouldBeAbleToLoadNestedBelongsToRelationUsingWithMethod({ assert }: Context) {
+    const product = await Product.query().with('user.profile').find()
+
+    assert.instanceOf(product.user, User)
+    assert.instanceOf(product.user.profile, Profile)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadNestedBelongsToRelationUsingLoadMethod({ assert }: Context) {
+    const product = await Product.find()
+    const profile = await product.load('user.profile')
+
+    assert.instanceOf(product.user, User)
+    assert.instanceOf(profile, Profile)
+  }
 }

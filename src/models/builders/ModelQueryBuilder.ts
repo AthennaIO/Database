@@ -446,11 +446,22 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public with(relation: string): this
+  public with<K extends ModelRelations<M>>(
+    relation: K,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
+        Driver
+      >
+    ) => any
+  ): this
+
   /**
    * Eager load a relation in your query.
    */
   public with<K extends ModelRelations<M>>(
-    relation: K,
+    relation: K | string,
     closure?: (
       query: ModelQueryBuilder<
         Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
