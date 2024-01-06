@@ -396,11 +396,21 @@ export class BaseModel {
     return json
   }
 
+  public load(relation: string): Promise<any>
+  public load<K extends ModelRelations<this>>(
+    relation: K,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<this[K] extends BaseModel[] ? this[K][0] : this[K], BaseModel>
+      >
+    ) => any
+  ): Promise<this[K]>
+
   /**
    * Eager load a model relation from model instance.
    */
   public async load<K extends ModelRelations<this>>(
-    relation: K,
+    relation: K | string,
     closure?: (
       query: ModelQueryBuilder<
         Extract<this[K] extends BaseModel[] ? this[K][0] : this[K], BaseModel>
@@ -416,7 +426,11 @@ export class BaseModel {
       schema.includeRelation(relation, closure)
     )
 
-    return this[relation]
+    if (relation.includes('.')) {
+      return Json.get(this, relation)
+    }
+
+    return this[relation as any]
   }
 
   /**

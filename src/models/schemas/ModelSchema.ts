@@ -7,12 +7,17 @@
  * file that was distributed with this source code.
  */
 
+import type {
+  ColumnOptions,
+  ModelColumns,
+  ModelRelations,
+  RelationOptions
+} from '#src/types'
 import { Json, Options } from '@athenna/common'
 import { ObjectId } from '#src/helpers/ObjectId'
 import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
-import type { ColumnOptions, ModelColumns, RelationOptions } from '#src/types'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
@@ -330,10 +335,18 @@ export class ModelSchema<M extends BaseModel = any> {
    * option to true.
    */
   public includeRelation(
-    property: string | ModelColumns<M>,
+    property: string | ModelRelations<M>,
     closure?: (query: ModelQueryBuilder) => any
   ) {
     const model = this.Model.name
+
+    if (property.includes('.')) {
+      const [first, ...rest] = property.split('.')
+
+      property = first
+      closure = this.createdNestedRelationClosure(rest)
+    }
+
     const options = this.getRelationByProperty(property)
 
     if (!options) {
@@ -352,5 +365,20 @@ export class ModelSchema<M extends BaseModel = any> {
     this.relations[i] = options
 
     return options
+  }
+
+  /**
+   * Created nested relationships closure to
+   * load relationship's relationships
+   */
+  private createdNestedRelationClosure(relationships: string[]) {
+    if (relationships.length === 1) {
+      return (query: any) => query.with(relationships[0])
+    }
+
+    const [first, ...rest] = relationships
+    const closure = this.createdNestedRelationClosure(rest)
+
+    return (query: any) => query.with(first, closure)
   }
 }

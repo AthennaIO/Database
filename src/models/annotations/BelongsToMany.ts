@@ -40,9 +40,9 @@ export function BelongsToMany<
       // Default value will be set later as: `${Model.table()}_${RelationModel.table()}`
       pivotTable: undefined,
       // Default value will be set later as: Relation.schema().getMainPrimaryKeyName()
-      pivotPrimaryKey: undefined,
+      relationPrimaryKey: undefined,
       // Default value will be set later as: `${String.toCamelCase(Relation.name)}Id`
-      pivotForeignKey: undefined
+      relationForeignKey: undefined
     })
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

@@ -94,20 +94,20 @@ export type BelongsToManyOptions<
   pivotTable?: string
 
   /**
-   * The pivot primary key is always the primary key
+   * The relation primary key is always the primary key
    * of the relation model.
    *
    * @default Relation.schema().getMainPrimaryKeyName()
    */
-  pivotPrimaryKey?: ModelColumns<R>
+  relationPrimaryKey?: ModelColumns<R>
 
   /**
-   * The pivot foreign key is the camelCase in singular
+   * The relation foreign key is the camelCase in singular
    * representation of the relation model name with
-   * an 'Id' at the end. The pivot foreign key will always
+   * an 'Id' at the end. The relation foreign key will always
    * be defined inside the pivot model.
    *
    * @default `${String.toCamelCase(Relation.name)}Id`
    */
-  pivotForeignKey?: ModelColumns<P>
+  relationForeignKey?: ModelColumns<P>
 }
