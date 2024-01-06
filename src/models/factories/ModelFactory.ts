@@ -138,7 +138,7 @@ export class ModelFactory<M extends BaseModel = any, R = M> {
       promises.push(this.getDefinition(override, 'create'))
     }
 
-    let data = await this.Model.createMany(await Promise.all(promises))
+    let data = await this.Model.createMany(await Promise.all(promises), false)
 
     if (this._returning !== '*') {
       data = data.map(d => d[this._returning as any])
