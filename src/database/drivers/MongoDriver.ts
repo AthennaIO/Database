@@ -35,7 +35,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * The where clause used in update queries.
    */
-  private _where: Record<string, any> = {}
+  private _where: Record<string, any>[] = []
 
   /**
    * The or where clause used in update queries.
@@ -1059,21 +1059,18 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (operation === undefined) {
-      this._where = {
-        ...this._where,
-        ...statement
-      }
+      this._where.push(statement)
 
       return this
     }
 
     if (value === undefined) {
-      this._where[statement] = this.setOperator(operation, '=')
+      this._where.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
     }
 
-    this._where[statement] = this.setOperator(value, operation)
+    this._where.push({ [statement]: this.setOperator(value, operation) })
 
     return this
   }
@@ -1127,7 +1124,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where in statement in your query.
    */
   public whereIn(column: string, values: any[]) {
-    this._where[column] = { $in: values }
+    this._where.push({ [column]: { $in: values } })
 
     return this
   }
@@ -1136,7 +1133,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not in statement in your query.
    */
   public whereNotIn(column: string, values: any[]) {
-    this._where[column] = { $nin: values }
+    this._where.push({ [column]: { $nin: values } })
 
     return this
   }
@@ -1145,7 +1142,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where between statement in your query.
    */
   public whereBetween(column: string, values: [any, any]) {
-    this._where[column] = { $gte: values[0], $lte: values[1] }
+    this._where.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
   }
@@ -1154,7 +1151,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not between statement in your query.
    */
   public whereNotBetween(column: string, values: [any, any]) {
-    this._where[column] = { $not: { $gte: values[0], $lte: values[1] } }
+    this._where.push({
+      [column]: { $not: { $gte: values[0], $lte: values[1] } }
+    })
 
     return this
   }
@@ -1163,7 +1162,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where null statement in your query.
    */
   public whereNull(column: string) {
-    this._where[column] = null
+    this._where.push({ [column]: null })
 
     return this
   }
@@ -1172,7 +1171,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not null statement in your query.
    */
   public whereNotNull(column: string) {
-    this._where[column] = { $ne: null }
+    this._where.push({ [column]: { $ne: null } })
 
     return this
   }
@@ -1407,20 +1406,18 @@ export class MongoDriver extends Driver<Connection, Collection> {
       clearOrWhere: true
     })
 
-    if (Is.Empty(this._orWhere)) {
-      const where = Json.copy(this._where)
+    const where: any = {}
 
-      if (options.clearWhere) {
-        this._where = {}
-      }
-
-      return where
+    if (!Is.Empty(this._where)) {
+      where.$and = Json.copy(this._where)
     }
 
-    const where = { $or: [Json.copy(this._where), ...Json.copy(this._orWhere)] }
+    if (!Is.Empty(this._orWhere)) {
+      where.$or = Json.copy(this._orWhere)
+    }
 
     if (options.clearWhere) {
-      this._where = {}
+      this._where = []
     }
 
     if (options.clearOrWhere) {
@@ -1452,29 +1449,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
       this.pipeline = []
     }
 
-    if (!Is.Empty(this._where)) {
-      const $match = Json.copy(this._where)
-
-      pipeline.push({ $match })
-    }
-
-    if (!Is.Empty(this._orWhere)) {
-      const $match = { $or: Json.copy(this._orWhere) }
-
-      if (!Is.Empty(this._where)) {
-        $match.$or.unshift(this._where)
-      }
-
-      pipeline.push({ $match })
-    }
-
-    if (options.clearWhere) {
-      this._where = {}
-    }
-
-    if (options.clearOrWhere) {
-      this._orWhere = []
-    }
+    pipeline.push({ $match: this.createWhere(options) })
 
     return pipeline
   }
