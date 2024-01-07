@@ -833,7 +833,7 @@ export default class MongoDriverTest {
 
     this.driver.table('users').select('*').dump()
 
-    assert.calledWith(console.log, { where: {}, orWhere: [], pipeline: [] })
+    assert.calledWith(console.log, { where: [], orWhere: [], pipeline: [] })
   }
 
   @Test()
