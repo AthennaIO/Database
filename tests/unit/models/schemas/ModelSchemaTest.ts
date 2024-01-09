@@ -58,6 +58,21 @@ export default class ModelSchemaTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetModelDriverName({ assert }: Context) {
+    Config.set('database.default', 'fake')
+    Config.set('database.connections.fake.driver', 'fake')
+
+    class User extends BaseModel {
+      @Column()
+      public id: string
+    }
+
+    const driver = new ModelSchema(User).getModelDriverName()
+
+    assert.deepEqual(driver, 'fake')
+  }
+
+  @Test()
   public async shouldBeAbleToGetModelColumnByProperty({ assert }: Context) {
     class User extends BaseModel {
       @Column()

@@ -12,7 +12,8 @@ export default {
 
   connections: {
     fake: {
-      driver: 'fake'
+      driver: 'fake',
+      validations: true
     },
     mysql: {
       driver: 'mysql'

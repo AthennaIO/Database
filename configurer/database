@@ -67,7 +67,8 @@ export default {
     },
 
     fake: {
-      driver: 'fake'
+      driver: 'fake',
+      validations: false
     }
   }
 }
