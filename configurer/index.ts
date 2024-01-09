@@ -115,9 +115,14 @@ export default class DatabaseConfigurer extends BaseConfigurer {
             'DB_DATABASE=athenna\n'
       }
 
+      const testEnvs = envs.replace(
+        `DB_CONNECTION=${connection}`,
+        'DB_CONNECTION=fake'
+      )
+
       return new File(Path.pwd('.env'), '')
         .append(envs)
-        .then(() => new File(Path.pwd('.env.test'), '').append(envs))
+        .then(() => new File(Path.pwd('.env.test'), '').append(testEnvs))
         .then(() => new File(Path.pwd('.env.example'), '').append(envs))
     })
 
