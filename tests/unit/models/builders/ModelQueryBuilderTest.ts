@@ -413,6 +413,27 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldNotBeAbleToValidateIsNullableIfConnectionValidationsAreTurnedOf({ assert }: Context) {
+    Config.set('database.connections.fake.validations', false)
+
+    Mock.when(Database.driver, 'find').resolve({ id: '3' })
+
+    await assert.doesNotReject(
+      () => User.query().setAttributes(false).uniqueValidation(false).create(),
+      NullableValueException
+    )
+  }
+
+  @Test()
+  public async shouldNotBeAbleToValidateIsUniqueIfConnectionValidationsAreTurnedOf({ assert }: Context) {
+    Config.set('database.connections.fake.validations', false)
+
+    Mock.when(Database.driver, 'find').resolve({ id: '3' })
+
+    await assert.doesNotReject(() => User.query().uniqueValidation(true).create(), UniqueValueException)
+  }
+
+  @Test()
   public async shouldBeAbleToCreateDataAndSetDefaultTimestamps({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     Mock.when(Database.driver, 'find').resolve(undefined)

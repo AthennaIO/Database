@@ -68,6 +68,15 @@ export class ModelSchema<M extends BaseModel = any> {
   }
 
   /**
+   * Get the model driver name.
+   */
+  public getModelDriverName() {
+    const connection = this.getModelConnection()
+
+    return Config.get(`database.connections.${connection}.driver`)
+  }
+
+  /**
    * Get the model driver.
    */
   public getModelDriver() {
