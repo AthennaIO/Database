@@ -83,6 +83,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: false,
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,
@@ -123,6 +124,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: true,
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,
@@ -163,6 +165,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: false,
       isCreateDate: true,
       isDeleteDate: false,
       isHidden: false,
@@ -191,6 +194,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: false,
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,
@@ -219,6 +223,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: false,
       isCreateDate: false,
       isDeleteDate: true,
       isHidden: false,
@@ -247,6 +252,7 @@ export default class ModelSchemaTest {
 
     assert.deepEqual(column, {
       defaultTo: null,
+      hasSetName: false,
       isCreateDate: false,
       isDeleteDate: false,
       isHidden: false,

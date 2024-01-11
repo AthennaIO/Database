@@ -24,40 +24,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
-        defaultTo: null,
-        type: String,
-        isIndex: false,
-        isSparse: false,
-        isPrimary: false,
-        isHidden: false,
-        isUnique: false,
-        isNullable: true,
-        isMainPrimary: false,
-        isCreateDate: false,
-        isUpdateDate: false,
-        isDeleteDate: false,
-        property: 'id',
-        persist: true
-      }
-    ])
-  }
-
-  @Test()
-  public async shouldAutomaticallyDefineNameAsUnderlineIdWhenUsingMongoDriver({ assert }: Context) {
-    Config.set('database.connections.mongo.driver', 'mongo')
-
-    class User extends BaseModel {
-      public static connection() {
-        return 'mongo'
-      }
-
-      @Column()
-      public id: string
-    }
-
-    assert.deepEqual(Annotation.getColumnsMeta(User), [
-      {
-        name: '_id',
+        hasSetName: false,
         defaultTo: null,
         type: String,
         isIndex: false,
@@ -90,6 +57,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
+        hasSetName: true,
         defaultTo: null,
         type: String,
         isIndex: false,
@@ -133,6 +101,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: '_id',
+        hasSetName: true,
         type: Schema.ObjectId,
         defaultTo: '1',
         isPrimary: true,
@@ -163,6 +132,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
+        hasSetName: false,
         defaultTo: null,
         type: String,
         isPrimary: false,
@@ -191,6 +161,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
+        hasSetName: false,
         defaultTo: null,
         type: String,
         isPrimary: true,
@@ -219,6 +190,7 @@ export default class ColumnAnnotationTest {
     assert.deepEqual(Annotation.getColumnsMeta(User), [
       {
         name: 'id',
+        hasSetName: false,
         type: String,
         defaultTo: null,
         isPrimary: true,

@@ -166,11 +166,15 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       mongo: 'mongoose'
     }
 
-    this.logger
+    const instruction = this.logger
       .instruction()
       .head('Run following commands to get started:')
       .add(`npm install ${libraries[connection]}`)
-      .add(`docker-compose up -d`)
-      .render()
+
+    if (connection !== 'sqlite') {
+      instruction.add(`docker-compose up -d`)
+    }
+
+    instruction.render()
   }
 }

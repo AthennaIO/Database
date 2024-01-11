@@ -28,6 +28,12 @@ export type ColumnOptions = {
   name?: string
 
   /**
+   * Holds if the user has set the name property
+   * in @Column or not.
+   */
+  hasSetName?: boolean
+
+  /**
    * The column type in database. This value
    * only matters when you are using MongoDB
    * or when you want to synchronize you model
