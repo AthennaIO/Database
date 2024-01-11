@@ -106,6 +106,12 @@ export class ModelSchema<M extends BaseModel = any> {
 
     if (!options) {
       options = this.columns.find(c => c.name === 'id')
+
+      if (options) {
+        if (!options.hasSetName && this.getModelDriverName() === 'mongo') {
+          options.name = '_id'
+        }
+      }
     }
 
     if (!options) {

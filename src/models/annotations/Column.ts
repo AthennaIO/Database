@@ -18,14 +18,10 @@ import type { ColumnOptions } from '#src/types/columns/ColumnOptions'
  * Create column for model class.
  */
 export function Column(
-  options: Omit<ColumnOptions, 'property'> = {}
+  options: Omit<ColumnOptions, 'property' | 'hasSetName'> = {}
 ): PropertyDecorator {
   return (target: any, key: any) => {
-    let hasSetName = false
-
-    if (options.name) {
-      hasSetName = true
-    }
+    const hasSetName = !!options.name
 
     options = Options.create(options, {
       name: AthennaString.toCamelCase(key),
@@ -48,18 +44,15 @@ export function Column(
     // @ts-ignore
     options.property = key
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    options.hasSetName = hasSetName
+
     if (options.isMainPrimary) {
       options.isPrimary = true
     }
 
     const Target = target.constructor
-
-    const connection = Target.connection()
-    const driver = Config.get(`database.connections.${connection}.driver`)
-
-    if (!hasSetName && options.name === 'id' && driver === 'mongo') {
-      options.name = '_id'
-    }
 
     debug('registering column metadata for model %s: %o', Target.name, options)
 
