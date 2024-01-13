@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { relative } from 'node:path'
 import { BaseConfigurer } from '@athenna/artisan'
 import { File, Module, Parser, Path } from '@athenna/common'
 
@@ -96,7 +97,7 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           envs =
             '\nDB_CONNECTION=sqlite\n' +
             'DB_DEBUG=false\n' +
-            'DB_FILENAME=./database/sqlite.db\n'
+            `DB_FILENAME=${this.databasePath()}/sqlite.db\n`
           break
         default:
           // eslint-disable-next-line no-case-declarations
@@ -176,5 +177,9 @@ export default class DatabaseConfigurer extends BaseConfigurer {
     }
 
     instruction.render()
+  }
+
+  private databasePath() {
+    return relative(Path.pwd(), Path.database().replace(/\\/g, '/'))
   }
 }
