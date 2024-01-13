@@ -180,6 +180,6 @@ export default class DatabaseConfigurer extends BaseConfigurer {
   }
 
   private databasePath() {
-    return relative(Path.pwd(), Path.database().replace(/\\/g, '/'))
+    return relative(Path.pwd(), Path.database()).replace(/\\/g, '/')
   }
 }
