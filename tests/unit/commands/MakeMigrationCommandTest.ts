@@ -17,6 +17,8 @@ export default class MakeMigrationCommandTest extends BaseCommandTest {
     const output = await command.run('make:migration TestMigration')
     const file = new Folder(Path.fixtures('storage/database/migrations')).loadSync().files[0]
 
+    console.log(output.output)
+
     output.assertSucceeded()
     assert.isTrue(file.fileExists)
     output.assertLogged('[ MAKING MIGRATION ]')
