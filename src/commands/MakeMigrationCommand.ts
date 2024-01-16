@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import { sep } from 'node:path'
 import { Path, String } from '@athenna/common'
-import { sep, resolve, isAbsolute } from 'node:path'
 import { BaseCommand, Argument } from '@athenna/artisan'
 
 export class MakeMigrationCommand extends BaseCommand {
@@ -16,8 +16,6 @@ export class MakeMigrationCommand extends BaseCommand {
     description: 'The migration name.'
   })
   public name: string
-
-  public tableName: string
 
   public static signature(): string {
     return 'make:migration'
@@ -37,15 +35,26 @@ export class MakeMigrationCommand extends BaseCommand {
     const namePluralCamel = String.toCamelCase(String.pluralize(this.name))
     const namePluralPascal = String.toPascalCase(String.pluralize(this.name))
 
-    this.tableName = String.pluralize(
+    const destination = Config.get(
+      'rc.commands.make:migration.destination',
+      Path.migrations()
+    )
+
+    const tableName = String.pluralize(
       namePascal
         .replace('Migration', '')
         .replace('Migrations', '')
         .toLowerCase()
     )
 
+    let [date, time] = new Date().toISOString().split('T')
+
+    date = date.replace(/-/g, '_')
+    time = time.split('.')[0].replace(/:/g, '')
+
     const file = await this.generator
-      .path(this.getFilePath())
+      .fileName(`${sep}${date}_${time}_create_${tableName}_table`)
+      .destination(destination)
       .properties({
         nameUp,
         nameCamel,
@@ -53,7 +62,7 @@ export class MakeMigrationCommand extends BaseCommand {
         namePascal,
         namePluralCamel,
         namePluralPascal,
-        tableName: this.tableName
+        tableName
       })
       .template('migration')
       .make()
@@ -61,37 +70,5 @@ export class MakeMigrationCommand extends BaseCommand {
     this.logger.success(
       `Migration ({yellow} "${file.name}") successfully created.`
     )
-  }
-
-  /**
-   * Get the file path where it will be generated.
-   */
-  private getFilePath(): string {
-    let [date, time] = new Date().toISOString().split('T')
-
-    date = date.replace(/-/g, '_')
-    time = time.split('.')[0].replace(/:/g, '')
-
-    const name = `${sep}${date}_${time}_create_${
-      this.tableName
-    }_table.${Path.ext()}`
-
-    return this.getDestinationPath().concat(name)
-  }
-
-  /**
-   * Get the destination path for the file that will be generated.
-   */
-  private getDestinationPath(): string {
-    let destination = Config.get(
-      'rc.commands.make:migration.destination',
-      Path.migrations()
-    )
-
-    if (!isAbsolute(destination)) {
-      destination = resolve(Path.pwd(), destination)
-    }
-
-    return destination
   }
 }

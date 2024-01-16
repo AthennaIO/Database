@@ -7,8 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Path, String } from '@athenna/common'
-import { sep, resolve, isAbsolute } from 'node:path'
+import { Path } from '@athenna/common'
 import { BaseCommand, Argument } from '@athenna/artisan'
 
 export class MakeSeederCommand extends BaseCommand {
@@ -28,9 +27,13 @@ export class MakeSeederCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ MAKING SEEDER ])\n')
 
+    const destination = Config.get(
+      'rc.commands.make:seeder.destination',
+      Path.seeders()
+    )
     const file = await this.generator
-      .path(this.getFilePath())
-      .properties({ nameTable: String.pluralize(this.name) })
+      .fileName(this.name)
+      .destination(destination)
       .template('seeder')
       .setNameProperties(true)
       .make()
@@ -38,28 +41,5 @@ export class MakeSeederCommand extends BaseCommand {
     this.logger.success(
       `Seeder ({yellow} "${file.name}") successfully created.`
     )
-  }
-
-  /**
-   * Get the file path where it will be generated.
-   */
-  private getFilePath(): string {
-    return this.getDestinationPath().concat(`${sep}${this.name}.${Path.ext()}`)
-  }
-
-  /**
-   * Get the destination path for the file that will be generated.
-   */
-  private getDestinationPath(): string {
-    let destination = Config.get(
-      'rc.commands.make:seeder.destination',
-      Path.seeders()
-    )
-
-    if (!isAbsolute(destination)) {
-      destination = resolve(Path.pwd(), destination)
-    }
-
-    return destination
   }
 }
