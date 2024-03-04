@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Path } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { BaseModel } from '#src/models/BaseModel'
 import { Column } from '#src/models/annotations/Column'

@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Path } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { User } from '#tests/fixtures/models/e2e/User'
 import { Profile } from '#tests/fixtures/models/e2e/Profile'

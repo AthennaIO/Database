@@ -7,11 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import { Collection } from '@athenna/common'
 import type { Connections } from '#src/types'
 import { Database } from '#src/facades/Database'
 import { BaseModel } from '#src/models/BaseModel'
 import { User } from '#tests/fixtures/models/User'
+import { Path, Collection } from '@athenna/common'
 import { Profile } from '#tests/fixtures/models/Profile'
 import { Product } from '#tests/fixtures/models/Product'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
