@@ -22,7 +22,7 @@ import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 
 export class FakeDriver {
-  public constructor(connection: string, client: any) {
+  public constructor(connection?: string, client?: any) {
     FakeDriver.connection = connection
 
     if (client) {

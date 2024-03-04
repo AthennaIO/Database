@@ -153,13 +153,6 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       })
     }
 
-    await task.run()
-
-    console.log()
-    this.logger.success(
-      'Successfully configured ({dim,yellow} @athenna/database) library'
-    )
-
     const libraries = {
       mysql: 'knex mysql2',
       postgres: 'knex pg',
@@ -167,16 +160,24 @@ export default class DatabaseConfigurer extends BaseConfigurer {
       mongo: 'mongoose'
     }
 
-    const instruction = this.logger
-      .instruction()
-      .head('Run following commands to get started:')
-      .add(`npm install ${libraries[connection]}`)
+    task.addPromise(`Install ${libraries[connection]} libraries`, () => {
+      return this.npm.install(libraries[connection])
+    })
+
+    await task.run()
+
+    console.log()
+    this.logger.success(
+      'Successfully configured ({dim,yellow} @athenna/database) library'
+    )
 
     if (connection !== 'sqlite') {
-      instruction.add(`docker-compose up -d`)
+      this.logger
+        .instruction()
+        .head('Run following commands to get started:')
+        .add(`docker-compose up -d`)
+        .render()
     }
-
-    instruction.render()
   }
 
   private databasePath() {

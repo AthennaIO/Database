@@ -39,6 +39,7 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForMySqlDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mysql')
 
     await configurer.configure()
@@ -70,6 +71,7 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToUpdateDockerComposeFileWhenItAlreadyExistWhenRunningMySqlConfigurer({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mysql')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(
@@ -105,6 +107,7 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForPostgresDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('postgres')
 
     await configurer.configure()
@@ -138,6 +141,7 @@ export default class DatabaseConfigurerTest {
   }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('postgres')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(
@@ -173,6 +177,7 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToRunDatabaseConfigurerForMongoDatabase({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mongo')
 
     await configurer.configure()
@@ -198,6 +203,7 @@ export default class DatabaseConfigurerTest {
   public async shouldBeAbleToUpdateDockerComposeFileWhenItAlreadyExistWhenRunningMongoConfigurer({ assert }: Context) {
     const configurer = new DatabaseConfigurer()
 
+    Mock.when(configurer.npm, 'install').resolve(undefined)
     Mock.when(configurer.prompt, 'list').resolve('mongo')
 
     await new File(this.cwd + sep + 'tests' + sep + 'fixtures' + sep + 'docker-compose.yml').copy(

@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Exception } from '@athenna/common'
+import { Path, Exception } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 
 export class NotFoundDriverException extends Exception {

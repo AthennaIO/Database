@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Json } from '@athenna/common'
+import { Path, Json } from '@athenna/common'
 import { LoggerProvider } from '@athenna/logger'
 import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { DriverFactory } from '#src/factories/DriverFactory'
