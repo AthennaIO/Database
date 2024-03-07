@@ -154,15 +154,18 @@ export default class DatabaseConfigurer extends BaseConfigurer {
     }
 
     const libraries = {
-      mysql: 'knex mysql2',
-      postgres: 'knex pg',
-      sqlite: 'knex better-sqlite3',
-      mongo: 'mongoose'
+      mysql: ['knex', 'mysql2'],
+      postgres: ['knex', 'pg'],
+      sqlite: ['knex', 'better-sqlite3'],
+      mongo: ['mongoose']
     }
 
-    task.addPromise(`Install ${libraries[connection]} libraries`, () => {
-      return this.npm.install(libraries[connection])
-    })
+    task.addPromise(
+      `Install ${libraries[connection].join(', ')} libraries`,
+      () => {
+        return this.npm.install(libraries[connection])
+      }
+    )
 
     await task.run()
 
