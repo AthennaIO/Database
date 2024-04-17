@@ -69,7 +69,7 @@
     "#tests": "./tests/index.js"
   },
   "dependencies": {
-    "@faker-js/faker": "^8.4.0",
+    "@faker-js/faker": "^8.4.1",
     "fast-deep-equal": "^3.1.3"
   },
   "devDependencies": {
