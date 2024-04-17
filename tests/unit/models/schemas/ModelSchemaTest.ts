@@ -14,7 +14,7 @@ import { Column } from '#src/models/annotations/Column'
 import { HasOne } from '#src/models/annotations/HasOne'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
-import { Test, type Context, AfterEach, BeforeEach, Cleanup } from '@athenna/test'
+import { Test, Setup, type Context, AfterEach, BeforeEach, Cleanup } from '@athenna/test'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
 export default class ModelSchemaTest {
@@ -554,6 +554,9 @@ export default class ModelSchemaTest {
   }
 
   @Test()
+  @Setup(async () => {
+    await Database.connection('mongo-memory').dropTable('users')
+  })
   @Cleanup(async () => {
     await Database.connection('mongo-memory').dropTable('users')
     await Database.connection('mongo-memory').close()

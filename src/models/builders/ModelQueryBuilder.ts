@@ -1045,16 +1045,6 @@ export class ModelQueryBuilder<
   }
 
   /**
-   * Validate if connection is able to run ORM
-   * validations or not.
-   */
-  private isNotAbleToValidate() {
-    const connection = this.schema.getModelConnection()
-
-    return !Config.get(`database.connections.${connection}.validations`)
-  }
-
-  /**
    * Set the internal selected properties and soft delete
    * queries.
    */
@@ -1083,10 +1073,6 @@ export class ModelQueryBuilder<
    * can be created in database.
    */
   private validateNullable(data: any) {
-    if (this.isNotAbleToValidate()) {
-      return
-    }
-
     if (!this.isToValidateNullable) {
       return
     }
@@ -1111,10 +1097,6 @@ export class ModelQueryBuilder<
    * can be created in database.
    */
   private async validateUnique(data: any, isUpdate = false) {
-    if (this.isNotAbleToValidate()) {
-      return
-    }
-
     if (!this.isToValidateUnique) {
       return
     }
