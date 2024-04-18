@@ -222,20 +222,8 @@ export class ModelSchema<M extends BaseModel = any> {
   /**
    * Get all column properties as an array of string.
    */
-  public getAllColumnProperties(options?: { removeHidden: boolean }): string[] {
-    options = Options.create(options, {
-      removeHidden: false
-    })
-
-    return this.columns
-      .map(column => {
-        if (column.isHidden && options.removeHidden) {
-          return null
-        }
-
-        return column.property
-      })
-      .filter(Boolean)
+  public getAllColumnProperties(): string[] {
+    return this.columns.map(column => column.property)
   }
 
   /**

@@ -12,7 +12,7 @@ import { Database } from '#src/facades/Database'
 import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
-import { Collection, Is, Json, String } from '@athenna/common'
+import { Collection, Is, Json, Options, String } from '@athenna/common'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
@@ -364,7 +364,11 @@ export class BaseModel {
   /**
    * Return a Json object from the actual subclass instance.
    */
-  public toJSON(): Record<string, any> {
+  public toJSON(options?: { withHidden?: boolean }): Record<string, any> {
+    options = Options.create(options, {
+      withHidden: false
+    })
+
     const _Model = this.constructor as unknown as typeof BaseModel
 
     const json = {}
@@ -387,6 +391,13 @@ export class BaseModel {
 
         json[key] = this[key].toJSON ? this[key].toJSON() : this[key]
 
+        return
+      }
+
+      if (
+        !options.withHidden &&
+        _Model.schema().getColumnByProperty(key).isHidden
+      ) {
         return
       }
 
