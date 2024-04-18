@@ -404,17 +404,6 @@ export class ModelQueryBuilder<
   }
 
   /**
-   * Select all fields that are hidden.
-   */
-  public withHidden() {
-    const properties = this.schema.getAllColumnProperties({
-      removeHidden: false
-    })
-
-    return this.select(...(properties as any))
-  }
-
-  /**
    * Enable/disable setting the default attributes properties
    * when creating/updating models.
    */
