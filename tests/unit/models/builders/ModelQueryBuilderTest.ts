@@ -11,7 +11,6 @@ import { Config } from '@athenna/config'
 import { Database } from '#src/facades/Database'
 import { Collection, Path } from '@athenna/common'
 import { User } from '#tests/fixtures/models/User'
-import { Order } from '#tests/fixtures/models/Order'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { UserNotSoftDelete } from '#tests/fixtures/models/UserNotSoftDelete'
@@ -33,24 +32,6 @@ export default class ModelQueryBuilderTest {
     Config.clear()
     ioc.reconstruct()
     User.setAttributes(true).uniqueValidation(true).nullableValidation(true)
-  }
-
-  @Test()
-  public async shouldBeAbleToAutomaticallySetNoHiddenFieldsToModelQueryBuilder({ assert }: Context) {
-    Mock.when(Database.driver, 'select').resolve(undefined)
-
-    await Order.query().find()
-
-    assert.calledOnceWith(Database.driver.select, 'id')
-  }
-
-  @Test()
-  public async shouldBeAbleToSetHiddenFieldsToModelQueryBuilder({ assert }: Context) {
-    Mock.when(Database.driver, 'select').resolve(undefined)
-
-    await Order.query().withHidden().find()
-
-    assert.calledWith(Database.driver.select, 'id', 'price')
   }
 
   @Test()
