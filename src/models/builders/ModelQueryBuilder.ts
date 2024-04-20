@@ -51,9 +51,7 @@ export class ModelQueryBuilder<
     this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
     const deletedAtColumn = this.schema.getDeletedAtColumn()
-    const properties = this.schema.getAllColumnProperties({
-      removeHidden: true
-    })
+    const properties = this.schema.getAllColumnProperties()
 
     if (deletedAtColumn) {
       this.isSoftDelete = true
@@ -403,17 +401,6 @@ export class ModelQueryBuilder<
     return this.whereNull(this.DELETED_AT_PROP).whereNotNull(
       this.DELETED_AT_PROP
     )
-  }
-
-  /**
-   * Select all fields that are hidden.
-   */
-  public withHidden() {
-    const properties = this.schema.getAllColumnProperties({
-      removeHidden: false
-    })
-
-    return this.select(...(properties as any))
   }
 
   /**

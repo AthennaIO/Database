@@ -74,7 +74,7 @@ export type ColumnOptions = {
 
   /**
    * Set if the field should be hidden when
-   * retrieving it from database.
+   * executing the `toJSON()` method of the model.
    *
    * @default false
    */

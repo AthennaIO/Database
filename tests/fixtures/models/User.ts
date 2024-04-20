@@ -45,6 +45,9 @@ export class User extends BaseModel {
   @Column({ persist: false })
   public metadata2: string
 
+  @Column({ isHidden: true })
+  public metadata3: string
+
   @Column({ name: 'rate_number' })
   public rate: number
 

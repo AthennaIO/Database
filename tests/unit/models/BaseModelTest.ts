@@ -398,6 +398,34 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetModelAsJsonHiddingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata3 = 'metadata3'
+
+    const json = user.toJSON()
+
+    assert.notInstanceOf(json, User)
+    assert.deepEqual(json, { id: '1', name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetModelAsJsonWithoutHiddingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata3 = 'metadata3'
+
+    const json = user.toJSON({ withHidden: true })
+
+    assert.notInstanceOf(json, User)
+    assert.deepEqual(json, { id: '1', name: 'lenon', metadata3: 'metadata3' })
+  }
+
+  @Test()
   public async shouldBeAbleToValidateThatAModelHasNotBeenPersistedInDatabase({ assert }: Context) {
     const user = new User()
 
