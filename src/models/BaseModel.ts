@@ -12,7 +12,15 @@ import { Database } from '#src/facades/Database'
 import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
-import { Collection, Is, Json, Options, String } from '@athenna/common'
+import {
+  Collection,
+  Is,
+  Json,
+  Options,
+  String,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
@@ -231,6 +239,23 @@ export class BaseModel {
     }
 
     return query.findMany()
+  }
+
+  /**
+   * Find many values in database and return paginated.
+   */
+  public static async paginate<T extends typeof BaseModel>(
+    this: T,
+    options?: PaginationOptions,
+    where?: Partial<InstanceType<T>>
+  ): Promise<PaginatedResponse<InstanceType<T>>> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.paginate(options)
   }
 
   /**

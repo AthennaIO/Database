@@ -13,8 +13,13 @@ import type {
   ModelColumns,
   ModelRelations
 } from '#src/types'
+import {
+  Collection,
+  Is,
+  Options,
+  type PaginationOptions
+} from '@athenna/common'
 import type { BaseModel } from '#src/models/BaseModel'
-import { Collection, Is, Options } from '@athenna/common'
 import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
@@ -225,6 +230,23 @@ export class ModelQueryBuilder<
     const data = await super.findMany()
 
     return this.generator.generateMany(data)
+  }
+
+  /**
+   * Find many values in database and return paginated.
+   */
+  public async paginate(
+    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
+    limit = 10,
+    resourceUrl = '/'
+  ) {
+    this.setInternalQueries()
+
+    const data = await super.paginate(page, limit, resourceUrl)
+
+    data.data = await this.generator.generateMany(data.data)
+
+    return data
   }
 
   /**

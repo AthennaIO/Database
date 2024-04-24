@@ -7,9 +7,13 @@
  * file that was distributed with this source code.
  */
 
+import type {
+  Collection,
+  PaginatedResponse,
+  PaginationOptions
+} from '@athenna/common'
 import type { Operations } from '#src/types/Operations'
 import type { Direction, ModelColumns } from '#src/types'
-import type { Collection, PaginatedResponse } from '@athenna/common'
 import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 
 export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
@@ -169,7 +173,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Find many values in database and return as paginated response.
    */
   public async paginate(
-    page = 0,
+    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse> {
