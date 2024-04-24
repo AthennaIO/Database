@@ -17,6 +17,13 @@ export class DbWipeCommand extends BaseCommand {
   })
   public connection: string
 
+  @Option({
+    default: false,
+    signature: '--with-seeders',
+    description: 'Run seeders at the end.'
+  })
+  public withSeeders: boolean
+
   public static signature(): string {
     return 'db:fresh'
   }
@@ -27,6 +34,12 @@ export class DbWipeCommand extends BaseCommand {
 
   public async handle(): Promise<void> {
     await Artisan.call(`db:wipe --connection ${this.connection}`)
+    console.log()
     await Artisan.call(`migration:run --connection ${this.connection}`)
+
+    if (this.withSeeders) {
+      console.log()
+      await Artisan.call(`db:seed --connection ${this.connection}`)
+    }
   }
 }

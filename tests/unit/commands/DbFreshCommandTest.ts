@@ -22,4 +22,16 @@ export default class DbFreshCommandTest extends BaseCommandTest {
     output.assertLogged('[ WIPING DATABASE ]')
     output.assertLogged('[ RUNNING MIGRATIONS ]')
   }
+
+  @Test()
+  public async shouldBeAbleToRunDbFreshCommandAndSeedersAtTheEnd({ command }: Context) {
+    const output = await command.run('db:fresh --with-seeders --connection=fake', {
+      path: Path.fixtures('consoles/db-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ WIPING DATABASE ]')
+    output.assertLogged('[ RUNNING MIGRATIONS ]')
+    output.assertLogged('[ SEEDING DATABASE ]')
+  }
 }
