@@ -391,7 +391,9 @@ export class FakeDriver {
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse<T>> {
-    return Exec.pagination([{}], 1, { page, limit, resourceUrl })
+    const data = await this.findMany()
+
+    return Exec.pagination(data, data.length, { page, limit, resourceUrl })
   }
 
   /**
