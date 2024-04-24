@@ -33,4 +33,15 @@ export default class MigrationRunCommandTest extends BaseCommandTest {
     output.assertLogged('[ RUNNING MIGRATIONS ]')
     output.assertLogged('[  success  ] Successfully ran migrations on "fake" database.')
   }
+
+  @Test()
+  public async shouldSkipRunningMigrationsIfDriverIsMongo({ command }: Context) {
+    const output = await command.run('migration:run --connection=fakeMongo', {
+      path: Path.fixtures('consoles/db-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ RUNNING MIGRATIONS ]')
+    output.assertLogged('Connection "fakeMongo" is using "mongo" driver and migrations run will be skipped.')
+  }
 }

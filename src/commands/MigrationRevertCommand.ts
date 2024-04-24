@@ -29,6 +29,14 @@ export class MigrationRevertCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ REVERTING MIGRATIONS ])\n')
 
+    if (Config.is(`database.connections.${this.connection}.driver`, 'mongo')) {
+      this.logger.warn(
+        `Connection ({yellow} "${this.connection}") is using ({yellow} "mongo") driver and migrations revert will be skipped.`
+      )
+
+      return
+    }
+
     const DB = Database.connection(this.connection)
     const dbName = await DB.getCurrentDatabase()
 

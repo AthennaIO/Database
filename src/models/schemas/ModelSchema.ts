@@ -227,6 +227,13 @@ export class ModelSchema<M extends BaseModel = any> {
   }
 
   /**
+   * Get all column names as an array of string.
+   */
+  public getAllColumnNames(): string[] {
+    return this.columns.map(column => column.name)
+  }
+
+  /**
    * Get all columns where unique option is true.
    */
   public getAllUniqueColumns(): ColumnOptions[] {
