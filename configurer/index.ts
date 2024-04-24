@@ -42,8 +42,17 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'make:migration',
           '@athenna/database/commands/MakeMigrationCommand'
         )
+        .setTo('commands', 'db:fresh', {
+          path: '@athenna/database/commands/DbFreshCommand',
+          loadApp: true,
+          loadAllCommands: true
+        })
         .setTo('commands', 'db:seed', {
           path: '@athenna/database/commands/DbSeedCommand',
+          loadApp: true
+        })
+        .setTo('commands', 'db:wipe', {
+          path: '@athenna/database/commands/DbWipeCommand',
           loadApp: true
         })
         .setTo('commands', 'migration:run', {

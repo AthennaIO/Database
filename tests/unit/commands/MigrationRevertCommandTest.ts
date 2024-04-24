@@ -33,4 +33,15 @@ export default class MigrationRevertCommandTest extends BaseCommandTest {
     output.assertLogged('[ REVERTING MIGRATIONS ]')
     output.assertLogged('[  success  ] Successfully reverted migrations on "fake" database.')
   }
+
+  @Test()
+  public async shouldSkipRevertingMigrationsIfDriverIsMongo({ command }: Context) {
+    const output = await command.run('migration:revert --connection=fakeMongo', {
+      path: Path.fixtures('consoles/db-console.ts')
+    })
+
+    output.assertSucceeded()
+    output.assertLogged('[ REVERTING MIGRATIONS ]')
+    output.assertLogged('Connection "fakeMongo" is using "mongo" driver and migrations revert will be skipped.')
+  }
 }

@@ -51,7 +51,6 @@ export class ModelQueryBuilder<
     this.primaryKeyProperty = this.schema.getMainPrimaryKeyProperty() as any
 
     const deletedAtColumn = this.schema.getDeletedAtColumn()
-    const properties = this.schema.getAllColumnProperties()
 
     if (deletedAtColumn) {
       this.isSoftDelete = true
@@ -59,7 +58,7 @@ export class ModelQueryBuilder<
       this.DELETED_AT_PROP = deletedAtColumn.property
     }
 
-    this.selectColumns = properties
+    this.selectColumns = this.schema.getAllColumnNames()
     this.setPrimaryKey(this.primaryKeyName)
   }
 

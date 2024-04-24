@@ -1,0 +1,32 @@
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import { Artisan, BaseCommand, Option } from '@athenna/artisan'
+
+export class DbWipeCommand extends BaseCommand {
+  @Option({
+    default: 'default',
+    signature: '-c, --connection <connection>',
+    description: 'Set the the database connection.'
+  })
+  public connection: string
+
+  public static signature(): string {
+    return 'db:fresh'
+  }
+
+  public static description(): string {
+    return 'Drop all the tables of your database and run migrations again.'
+  }
+
+  public async handle(): Promise<void> {
+    await Artisan.call(`db:wipe --connection ${this.connection}`)
+    await Artisan.call(`migration:run --connection ${this.connection}`)
+  }
+}
