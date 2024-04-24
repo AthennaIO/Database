@@ -8,11 +8,16 @@
  */
 
 import type { Knex, TableBuilder } from 'knex'
+import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import { Collection, Options, type PaginatedResponse } from '@athenna/common'
-import type { ModelSchema } from 'src/models/schemas/ModelSchema.js'
+import {
+  Collection,
+  Options,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
@@ -370,7 +375,7 @@ export abstract class Driver<Client = any, QB = any> {
    * Find many values in database and return as paginated response.
    */
   public abstract paginate<T = any>(
-    page?: number,
+    page?: PaginationOptions | number,
     limit?: number,
     resourceUrl?: string
   ): Promise<PaginatedResponse<T>>

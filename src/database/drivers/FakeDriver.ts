@@ -387,11 +387,17 @@ export class FakeDriver {
    * Find many values in database and return as paginated response.
    */
   public static async paginate<T = any>(
-    page = 0,
+    page = { page: 0, limit: 10, resourceUrl: '/' },
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse<T>> {
-    return Exec.pagination([{}], 1, { page, limit, resourceUrl })
+    if (Is.Number(page)) {
+      page = { page, limit, resourceUrl }
+    }
+
+    const data = await this.findMany()
+
+    return Exec.pagination(data, data.length, page)
   }
 
   /**

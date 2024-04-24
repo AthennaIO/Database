@@ -12,7 +12,8 @@ import {
   Is,
   Json,
   Options,
-  type PaginatedResponse
+  type PaginatedResponse,
+  type PaginationOptions
 } from '@athenna/common'
 
 import { debug } from '#src/debug'
@@ -549,10 +550,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Find many values in database and return as paginated response.
    */
   public async paginate<T = any>(
-    page = 0,
+    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse<T>> {
+    if (Is.Number(page)) {
+      page = { page, limit, resourceUrl }
+    }
+
     const pipeline = this.createPipeline({
       clearWhere: false,
       clearOrWhere: false,
@@ -568,9 +573,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
 
     const count = result[0]?.count || 0
 
-    const data = await this.offset(page).limit(limit).findMany()
+    const data = await this.offset(page.page).limit(page.limit).findMany()
 
-    return Exec.pagination(data, count, { page, limit, resourceUrl })
+    return Exec.pagination(data, count, page)
   }
 
   /**

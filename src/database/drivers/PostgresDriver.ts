@@ -17,9 +17,15 @@ import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
-import { Exec, Is, Options, type PaginatedResponse } from '@athenna/common'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+import {
+  Exec,
+  Is,
+  Options,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
 
 export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
@@ -372,19 +378,23 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Find many values in database and return as paginated response.
    */
   public async paginate<T = any>(
-    page = 0,
+    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse<T>> {
+    if (Is.Number(page)) {
+      page = { page, limit, resourceUrl }
+    }
+
     const [{ count }] = await this.qb
       .clone()
       .clearOrder()
       .clearSelect()
       .count({ count: '*' })
 
-    const data = await this.offset(page).limit(limit).findMany()
+    const data = await this.offset(page.page).limit(page.limit).findMany()
 
-    return Exec.pagination(data, parseInt(count), { page, limit, resourceUrl })
+    return Exec.pagination(data, parseInt(count), page)
   }
 
   /**
