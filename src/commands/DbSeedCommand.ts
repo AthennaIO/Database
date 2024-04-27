@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { Module, Path } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
 
@@ -38,16 +37,9 @@ export class DbSeedCommand extends BaseCommand {
     this.logger.simple('({bold,green} [ SEEDING DATABASE ])\n')
 
     const DB = Database.connection(this.connection)
-    const seeds = await Module.getAllFrom(Path.seeders())
     const task = this.logger.task()
 
-    seeds.forEach(Seed => {
-      if (this.classes?.length && !this.classes.includes(Seed.name)) {
-        return
-      }
-
-      task.addPromise(`Running "${Seed.name}" seeder`, () => new Seed().run(DB))
-    })
+    await DB.runSeeders({ task, classes: this.classes })
 
     await task.run().finally(() => DB.close())
   }
