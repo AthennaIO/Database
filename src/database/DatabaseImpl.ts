@@ -8,6 +8,7 @@
  */
 
 import type { Knex } from 'knex'
+import { Path, Module, Options } from '@athenna/common'
 import { DriverFactory } from '#src/factories/DriverFactory'
 import type { Connections, ConnectionOptions } from '#src/types'
 import type { FakeDriver } from '#src/database/drivers/FakeDriver'
@@ -139,6 +140,43 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    */
   public async startTransaction(): Promise<Transaction<Driver>> {
     return this.driver.startTransaction()
+  }
+
+  /**
+   * Run datase seeders.
+   */
+  public async runSeeders(
+    options: {
+      task?: any
+      path?: string
+      classes?: string[]
+    } = {}
+  ): Promise<void> {
+    options = Options.create(options, {
+      classes: [],
+      task: null,
+      path: Path.seeders()
+    })
+
+    const seeds = await Module.getAllFrom(options.path)
+
+    const promises = seeds.map(Seed => {
+      if (options.classes?.length && !options.classes.includes(Seed.name)) {
+        return {}
+      }
+
+      if (!options.task) {
+        return new Seed().run(this)
+      }
+
+      return options.task.addPromise(`Running "${Seed.name}" seeder`, () =>
+        new Seed().run(this)
+      )
+    })
+
+    if (!options.task) {
+      await Promise.all(promises)
+    }
   }
 
   /**
