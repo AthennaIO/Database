@@ -35,6 +35,7 @@ export class DbWipeCommand extends BaseCommand {
   public async handle(): Promise<void> {
     await Artisan.call(`db:wipe --connection ${this.connection}`)
     console.log()
+
     await Artisan.call(`migration:run --connection ${this.connection}`)
 
     if (this.withSeeders) {

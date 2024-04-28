@@ -36,15 +36,19 @@ export class DbWipeCommand extends BaseCommand {
     if (this.getConfig('driver') === 'mongo') {
       const tables = await DB.getTables()
 
-      await Exec.concurrently(tables, table => DB.dropTable(table))
+      task.addPromise('Dropping all database tables', () => {
+        return Exec.concurrently(tables, table => DB.dropTable(table))
+      })
     } else {
       const migrationsTable = this.getConfig(
         'migrations.tableName',
         'migrations'
       )
 
-      await DB.revertMigrations()
-      await DB.dropTable(migrationsTable)
+      task.addPromise('Reverting migrations', () => DB.revertMigrations())
+      task.addPromise('Drop migrations table', () =>
+        DB.dropTable(migrationsTable)
+      )
     }
 
     const dbName = await DB.getCurrentDatabase()
