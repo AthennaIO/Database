@@ -419,7 +419,7 @@ export class ModelQueryBuilder<
       return
     }
 
-    return this.whereNull(this.DELETED_AT_PROP).whereNotNull(
+    return this.whereNull(this.DELETED_AT_PROP).orWhereNotNull(
       this.DELETED_AT_PROP
     )
   }

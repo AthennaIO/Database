@@ -581,7 +581,10 @@ export class BaseModel {
     const Model = this.constructor as any
     const primaryKey = Model.schema().getMainPrimaryKeyProperty()
 
-    return Model.query().where(primaryKey, this[primaryKey]).find()
+    return Model.query()
+      .where(primaryKey, this[primaryKey])
+      .withTrashed()
+      .find()
   }
 
   /**
@@ -594,7 +597,9 @@ export class BaseModel {
     const schema = Model.schema()
     const relations = schema.getRelationProperties()
     const primaryKey = schema.getMainPrimaryKeyProperty()
-    const query = Model.query().where(primaryKey, this[primaryKey])
+    const query = Model.query()
+      .where(primaryKey, this[primaryKey])
+      .withTrashed()
 
     Object.keys(this).forEach(key => {
       if (!relations.includes(key)) {
