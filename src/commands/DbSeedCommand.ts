@@ -38,9 +38,13 @@ export class DbSeedCommand extends BaseCommand {
 
     const DB = Database.connection(this.connection)
     const task = this.logger.task()
+    const dbName = await DB.getCurrentDatabase()
 
     await DB.runSeeders({ task, classes: this.classes })
 
     await task.run().finally(() => DB.close())
+
+    console.log()
+    this.logger.success(`Database ({yellow} "${dbName}") successfully seeded.`)
   }
 }

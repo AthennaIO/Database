@@ -7,11 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import equal from 'fast-deep-equal'
-import { Database } from '#src/facades/Database'
-import type { ModelRelations } from '#src/types'
-import { faker, type Faker } from '@faker-js/faker'
-import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import {
   Collection,
   Is,
@@ -21,14 +16,48 @@ import {
   type PaginatedResponse,
   type PaginationOptions
 } from '@athenna/common'
+
+import equal from 'fast-deep-equal'
+import { Database } from '#src/facades/Database'
+import type { ModelRelations } from '#src/types'
+import { faker, type Faker } from '@faker-js/faker'
+import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 
 export class BaseModel {
-  private static isToSetAttributes = true
-  private static isToValidateUnique = true
-  private static isToValidateNullable = true
+  /**
+   * Set if the `attributes` method should be called or not.
+   */
+  private static get isToSetAttributes() {
+    return Config.get(
+      `database.connections.${this.connection()}.validations.isToSetAttributes`,
+      true
+    )
+  }
+
+  /**
+   * Set if the option annotation `isUnique`
+   * should be verified or not.
+   */
+  private static get isToValidateUnique() {
+    return Config.get(
+      `database.connections.${this.connection()}.validations.isToValidateUnique`,
+      true
+    )
+  }
+
+  /**
+   * Set if the option annotation `isNullable`
+   * should be verified or not.
+   */
+  private static get isToValidateNullable() {
+    return Config.get(
+      `database.connections.${this.connection()}.validations.isToValidateNullable`,
+      true
+    )
+  }
 
   /**
    * The faker instance to create fake data in
@@ -108,7 +137,10 @@ export class BaseModel {
     this: T,
     value: boolean
   ) {
-    this.isToSetAttributes = value
+    Config.set(
+      `database.connections.${this.connection()}.validations.isToSetAttributes`,
+      value
+    )
 
     return this
   }
@@ -121,7 +153,10 @@ export class BaseModel {
     this: T,
     value: boolean
   ) {
-    this.isToValidateUnique = value
+    Config.set(
+      `database.connections.${this.connection()}.validations.isToValidateUnique`,
+      value
+    )
 
     return this
   }
@@ -134,7 +169,10 @@ export class BaseModel {
     this: T,
     value: boolean
   ) {
-    this.isToValidateNullable = value
+    Config.set(
+      `database.connections.${this.connection()}.validations.isToValidateNullable`,
+      value
+    )
 
     return this
   }

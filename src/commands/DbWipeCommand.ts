@@ -55,6 +55,7 @@ export class DbWipeCommand extends BaseCommand {
 
     await task.run().finally(() => DB.close())
 
+    console.log()
     this.logger.success(`Database ({yellow} "${dbName}") successfully wiped.`)
   }
 

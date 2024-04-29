@@ -110,10 +110,40 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToDisableUniqueValidationInModelByConfiguration({ assert }: Context) {
+    class User extends BaseModel {
+      public static connection() {
+        return 'fake_no_validation'
+      }
+    }
+
+    Mock.when(Database.driver, 'find').resolve(undefined)
+
+    await User.create()
+
+    assert.notCalled(Database.driver.find)
+  }
+
+  @Test()
   public async shouldBeAbleToDisableNullableValidationInModel({ assert }: Context) {
     Mock.when(Database.driver, 'createMany').resolve(undefined)
 
     await BaseModel.nullableValidation(false).create()
+
+    assert.calledOnce(Database.driver.createMany)
+  }
+
+  @Test()
+  public async shouldBeAbleToDisableNullableValidationInModelByConfiguration({ assert }: Context) {
+    class User extends BaseModel {
+      public static connection() {
+        return 'fake_no_validation'
+      }
+    }
+
+    Mock.when(Database.driver, 'createMany').resolve(undefined)
+
+    await User.create()
 
     assert.calledOnce(Database.driver.createMany)
   }
@@ -210,6 +240,33 @@ export default class BaseModelTest {
     const data = await User.findMany({ id: '1' })
 
     assert.deepEqual(data[0].id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToFindValueInDatabaseUsingPaginateMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
+
+    const data = await User.paginate()
+
+    assert.instanceOf(data.data[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToFindValueInDatabaseWithPaginationOptionsUsingPaginateMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
+
+    const data = await User.paginate({ page: 0, limit: 10, resourceUrl: '/' })
+
+    assert.instanceOf(data.data[0], User)
+  }
+
+  @Test()
+  public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingPaginateMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
+
+    const data = await User.paginate({ page: 0, limit: 10, resourceUrl: '/' }, { id: '1' })
+
+    assert.instanceOf(data.data[0], User)
   }
 
   @Test()
