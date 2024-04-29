@@ -67,6 +67,14 @@ export default {
       retryWrites: true,
       useNewUrlParser: true,
       useUnifiedTopology: true
+    },
+    fake_no_validation: {
+      driver: 'fake',
+      validations: {
+        isToSetAttributes: false,
+        isToValidateUnique: false,
+        isToValidateNullable: false
+      }
     }
   }
 }

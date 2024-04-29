@@ -354,6 +354,16 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToFindManyDataAndPaginate({ assert }: Context) {
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1', name: 'John Doe' }])
+
+    const result = await User.query().paginate()
+
+    assert.calledOnce(Database.driver.findMany)
+    assert.instanceOf(result.data[0], User)
+  }
+
+  @Test()
   public async shouldBeAbleToCreateData({ assert }: Context) {
     const dataToCreate = { name: 'New User' }
     Mock.when(Database.driver, 'find').resolve(undefined)
@@ -992,14 +1002,14 @@ export default class ModelQueryBuilderTest {
   @Test()
   public async shouldBeAbleToGetSoftDeletedData({ assert }: Context) {
     Mock.when(Database.driver, 'whereNull').resolve(undefined)
-    Mock.when(Database.driver, 'whereNotNull').resolve(undefined)
+    Mock.when(Database.driver, 'orWhereNotNull').resolve(undefined)
     Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const result = await User.query().withTrashed().find()
 
     assert.instanceOf(result, User)
     assert.calledOnceWith(Database.driver.whereNull, 'deletedAt')
-    assert.calledOnceWith(Database.driver.whereNotNull, 'deletedAt')
+    assert.calledOnceWith(Database.driver.orWhereNotNull, 'deletedAt')
   }
 
   @Test()
