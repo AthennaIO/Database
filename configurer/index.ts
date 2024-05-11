@@ -89,10 +89,6 @@ export default class DatabaseConfigurer extends BaseConfigurer {
     task.addPromise('Update providers of .athennarc.json', () => {
       return this.rc
         .pushTo('providers', '@athenna/database/providers/DatabaseProvider')
-        .pushTo(
-          'providers',
-          '@athenna/database/providers/DatabaseValidatorProvider'
-        )
         .save()
     })
 
