@@ -7,17 +7,18 @@
  * file that was distributed with this source code.
  */
 
+import {
+  Module,
+  Options,
+  Collection,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
 import type { Knex, TableBuilder } from 'knex'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
-import {
-  Collection,
-  Options,
-  type PaginatedResponse,
-  type PaginationOptions
-} from '@athenna/common'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
@@ -70,7 +71,32 @@ export abstract class Driver<Client = any, QB = any> {
     if (client) {
       this.client = client
       this.isConnected = true
+      this.isSavedOnFactory = true
     }
+  }
+
+  /**
+   * Import knex in a method to be easier to mock.
+   */
+  public getKnex() {
+    const require = Module.createRequire(import.meta.url)
+
+    return require('knex')
+  }
+
+  /**
+   * Import mongoose in a method to be easier to mock.
+   */
+  public getMongoose() {
+    const require = Module.createRequire(import.meta.url)
+
+    let mongoose = require('mongoose')
+
+    if (!mongoose.createConnection) {
+      mongoose = mongoose.default
+    }
+
+    return mongoose
   }
 
   /**

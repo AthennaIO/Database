@@ -17,8 +17,8 @@ import {
 } from '@athenna/common'
 
 import { debug } from '#src/debug'
+import { Log } from '@athenna/logger'
 import { Driver } from '#src/database/drivers/Driver'
-import { DriverFactory } from '#src/factories/DriverFactory'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -75,14 +75,40 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return
     }
 
-    this.client = ConnectionFactory.mongo(this.connection)
+    const mongoose = this.getMongoose()
+    const configs = Config.get(`database.connections.${this.connection}`, {})
 
-    if (options.saveOnFactory) {
-      DriverFactory.setClient('mongo', this.client)
+    if (configs.debug !== undefined) {
+      mongoose.set('debug', configs.debug)
+    }
+
+    const mongoOpts = Json.omit(configs, [
+      'url',
+      'debug',
+      'driver',
+      'validations'
+    ])
+
+    debug('creating new connection using mongoose. options defined: %o', {
+      url: configs.url,
+      debug: configs.debug,
+      ...mongoOpts
+    })
+
+    this.client = mongoose.createConnection(configs.url, mongoOpts)
+
+    if (Config.is('rc.bootLogs', true)) {
+      Log.channelOrVanilla('application').success(
+        `Successfully connected to ({yellow} ${this.connection}) database connection`
+      )
     }
 
     this.isConnected = true
     this.isSavedOnFactory = options.saveOnFactory
+
+    if (this.isSavedOnFactory) {
+      ConnectionFactory.setClient(this.connection, this.client)
+    }
 
     this.qb = this.query()
   }
@@ -95,18 +121,15 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return
     }
 
-    if (this.isSavedOnFactory && DriverFactory.hasClient('mongo')) {
-      await DriverFactory.getClient('mongo').close()
-      DriverFactory.setClient('mongo', null)
-    } else {
-      await this.client.close()
-    }
+    await this.client.close()
 
     this.qb = null
     this.tableName = null
     this.client = null
     this.session = null
     this.isConnected = false
+
+    ConnectionFactory.setClient(this.connection, null)
   }
 
   /**

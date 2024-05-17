@@ -10,6 +10,10 @@
 export * from '#src/types'
 
 export * from '#src/database/drivers/FakeDriver'
+export * from '#src/database/drivers/MongoDriver'
+export * from '#src/database/drivers/MySqlDriver'
+export * from '#src/database/drivers/SqliteDriver'
+export * from '#src/database/drivers/PostgresDriver'
 
 export * from '#src/models/BaseModel'
 export * from '#src/models/annotations/Column'
@@ -26,7 +30,6 @@ export * from '#src/database/transactions/Transaction'
 export * from '#src/database/migrations/MigrationSource'
 
 export * from '#src/database/drivers/Driver'
-export * from '#src/factories/DriverFactory'
 export * from '#src/factories/ConnectionFactory'
 
 export * from '#src/helpers/Annotation'

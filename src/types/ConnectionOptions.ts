@@ -21,7 +21,7 @@ export type ConnectionOptions = {
   force?: boolean
 
   /**
-   * Save your connection in the DriverFactory class.
+   * Save your connection in the ConnectionFactory class.
    * If this is true, all the drivers will have a shared
    * connection to use.
    *

@@ -7,194 +7,168 @@
  * file that was distributed with this source code.
  */
 
-import type { Knex } from 'knex'
 import { debug } from '#src/debug'
-import { Log } from '@athenna/logger'
-import { Config } from '@athenna/config'
-import type { Connection } from 'mongoose'
-import { Exec, Json, Module } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
+import type { Driver } from '#src/database/drivers/Driver'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
+import { MongoDriver } from '#src/database/drivers/MongoDriver'
+import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
+import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
+import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
+import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
 
 export class ConnectionFactory {
   /**
-   * Close the connection by the driver that is being used.
+   * Holds all the open connections.
    */
-  public static async closeByDriver(
-    driver: string,
-    client: any
-  ): Promise<void> {
-    switch (driver) {
-      case 'fake':
-      case 'mysql':
-      case 'sqlite':
-      case 'postgres':
-        await client.destroy()
-        break
-      case 'mongo':
-        await client.close()
-        break
+  public static connections: Map<string, any> = new Map()
+
+  /**
+   * Holds all the Athenna drivers implementations available.
+   */
+  public static drivers: Map<string, any> = new Map()
+    .set('fake', { driver: FakeDriver })
+    .set('mongo', { driver: MongoDriver })
+    .set('mysql', { driver: MySqlDriver })
+    .set('sqlite', { driver: SqliteDriver })
+    .set('postgres', { driver: PostgresDriver })
+
+  public static fabricate(con: 'fake'): typeof FakeDriver
+  public static fabricate(con: 'mongo'): MongoDriver
+  public static fabricate(con: 'mysql'): MySqlDriver
+  public static fabricate(con: 'sqlite'): SqliteDriver
+  public static fabricate(con: 'postgres'): PostgresDriver
+  public static fabricate(
+    con: 'fake' | 'mongo' | 'mysql' | 'sqlite' | 'postgres' | string
+  ):
+    | typeof FakeDriver
+    | MongoDriver
+    | MySqlDriver
+    | SqliteDriver
+    | PostgresDriver
+
+  /**
+   * Fabricate a new connection for a specific driver.
+   */
+  public static fabricate(con: string) {
+    con = this.parseConName(con)
+
+    const driverName = this.getConnectionDriver(con)
+    const Driver = this.drivers.get(driverName).driver
+    const connection = this.connections.get(con)
+
+    if (!connection) {
+      this.connections.set(con, { client: null })
+
+      return new Driver(con)
     }
-  }
 
-  /**
-   * Close all opened connections of DriverFactory.
-   */
-  public static async closeAllConnections(): Promise<void> {
-    const availableDrivers = DriverFactory.availableDrivers({
-      onlyConnected: true
-    })
-
-    await Exec.concurrently(availableDrivers, async (driver: string) => {
-      debug('closing connection for %s driver', driver)
-
-      await this.closeByDriver(driver, DriverFactory.getClient(driver))
-
-      DriverFactory.setClient(driver, null)
-    })
-  }
-
-  /**
-   * Log that connection was created.
-   */
-  public static log(con: string): void {
-    if (Config.is('rc.bootLogs', true)) {
-      Log.channelOrVanilla('application').success(
-        `Successfully connected to ({yellow} ${con}) database connection`
+    if (connection.client) {
+      debug(
+        'client found for connection %s using driver %s, using it as default',
+        con,
+        driverName
       )
-    }
-  }
 
-  /**
-   * For testing purposes only.
-   */
-  public static fake() {}
-
-  /**
-   * Create the connection with a mysql database.
-   */
-  // TODO Don't use connection here. Pass connection
-  // configs instead.
-  public static mysql(con: string): Knex {
-    const client = this.knex(con, 'mysql2')
-
-    this.log(con)
-
-    return client
-  }
-
-  /**
-   * Create the connection with a mongo database.
-   */
-  // TODO Don't use connection here. Pass connection
-  // configs instead.
-  public static mongo(con: string): Connection {
-    const client = this.mongoose(con)
-
-    this.log(con)
-
-    return client
-  }
-
-  /**
-   * Create the connection with a sqlite database.
-   */
-  // TODO Don't use connection here. Pass connection
-  // configs instead.
-  public static sqlite(con: string): Knex {
-    const client = this.knex(con, 'better-sqlite3')
-
-    this.log(con)
-
-    return client
-  }
-
-  /**
-   * Create the connection with a postgres database.
-   */
-  // TODO Don't use connection here. Pass connection
-  // configs instead.
-  public static postgres(con: string): Knex {
-    const client = this.knex(con, 'pg')
-
-    this.log(con)
-
-    return client
-  }
-
-  /**
-   * Create a database connection using mongoose.
-   */
-  public static mongoose(con: string) {
-    const mongoose = this.getMongoose()
-    const configs = Config.get(`database.connections.${con}`, {})
-
-    if (configs.debug !== undefined) {
-      mongoose.set('debug', configs.debug)
+      return new Driver(con, connection.client)
     }
 
-    const options = Json.omit(configs, [
-      'url',
-      'debug',
-      'driver',
-      'validations'
-    ])
-
-    debug('creating new connection using mongoose. options defined: %o', {
-      url: configs.url,
-      debug: configs.debug,
-      ...options
-    })
-
-    return mongoose.createConnection(configs.url, options)
+    return new Driver(con)
   }
 
   /**
-   * Create a database connection using knex.
+   * Verify if client is present on a driver connection.
    */
-  public static knex(con: string, client: string): Knex {
-    const knex = this.getKnex()
-    const configs = Config.get(`database.connections.${con}`, {})
-    const options = {
-      client,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        min: 2,
-        max: 20,
-        acquireTimeoutMillis: 60 * 1000
-      },
-      debug: false,
-      useNullAsDefault: false,
-      ...Json.omit(configs, ['driver', 'validations'])
+  public static hasClient(con: string): boolean {
+    return !!this.connections.get(con)?.client
+  }
+
+  /**
+   * Get client of a connection.
+   */
+  public static getClient(con: string): any {
+    return this.connections.get(con)?.client
+  }
+
+  /**
+   * Set connection client on driver.
+   */
+  public static setClient(con: string, client: any): void {
+    const connection = this.connections.get(con) || {}
+
+    connection.client = client
+
+    this.connections.set(con, connection)
+  }
+
+  /**
+   * Return all available drivers.
+   */
+  public static availableDrivers() {
+    const availableDrivers = []
+
+    for (const key of this.drivers.keys()) {
+      availableDrivers.push(key)
     }
 
-    debug('creating new connection using Knex. options defined: %o', options)
-
-    return knex.default(options)
+    return availableDrivers
   }
 
   /**
-   * Import knex in a method to be easier to mock.
+   * Return all available connections.
    */
-  public static getKnex() {
-    const require = Module.createRequire(import.meta.url)
+  public static availableConnections() {
+    const availableConnections = []
 
-    return require('knex')
-  }
-
-  /**
-   * Import mongoose in a method to be easier to mock.
-   */
-  public static getMongoose() {
-    const require = Module.createRequire(import.meta.url)
-
-    let mongoose = require('mongoose')
-
-    if (!mongoose.createConnection) {
-      mongoose = mongoose.default
+    for (const key of this.connections.keys()) {
+      availableConnections.push(key)
     }
 
-    return mongoose
+    return availableConnections
+  }
+
+  /**
+   * Define your own database driver implementation to use
+   * within Database facade.
+   *
+   * @example
+   * ```ts
+   * import { Driver, ConnectionFactory } from '@athenna/database'
+   *
+   * class TestDriver extends Driver {}
+   *
+   * ConnectionFactory.createDriver('test', TestDriver)
+   * ```
+   */
+  public static createDriver(name: string, impl: typeof Driver<any, any>) {
+    this.drivers.set(name, { driver: impl })
+  }
+
+  /**
+   * Parse connection config name if is default
+   */
+  private static parseConName(con: string): string {
+    if (con === 'default') {
+      return Config.get('database.default')
+    }
+
+    return con
+  }
+
+  /**
+   * Get the connection configuration of config/database file.
+   */
+  private static getConnectionDriver(con: string): string {
+    const config = Config.get(`database.connections.${con}`)
+
+    if (!config) {
+      throw new NotImplementedConfigException(con)
+    }
+
+    if (!this.drivers.has(config.driver)) {
+      throw new NotFoundDriverException(config.driver)
+    }
+
+    return config.driver
   }
 }

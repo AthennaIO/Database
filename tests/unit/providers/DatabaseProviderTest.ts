@@ -42,25 +42,25 @@ export default class DatabaseProviderTest {
 
   @Test()
   public async shouldAutomaticallyShutdownAllOpenConnectionsWhenShuttingDownTheProvider({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
+    Mock.when(ConnectionFactory, 'availableConnections').return(['sqlite'])
 
     const provider = new DatabaseProvider()
 
     await provider.register()
     await provider.shutdown()
 
-    assert.calledOnce(ConnectionFactory.closeAllConnections)
+    assert.calledOnce(ConnectionFactory.availableConnections)
   }
 
   @Test()
   public async shouldNotTryToCloseConnectionIfDependencyIsNotRegisteredInTheServiceContainer({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
+    Mock.when(ConnectionFactory, 'availableDrivers').resolve(undefined)
 
     const provider = new DatabaseProvider()
 
     await provider.shutdown()
 
-    assert.notCalled(ConnectionFactory.closeAllConnections)
+    assert.notCalled(ConnectionFactory.availableDrivers)
   }
 
   @Test()

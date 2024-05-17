@@ -9,7 +9,6 @@
 
 import type { Knex } from 'knex'
 import { Path, Module, Options } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
 import type { Connections, ConnectionOptions } from '#src/types'
 import type { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
@@ -36,7 +35,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    * Creates a new instance of DatabaseImpl.
    */
   public constructor(athennaDbOpts?: ConnectionOptions) {
-    this.driver = DriverFactory.fabricate(
+    this.driver = ConnectionFactory.fabricate(
       this.connectionName
     ) as unknown as Driver
 
@@ -69,7 +68,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
   ): DatabaseImpl<typeof FakeDriver>
 
   public connection(
-    con: Connections,
+    con: 'mongo' | 'mysql' | 'sqlite' | 'postgres' | 'fake' | string,
     options?: ConnectionOptions
   ):
     | DatabaseImpl<MongoDriver>
@@ -82,7 +81,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    * Change the database connection.
    */
   public connection(con: Connections, options?: ConnectionOptions) {
-    const driver = DriverFactory.fabricate(con)
+    const driver = ConnectionFactory.fabricate(con)
     const database = new DatabaseImpl<typeof driver>(options)
 
     database.connectionName = con
@@ -118,7 +117,14 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    * Close all the connections with all databases.
    */
   public async closeAll(): Promise<void> {
-    await ConnectionFactory.closeAllConnections()
+    const cons = ConnectionFactory.availableConnections()
+    const promises = cons.map(con => {
+      const driver = ConnectionFactory.fabricate(con)
+
+      return driver.close().then(() => ConnectionFactory.setClient(con, null))
+    })
+
+    await Promise.all(promises)
   }
 
   /**
@@ -143,7 +149,7 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
   }
 
   /**
-   * Run datase seeders.
+   * Run database seeders.
    */
   public async runSeeders(
     options: {
