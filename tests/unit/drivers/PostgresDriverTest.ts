@@ -9,9 +9,8 @@
 
 import { Config } from '@athenna/config'
 import { Collection, Path } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
-import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context } from '@athenna/test'
@@ -122,7 +121,7 @@ export default class PostgresDriverTest {
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
-    Mock.when(ConnectionFactory, 'postgres').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -130,8 +129,8 @@ export default class PostgresDriverTest {
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.calledOnce(ConnectionFactory.postgres)
-    assert.isTrue(DriverFactory.availableDrivers({ onlyConnected: true }).includes('postgres'))
+    assert.calledOnce(driver.getKnex)
+    assert.isTrue(ConnectionFactory.availableConnections().includes('postgres-docker'))
   }
 
   @Test()
@@ -149,7 +148,7 @@ export default class PostgresDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
-    Mock.when(ConnectionFactory, 'postgres').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -157,14 +156,14 @@ export default class PostgresDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false })
 
-    assert.calledOnce(ConnectionFactory.postgres)
+    assert.calledOnce(driver.getKnex)
   }
 
   @Test()
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
-    Mock.when(ConnectionFactory, 'postgres').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -172,7 +171,7 @@ export default class PostgresDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false, force: true })
 
-    assert.calledTimes(ConnectionFactory.postgres, 2)
+    assert.calledTimes(driver.getKnex, 2)
   }
 
   @Test()
@@ -193,17 +192,17 @@ export default class PostgresDriverTest {
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
-    Mock.spy(DriverFactory, 'getClient')
+    Mock.spy(driver, 'getKnex')
 
     assert.isFalse(driver.isConnected)
 
     await driver.close()
 
-    assert.notCalled(DriverFactory.getClient)
+    assert.notCalled(driver.getKnex)
   }
 
   @Test()
-  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
+  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheConnectionFactory({ assert }: Context) {
     const driver = new PostgresDriver('postgres-docker')
 
     assert.isFalse(driver.isConnected)

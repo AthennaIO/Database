@@ -8,299 +8,162 @@
  */
 
 import { Path } from '@athenna/common'
-import { Config } from '@athenna/config'
-import { Log, LoggerProvider } from '@athenna/logger'
-import { DriverFactory } from '#src/factories/DriverFactory'
-import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
-import { ConnectionFactory } from '#src/factories/ConnectionFactory'
-import { Test, Mock, type Context, BeforeEach, AfterEach } from '@athenna/test'
+import { TestDriver } from '#tests/fixtures/drivers/TestDriver'
+import { AfterEach, BeforeEach, Mock, Test, type Context } from '@athenna/test'
+import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
+import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
+import { ConnectionFactory, FakeDriver, MongoDriver, MySqlDriver, SqliteDriver, PostgresDriver } from '#src'
 
-export default class ConnectionFactoryTest {
+export class ConnectionFactoryTest {
   @BeforeEach()
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
-    new LoggerProvider().register()
+    ConnectionFactory.connections = new Map()
+    ConnectionFactory.drivers.delete('test')
   }
 
   @AfterEach()
-  public afterEach() {
-    Mock.restoreAll()
+  public async afterEach() {
     Config.clear()
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionUsingKnex({ assert }: Context) {
-    const knexFake = Mock.fake()
+  public async shouldBeAbleToGetAllAvailableDrivers({ assert }: Context) {
+    const availableDrivers = ConnectionFactory.availableDrivers()
 
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.knex('postgres', 'pg')
-
-    assert.calledWith(knexFake, {
-      client: 'pg',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.deepEqual(availableDrivers, ['fake', 'mongo', 'mysql', 'sqlite', 'postgres'])
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionUsingMongoose({ assert }: Context) {
-    const mongooseFake = Mock.fake()
+  public async shouldBeAbleToGetAllAvailableConnections({ assert }: Context) {
+    const availableConnections = ConnectionFactory.availableConnections()
 
-    Mock.when(ConnectionFactory, 'getMongoose').return({ createConnection: mongooseFake })
-
-    ConnectionFactory.mongoose('mongo')
-
-    assert.calledWith(mongooseFake, 'mongodb://localhost:27017', { replicaSet: 'admin' })
+    assert.deepEqual(availableConnections, [])
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionToMysqlDirectly({ assert }: Context) {
-    const knexFake = Mock.fake()
+  public async shouldBeAbleToGetAllAvailableConnectionsWhenTheyExist({ assert }: Context) {
+    ConnectionFactory.setClient('test', {})
 
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
+    const availableConnections = ConnectionFactory.availableConnections()
 
-    ConnectionFactory.mysql('mysql')
-
-    assert.calledWith(knexFake, {
-      client: 'mysql2',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.deepEqual(availableConnections, ['test'])
   }
 
   @Test()
-  public async shouldLogSuccessfulConnectionMessageWhenConnectingToMysql({ assert }: Context) {
-    Config.set('rc.bootLogs', true)
+  public async shouldBeAbleToFabricateNewConnectionsAndReturnFakeDriverInstance({ assert }: Context) {
+    const driver = ConnectionFactory.fabricate('fake')
 
-    const knexFake = Mock.fake()
-    const successFake = Mock.fake()
-
-    Log.when('channelOrVanilla').return({ success: successFake })
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.mysql('mysql')
-
-    assert.calledWith(Log.channelOrVanilla, 'application')
-    assert.calledWith(successFake, 'Successfully connected to ({yellow} mysql) database connection')
-    assert.calledWith(knexFake, {
-      client: 'mysql2',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.deepEqual(driver, FakeDriver)
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionToSqliteDirectly({ assert }: Context) {
-    const knexFake = Mock.fake()
+  public async shouldBeAbleToFabricateNewConnectionsAndReturnMongoDriverInstance({ assert }: Context) {
+    const driver = ConnectionFactory.fabricate('mongo')
 
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.sqlite('sqlite')
-
-    assert.calledWith(knexFake, {
-      client: 'better-sqlite3',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.instanceOf(driver, MongoDriver)
   }
 
   @Test()
-  public async shouldLogSuccessfulConnectionMessageWhenConnectingToSqlite({ assert }: Context) {
-    Config.set('rc.bootLogs', true)
+  public async shouldBeAbleToFabricateNewConnectionsAndReturnMySqlDriverInstance({ assert }: Context) {
+    const driver = ConnectionFactory.fabricate('mysql')
 
-    const knexFake = Mock.fake()
-    const successFake = Mock.fake()
-
-    Log.when('channelOrVanilla').return({ success: successFake })
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.sqlite('sqlite')
-
-    assert.calledWith(Log.channelOrVanilla, 'application')
-    assert.calledWith(successFake, 'Successfully connected to ({yellow} sqlite) database connection')
-    assert.calledWith(knexFake, {
-      client: 'better-sqlite3',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.instanceOf(driver, MySqlDriver)
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionToPostgresDirectly({ assert }: Context) {
-    const knexFake = Mock.fake()
+  public async shouldBeAbleToFabricateNewConnectionsAndReturnSqliteDriverInstance({ assert }: Context) {
+    const driver = ConnectionFactory.fabricate('sqlite')
 
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.postgres('postgres')
-
-    assert.calledWith(knexFake, {
-      client: 'pg',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.instanceOf(driver, SqliteDriver)
   }
 
   @Test()
-  public async shouldLogSuccessfulConnectionMessageWhenConnectingToPostgres({ assert }: Context) {
-    Config.set('rc.bootLogs', true)
+  public async shouldBeAbleToFabricateNewConnectionsAndReturnPostgresDriverInstance({ assert }: Context) {
+    const driver = ConnectionFactory.fabricate('postgres')
 
-    const knexFake = Mock.fake()
-    const successFake = Mock.fake()
-
-    Log.when('channelOrVanilla').return({ success: successFake })
-    Mock.when(ConnectionFactory, 'getKnex').return({ default: knexFake })
-
-    ConnectionFactory.postgres('postgres')
-
-    assert.calledWith(Log.channelOrVanilla, 'application')
-    assert.calledWith(successFake, 'Successfully connected to ({yellow} postgres) database connection')
-    assert.calledWith(knexFake, {
-      client: 'pg',
-      debug: false,
-      migrations: {
-        tableName: 'migrations'
-      },
-      pool: {
-        acquireTimeoutMillis: 60000,
-        max: 20,
-        min: 2
-      },
-      useNullAsDefault: false
-    })
+    assert.instanceOf(driver, PostgresDriver)
   }
 
   @Test()
-  public async shouldBeAbleToCreateTheConnectionToMongoDirectly({ assert }: Context) {
-    const mongooseFake = Mock.fake()
-
-    Mock.when(ConnectionFactory, 'getMongoose').return({ createConnection: mongooseFake })
-
-    ConnectionFactory.mongo('mongo')
-
-    assert.calledWith(mongooseFake, 'mongodb://localhost:27017', { replicaSet: 'admin' })
+  public async shouldThrowNotFoundDriverExceptionWhenTryingToUseANotImplementedDriver({ assert }: Context) {
+    assert.throws(() => ConnectionFactory.fabricate('not-found'), NotFoundDriverException)
   }
 
   @Test()
-  public async shouldLogSuccessfulConnectionMessageWhenConnectingToMongo({ assert }: Context) {
-    Config.set('rc.bootLogs', true)
-
-    const mongooseFake = Mock.fake()
-    const successFake = Mock.fake()
-
-    Log.when('channelOrVanilla').return({ success: successFake })
-
-    Mock.when(ConnectionFactory, 'getMongoose').return({ createConnection: mongooseFake })
-
-    ConnectionFactory.mongo('mongo')
-
-    assert.calledWith(Log.channelOrVanilla, 'application')
-    assert.calledWith(successFake, 'Successfully connected to ({yellow} mongo) database connection')
-    assert.calledWith(mongooseFake, 'mongodb://localhost:27017', { replicaSet: 'admin' })
+  public async shouldThrowNotImplementedConfigExceptionWhenTryingToUseANotImplementedDriver({ assert }: Context) {
+    assert.throws(() => ConnectionFactory.fabricate('not-found-con'), NotImplementedConfigException)
   }
 
   @Test()
-  public async shouldBeAbleToCloseMysqlConnection({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
+  public async shouldBeAbleToCreateOwnDriverImplementationToUseWithinDatabaseFacade({ assert }: Context) {
+    ConnectionFactory.createDriver('test', TestDriver)
 
-    await ConnectionFactory.closeByDriver('mysql', clientFake)
+    const testDriver = ConnectionFactory.fabricate('test')
 
-    assert.calledOnce(clientFake.destroy)
+    assert.instanceOf(testDriver, TestDriver)
+
+    ConnectionFactory.drivers.delete('test')
+    ConnectionFactory.connections.delete('test')
   }
 
   @Test()
-  public async shouldBeAbleToCloseSqliteConnection({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
+  public shouldBeAbleToFabricateTheDriverWithTheSavedClientOfConnection({ assert }: Context) {
+    Mock.when(ConnectionFactory.connections, 'get').return({ client: {} })
 
-    await ConnectionFactory.closeByDriver('sqlite', clientFake)
+    const driver = ConnectionFactory.fabricate('postgres')
 
-    assert.calledOnce(clientFake.destroy)
+    assert.instanceOf(driver, PostgresDriver)
+    assert.deepEqual(driver.getClient(), {})
   }
 
   @Test()
-  public async shouldBeAbleToClosePostgresConnection({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
+  public async shouldBeAbleToVerifyThatDriverHasClient({ assert }: Context) {
+    ConnectionFactory.setClient('mysql', {})
 
-    await ConnectionFactory.closeByDriver('postgres', clientFake)
+    const hasClient = ConnectionFactory.hasClient('mysql')
 
-    assert.calledOnce(clientFake.destroy)
+    assert.isTrue(hasClient)
   }
 
   @Test()
-  public async shouldBeAbleToCloseMongoConnection({ assert }: Context) {
-    const clientFake = {
-      close: Mock.fake()
-    }
+  public async shouldBeAbleToVerifyThatDriverDoesNotHaveClient({ assert }: Context) {
+    const hasClient = ConnectionFactory.hasClient('mysql')
 
-    await ConnectionFactory.closeByDriver('mongo', clientFake)
-
-    assert.calledOnce(clientFake.close)
+    assert.isFalse(hasClient)
   }
 
   @Test()
-  public async shouldBeAbleToCloseAllOpenedConnectionsWithAllDrivers({ assert }: Context) {
-    const clientFake = {
-      destroy: Mock.fake()
-    }
-    Mock.when(DriverFactory, 'availableDrivers').return(['postgres'])
-    Mock.when(DriverFactory.drivers, 'get').return({ Driver: PostgresDriver, client: clientFake })
+  public async shouldBeAbleToGetDriverClient({ assert }: Context) {
+    ConnectionFactory.setClient('mysql', {})
 
-    await ConnectionFactory.closeAllConnections()
+    const client = ConnectionFactory.getClient('mysql')
 
-    assert.calledOnce(clientFake.destroy)
+    assert.deepEqual(client, {})
+  }
+
+  @Test()
+  public async shouldReturnUndefinedWhenClientDoesNotExist({ assert }: Context) {
+    const client = ConnectionFactory.getClient('mysql')
+
+    assert.isUndefined(client)
+  }
+
+  @Test()
+  public async shouldBeAbleToSetDriverClient({ assert }: Context) {
+    ConnectionFactory.setClient('mysql', {})
+
+    const client = ConnectionFactory.getClient('mysql')
+
+    assert.deepEqual(client, {})
+  }
+
+  @Test()
+  public async shouldBeAbleToSetDriverClientAsNull({ assert }: Context) {
+    ConnectionFactory.setClient('mysql', null)
+
+    const client = ConnectionFactory.getClient('mysql')
+
+    assert.isNull(client)
   }
 }

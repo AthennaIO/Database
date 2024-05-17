@@ -8,9 +8,8 @@
  */
 
 import { Config } from '@athenna/config'
-import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
 import { Collection, Exec, Path } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
+import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
@@ -122,7 +121,7 @@ export default class MySqlDriverTest {
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
-    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -130,8 +129,8 @@ export default class MySqlDriverTest {
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.calledOnce(ConnectionFactory.mysql)
-    assert.isTrue(DriverFactory.availableDrivers({ onlyConnected: true }).includes('mysql'))
+    assert.calledOnce(driver.getKnex)
+    assert.isTrue(ConnectionFactory.availableConnections().includes('mysql-docker'))
   }
 
   @Test()
@@ -149,7 +148,7 @@ export default class MySqlDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
-    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -157,14 +156,14 @@ export default class MySqlDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false })
 
-    assert.calledOnce(ConnectionFactory.mysql)
+    assert.calledOnce(driver.getKnex)
   }
 
   @Test()
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
-    Mock.when(ConnectionFactory, 'mysql').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -172,7 +171,7 @@ export default class MySqlDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false, force: true })
 
-    assert.calledTimes(ConnectionFactory.mysql, 2)
+    assert.calledTimes(driver.getKnex, 2)
   }
 
   @Test()
@@ -193,17 +192,17 @@ export default class MySqlDriverTest {
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
-    Mock.spy(DriverFactory, 'getClient')
+    Mock.spy(driver, 'getKnex')
 
     assert.isFalse(driver.isConnected)
 
     await driver.close()
 
-    assert.notCalled(DriverFactory.getClient)
+    assert.notCalled(driver.getKnex)
   }
 
   @Test()
-  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
+  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheConnectionFactory({ assert }: Context) {
     const driver = new MySqlDriver('mysql-docker')
 
     assert.isFalse(driver.isConnected)

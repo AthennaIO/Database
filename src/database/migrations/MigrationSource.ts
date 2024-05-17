@@ -10,7 +10,7 @@
 import { debug } from '#src/debug'
 import { Module, Path } from '@athenna/common'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
-import { DriverFactory } from '#src/factories/DriverFactory'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { BaseMigration } from '#src/database/migrations/BaseMigration'
 
 type Source = {
@@ -78,7 +78,7 @@ export class MigrationSource {
     )
 
     database.connectionName = connection
-    database.driver = DriverFactory.fabricate(connection)
+    database.driver = ConnectionFactory.fabricate(connection)
 
     const bind = (method, knex) => {
       database.driver = database.driver.setClient(knex)

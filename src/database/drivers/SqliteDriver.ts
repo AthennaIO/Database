@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /**
  * @athenna/database
  *
@@ -8,24 +7,28 @@
  * file that was distributed with this source code.
  */
 
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
+import {
+  Exec,
+  Is,
+  Json,
+  Options,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
+
 import type { Knex } from 'knex'
 import { debug } from '#src/debug'
+import { Log } from '@athenna/logger'
 import { Driver } from '#src/database/drivers/Driver'
-import { DriverFactory } from '#src/factories/DriverFactory'
-import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { Transaction } from '#src/database/transactions/Transaction'
 import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
-import {
-  Exec,
-  Is,
-  Options,
-  type PaginatedResponse,
-  type PaginationOptions
-} from '@athenna/common'
 
 export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
@@ -46,14 +49,39 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
       return
     }
 
-    this.client = ConnectionFactory.sqlite(this.connection)
-
-    if (options.saveOnFactory) {
-      DriverFactory.setClient('sqlite', this.client)
+    const knex = this.getKnex()
+    const configs = Config.get(`database.connections.${this.connection}`, {})
+    const knexOpts = {
+      client: 'better-sqlite3',
+      migrations: {
+        tableName: 'migrations'
+      },
+      pool: {
+        min: 2,
+        max: 20,
+        acquireTimeoutMillis: 60 * 1000
+      },
+      debug: false,
+      useNullAsDefault: false,
+      ...Json.omit(configs, ['driver', 'validations'])
     }
+
+    debug('creating new connection using Knex. options defined: %o', knexOpts)
+
+    if (Config.is('rc.bootLogs', true)) {
+      Log.channelOrVanilla('application').success(
+        `Successfully connected to ({yellow} ${this.connection}) database connection`
+      )
+    }
+
+    this.client = knex.default(knexOpts)
 
     this.isConnected = true
     this.isSavedOnFactory = options.saveOnFactory
+
+    if (this.isSavedOnFactory) {
+      ConnectionFactory.setClient(this.connection, this.client)
+    }
 
     this.qb = this.query()
   }
@@ -66,17 +94,14 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
       return
     }
 
-    if (this.isSavedOnFactory && DriverFactory.hasClient('sqlite')) {
-      await DriverFactory.getClient('sqlite').destroy()
-      DriverFactory.setClient('sqlite', null)
-    } else {
-      await this.client.destroy()
-    }
+    await this.client.destroy()
 
     this.qb = null
     this.tableName = null
     this.client = null
     this.isConnected = false
+
+    ConnectionFactory.setClient(this.connection, null)
   }
 
   /**

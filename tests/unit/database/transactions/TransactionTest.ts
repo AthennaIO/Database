@@ -10,8 +10,8 @@
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { FakeDriver } from '#src/database/drivers/FakeDriver'
-import { DriverFactory } from '#src/factories/DriverFactory'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { Test, AfterEach, BeforeEach, type Context, Mock } from '@athenna/test'
 
@@ -30,7 +30,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToCommitTheTransaction({ assert }: Context) {
     Mock.when(FakeDriver, 'commitTransaction').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.commitTransaction()
@@ -41,7 +41,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToRollbackTheTransaction({ assert }: Context) {
     Mock.when(FakeDriver, 'rollbackTransaction').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.rollbackTransaction()
@@ -52,7 +52,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToGetTheDatabaseClientFromDriver({ assert }: Context) {
     Mock.when(FakeDriver, 'getClient').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     const client = trx.getClient()
@@ -63,7 +63,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToGetTheDatabaseQueryBuilderFromDriver({ assert }: Context) {
     Mock.when(FakeDriver, 'getQueryBuilder').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     const queryBuilder = trx.getQueryBuilder()
@@ -74,7 +74,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToRunMigrations({ assert }: Context) {
     Mock.when(FakeDriver, 'runMigrations').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.runMigrations()
@@ -85,7 +85,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToRevertMigrations({ assert }: Context) {
     Mock.when(FakeDriver, 'revertMigrations').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.revertMigrations()
@@ -96,7 +96,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToGetTheDatabases({ assert }: Context) {
     Mock.when(FakeDriver, 'getDatabases').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.getDatabases()
@@ -107,7 +107,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToGetTheCurrentDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'getCurrentDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.getCurrentDatabase()
@@ -118,7 +118,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToValidateThatDatabaseExists({ assert }: Context) {
     Mock.when(FakeDriver, 'hasDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.hasDatabase('users')
@@ -129,7 +129,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToCreateDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'createDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.createDatabase('users')
@@ -140,7 +140,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToDropDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'dropDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.dropDatabase('users')
@@ -151,7 +151,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToGetDatabaseTables({ assert }: Context) {
     Mock.when(FakeDriver, 'getTables').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.getTables()
@@ -162,7 +162,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToVerifyIfTableExistsInDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'hasTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.hasTable('users')
@@ -173,7 +173,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToCreateTableInDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'createTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.createTable('users', builder => {
@@ -186,7 +186,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToDropTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'dropTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.dropTable('users')
@@ -197,7 +197,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToTruncateTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'truncate').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.truncate('users')
@@ -208,7 +208,7 @@ export default class TransactionTest {
   @Test()
   public async shouldBeAbleToRunRawQueriesInTheDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'raw').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     await trx.raw('SELECT * FROM users')
@@ -218,7 +218,7 @@ export default class TransactionTest {
 
   @Test()
   public async shouldBeAbleToCreateAQueryBuilderWhenSelectingATableToOperate({ assert }: Context) {
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const trx = new Transaction(FakeDriver)
     const queryBuilder = trx.table('users')

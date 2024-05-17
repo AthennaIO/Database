@@ -8,9 +8,8 @@
  */
 
 import { Config } from '@athenna/config'
-import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
 import { Collection, Exec, Path } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
+import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
@@ -121,7 +120,7 @@ export default class SqliteDriverTest {
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
     const driver = new SqliteDriver('sqlite-docker')
 
-    Mock.when(ConnectionFactory, 'sqlite').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -129,8 +128,8 @@ export default class SqliteDriverTest {
     driver.connect({ saveOnFactory: false })
 
     assert.isTrue(driver.isConnected)
-    assert.calledOnce(ConnectionFactory.sqlite)
-    assert.isTrue(DriverFactory.availableDrivers({ onlyConnected: true }).includes('sqlite'))
+    assert.calledOnce(driver.getKnex)
+    assert.isTrue(ConnectionFactory.availableConnections().includes('sqlite-docker'))
   }
 
   @Test()
@@ -148,7 +147,7 @@ export default class SqliteDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     const driver = new SqliteDriver('sqlite-docker')
 
-    Mock.when(ConnectionFactory, 'sqlite').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -156,14 +155,14 @@ export default class SqliteDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false })
 
-    assert.calledOnce(ConnectionFactory.sqlite)
+    assert.calledOnce(driver.getKnex)
   }
 
   @Test()
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     const driver = new SqliteDriver('sqlite-docker')
 
-    Mock.when(ConnectionFactory, 'sqlite').resolve(undefined)
+    Mock.when(driver, 'getKnex').return({ default: () => {} })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -171,7 +170,7 @@ export default class SqliteDriverTest {
     driver.connect({ saveOnFactory: false })
     driver.connect({ saveOnFactory: false, force: true })
 
-    assert.calledTimes(ConnectionFactory.sqlite, 2)
+    assert.calledTimes(driver.getKnex, 2)
   }
 
   @Test()
@@ -192,17 +191,17 @@ export default class SqliteDriverTest {
   public async shouldNotTryToCloseConnectionWithDriverIfConnectionIsClosed({ assert }: Context) {
     const driver = new SqliteDriver('sqlite-docker')
 
-    Mock.spy(DriverFactory, 'getClient')
+    Mock.spy(driver, 'getKnex')
 
     assert.isFalse(driver.isConnected)
 
     await driver.close()
 
-    assert.notCalled(DriverFactory.getClient)
+    assert.notCalled(driver.getKnex)
   }
 
   @Test()
-  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheDriverFactory({ assert }: Context) {
+  public async shouldBeAbleToCloseConnectionsThatAreNotSavedInTheConnectionFactory({ assert }: Context) {
     const driver = new SqliteDriver('sqlite-docker')
 
     assert.isFalse(driver.isConnected)

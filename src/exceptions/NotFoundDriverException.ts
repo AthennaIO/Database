@@ -8,12 +8,12 @@
  */
 
 import { Path, Exception } from '@athenna/common'
-import { DriverFactory } from '#src/factories/DriverFactory'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 
 export class NotFoundDriverException extends Exception {
   public constructor(driver: string) {
     const message = `The driver ${driver} has not been found.`
-    const availableDrivers = DriverFactory.availableDrivers().join(', ')
+    const availableDrivers = ConnectionFactory.availableDrivers().join(', ')
 
     super({
       message,

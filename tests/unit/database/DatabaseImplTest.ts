@@ -10,7 +10,6 @@
 import { Path } from '@athenna/common'
 import { Config } from '@athenna/config'
 import { DatabaseImpl } from '#src/database/DatabaseImpl'
-import { DriverFactory } from '#src/factories/DriverFactory'
 import { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -50,11 +49,11 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToConnectToPostgresDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'connect').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
 
-    assert.calledTimesWith(DriverFactory.fabricate, 3, 'postgres')
+    assert.calledTimesWith(ConnectionFactory.fabricate, 3, 'postgres')
     assert.calledTimes(database.driver.connect, 3)
   }
 
@@ -71,7 +70,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToCloseTheConnectionWithPostgresDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'close').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.close()
@@ -81,19 +80,19 @@ export default class DatabaseImplTest {
 
   @Test()
   public async shouldBeAbleToCloseAllConnections({ assert }: Context) {
-    Mock.when(ConnectionFactory, 'closeAllConnections').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'availableConnections').return(['postgres'])
 
     const database = new DatabaseImpl().connection('postgres')
     await database.closeAll()
 
-    assert.calledOnce(ConnectionFactory.closeAllConnections)
+    assert.calledOnce(ConnectionFactory.availableConnections)
   }
 
   @Test()
   public async shouldBeAbleToGetTheDatabaseClientFromDriver({ assert }: Context) {
     Mock.when(FakeDriver, 'getClient').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     const client = database.getClient()
@@ -104,7 +103,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToGetTheDatabaseQueryBuilderFromDriver({ assert }: Context) {
     Mock.when(FakeDriver, 'getQueryBuilder').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     const queryBuilder = database.getQueryBuilder()
@@ -115,7 +114,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToStartDatabaseTransactions({ assert }: Context) {
     Mock.when(FakeDriver, 'startTransaction').return({})
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     const transaction = await database.startTransaction()
@@ -126,7 +125,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToRunMigrations({ assert }: Context) {
     Mock.when(FakeDriver, 'runMigrations').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.runMigrations()
@@ -137,7 +136,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToRevertMigrations({ assert }: Context) {
     Mock.when(FakeDriver, 'revertMigrations').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.revertMigrations()
@@ -148,7 +147,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToGetTheDatabases({ assert }: Context) {
     Mock.when(FakeDriver, 'getDatabases').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.getDatabases()
@@ -159,7 +158,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToGetTheCurrentDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'getCurrentDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.getCurrentDatabase()
@@ -170,7 +169,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToValidateThatDatabaseExists({ assert }: Context) {
     Mock.when(FakeDriver, 'hasDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.hasDatabase('users')
@@ -181,7 +180,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToCreateDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'createDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.createDatabase('users')
@@ -192,7 +191,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToDropDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'dropDatabase').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.dropDatabase('users')
@@ -203,7 +202,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToGetDatabaseTables({ assert }: Context) {
     Mock.when(FakeDriver, 'getTables').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.getTables()
@@ -214,7 +213,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToVerifyIfTableExistsInDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'hasTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.hasTable('users')
@@ -225,7 +224,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToCreateTableInDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'createTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.createTable('users', builder => {
@@ -238,7 +237,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToDropTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'dropTable').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.dropTable('users')
@@ -249,7 +248,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToTruncateTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'truncate').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.truncate('users')
@@ -260,7 +259,7 @@ export default class DatabaseImplTest {
   @Test()
   public async shouldBeAbleToRunRawQueriesInTheDatabase({ assert }: Context) {
     Mock.when(FakeDriver, 'raw').resolve(undefined)
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     await database.raw('SELECT * FROM users')
@@ -270,7 +269,7 @@ export default class DatabaseImplTest {
 
   @Test()
   public async shouldBeAbleToCreateAQueryBuilderWhenSelectingATableToOperate({ assert }: Context) {
-    Mock.when(DriverFactory, 'fabricate').return(FakeDriver)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
 
     const database = new DatabaseImpl().connection('postgres')
     const queryBuilder = database.table('users')

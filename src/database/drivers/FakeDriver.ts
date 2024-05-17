@@ -15,6 +15,7 @@ import {
   Options,
   type PaginatedResponse
 } from '@athenna/common'
+
 import type { ConnectionOptions, Operations } from '#src/types'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
@@ -28,6 +29,7 @@ export class FakeDriver {
     if (client) {
       FakeDriver.client = client
       FakeDriver.isConnected = true
+      FakeDriver.isSavedOnFactory = true
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -49,6 +51,10 @@ export class FakeDriver {
   public static joinByType() {
     return this
   }
+
+  public static getKnex() {}
+
+  public static getMongoose() {}
 
   public static clone() {
     return Json.copy(FakeDriver)

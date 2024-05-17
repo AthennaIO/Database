@@ -20,10 +20,14 @@ export default {
     mysql: {
       driver: 'mysql'
     },
+    sqlite: {
+      driver: 'sqlite'
+    },
     postgres: {
       driver: 'postgres'
     },
     mongo: {
+      driver: 'mongo',
       url: 'mongodb://localhost:27017',
       replicaSet: 'admin'
     },
@@ -75,6 +79,12 @@ export default {
         isToValidateUnique: false,
         isToValidateNullable: false
       }
+    },
+    'not-found': {
+      driver: 'not-found'
+    },
+    test: {
+      driver: 'test'
     }
   }
 }
