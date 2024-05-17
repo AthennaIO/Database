@@ -8,11 +8,15 @@
  */
 
 import { Path } from '@athenna/common'
+import { FakeDriver } from '#src/database/drivers/FakeDriver'
+import { MongoDriver } from '#src/database/drivers/MongoDriver'
 import { TestDriver } from '#tests/fixtures/drivers/TestDriver'
+import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
+import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { AfterEach, BeforeEach, Mock, Test, type Context } from '@athenna/test'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
 import { NotImplementedConfigException } from '#src/exceptions/NotImplementedConfigException'
-import { ConnectionFactory, FakeDriver, MongoDriver, MySqlDriver, SqliteDriver, PostgresDriver } from '#src'
 
 export class ConnectionFactoryTest {
   @BeforeEach()
