@@ -9,10 +9,7 @@
 
 import { Path } from '@athenna/common'
 import { FakeDriver } from '#src/database/drivers/FakeDriver'
-import { MongoDriver } from '#src/database/drivers/MongoDriver'
 import { TestDriver } from '#tests/fixtures/drivers/TestDriver'
-import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
-import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { AfterEach, BeforeEach, Mock, Test, type Context } from '@athenna/test'
 import { NotFoundDriverException } from '#src/exceptions/NotFoundDriverException'
@@ -65,28 +62,28 @@ export class ConnectionFactoryTest {
   public async shouldBeAbleToFabricateNewConnectionsAndReturnMongoDriverInstance({ assert }: Context) {
     const driver = ConnectionFactory.fabricate('mongo')
 
-    assert.instanceOf(driver, MongoDriver)
+    assert.deepEqual(driver.constructor.name, 'MongoDriver')
   }
 
   @Test()
   public async shouldBeAbleToFabricateNewConnectionsAndReturnMySqlDriverInstance({ assert }: Context) {
     const driver = ConnectionFactory.fabricate('mysql')
 
-    assert.instanceOf(driver, MySqlDriver)
+    assert.deepEqual(driver.constructor.name, 'MySqlDriver')
   }
 
   @Test()
   public async shouldBeAbleToFabricateNewConnectionsAndReturnSqliteDriverInstance({ assert }: Context) {
     const driver = ConnectionFactory.fabricate('sqlite')
 
-    assert.instanceOf(driver, SqliteDriver)
+    assert.deepEqual(driver.constructor.name, 'SqliteDriver')
   }
 
   @Test()
   public async shouldBeAbleToFabricateNewConnectionsAndReturnPostgresDriverInstance({ assert }: Context) {
     const driver = ConnectionFactory.fabricate('postgres')
 
-    assert.instanceOf(driver, PostgresDriver)
+    assert.deepEqual(driver.constructor.name, 'PostgresDriver')
   }
 
   @Test()
@@ -117,7 +114,7 @@ export class ConnectionFactoryTest {
 
     const driver = ConnectionFactory.fabricate('postgres')
 
-    assert.instanceOf(driver, PostgresDriver)
+    assert.deepEqual(driver.constructor.name, 'PostgresDriver')
     assert.deepEqual(driver.getClient(), {})
   }
 
