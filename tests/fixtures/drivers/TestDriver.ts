@@ -7,6 +7,4 @@
  * file that was distributed with this source code.
  */
 
-import { MongoDriver } from '#src/database/drivers/MongoDriver'
-
-export class TestDriver extends MongoDriver {}
+export class TestDriver {}

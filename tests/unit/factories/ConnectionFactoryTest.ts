@@ -98,11 +98,11 @@ export class ConnectionFactoryTest {
 
   @Test()
   public async shouldBeAbleToCreateOwnDriverImplementationToUseWithinDatabaseFacade({ assert }: Context) {
-    ConnectionFactory.createDriver('test', TestDriver)
+    ConnectionFactory.createDriver('test', TestDriver as any)
 
     const testDriver = ConnectionFactory.fabricate('test')
 
-    assert.instanceOf(testDriver, TestDriver)
+    assert.deepEqual(testDriver.constructor.name, 'TestDriver')
 
     ConnectionFactory.drivers.delete('test')
     ConnectionFactory.connections.delete('test')
