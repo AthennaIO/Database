@@ -87,6 +87,26 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'migration',
           'node_modules/@athenna/database/templates/migration.edge'
         )
+        .setTo(
+          'templates',
+          'crud-model',
+          'node_modules/@athenna/database/templates/crud-model.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-migration',
+          'node_modules/@athenna/database/templates/crud-migration.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-service',
+          'node_modules/@athenna/database/templates/crud-service.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-controller',
+          'node_modules/@athenna/database/templates/crud-controller.edge'
+        )
         .save()
     })
 
