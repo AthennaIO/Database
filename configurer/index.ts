@@ -42,6 +42,10 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'make:migration',
           '@athenna/database/commands/MakeMigrationCommand'
         )
+        .setTo('commands', 'make:crud', {
+          path: '@athenna/database/commands/MakeCrudCommand',
+          fileCase: Config.is('rc.isSlim', true) ? 'toDotCase' : 'toPascalCase'
+        })
         .setTo('commands', 'db:fresh', {
           path: '@athenna/database/commands/DbFreshCommand',
           loadApp: true,

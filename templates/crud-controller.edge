@@ -1,0 +1,52 @@
+import { Inject } from '@athenna/ioc'
+import type { PaginationOptions } from '@athenna/common'
+import { Controller, type Context } from '@athenna/http'
+import { {{ crudNamePascal }}Service } from '{{ serviceImportPath }}'
+
+@Controller()
+export class {{ namePascal }} {
+  @Inject()
+  public {{ crudNameLower }}Service: {{ crudNamePascal }}Service
+
+  public async index({ request, response }: Context) {
+    const options: PaginationOptions = {
+      page: parseInt(request.query('page', 0)),
+      limit: parseInt(request.query('limit', 10)),
+      resourceUrl: request.baseHostUrl
+    }
+
+    const data = await this.{{ crudNameLower }}Service.paginate(options)
+
+    return response.status(200).send(data)
+  }
+
+  public async store({ request, response }: Context) {
+    const body = request.only([{{ properties }}])
+    const data = await this.{{ crudNameLower }}Service.create(body)
+
+    return response.status(201).send(data)
+  }
+
+  public async show({ request, response }: Context) {
+    const id = request.param('id')
+    const data = await this.{{ crudNameLower }}Service.findById(id)
+
+    return response.status(200).send(data)
+  }
+
+  public async update({ request, response }: Context) {
+    const id = request.param('id')
+    const body = request.only([{{ properties }}])
+    const data = await this.{{ crudNameLower }}Service.update(id, body)
+
+    return response.status(200).send(data)
+  }
+
+  public async delete({ request, response }: Context) {
+    const id = request.param('id')
+
+    await this.{{crudNameLower }}Service.delete(id)
+
+    return response.status(204)
+  }
+}
