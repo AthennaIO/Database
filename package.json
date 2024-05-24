@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "4.56.0",
+  "version": "4.57.0",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -53,6 +53,7 @@
     "./commands/DbFreshCommand": "./src/commands/DbFreshCommand.js",
     "./commands/DbSeedCommand": "./src/commands/DbSeedCommand.js",
     "./commands/DbWipeCommand": "./src/commands/DbWipeCommand.js",
+    "./commands/MakeCrudCommand": "./src/commands/MakeCrudCommand.js",
     "./commands/MakeMigrationCommand": "./src/commands/MakeMigrationCommand.js",
     "./commands/MakeModelCommand": "./src/commands/MakeModelCommand.js",
     "./commands/MakeSeederCommand": "./src/commands/MakeSeederCommand.js",
@@ -223,12 +224,19 @@
       },
       "make:migration": {
         "path": "#src/commands/MakeMigrationCommand"
+      },
+      "make:crud": {
+        "path": "#src/commands/MakeCrudCommand"
       }
     },
     "templates": {
       "migration": "./templates/migration.edge",
       "model": "./templates/model.edge",
-      "seeder": "./templates/seeder.edge"
+      "seeder": "./templates/seeder.edge",
+      "crud-model": "./templates/crud-model.edge",
+      "crud-migration": "./templates/crud-migration.edge",
+      "crud-service": "./templates/crud-service.edge",
+      "crud-controller": "./templates/crud-controller.edge"
     }
   }
 }

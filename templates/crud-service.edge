@@ -1,0 +1,26 @@
+import { Service } from '@athenna/ioc'
+import { {{ crudNamePascal }} } from '{{ modelImportPath }}'
+import type { PaginationOptions } from '@athenna/common'
+
+@Service()
+export class {{ namePascal }} {
+  public async paginate(options: PaginationOptions) {
+    return {{ crudNamePascal }}.paginate(options)
+  }
+
+  public async create(body: Partial<{{ crudNamePascal }}>) {
+    return {{ crudNamePascal }}.create(body)
+  }
+
+  public async findById(id: {{ idType }}) {
+    return {{ crudNamePascal }}.query().where('id', id).find()
+  }
+
+  public async update(id: {{ idType }}, body: Partial<{{ crudNamePascal }}>) {
+    return {{ crudNamePascal }}.update({ id }, body)
+  }
+
+  public async delete(id: {{ idType }}) {
+    await {{ crudNamePascal }}.delete({ id })
+  }
+}

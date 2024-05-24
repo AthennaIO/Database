@@ -42,6 +42,10 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'make:migration',
           '@athenna/database/commands/MakeMigrationCommand'
         )
+        .setTo('commands', 'make:crud', {
+          path: '@athenna/database/commands/MakeCrudCommand',
+          fileCase: Config.is('rc.isSlim', true) ? 'toDotCase' : 'toPascalCase'
+        })
         .setTo('commands', 'db:fresh', {
           path: '@athenna/database/commands/DbFreshCommand',
           loadApp: true,
@@ -82,6 +86,26 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'templates',
           'migration',
           'node_modules/@athenna/database/templates/migration.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-model',
+          'node_modules/@athenna/database/templates/crud-model.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-migration',
+          'node_modules/@athenna/database/templates/crud-migration.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-service',
+          'node_modules/@athenna/database/templates/crud-service.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-controller',
+          'node_modules/@athenna/database/templates/crud-controller.edge'
         )
         .save()
     })
