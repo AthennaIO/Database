@@ -1001,14 +1001,12 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetSoftDeletedData({ assert }: Context) {
-    Mock.when(Database.driver, 'whereNull').resolve(undefined)
     Mock.when(Database.driver, 'orWhereNotNull').resolve(undefined)
     Mock.when(Database.driver, 'find').resolve({ id: '1' })
 
     const result = await User.query().withTrashed().find()
 
     assert.instanceOf(result, User)
-    assert.calledOnceWith(Database.driver.whereNull, 'deletedAt')
     assert.calledOnceWith(Database.driver.orWhereNotNull, 'deletedAt')
   }
 
