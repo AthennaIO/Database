@@ -1,0 +1,107 @@
+import { {{ crudNamePascal }} } from '{{ modelImportPath }}'
+import { Database } from '@athenna/database'
+import { {{ crudNamePascal }}Service } from '{{ serviceImportPath }}'
+import { AfterEach, BeforeEach, Mock, Test, type Context } from '@athenna/test'
+
+export default class {{ crudNamePascal }}ServiceTest {
+  @BeforeEach()
+  public async beforeEach() {
+    Config.set('database.default', 'fake')
+  }
+
+  @AfterEach()
+  public async afterEach() {
+    Config.set('database.default', Env('DB_CONNECTION'))
+
+    Mock.restoreAll()
+  }
+
+  @Test()
+  public async shouldBeAbleToGet{{ crudNamePascalPlural }}Paginated({ assert }: Context) {
+    const {{ crudNameLowerPlural }} = await {{ crudNamePascal }}.factory().count(10).make()
+
+    Mock.when(Database.driver, 'paginate').resolve({
+      data: {{ crudNameLowerPlural }}
+    })
+
+    const { data } = await new {{ crudNamePascal }}Service().paginate()
+
+    assert.deepEqual(data.athenna.toJSON(), {{ crudNameLowerPlural }}.athenna.toJSON())
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateA{{ crudNamePascal }}({ assert }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.factory().make({
+      {{{ createBody }}}
+    })
+
+    Mock.when(Database.driver, 'create').resolve({{ crudNameLower }})
+
+    const data = await new {{ crudNamePascal }}Service().create({
+      {{{ createBody }}}
+    })
+
+    assert.containsSubset(data.toJSON(), {{ crudNameLower }}.toJSON())
+  }
+
+  @Test()
+  public async shouldBeAbleToFindA{{ crudNamePascal }}ById({ assert }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.factory().make()
+
+    Mock.when(Database.driver, 'find').resolve({{ crudNameLower }})
+
+    const data = await new {{ crudNamePascal }}Service().findById('1')
+
+    assert.deepEqual(data.toJSON(), {{ crudNameLower }}.toJSON())
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIf{{ crudNamePascal }}DoesNotExistWhenGettingById({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+
+    assert.rejects(() => new {{ crudNamePascal }}Service().findById('1'))
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateA{{ crudNamePascal }}({ assert }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.factory().make()
+    const {{ crudNameLower }}Updated = await {{ crudNamePascal }}.factory().make({
+      ...{{ crudNameLower }},
+      {{{ updateBody }}}
+    })
+
+    Mock.when(Database.driver, 'find').resolve({{ crudNameLower }})
+    Mock.when(Database.driver, 'update').resolve({{ crudNameLower }}Updated)
+
+    const data = await new {{ crudNamePascal }}Service().update('1', {
+      {{{ updateBody }}}
+    })
+
+    assert.containsSubset(data.toJSON(), {
+      {{{ updateBody }}}
+    })
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIf{{ crudNamePascal }}DoesNotExistWhenUpdating({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+
+    assert.rejects(() => new {{ crudNamePascal }}Service().update('1', {}))
+  }
+
+  @Test()
+  public async shouldBeAbleToDelete{{ crudNamePascal }}({ assert }: Context) {
+    Mock.when(Database.driver, 'update').resolve(undefined)
+
+    await new {{ crudNamePascal }}Service().delete('1')
+
+    assert.calledWithMatch(Database.driver.update, { deletedAt: Mock.match.date })
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIf{{ crudNamePascal }}DoesNotExistWhenDeleting({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+
+    assert.rejects(() => new {{ crudNamePascal }}Service().delete('1'))
+  }
+}

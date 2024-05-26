@@ -7,18 +7,18 @@
  * file that was distributed with this source code.
  */
 
-import type {
-  Direction,
-  Operations,
-  ModelColumns,
-  ModelRelations
-} from '#src/types'
 import {
   Collection,
   Is,
   Options,
   type PaginationOptions
 } from '@athenna/common'
+import type {
+  Direction,
+  Operations,
+  ModelColumns,
+  ModelRelations
+} from '#src/types'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
@@ -419,9 +419,11 @@ export class ModelQueryBuilder<
       return
     }
 
-    return this.whereNull(this.DELETED_AT_PROP).orWhereNotNull(
-      this.DELETED_AT_PROP
-    )
+    if (this.schema.getModelDriverName() === 'mongo') {
+      this.orWhereNull(this.DELETED_AT_PROP)
+    }
+
+    return this.orWhereNotNull(this.DELETED_AT_PROP)
   }
 
   /**
