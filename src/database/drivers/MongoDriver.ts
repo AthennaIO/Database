@@ -18,6 +18,7 @@ import {
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
+import { ObjectId } from '#src/helpers/ObjectId'
 import { Driver } from '#src/database/drivers/Driver'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -1087,16 +1088,24 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (operation === undefined) {
+      Object.keys(statement).forEach(key => {
+        statement[key] = ObjectId.ifValidSwap(statement[key])
+      })
+
       this._where.push(statement)
 
       return this
     }
 
     if (value === undefined) {
+      operation = ObjectId.ifValidSwap(operation)
+
       this._where.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
     }
+
+    value = ObjectId.ifValidSwap(value)
 
     this._where.push({ [statement]: this.setOperator(value, operation) })
 
@@ -1152,6 +1161,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where in statement in your query.
    */
   public whereIn(column: string, values: any[]) {
+    values = values.map(v => ObjectId.ifValidSwap(v))
+
     this._where.push({ [column]: { $in: values } })
 
     return this
@@ -1161,6 +1172,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not in statement in your query.
    */
   public whereNotIn(column: string, values: any[]) {
+    values = values.map(v => ObjectId.ifValidSwap(v))
+
     this._where.push({ [column]: { $nin: values } })
 
     return this
@@ -1170,6 +1183,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where between statement in your query.
    */
   public whereBetween(column: string, values: [any, any]) {
+    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
+
     this._where.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1179,6 +1194,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not between statement in your query.
    */
   public whereNotBetween(column: string, values: [any, any]) {
+    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
+
     this._where.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })
@@ -1219,16 +1236,24 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (operation === undefined) {
+      Object.keys(statement).forEach(key => {
+        statement[key] = ObjectId.ifValidSwap(statement[key])
+      })
+
       this._orWhere.push(statement)
 
       return this
     }
 
     if (value === undefined) {
+      operation = ObjectId.ifValidSwap(operation)
+
       this._orWhere.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
     }
+
+    value = ObjectId.ifValidSwap(value)
 
     this._orWhere.push({ [statement]: this.setOperator(value, operation) })
 
@@ -1284,6 +1309,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where in statement in your query.
    */
   public orWhereIn(column: string, values: any[]) {
+    values = values.map(v => ObjectId.ifValidSwap(v))
+
     this._orWhere.push({ [column]: { $in: values } })
 
     return this
@@ -1293,6 +1320,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not in statement in your query.
    */
   public orWhereNotIn(column: string, values: any[]) {
+    values = values.map(v => ObjectId.ifValidSwap(v))
+
     this._orWhere.push({ [column]: { $nin: values } })
 
     return this
@@ -1302,6 +1331,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where between statement in your query.
    */
   public orWhereBetween(column: string, values: [any, any]) {
+    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
+
     this._orWhere.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1311,6 +1342,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not between statement in your query.
    */
   public orWhereNotBetween(column: string, values: [any, any]) {
+    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
+
     this._orWhere.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })

@@ -107,6 +107,16 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           'crud-controller',
           'node_modules/@athenna/database/templates/crud-controller.edge'
         )
+        .setTo(
+          'templates',
+          'crud-service-test',
+          'node_modules/@athenna/database/templates/crud-service-test.edge'
+        )
+        .setTo(
+          'templates',
+          'crud-controller-test',
+          'node_modules/@athenna/database/templates/crud-controller-test.edge'
+        )
         .save()
     })
 

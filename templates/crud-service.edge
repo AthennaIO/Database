@@ -1,9 +1,10 @@
 import { Service } from '@athenna/ioc'
 import { {{ crudNamePascal }} } from '{{ modelImportPath }}'
+import { NotFoundException } from '@athenna/http'
 import type { PaginationOptions } from '@athenna/common'
 
 @Service()
-export class {{ namePascal }} {
+export class {{ crudNamePascal }}Service {
   public async paginate(options: PaginationOptions) {
     return {{ crudNamePascal }}.paginate(options)
   }
@@ -12,15 +13,31 @@ export class {{ namePascal }} {
     return {{ crudNamePascal }}.create(body)
   }
 
-  public async findById(id: {{ idType }}) {
-    return {{ crudNamePascal }}.query().where('id', id).find()
+  public async findById(id: string, trashed = false) {
+    const query = {{ crudNamePascal }}.query()
+    const {{ crudNameLower }} = await query
+      .when(trashed, () => query.withTrashed())
+      .where({ id })
+      .find()
+
+    if (!{{ crudNameLower }}) {
+      throw new NotFoundException('{{ crudNamePascal }} not found')
+    }
+
+    return {{ crudNameLower }}
   }
 
-  public async update(id: {{ idType }}, body: Partial<{{ crudNamePascal }}>) {
-    return {{ crudNamePascal }}.update({ id }, body)
+  public async update(id: string, body: Partial<{{ crudNamePascal }}>) {
+    const {{ crudNameLower }} = await this.findById(id)
+
+{{{ propertiesToUpdate }}}
+    return {{ crudNameLower }}.save()
   }
 
-  public async delete(id: {{ idType }}) {
-    await {{ crudNamePascal }}.delete({ id })
+  public async delete(id: string) {
+    const {{ crudNameLower }} = await this.findById(id, true)
+
+    await {{ crudNameLower }}.delete()
   }
 }
+

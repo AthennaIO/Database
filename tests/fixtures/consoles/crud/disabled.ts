@@ -27,7 +27,8 @@ Path.mergeDirs({
   seeders: 'tests/fixtures/storage/database/seeders',
   migrations: 'tests/fixtures/storage/database/migrations',
   services: 'tests/fixtures/storage/app/services',
-  controllers: 'tests/fixtures/storage/app/http/controllers'
+  controllers: 'tests/fixtures/storage/app/http/controllers',
+  tests: 'tests/fixtures/storage/tests'
 })
 
 await new ConsoleKernel().registerCommands()
@@ -44,6 +45,12 @@ Config.set('rc.commands.make:crud', {
     enabled: false
   },
   migration: {
+    enabled: false
+  },
+  'controller-test': {
+    enabled: false
+  },
+  'service-test': {
     enabled: false
   }
 })

@@ -21,7 +21,7 @@ export class {{ namePascal }} {
   }
 
   public async store({ request, response }: Context) {
-    const body = request.only([{{ properties }}])
+    const body = request.only([{{{ properties }}}])
     const data = await this.{{ crudNameLower }}Service.create(body)
 
     return response.status(201).send(data)
@@ -36,7 +36,7 @@ export class {{ namePascal }} {
 
   public async update({ request, response }: Context) {
     const id = request.param('id')
-    const body = request.only([{{ properties }}])
+    const body = request.only([{{{ properties }}}])
     const data = await this.{{ crudNameLower }}Service.update(id, body)
 
     return response.status(200).send(data)

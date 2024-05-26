@@ -1,0 +1,92 @@
+import { {{ crudNamePascal }} } from '{{ modelImportPath }}'
+import { BaseHttpTest } from '@athenna/core/testing/BaseHttpTest'
+import { AfterEach, BeforeEach, Test, type Context } from '@athenna/test'
+
+export default class {{ namePascal }} extends BaseHttpTest {
+  @BeforeEach()
+  public async beforeEach() {
+    await {{ crudNamePascal }}.factory().count(10).create()
+  }
+
+  @AfterEach()
+  public async afterEach() {
+    await {{ crudNamePascal }}.truncate()
+  }
+
+  @Test()
+  public async shouldBeAbleToGet{{ crudNamePascalPlural }}Paginated({ request }: Context) {
+    const response = await request.get('/{{ crudNameLowerPlural }}')
+
+    response.assertStatusCode(200)
+    response.assertBodyContainsAllKeys(['data', 'meta', 'links'])
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateA{{ crudNamePascal }}({ request }: Context) {
+    const response = await request.post('/{{ crudNameLowerPlural }}', {
+      body: { {{{ createBody }}} }
+    })
+
+    response.assertStatusCode(201)
+    response.assertBodyContainsAllKeys([{{{ createAssertBody }}}])
+  }
+
+  @Test()
+  public async shouldBeAbleToGetA{{ crudNamePascal }}ById({ request }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.find()
+    const response = await request.get('/{{ crudNameLowerPlural }}/' + {{ crudNameLower }}.id)
+
+    response.assertStatusCode(200)
+    response.assertBodyContains({
+      {{{ showAssertBody }}}
+    })
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIfGettingA{{ crudNamePascal }}WithAnIdThatDoesNotExist({ request }: Context) {
+    const response = await request.get('/{{ crudNameLowerPlural }}/not-found')
+
+    response.assertStatusCode(404)
+  }
+
+  @Test()
+  public async shouldBeAbleToUpdateA{{ crudNamePascal }}({ request }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.find()
+    const response = await request.put('/{{ crudNameLowerPlural }}/' + {{ crudNameLower }}.id, {
+      body: { {{{ updateBody }}} }
+    })
+    response.assertStatusCode(200)
+    response.assertBodyContains({
+      {{{ updateAssertBody }}}
+    })
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIfUpdatingA{{ crudNamePascal }}WithAnIdThatDoesNotExist({ request }: Context) {
+    const response = await request.put('/{{ crudNameLowerPlural }}/not-found')
+
+    response.assertStatusCode(404)
+  }
+
+  @Test()
+  public async shouldBeAbleToDeleteA{{ crudNamePascal }}({ assert, request }: Context) {
+    const {{ crudNameLower }} = await {{ crudNamePascal }}.find()
+    const response = await request.delete('/{{ crudNameLowerPlural }}/' + {{ crudNameLower }}.id)
+
+    response.assertStatusCode(204)
+    @if(hasDeletedAt)
+      await {{ crudNameLower }}.refresh()
+
+  assert.isDefined({{ crudNameLower }}.deletedAt)
+    @else
+      assert.isFalse(await User.exists({ id: {{ crudNameLower }}.id }))
+    @end
+  }
+
+  @Test()
+  public async shouldThrowNotFoundExceptionIfDeletingA{{ crudNamePascal }}WithAnIdThatDoesNotExist({ request }: Context) {
+    const response = await request.delete('/{{ crudNameLowerPlural }}/not-found')
+
+    response.assertStatusCode(404)
+  }
+}

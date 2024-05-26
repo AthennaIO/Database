@@ -36,6 +36,18 @@ export class ObjectId {
   }
 
   /**
+   * Swap the value for an objectId instance if valid.
+   * If not valid, return the value.
+   */
+  public static ifValidSwap(value: any) {
+    if (ObjectId.isValidString(value)) {
+      return new ObjectId(value)
+    }
+
+    return value
+  }
+
+  /**
    * Validate if is a valid object id object.
    */
   public static isValidObject(objectId: any): boolean {

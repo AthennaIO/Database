@@ -14,7 +14,6 @@ import type {
   RelationOptions
 } from '#src/types'
 import { Json, Options } from '@athenna/common'
-import { ObjectId } from '#src/helpers/ObjectId'
 import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
@@ -168,10 +167,6 @@ export class ModelSchema<M extends BaseModel = any> {
         return
       }
 
-      if (ObjectId.isValidString(data[key])) {
-        data[key] = new ObjectId(data[key])
-      }
-
       parsed[column.name] = data[key]
     })
 
@@ -183,10 +178,6 @@ export class ModelSchema<M extends BaseModel = any> {
 
       if (parsed[column.name] !== undefined) {
         return
-      }
-
-      if (ObjectId.isValidString(options.attributes[key])) {
-        options.attributes[key] = new ObjectId(options.attributes[key])
       }
 
       parsed[column.name] = options.attributes[key]
