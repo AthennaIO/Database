@@ -71,7 +71,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
 
   @Test()
   public async shouldBeAbleToCreateACrudForMongoDb({ assert, command }: Context) {
-    const output = await command.run('make:crud user --is-mongo', {
+    const output = await command.run('make:crud user --mongo', {
       path: Path.fixtures('consoles/crud/with-properties.ts')
     })
 
