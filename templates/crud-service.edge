@@ -5,7 +5,7 @@ import type { PaginationOptions } from '@athenna/common'
 
 @Service()
 export class {{ crudNamePascal }}Service {
-  public async paginate(options: PaginationOptions) {
+  public async paginate(options?: PaginationOptions) {
     return {{ crudNamePascal }}.paginate(options)
   }
 
