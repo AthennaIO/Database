@@ -22,7 +22,7 @@ export class MakeCrudCommand extends BaseCommand {
 
   @Option({
     default: false,
-    signature: '--is-mongo',
+    signature: '--mongo',
     description:
       'Define if CRUD will use Mongo as database. Migration will be skipped and "id" will be defined as string.'
   })
