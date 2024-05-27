@@ -8,7 +8,7 @@
  */
 
 import { sep } from 'node:path'
-import { Json, Path, String } from '@athenna/common'
+import { Json, Path, File, String } from '@athenna/common'
 import { BaseCommand, Option, Argument, Generator } from '@athenna/artisan'
 
 export class MakeCrudCommand extends BaseCommand {
@@ -154,6 +154,7 @@ export class MakeCrudCommand extends BaseCommand {
 
     if (Config.get('rc.commands.make:crud.controller.enabled', true)) {
       task.addPromise('Creating controller', () => this.makeController())
+      task.addPromise('Adding CRUD routes', () => this.addRoutes())
     }
 
     if (Config.get('rc.commands.make:crud.service.enabled', true)) {
@@ -255,7 +256,7 @@ export class MakeCrudCommand extends BaseCommand {
 
       if (this.properties.length - 1 !== i) {
         properties += '\n\n'
-        if (definitions.length) definitions += ',\n'
+        if (definitions.length && property.custom) definitions += ',\n'
       }
     })
 
@@ -392,6 +393,46 @@ export class MakeCrudCommand extends BaseCommand {
     await this.rc.pushTo('controllers', importPath).save()
   }
 
+  public async addRoutes() {
+    const routeFilePath = Config.get(
+      'rc.commands.make:crud.routeFilePath',
+      Path.routes(`http.${Path.ext()}`)
+    )
+
+    const path = `/${String.pluralize(this.nameLower)}`
+    const controller = `${this.namePascal}Controller`
+
+    let body = ''
+
+    this.properties
+      .filter(p => p.custom)
+      .forEach(property => {
+        const type = {
+          string: `'string'`,
+          number: 1,
+          boolean: true,
+          Date: 'new Date()'
+        }
+
+        body += `${property.name}: ${type[property.type]}, `
+      })
+
+    const routeContent = `
+Route.get('${path}', '${controller}.index')
+Route.post('${path}', '${controller}.store').body({
+  ${body.slice(0, body.length - 2)}
+})
+Route.show('${path}/:id', '${controller}.show')
+Route.put('${path}/:id', '${controller}.update')
+Route.delete('${path}/:id', '${controller}.delete')
+\n`
+
+    await new File(
+      routeFilePath,
+      `import { Route } from '@athenna/http'\n\n`
+    ).append(routeContent)
+  }
+
   public async makeService() {
     this.cleanGenerator()
 
@@ -475,6 +516,7 @@ export class MakeCrudCommand extends BaseCommand {
       .fileName(this.toCase(`${this.name}ControllerTest`))
       .destination(destination)
       .properties({
+        hasDeletedAt: this.properties.find(p => p.name === 'deletedAt'),
         createBody: createBody.slice(0, createBody.length - 2),
         updateBody: updateBody.slice(0, updateBody.length - 2),
         showAssertBody: showAssertBody.slice(0, showAssertBody.length - 2),
