@@ -37,9 +37,7 @@ export default class {{ namePascal }} extends BaseHttpTest {
     const response = await request.get('/{{ crudNameLowerPlural }}/' + {{ crudNameLower }}.id)
 
     response.assertStatusCode(200)
-    response.assertBodyContains({
-      {{{ showAssertBody }}}
-    })
+    response.assertBodyContains({ id: {{ crudNameLower }}.id })
   }
 
   @Test()

@@ -23,6 +23,7 @@ await Config.loadAll(Path.fixtures('config'))
 Rc.setFile(Path.pwd('package.json'))
 
 Path.mergeDirs({
+  routes: 'tests/fixtures/storage/routes',
   models: 'tests/fixtures/storage/app/models',
   seeders: 'tests/fixtures/storage/database/seeders',
   migrations: 'tests/fixtures/storage/database/migrations',

@@ -27,6 +27,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isTrue(await File.exists(Path.fixtures('storage/app/services/UserService.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/e2e/UserControllerTest.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/unit/UserServiceTest.ts')))
+    assert.isTrue(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isTrue(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 
@@ -45,6 +46,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isTrue(await File.exists(Path.fixtures('storage/app/services/UserService.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/e2e/UserControllerTest.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/unit/UserServiceTest.ts')))
+    assert.isTrue(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isTrue(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 
@@ -63,6 +65,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isTrue(await File.exists(Path.fixtures('storage/app/services/UserService.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/e2e/UserControllerTest.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/unit/UserServiceTest.ts')))
+    assert.isTrue(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isTrue(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 
@@ -81,6 +84,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isTrue(await File.exists(Path.fixtures('storage/app/services/UserService.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/e2e/UserControllerTest.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/unit/UserServiceTest.ts')))
+    assert.isTrue(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isFalse(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 
@@ -99,6 +103,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isFalse(await File.exists(Path.fixtures('storage/app/services/UserService.ts')))
     assert.isFalse(await File.exists(Path.fixtures('storage/tests/e2e/UserControllerTest.ts')))
     assert.isFalse(await File.exists(Path.fixtures('storage/tests/unit/UserServiceTest.ts')))
+    assert.isFalse(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isFalse(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 
@@ -117,6 +122,7 @@ export default class MakeCrudCommandTest extends BaseCommandTest {
     assert.isTrue(await File.exists(Path.fixtures('storage/app/services/user.service.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/e2e/user.controller.test.ts')))
     assert.isTrue(await File.exists(Path.fixtures('storage/tests/unit/user.service.test.ts')))
+    assert.isTrue(await File.exists(Path.fixtures('storage/routes/http.ts')))
     assert.isTrue(await Folder.exists(Path.fixtures('storage/database/migrations')))
   }
 }
