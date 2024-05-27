@@ -61,7 +61,9 @@ export default class {{ namePascal }} extends BaseHttpTest {
 
   @Test()
   public async shouldThrowNotFoundExceptionIfUpdatingA{{ crudNamePascal }}WithAnIdThatDoesNotExist({ request }: Context) {
-    const response = await request.put('/{{ crudNameLowerPlural }}/not-found')
+    const response = await request.put('/{{ crudNameLowerPlural }}/not-found', {
+      body: { {{{ updateBody }}} }
+    })
 
     response.assertStatusCode(404)
   }
