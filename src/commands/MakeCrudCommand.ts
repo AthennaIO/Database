@@ -408,22 +408,20 @@ export class MakeCrudCommand extends BaseCommand {
       .filter(p => p.custom)
       .forEach(property => {
         const type = {
-          string: `'string'`,
-          number: 1,
-          boolean: true,
-          Date: 'new Date()'
+          string: 'string',
+          number: 'number',
+          boolean: 'boolean',
+          Date: 'string'
         }
 
-        body += `${property.name}: ${type[property.type]}, `
+        body += `.body('${property.name}', { type: '${type[property.type]}' })`
       })
 
     const routeContent = `
 Route.get('${path}', '${controller}.index')
-Route.post('${path}', '${controller}.store').body({
-  ${body.slice(0, body.length - 2)}
-})
-Route.show('${path}/:id', '${controller}.show')
-Route.put('${path}/:id', '${controller}.update')
+Route.post('${path}', '${controller}.store')${body}
+Route.get('${path}/:id', '${controller}.show')
+Route.put('${path}/:id', '${controller}.update')${body}
 Route.delete('${path}/:id', '${controller}.delete')
 \n`
 
