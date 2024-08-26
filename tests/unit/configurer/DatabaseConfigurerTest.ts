@@ -50,7 +50,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\n\nservices:\n  mysql:\n    container_name: athenna_mysql\n    image: mysql\n    ports:\n      - '3306:3306'\n    environment:\n      MYSQL_DATABASE: athenna\n      MYSQL_ROOT_PASSWORD: root\n      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'\n"
@@ -86,7 +86,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  mysql:\n    container_name: athenna_mysql\n    image: mysql\n    ports:\n      - '3306:3306'\n    environment:\n      MYSQL_DATABASE: athenna\n      MYSQL_ROOT_PASSWORD: root\n      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'\n"
@@ -118,7 +118,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\n\nservices:\n  postgres:\n    container_name: athenna_postgres\n    image: postgres\n    ports:\n      - '5432:5432'\n    environment:\n      POSTGRES_DB: athenna\n      POSTGRES_USER: root\n      POSTGRES_PASSWORD: root\n      POSTGRES_ROOT_PASSWORD: root\n"
@@ -156,7 +156,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  postgres:\n    container_name: athenna_postgres\n    image: postgres\n    ports:\n      - '5432:5432'\n    environment:\n      POSTGRES_DB: athenna\n      POSTGRES_USER: root\n      POSTGRES_PASSWORD: root\n      POSTGRES_ROOT_PASSWORD: root\n"
@@ -188,7 +188,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\n\nservices:\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - '27017:27017'\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n"
@@ -218,7 +218,7 @@ export default class DatabaseConfigurerTest {
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.test')))
     assert.isTrue(await File.exists(Path.pwd('.env.example')))
-    assert.isTrue(await File.exists(Path.pwd('config/database.ts')))
+    assert.isTrue(await File.exists(Path.pwd('src/config/database.ts')))
     assert.deepEqual(
       dockerComposeFile,
       "version: '3'\nservices:\n  app:\n    container_name: athenna_app\n  mongo:\n    container_name: athenna_mongo\n    image: mongo\n    ports:\n      - '27017:27017'\n    environment:\n      MONGO_INITDB_ROOT_USERNAME: root\n      MONGO_INITDB_ROOT_PASSWORD: root\n"
