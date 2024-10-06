@@ -10,8 +10,8 @@
 import 'reflect-metadata'
 
 import { debug } from '#src/debug'
+import { Options } from '@athenna/common'
 import { Annotation } from '#src/helpers/Annotation'
-import { Options, String as AthennaString } from '@athenna/common'
 import type { ColumnOptions } from '#src/types/columns/ColumnOptions'
 
 /**
@@ -24,7 +24,7 @@ export function Column(
     const hasSetName = !!options.name
 
     options = Options.create(options, {
-      name: AthennaString.toCamelCase(key),
+      name: key,
       type: Reflect.getMetadata('design:type', target, key),
       defaultTo: null,
       isPrimary: false,
