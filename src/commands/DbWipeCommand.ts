@@ -34,6 +34,8 @@ export class DbWipeCommand extends BaseCommand {
     const task = this.logger.task()
 
     if (this.getConfig('driver') === 'mongo') {
+      await Exec.sleep(1000)
+
       const tables = await DB.getTables()
 
       task.addPromise('Dropping all database tables', () => {
@@ -61,7 +63,11 @@ export class DbWipeCommand extends BaseCommand {
 
   private getConfig(name: string, defaultValue?: any) {
     return Config.get(
-      `database.connections.${this.connection}.${name}`,
+      `database.connections.${
+        this.connection === 'default'
+          ? Config.get('database.default')
+          : this.connection
+      }.${name}`,
       defaultValue
     )
   }

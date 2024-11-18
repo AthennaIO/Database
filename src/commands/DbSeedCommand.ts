@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Exec } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
 
@@ -37,6 +38,11 @@ export class DbSeedCommand extends BaseCommand {
     this.logger.simple('({bold,green} [ SEEDING DATABASE ])\n')
 
     const DB = Database.connection(this.connection)
+
+    if (this.getConfig('driver') === 'mongo') {
+      await Exec.sleep(1000)
+    }
+
     const task = this.logger.task()
     const dbName = await DB.getCurrentDatabase()
 
@@ -46,5 +52,16 @@ export class DbSeedCommand extends BaseCommand {
 
     console.log()
     this.logger.success(`Database ({yellow} "${dbName}") successfully seeded.`)
+  }
+
+  private getConfig(name: string, defaultValue?: any) {
+    return Config.get(
+      `database.connections.${
+        this.connection === 'default'
+          ? Config.get('database.default')
+          : this.connection
+      }.${name}`,
+      defaultValue
+    )
   }
 }
