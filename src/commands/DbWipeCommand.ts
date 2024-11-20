@@ -34,11 +34,13 @@ export class DbWipeCommand extends BaseCommand {
     const task = this.logger.task()
 
     if (this.getConfig('driver') === 'mongo') {
-      await Exec.sleep(1000)
+      task.addPromise('Connecting to database', () => {
+        return Exec.sleep(5000)
+      })
 
-      const tables = await DB.getTables()
+      task.addPromise('Dropping all database tables', async () => {
+        const tables = await DB.getTables()
 
-      task.addPromise('Dropping all database tables', () => {
         return Exec.concurrently(tables, table => DB.dropTable(table))
       })
     } else {
@@ -53,12 +55,14 @@ export class DbWipeCommand extends BaseCommand {
       )
     }
 
-    const dbName = await DB.getCurrentDatabase()
+    await task.run().finally(async () => {
+      const dbName = await DB.getCurrentDatabase()
 
-    await task.run().finally(() => DB.close())
+      await DB.close()
 
-    console.log()
-    this.logger.success(`Database ({yellow} "${dbName}") successfully wiped.`)
+      console.log()
+      this.logger.success(`Database ({yellow} "${dbName}") successfully wiped.`)
+    })
   }
 
   private getConfig(name: string, defaultValue?: any) {
