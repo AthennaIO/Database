@@ -30,8 +30,8 @@ export class DbWipeCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ WIPING DATABASE ])\n')
 
-    const DB = Database.connection(this.connection)
     const task = this.logger.task()
+    const DB = Database.connection(this.connection)
 
     if (this.getConfig('driver') === 'mongo') {
       task.addPromise('Connecting to database', () => {

@@ -41,19 +41,23 @@ export class DbSeedCommand extends BaseCommand {
     const DB = Database.connection(this.connection)
 
     if (this.getConfig('driver') === 'mongo') {
-      task.addPromise('Connecting to database', async () => {
-        await Exec.sleep(5000)
+      task.addPromise('Connecting to database', () => {
+        return Exec.sleep(5000)
       })
     }
 
-    const dbName = await DB.getCurrentDatabase()
-
     await DB.runSeeders({ task, classes: this.classes })
 
-    await task.run().finally(() => DB.close())
+    await task.run().finally(async () => {
+      const dbName = await DB.getCurrentDatabase()
 
-    console.log()
-    this.logger.success(`Database ({yellow} "${dbName}") successfully seeded.`)
+      await DB.close()
+
+      console.log()
+      this.logger.success(
+        `Database ({yellow} "${dbName}") successfully seeded.`
+      )
+    })
   }
 
   private getConfig(name: string, defaultValue?: any) {
