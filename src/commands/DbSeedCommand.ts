@@ -37,13 +37,15 @@ export class DbSeedCommand extends BaseCommand {
   public async handle(): Promise<void> {
     this.logger.simple('({bold,green} [ SEEDING DATABASE ])\n')
 
+    const task = this.logger.task()
     const DB = Database.connection(this.connection)
 
     if (this.getConfig('driver') === 'mongo') {
-      await Exec.sleep(1000)
+      task.addPromise('Connecting to database', async () => {
+        await Exec.sleep(5000)
+      })
     }
 
-    const task = this.logger.task()
     const dbName = await DB.getCurrentDatabase()
 
     await DB.runSeeders({ task, classes: this.classes })
