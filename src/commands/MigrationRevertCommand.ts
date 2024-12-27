@@ -38,12 +38,15 @@ export class MigrationRevertCommand extends BaseCommand {
     }
 
     const DB = Database.connection(this.connection)
-    const dbName = await DB.getCurrentDatabase()
 
-    await DB.revertMigrations().finally(() => DB.close())
+    await DB.revertMigrations()
+      .then(async () => {
+        const dbName = await DB.getCurrentDatabase()
 
-    this.logger.success(
-      `Successfully reverted migrations on ({yellow} "${dbName}") database.`
-    )
+        this.logger.success(
+          `Successfully reverted migrations on ({yellow} "${dbName}") database.`
+        )
+      })
+      .finally(() => DB.close())
   }
 }

@@ -55,14 +55,17 @@ export class DbWipeCommand extends BaseCommand {
       )
     }
 
-    await task.run().finally(async () => {
-      const dbName = await DB.getCurrentDatabase()
+    await task
+      .run()
+      .then(async () => {
+        const dbName = await DB.getCurrentDatabase()
 
-      await DB.close()
-
-      console.log()
-      this.logger.success(`Database ({yellow} "${dbName}") successfully wiped.`)
-    })
+        console.log()
+        this.logger.success(
+          `Database ({yellow} "${dbName}") successfully wiped.`
+        )
+      })
+      .finally(() => DB.close())
   }
 
   private getConfig(name: string, defaultValue?: any) {
