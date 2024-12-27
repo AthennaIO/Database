@@ -36,11 +36,24 @@ export class DbWipeCommand extends BaseCommand {
     await Artisan.call(`db:wipe --connection ${this.connection}`)
     console.log()
 
-    await Artisan.call(`migration:run --connection ${this.connection}`)
+    if (this.getConfig('driver') !== 'mongo') {
+      await Artisan.call(`migration:run --connection ${this.connection}`)
+    }
 
     if (this.withSeeders) {
       console.log()
       await Artisan.call(`db:seed --connection ${this.connection}`)
     }
+  }
+
+  private getConfig(name: string, defaultValue?: any) {
+    return Config.get(
+      `database.connections.${
+        this.connection === 'default'
+          ? Config.get('database.default')
+          : this.connection
+      }.${name}`,
+      defaultValue
+    )
   }
 }
