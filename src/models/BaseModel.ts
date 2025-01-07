@@ -459,7 +459,7 @@ export class BaseModel {
 
       if (
         !options.withHidden &&
-        _Model.schema().getColumnByProperty(key).isHidden
+        _Model.schema().getColumnByProperty(key)?.isHidden
       ) {
         return
       }
