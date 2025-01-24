@@ -208,7 +208,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Sync a model schema with the driver.
    */
-  public abstract sync(schema: ModelSchema): Promise<void>
+  public abstract sync(schema: ModelSchema): Promise<any>
 
   /**
    * Create a new transaction.

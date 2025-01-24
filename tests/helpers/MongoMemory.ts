@@ -24,8 +24,8 @@ export class MongoMemory {
     }
 
     this.replSet = await MongoMemoryReplSet.create({
-      instanceOpts: [{ port: 27017 }, { port: 27018 }, { port: 27019 }],
-      replSet: { name: 'rs', count: 3 }
+      instanceOpts: [{ port: 27017 }],
+      replSet: { name: 'rs', count: 1 }
     })
 
     console.log('##### STARTING MONGODB MEMORY SERVER #####')

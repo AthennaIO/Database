@@ -146,7 +146,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Sync a model schema with database.
    */
-  public async sync(schema: ModelSchema): Promise<void> {
+  public async sync(schema: ModelSchema) {
     const columns: any = {}
     const mongoose = await import('mongoose')
 
@@ -190,7 +190,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
      * Relations will not be registered because
      * Athenna will handle them instead of mongoose.
      */
-    this.client
+    return this.client
       .model(schema.getModelName(), new mongoose.Schema(columns))
       .syncIndexes()
   }
