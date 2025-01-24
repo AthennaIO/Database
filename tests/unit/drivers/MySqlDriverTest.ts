@@ -8,7 +8,7 @@
  */
 
 import { Config } from '@athenna/config'
-import { Collection, Exec, Path } from '@athenna/common'
+import { Path, Sleep, Collection } from '@athenna/common'
 import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
@@ -2845,7 +2845,7 @@ export default class MySqlDriverTest {
   @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
     await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
-    await Exec.sleep(2000)
+    await Sleep.for(2).seconds().wait()
     const latest = await this.driver.table('users').create({ id: '3', name: 'Alan Turing' })
 
     const data = await this.driver.table('users').latest('created_at').find()

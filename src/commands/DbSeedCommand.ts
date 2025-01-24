@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { Exec } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
 
@@ -40,12 +39,6 @@ export class DbSeedCommand extends BaseCommand {
     const task = this.logger.task()
     const DB = Database.connection(this.connection)
 
-    if (this.getConfig('driver') === 'mongo') {
-      task.addPromise('Connecting to database', () => {
-        return Exec.sleep(5000)
-      })
-    }
-
     await DB.runSeeders({ task, classes: this.classes })
 
     await task
@@ -58,16 +51,5 @@ export class DbSeedCommand extends BaseCommand {
         )
       })
       .finally(() => DB.close())
-  }
-
-  private getConfig(name: string, defaultValue?: any) {
-    return Config.get(
-      `database.connections.${
-        this.connection === 'default'
-          ? Config.get('database.default')
-          : this.connection
-      }.${name}`,
-      defaultValue
-    )
   }
 }

@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { Exec } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { BaseCommand, Option } from '@athenna/artisan'
 
@@ -34,14 +33,10 @@ export class DbWipeCommand extends BaseCommand {
     const DB = Database.connection(this.connection)
 
     if (this.getConfig('driver') === 'mongo') {
-      task.addPromise('Connecting to database', () => {
-        return Exec.sleep(5000)
-      })
-
       task.addPromise('Dropping all database tables', async () => {
         const tables = await DB.getTables()
 
-        return Exec.concurrently(tables, table => DB.dropTable(table))
+        return tables.athenna.concurrently(table => DB.dropTable(table))
       })
     } else {
       const migrationsTable = this.getConfig(

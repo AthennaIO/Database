@@ -227,7 +227,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
      */
     try {
       await this.raw('CREATE DATABASE ??', database)
-    } catch (err) {}
+    } catch (_err) {}
   }
 
   /**
@@ -239,7 +239,7 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
      */
     try {
       await this.raw('DROP DATABASE ??', database)
-    } catch (err) {}
+    } catch (_err) {}
   }
 
   /**

@@ -8,7 +8,7 @@
  */
 
 import { Config } from '@athenna/config'
-import { Collection, Path } from '@athenna/common'
+import { Path, Collection } from '@athenna/common'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'

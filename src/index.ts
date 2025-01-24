@@ -10,6 +10,8 @@
 export * from '#src/types'
 
 export * from '#src/models/BaseModel'
+export * from '#src/models/builders/ModelQueryBuilder'
+export * from '#src/models/schemas/ModelSchema'
 export * from '#src/models/annotations/Column'
 export * from '#src/models/annotations/HasOne'
 export * from '#src/models/annotations/HasMany'

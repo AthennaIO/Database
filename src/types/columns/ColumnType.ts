@@ -7,8 +7,6 @@
  * file that was distributed with this source code.
  */
 
-/* eslint-disable @typescript-eslint/ban-types */
-
 import type { Schema } from 'mongoose'
 
 export type ColumnType =

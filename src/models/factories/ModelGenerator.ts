@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Macroable } from '@athenna/common'
 import { ObjectId } from '#src/helpers/ObjectId'
 import type { RelationOptions } from '#src/types'
 import type { BaseModel } from '#src/models/BaseModel'
@@ -16,7 +17,7 @@ import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
 import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
 
-export class ModelGenerator<M extends BaseModel = any> {
+export class ModelGenerator<M extends BaseModel = any> extends Macroable {
   /**
    * The model that will be generated instances
    * from.
@@ -30,6 +31,7 @@ export class ModelGenerator<M extends BaseModel = any> {
   private schema: ModelSchema<M>
 
   public constructor(model: new () => M, schema: ModelSchema<M>) {
+    super()
     this.Model = model
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

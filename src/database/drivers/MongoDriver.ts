@@ -8,9 +8,9 @@
  */
 
 import {
-  Exec,
   Is,
   Json,
+  Exec,
   Options,
   type PaginatedResponse,
   type PaginationOptions
@@ -18,7 +18,6 @@ import {
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
-import { ObjectId } from '#src/helpers/ObjectId'
 import { Driver } from '#src/database/drivers/Driver'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -202,6 +201,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async startTransaction(): Promise<
     Transaction<Connection, Collection>
   > {
+    await this.client.asPromise()
+
     const session = await this.client.startSession()
 
     session.startTransaction()
@@ -215,6 +216,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Commit the transaction.
    */
   public async commitTransaction(): Promise<void> {
+    await this.client.asPromise()
     await this.session.commitTransaction()
     await this.session.endSession()
 
@@ -228,6 +230,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Rollback the transaction.
    */
   public async rollbackTransaction(): Promise<void> {
+    await this.client.asPromise()
     await this.session.abortTransaction()
     await this.session.endSession()
 
@@ -255,6 +258,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * List all databases available.
    */
   public async getDatabases(): Promise<string[]> {
+    await this.client.asPromise()
+
     const admin = this.client.db.admin()
     const { databases } = await admin.listDatabases()
 
@@ -265,6 +270,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Get the current database name.
    */
   public async getCurrentDatabase(): Promise<string | undefined> {
+    await this.client.asPromise()
+
     return this.client.db.databaseName
   }
 
@@ -272,6 +279,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Verify if database exists.
    */
   public async hasDatabase(database: string): Promise<boolean> {
+    await this.client.asPromise()
+
     const databases = await this.getDatabases()
 
     return databases.includes(database)
@@ -288,6 +297,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Drop some database.
    */
   public async dropDatabase(database: string): Promise<void> {
+    await this.client.asPromise()
+
     await this.client.useDb(database).dropDatabase()
   }
 
@@ -295,6 +306,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * List all tables available.
    */
   public async getTables(): Promise<string[]> {
+    await this.client.asPromise()
+
     const collections = await this.client.db.listCollections().toArray()
 
     return collections.map(collection => collection.name)
@@ -304,6 +317,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Verify if table exists.
    */
   public async hasTable(table: string): Promise<boolean> {
+    await this.client.asPromise()
+
     const tables = await this.getTables()
 
     return tables.includes(table)
@@ -321,6 +336,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public async dropTable(table: string): Promise<void> {
     try {
+      await this.client.asPromise()
       await this.client.dropCollection(table)
     } catch (err) {
       debug('error happened while dropping table %s in MongoDriver: %o', err)
@@ -332,6 +348,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * and restart the identity of the table.
    */
   public async truncate(table: string): Promise<void> {
+    await this.client.asPromise()
+
     const collection = this.client.collection(table)
 
     await collection.deleteMany({}, { session: this.session })
@@ -348,6 +366,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Calculate the average of a given column.
    */
   public async avg(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -370,6 +390,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Calculate the average of a given column using distinct.
    */
   public async avgDistinct(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -392,6 +414,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Get the max number of a given column.
    */
   public async max(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -414,6 +438,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Get the min number of a given column.
    */
   public async min(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -436,6 +462,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Sum all numbers of a given column.
    */
   public async sum(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -458,6 +486,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Sum all numbers of a given column in distinct mode.
    */
   public async sumDistinct(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     pipeline.push({
@@ -480,6 +510,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Increment a value of a given column.
    */
   public async increment(column: string): Promise<void> {
+    await this.client.asPromise()
+
     const where = this.createWhere()
 
     await this.qb.updateMany(
@@ -493,6 +525,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Decrement a value of a given column.
    */
   public async decrement(column: string): Promise<void> {
+    await this.client.asPromise()
+
     const where = this.createWhere()
 
     await this.qb.updateMany(
@@ -506,6 +540,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Calculate the average of a given column using distinct.
    */
   public async count(column: string = '*'): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     if (column !== '*') {
@@ -526,6 +562,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Calculate the average of a given column using distinct.
    */
   public async countDistinct(column: string): Promise<string> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     if (column !== '*') {
@@ -550,6 +588,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Find a value in database.
    */
   public async find<T = any>(): Promise<T> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     const data = await this.qb
@@ -563,6 +603,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Find many values in database.
    */
   public async findMany<T = any>(): Promise<T[]> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     return this.qb
@@ -578,6 +620,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
     limit = 10,
     resourceUrl = '/'
   ): Promise<PaginatedResponse<T>> {
+    await this.client.asPromise()
+
     if (Is.Number(page)) {
       page = { page, limit, resourceUrl }
     }
@@ -610,6 +654,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
       throw new WrongMethodException('create', 'createMany')
     }
 
+    await this.client.asPromise()
+
     const created = await this.createMany([data])
 
     return created[0]
@@ -622,6 +668,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
     if (!Is.Array(data)) {
       throw new WrongMethodException('createMany', 'create')
     }
+
+    await this.client.asPromise()
 
     const { insertedIds } = await this.qb.insertMany(data, {
       session: this.session
@@ -642,6 +690,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public async createOrUpdate<T = any>(
     data: Partial<T> = {}
   ): Promise<T | T[]> {
+    await this.client.asPromise()
+
     const pipeline = this.createPipeline()
 
     const hasValue = (
@@ -659,6 +709,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Update a value in database.
    */
   public async update<T = any>(data: Partial<T>): Promise<T | T[]> {
+    await this.client.asPromise()
+
     const where = this.createWhere({ clearWhere: false, clearOrWhere: false })
     const pipeline = this.createPipeline()
 
@@ -683,6 +735,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Delete one value in database.
    */
   public async delete(): Promise<void> {
+    await this.client.asPromise()
+
     await this.qb.deleteMany(this.createWhere(), { session: this.session })
   }
 
@@ -1088,24 +1142,16 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (operation === undefined) {
-      Object.keys(statement).forEach(key => {
-        statement[key] = ObjectId.ifValidSwap(statement[key])
-      })
-
       this._where.push(statement)
 
       return this
     }
 
     if (value === undefined) {
-      operation = ObjectId.ifValidSwap(operation)
-
       this._where.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
     }
-
-    value = ObjectId.ifValidSwap(value)
 
     this._where.push({ [statement]: this.setOperator(value, operation) })
 
@@ -1161,8 +1207,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where in statement in your query.
    */
   public whereIn(column: string, values: any[]) {
-    values = values.map(v => ObjectId.ifValidSwap(v))
-
     this._where.push({ [column]: { $in: values } })
 
     return this
@@ -1172,8 +1216,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not in statement in your query.
    */
   public whereNotIn(column: string, values: any[]) {
-    values = values.map(v => ObjectId.ifValidSwap(v))
-
     this._where.push({ [column]: { $nin: values } })
 
     return this
@@ -1183,8 +1225,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where between statement in your query.
    */
   public whereBetween(column: string, values: [any, any]) {
-    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
-
     this._where.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1194,8 +1234,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not between statement in your query.
    */
   public whereNotBetween(column: string, values: [any, any]) {
-    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
-
     this._where.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })
@@ -1236,24 +1274,16 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     if (operation === undefined) {
-      Object.keys(statement).forEach(key => {
-        statement[key] = ObjectId.ifValidSwap(statement[key])
-      })
-
       this._orWhere.push(statement)
 
       return this
     }
 
     if (value === undefined) {
-      operation = ObjectId.ifValidSwap(operation)
-
       this._orWhere.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
     }
-
-    value = ObjectId.ifValidSwap(value)
 
     this._orWhere.push({ [statement]: this.setOperator(value, operation) })
 
@@ -1309,8 +1339,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where in statement in your query.
    */
   public orWhereIn(column: string, values: any[]) {
-    values = values.map(v => ObjectId.ifValidSwap(v))
-
     this._orWhere.push({ [column]: { $in: values } })
 
     return this
@@ -1320,8 +1348,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not in statement in your query.
    */
   public orWhereNotIn(column: string, values: any[]) {
-    values = values.map(v => ObjectId.ifValidSwap(v))
-
     this._orWhere.push({ [column]: { $nin: values } })
 
     return this
@@ -1331,8 +1357,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where between statement in your query.
    */
   public orWhereBetween(column: string, values: [any, any]) {
-    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
-
     this._orWhere.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1342,8 +1366,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not between statement in your query.
    */
   public orWhereNotBetween(column: string, values: [any, any]) {
-    values = values.map(v => ObjectId.ifValidSwap(v)) as [any, any]
-
     this._orWhere.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })

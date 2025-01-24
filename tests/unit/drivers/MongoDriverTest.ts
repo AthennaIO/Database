@@ -8,7 +8,7 @@
  */
 
 import { Config } from '@athenna/config'
-import { Collection, Exec, Path } from '@athenna/common'
+import { Path, Sleep, Collection } from '@athenna/common'
 import { MongoDriver } from '#src/database/drivers/MongoDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
@@ -24,7 +24,7 @@ export default class MongoDriverTest {
   public async beforeEach() {
     await Config.loadAll(Path.fixtures('config'))
     this.driver.connect()
-    await Exec.sleep(100)
+    await Sleep.for(100).milliseconds().wait()
   }
 
   @AfterEach()
@@ -102,7 +102,14 @@ export default class MongoDriverTest {
   public async shouldBeAbleToConnectToDatabaseWithoutSavingConnectionInFactory({ assert }: Context) {
     const driver = new MongoDriver('mongo-memory')
 
-    Mock.when(driver, 'getMongoose').return({ set: () => {}, createConnection: () => {} })
+    Mock.when(driver, 'getMongoose').return({
+      set: () => {},
+      createConnection: () => ({
+        on: () => {
+          driver.isConnected = true
+        }
+      })
+    })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -129,7 +136,14 @@ export default class MongoDriverTest {
   public async shouldNotReconnectToDatabaseIfIsAlreadyConnected({ assert }: Context) {
     const driver = new MongoDriver('mongo-memory')
 
-    Mock.when(driver, 'getMongoose').return({ set: () => {}, createConnection: () => {} })
+    Mock.when(driver, 'getMongoose').return({
+      set: () => {},
+      createConnection: () => ({
+        on: () => {
+          driver.isConnected = true
+        }
+      })
+    })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)
@@ -144,7 +158,14 @@ export default class MongoDriverTest {
   public async shouldReconnectToDatabaseEvenIfIsAlreadyConnectedWhenForceIsSet({ assert }: Context) {
     const driver = new MongoDriver('mongo-memory')
 
-    Mock.when(driver, 'getMongoose').return({ set: () => {}, createConnection: () => {} })
+    Mock.when(driver, 'getMongoose').return({
+      set: () => {},
+      createConnection: () => ({
+        on: () => {
+          driver.isConnected = true
+        }
+      })
+    })
     Mock.when(driver, 'query').return(undefined)
 
     assert.isFalse(driver.isConnected)

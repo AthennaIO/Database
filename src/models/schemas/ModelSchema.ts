@@ -13,14 +13,14 @@ import type {
   ModelRelations,
   RelationOptions
 } from '#src/types'
-import { Json, Options } from '@athenna/common'
 import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
+import { Json, Options, Macroable } from '@athenna/common'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
-export class ModelSchema<M extends BaseModel = any> {
+export class ModelSchema<M extends BaseModel = any> extends Macroable {
   /**
    * Save the columns defined by @Column annotation.
    */
@@ -39,6 +39,7 @@ export class ModelSchema<M extends BaseModel = any> {
   private Model: typeof BaseModel
 
   public constructor(model: any) {
+    super()
     this.Model = model
     this.columns = Json.copy(Annotation.getColumnsMeta(model))
     this.relations = Json.copy(Annotation.getRelationsMeta(model))
