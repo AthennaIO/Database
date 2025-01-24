@@ -8,10 +8,10 @@
  */
 
 import type { Knex } from 'knex'
-import { Path, Module, Options } from '@athenna/common'
 import type { Connections, ConnectionOptions } from '#src/types'
 import type { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
+import { Path, Module, Options, Macroable } from '@athenna/common'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { MongoDriver } from '#src/database/drivers/MongoDriver'
 import type { MySqlDriver } from '#src/database/drivers/MySqlDriver'
@@ -20,7 +20,7 @@ import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import type { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 
-export class DatabaseImpl<Driver extends DriverImpl = any> {
+export class DatabaseImpl<Driver extends DriverImpl = any> extends Macroable {
   /**
    * The connection name used for this instance.
    */
@@ -35,6 +35,8 @@ export class DatabaseImpl<Driver extends DriverImpl = any> {
    * Creates a new instance of DatabaseImpl.
    */
   public constructor(athennaDbOpts?: ConnectionOptions) {
+    super()
+
     this.driver = ConnectionFactory.fabricate(
       this.connectionName
     ) as unknown as Driver

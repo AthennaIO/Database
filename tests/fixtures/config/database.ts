@@ -68,9 +68,7 @@ export default {
       url: 'mongodb://localhost:27017,localhost:27018,localhost:27019/admin',
       w: 'majority',
       replicaSet: 'rs',
-      retryWrites: true,
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+      retryWrites: true
     },
     fake_no_validation: {
       driver: 'fake',

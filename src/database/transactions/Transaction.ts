@@ -8,10 +8,11 @@
  */
 
 import type { Knex } from 'knex'
+import { Macroable } from '@athenna/common'
 import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 
-export class Transaction<Client = any, QB = any> {
+export class Transaction<Client = any, QB = any> extends Macroable {
   /**
    * The drivers responsible for handling database operations.
    */
@@ -21,6 +22,7 @@ export class Transaction<Client = any, QB = any> {
    * Creates a new instance of transaction.
    */
   public constructor(driver: Driver) {
+    super()
     this.driver = driver
   }
 

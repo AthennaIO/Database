@@ -7,16 +7,20 @@
  * file that was distributed with this source code.
  */
 
-import type {
-  Collection,
-  PaginatedResponse,
-  PaginationOptions
+import {
+  Macroable,
+  type Collection,
+  type PaginatedResponse,
+  type PaginationOptions
 } from '@athenna/common'
 import type { Operations } from '#src/types/Operations'
 import type { Direction, ModelColumns } from '#src/types'
 import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 
-export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
+export class QueryBuilder<
+  T = any,
+  Driver extends DriverImpl = any
+> extends Macroable {
   /**
    * The drivers responsible for handling database operations.
    */
@@ -26,6 +30,7 @@ export class QueryBuilder<T = any, Driver extends DriverImpl = any> {
    * Creates a new instance of QueryBuilder.
    */
   public constructor(driver: Driver, tableName: string) {
+    super()
     this.driver = driver
     this.driver.table(tableName)
   }

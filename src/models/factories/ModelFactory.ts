@@ -8,9 +8,10 @@
  */
 
 import { debug } from '#src/debug'
+import { Macroable } from '@athenna/common'
 import { BaseModel } from '#src/models/BaseModel'
 
-export class ModelFactory<M extends BaseModel = any, R = M> {
+export class ModelFactory<M extends BaseModel = any, R = M> extends Macroable {
   /**
    * The model that will be used to fabricate
    * instances from.
@@ -33,6 +34,7 @@ export class ModelFactory<M extends BaseModel = any, R = M> {
   private _returning: keyof M | '*' = '*'
 
   public constructor(model: typeof BaseModel) {
+    super()
     this.Model = model
   }
 
