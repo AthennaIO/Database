@@ -19,7 +19,7 @@ export class BelongsToRelation {
     const RelationModel = relation.model()
 
     relation.primaryKey =
-      relation.primaryKey || RelationModel.schema().getMainPrimaryKeyName()
+      relation.primaryKey || RelationModel.schema().getMainPrimaryKeyProperty()
     relation.foreignKey =
       relation.foreignKey || `${String.toCamelCase(RelationModel.name)}Id`
 

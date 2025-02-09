@@ -27,7 +27,7 @@ export function HasOne<T extends BaseModel = any, R extends BaseModel = any>(
 
     options = Options.create(options, {
       isIncluded: false,
-      primaryKey: Target.schema().getMainPrimaryKeyName() as any,
+      primaryKey: Target.schema().getMainPrimaryKeyProperty() as any,
       foreignKey: `${String.toCamelCase(Target.name)}Id` as any
     })
 

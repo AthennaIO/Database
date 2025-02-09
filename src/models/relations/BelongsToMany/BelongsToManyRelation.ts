@@ -20,7 +20,8 @@ export class BelongsToManyRelation {
     const PivotModel = relation.pivotModel()
 
     relation.pivotTable = relation.pivotTable || PivotModel.table()
-    relation.relationPrimaryKey = RelationModel.schema().getMainPrimaryKeyName()
+    relation.relationPrimaryKey =
+      RelationModel.schema().getMainPrimaryKeyProperty()
     relation.relationForeignKey = `${String.toCamelCase(RelationModel.name)}Id`
 
     return relation
