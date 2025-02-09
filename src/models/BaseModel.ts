@@ -452,7 +452,7 @@ export class BaseModel {
           return
         }
 
-        json[key] = this[key].toJSON ? this[key].toJSON() : this[key]
+        json[key] = this[key]?.toJSON ? this[key].toJSON() : this[key]
 
         return
       }

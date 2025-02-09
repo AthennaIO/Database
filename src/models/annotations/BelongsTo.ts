@@ -27,7 +27,7 @@ export function BelongsTo<T extends BaseModel = any, R extends BaseModel = any>(
 
     options = Options.create(options, {
       isIncluded: false,
-      // Default will be set later as: RelationModel.schema().getMainPrimaryKeyName()
+      // Default will be set later as: RelationModel.schema().getMainPrimaryKeyProperty()
       primaryKey: undefined,
       // Default will be set later as: `${String.toCamelCase(RelationModel.name)}Id`
       foreignKey: undefined
