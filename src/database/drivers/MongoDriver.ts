@@ -28,6 +28,7 @@ import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { MONGO_OPERATIONS_DICTIONARY } from '#src/constants/MongoOperationsDictionary'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
+import { ObjectId } from '#src/helpers/ObjectId'
 
 export class MongoDriver extends Driver<Connection, Collection> {
   public primaryKey = '_id'
@@ -1496,11 +1497,51 @@ export class MongoDriver extends Driver<Connection, Collection> {
     const where: any = {}
 
     if (!Is.Empty(this._where)) {
-      where.$and = Json.copy(this._where)
+      where.$and = Json.copy(this._where).map(condition => {
+        const keysToSwap = Object.keys(condition).filter(key => {
+          const value = condition[key]
+
+          if (ObjectId.isValid(value)) {
+            return true
+          }
+
+          return false
+        })
+
+        keysToSwap.forEach(key => {
+          const objectId = condition[key]
+
+          condition[key] = {
+            $or: [{ [key]: objectId }, { [key]: new ObjectId(objectId) }]
+          }
+        })
+
+        return condition
+      })
     }
 
     if (!Is.Empty(this._orWhere)) {
-      where.$or = Json.copy(this._orWhere)
+      where.$or = Json.copy(this._orWhere).map(condition => {
+        const keysToSwap = Object.keys(condition).filter(key => {
+          const value = condition[key]
+
+          if (ObjectId.isValid(value)) {
+            return true
+          }
+
+          return false
+        })
+
+        keysToSwap.forEach(key => {
+          const objectId = condition[key]
+
+          condition[key] = {
+            $or: [{ [key]: objectId }, { [key]: new ObjectId(objectId) }]
+          }
+        })
+
+        return condition
+      })
     }
 
     if (options.clearWhere) {
