@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "5.16.0",
+  "version": "5.17.0",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",

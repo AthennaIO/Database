@@ -18,6 +18,7 @@ import {
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
+import { ObjectId } from '#src/helpers/ObjectId'
 import { Driver } from '#src/database/drivers/Driver'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
@@ -28,7 +29,6 @@ import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { MONGO_OPERATIONS_DICTIONARY } from '#src/constants/MongoOperationsDictionary'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
-import { ObjectId } from '#src/helpers/ObjectId'
 
 export class MongoDriver extends Driver<Connection, Collection> {
   public primaryKey = '_id'
@@ -1214,7 +1214,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public whereIn(column: string, values: any[]) {
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
-        return [value, new ObjectId(value)]
+        return [String(value), new ObjectId(value)]
       }
 
       return [value]
@@ -1231,7 +1231,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public whereNotIn(column: string, values: any[]) {
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
-        return [value, new ObjectId(value)]
+        return [String(value), new ObjectId(value)]
       }
 
       return [value]
@@ -1362,7 +1362,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public orWhereIn(column: string, values: any[]) {
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
-        return [value, new ObjectId(value)]
+        return [String(value), new ObjectId(value)]
       }
 
       return [value]
@@ -1379,7 +1379,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   public orWhereNotIn(column: string, values: any[]) {
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
-        return [value, new ObjectId(value)]
+        return [String(value), new ObjectId(value)]
       }
 
       return [value]
@@ -1548,7 +1548,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
           const objectId = condition[key]
 
           condition.$or.push(
-            { [key]: objectId },
+            { [key]: String(objectId) },
             { [key]: new ObjectId(objectId) }
           )
 
@@ -1579,7 +1579,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
           const objectId = condition[key]
 
           condition.$or.push(
-            { [key]: objectId },
+            { [key]: String(objectId) },
             { [key]: new ObjectId(objectId) }
           )
 
