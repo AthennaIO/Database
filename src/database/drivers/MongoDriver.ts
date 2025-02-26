@@ -1213,8 +1213,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public whereIn(column: string, values: any[]) {
     values = values.flatMap(value => {
-      if (ObjectId.isValid(value)) {
-        return [value, ObjectId.ifValidSwap(value)]
+      if (ObjectId.isValidStringOrObject(value)) {
+        return [value, new ObjectId(value)]
       }
 
       return [value]
@@ -1230,8 +1230,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public whereNotIn(column: string, values: any[]) {
     values = values.flatMap(value => {
-      if (ObjectId.isValid(value)) {
-        return [value, ObjectId.ifValidSwap(value)]
+      if (ObjectId.isValidStringOrObject(value)) {
+        return [value, new ObjectId(value)]
       }
 
       return [value]
@@ -1361,8 +1361,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public orWhereIn(column: string, values: any[]) {
     values = values.flatMap(value => {
-      if (ObjectId.isValid(value)) {
-        return [value, ObjectId.ifValidSwap(value)]
+      if (ObjectId.isValidStringOrObject(value)) {
+        return [value, new ObjectId(value)]
       }
 
       return [value]
@@ -1378,8 +1378,8 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public orWhereNotIn(column: string, values: any[]) {
     values = values.flatMap(value => {
-      if (ObjectId.isValid(value)) {
-        return [value, ObjectId.ifValidSwap(value)]
+      if (ObjectId.isValidStringOrObject(value)) {
+        return [value, new ObjectId(value)]
       }
 
       return [value]
@@ -1533,7 +1533,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
         const keysToSwap = Object.keys(condition).filter(key => {
           const value = condition[key]
 
-          if (ObjectId.isValid(value)) {
+          if (ObjectId.isValidStringOrObject(value)) {
             return true
           }
 
@@ -1541,11 +1541,18 @@ export class MongoDriver extends Driver<Connection, Collection> {
         })
 
         keysToSwap.forEach(key => {
+          if (!condition.$or) {
+            condition.$or = []
+          }
+
           const objectId = condition[key]
 
-          condition[key] = {
-            $or: [{ [key]: objectId }, { [key]: new ObjectId(objectId) }]
-          }
+          condition.$or.push(
+            { [key]: objectId },
+            { [key]: new ObjectId(objectId) }
+          )
+
+          delete condition[key]
         })
 
         return condition
@@ -1557,7 +1564,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
         const keysToSwap = Object.keys(condition).filter(key => {
           const value = condition[key]
 
-          if (ObjectId.isValid(value)) {
+          if (ObjectId.isValidStringOrObject(value)) {
             return true
           }
 
@@ -1565,11 +1572,18 @@ export class MongoDriver extends Driver<Connection, Collection> {
         })
 
         keysToSwap.forEach(key => {
+          if (!condition.$or) {
+            condition.$or = []
+          }
+
           const objectId = condition[key]
 
-          condition[key] = {
-            $or: [{ [key]: objectId }, { [key]: new ObjectId(objectId) }]
-          }
+          condition.$or.push(
+            { [key]: objectId },
+            { [key]: new ObjectId(objectId) }
+          )
+
+          delete condition[key]
         })
 
         return condition

@@ -25,6 +25,13 @@ export class ObjectId {
   }
 
   /**
+   * Validate if is a valid object id string or ObjectID object.
+   */
+  public static isValidStringOrObject(objectId: any): boolean {
+    return this.isValidString(objectId) || this.isValidObject(objectId)
+  }
+
+  /**
    * Validate if is a valid object id string.
    */
   public static isValidString(objectId: any): boolean {
