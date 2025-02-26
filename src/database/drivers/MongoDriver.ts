@@ -1212,6 +1212,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where in statement in your query.
    */
   public whereIn(column: string, values: any[]) {
+    values = values.flatMap(value => {
+      if (ObjectId.isValid(value)) {
+        return [value, ObjectId.ifValidSwap(value)]
+      }
+
+      return [value]
+    })
+
     this._where.push({ [column]: { $in: values } })
 
     return this
@@ -1221,6 +1229,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not in statement in your query.
    */
   public whereNotIn(column: string, values: any[]) {
+    values = values.flatMap(value => {
+      if (ObjectId.isValid(value)) {
+        return [value, ObjectId.ifValidSwap(value)]
+      }
+
+      return [value]
+    })
+
     this._where.push({ [column]: { $nin: values } })
 
     return this
@@ -1344,6 +1360,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where in statement in your query.
    */
   public orWhereIn(column: string, values: any[]) {
+    values = values.flatMap(value => {
+      if (ObjectId.isValid(value)) {
+        return [value, ObjectId.ifValidSwap(value)]
+      }
+
+      return [value]
+    })
+
     this._orWhere.push({ [column]: { $in: values } })
 
     return this
@@ -1353,6 +1377,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not in statement in your query.
    */
   public orWhereNotIn(column: string, values: any[]) {
+    values = values.flatMap(value => {
+      if (ObjectId.isValid(value)) {
+        return [value, ObjectId.ifValidSwap(value)]
+      }
+
+      return [value]
+    })
+
     this._orWhere.push({ [column]: { $nin: values } })
 
     return this
