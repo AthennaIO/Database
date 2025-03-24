@@ -99,7 +99,9 @@ export class BelongsToManyRelation {
     return models.map(model => {
       const ids = pivotDataMap.get(model[relation.primaryKey]) || []
 
-      model[relation.property] = ids.filter(id => map.get(id))
+      model[relation.property] = ids
+        .map(id => map.get(id))
+        .filter(data => data !== undefined)
 
       return model
     })
