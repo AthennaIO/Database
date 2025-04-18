@@ -168,7 +168,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToPluckColumnValueInDatabaseUsingPluckMethod({ assert }: Context) {
-    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+    Mock.when(Database.driver, 'pluck').resolve('1')
 
     const data = await User.pluck('id')
 
@@ -244,7 +244,7 @@ export default class BaseModelTest {
 
   @Test()
   public async shouldBeAbleToPluckColumnsValueInDatabaseUsingPluckManyMethod({ assert }: Context) {
-    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
+    Mock.when(Database.driver, 'pluckMany').resolve(['1'])
 
     const data = await User.pluckMany('id')
 
