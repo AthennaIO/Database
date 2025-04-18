@@ -340,6 +340,26 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToPluckData({ assert }: Context) {
+    Mock.when(Database.driver, 'pluck').resolve('John Doe')
+
+    const result = await User.query().pluck('name')
+
+    assert.calledOnce(Database.driver.pluck)
+    assert.deepEqual(result, 'John Doe')
+  }
+
+  @Test()
+  public async shouldBeAbleToPluckManyData({ assert }: Context) {
+    Mock.when(Database.driver, 'pluckMany').resolve(['John Doe', 'Jane Doe'])
+
+    const result = await User.query().pluckMany('name')
+
+    assert.calledOnce(Database.driver.pluckMany)
+    assert.deepEqual(result, ['John Doe', 'Jane Doe'])
+  }
+
+  @Test()
   public async shouldBeAbleToFindManyDataUsingCollection({ assert }: Context) {
     const expectedData = [
       { id: '1', name: 'John Doe' },

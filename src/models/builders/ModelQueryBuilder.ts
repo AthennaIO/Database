@@ -182,6 +182,34 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Find value in database but returns only the value of
+   * selected column directly.
+   */
+  public async pluck<K extends keyof M = ModelColumns<M>>(
+    column: K
+  ): Promise<M[K]> {
+    this.setInternalQueries()
+
+    const columnName: any = this.schema.getColumnNameByProperty(column as any)
+
+    return super.pluck(columnName)
+  }
+
+  /**
+   * Find many values in database but returns only the
+   * values of selected column directly.
+   */
+  public async pluckMany<K extends keyof M = ModelColumns<M>>(
+    column: K
+  ): Promise<M[K][]> {
+    this.setInternalQueries()
+
+    const columnName: any = this.schema.getColumnNameByProperty(column as any)
+
+    return super.pluckMany(columnName)
+  }
+
+  /**
    * Find a value in database.
    */
   public async find() {
