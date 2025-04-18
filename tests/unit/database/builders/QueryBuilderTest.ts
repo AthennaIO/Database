@@ -229,6 +229,33 @@ export default class QueryBuilderTest {
   }
 
   @Test()
+  public async shouldBeAbleToPluckData({ assert }: Context) {
+    const expectedData = { id: '1', name: 'John Doe' }
+    Mock.when(FakeDriver, 'find').resolve(expectedData)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    const result = await queryBuilder.pluck('name')
+
+    assert.calledOnce(FakeDriver.find)
+    assert.deepEqual(result, 'John Doe')
+  }
+
+  @Test()
+  public async shouldBeAbleToPluckManyData({ assert }: Context) {
+    const expectedData = [
+      { id: '1', name: 'John Doe' },
+      { id: '2', name: 'Jane Doe' }
+    ]
+    Mock.when(FakeDriver, 'findMany').resolve(expectedData)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    const result = await queryBuilder.pluckMany('name')
+
+    assert.calledOnce(FakeDriver.findMany)
+    assert.deepEqual(result, ['John Doe', 'Jane Doe'])
+  }
+
+  @Test()
   public async shouldBeAbleToFindManyDataUsingCollection({ assert }: Context) {
     const expectedData = [
       { id: '1', name: 'John Doe' },

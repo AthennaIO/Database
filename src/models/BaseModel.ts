@@ -198,6 +198,48 @@ export class BaseModel {
   }
 
   /**
+   * Find value in database but returns only the value of
+   * selected column directly.
+   */
+  public static async pluck<
+    T extends typeof BaseModel,
+    K extends keyof InstanceType<T> = keyof InstanceType<T>
+  >(
+    this: T,
+    key: K,
+    where?: Partial<InstanceType<T>>
+  ): Promise<InstanceType<T>[K]> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.pluck(key)
+  }
+
+  /**
+   * Find many values in database but returns only the
+   * values of selected column directly.
+   */
+  public static async pluckMany<
+    T extends typeof BaseModel,
+    K extends keyof InstanceType<T> = keyof InstanceType<T>
+  >(
+    this: T,
+    key: K,
+    where?: Partial<InstanceType<T>>
+  ): Promise<InstanceType<T>[K][]> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.pluckMany(key)
+  }
+
+  /**
    * Find a value in database.
    */
   public static async find<T extends typeof BaseModel>(

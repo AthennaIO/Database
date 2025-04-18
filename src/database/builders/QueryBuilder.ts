@@ -147,6 +147,24 @@ export class QueryBuilder<
   }
 
   /**
+   * Find value in database but returns only the value of
+   * selected column directly.
+   */
+  public async pluck<K extends keyof T = keyof T>(column: K): Promise<T[K]> {
+    return this.driver.pluck(column)
+  }
+
+  /**
+   * Find many values in database but returns only the
+   * values of selected column directly.
+   */
+  public async pluckMany<K extends keyof T = keyof T>(
+    column: K
+  ): Promise<T[K][]> {
+    return this.driver.pluckMany(column)
+  }
+
+  /**
    * Find a value in database.
    */
   public async find(): Promise<T> {

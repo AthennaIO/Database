@@ -324,6 +324,22 @@ export class FakeDriver {
   }
 
   /**
+   * Find value in database but returns only the value of
+   * selected column directly.
+   */
+  public static async pluck(): Promise<any> {
+    return ''
+  }
+
+  /**
+   * Find many values in database but returns only the
+   * values of selected column directly.
+   */
+  public static async pluckMany(): Promise<any> {
+    return ['']
+  }
+
+  /**
    * Find a value in database.
    */
   public static async find(): Promise<any> {

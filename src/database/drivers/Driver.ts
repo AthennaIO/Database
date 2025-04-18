@@ -381,6 +381,30 @@ export abstract class Driver<Client = any, QB = any> {
   }
 
   /**
+   * Find value in database but returns only the value of
+   * selected column directly.
+   */
+  public async pluck<T = any, K extends keyof T = keyof T>(
+    column: K
+  ): Promise<T[K]> {
+    const data = await this.find()
+
+    return data[column]
+  }
+
+  /**
+   * Find many values in database but returns only the
+   * values of selected column directly.
+   */
+  public async pluckMany<T = any, K extends keyof T = keyof T>(
+    column: K
+  ): Promise<T[K][]> {
+    const data = await this.findMany()
+
+    return data.map(d => d[column])
+  }
+
+  /**
    * Find a value in database.
    */
   public abstract find<T = any>(): Promise<T>

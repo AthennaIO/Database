@@ -167,6 +167,15 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToPluckColumnValueInDatabaseUsingPluckMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve({ id: '1' })
+
+    const data = await User.pluck('id')
+
+    assert.deepEqual(data, '1')
+  }
+
+  @Test()
   public async shouldBeAbleToFindValueInDatabaseWithWhereClauseUsingFindMethod({ assert }: Context) {
     Mock.when(Database.driver, 'find').resolve({ id: '1' })
     Mock.when(Database.driver, 'where').return(undefined)
@@ -231,6 +240,15 @@ export default class BaseModelTest {
     const data = await User.findMany()
 
     assert.deepEqual(data[0].id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToPluckColumnsValueInDatabaseUsingPluckManyMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'findMany').resolve([{ id: '1' }])
+
+    const data = await User.pluckMany('id')
+
+    assert.deepEqual(data, ['1'])
   }
 
   @Test()
