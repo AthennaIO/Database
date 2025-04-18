@@ -711,7 +711,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldBeAbleToPluckDataUsingDriver({ assert }: Context) {
-    const data = { _id: '1', name: 'Charles Babbage' }
+    const data = { id: '1', name: 'Charles Babbage' }
     await this.driver.table('users').create(data)
 
     const result = await this.driver.table('users').pluck('name')
@@ -721,7 +721,7 @@ export default class SqliteDriverTest {
 
   @Test()
   public async shouldBeAbleToPluckManyDataUsingDriver({ assert }: Context) {
-    const data = [{ _id: '1', name: 'Charles Babbage' }]
+    const data = [{ id: '1', name: 'Charles Babbage' }]
     await this.driver.table('users').createMany(data)
 
     const result = await this.driver.table('users').pluckMany('name')
