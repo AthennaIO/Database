@@ -168,22 +168,20 @@ export class DatabaseImpl<Driver extends DriverImpl = any> extends Macroable {
 
     const seeds = await Module.getAllFrom(options.path)
 
-    const promises = seeds.map(Seed => {
+    for (const Seed of seeds) {
       if (options.classes?.length && !options.classes.includes(Seed.name)) {
-        return {}
+        continue
       }
 
       if (!options.task) {
-        return new Seed().run(this)
+        await new Seed().run(this)
+
+        continue
       }
 
-      return options.task.addPromise(`Running "${Seed.name}" seeder`, () =>
-        new Seed().run(this)
-      )
-    })
+      const msg = `Running "${Seed.name}" seeder`
 
-    if (!options.task) {
-      await Promise.all(promises)
+      options.task.addPromise(msg, () => new Seed().run(this))
     }
   }
 
