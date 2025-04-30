@@ -415,7 +415,9 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
       .clearSelect()
       .count({ count: '*' })
 
-    const data = await this.offset(page.page).limit(page.limit).findMany()
+    const data = await this.offset(page.page * page.limit)
+      .limit(page.limit)
+      .findMany()
 
     return Exec.pagination(data, parseInt(count), page)
   }
