@@ -644,7 +644,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
 
     const count = result[0]?.count || 0
 
-    const data = await this.offset(page.page).limit(page.limit).findMany()
+    const data = await this.offset(page.page * page.limit)
+      .limit(page.limit)
+      .findMany()
 
     return Exec.pagination(data, count, page)
   }
