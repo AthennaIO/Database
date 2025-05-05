@@ -741,6 +741,7 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public where(statement: (query: this) => void): this
   public where(statement: Partial<M>): this
   public where(statement: Record<string, any>): this
   public where(key: ModelColumns<M>, value: any): this
@@ -750,6 +751,21 @@ export class ModelQueryBuilder<
    * Set a where statement in your query.
    */
   public where(statement: any, operation?: any | Operations, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.driver.clone()
+
+      super.where(query => {
+        const modelQb = new ModelQueryBuilder(
+          this.Model,
+          driver.setQueryBuilder(query, { useSetQB: true })
+        )
+
+        statement(modelQb)
+      })
+
+      return this
+    }
+
     if (!operation) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -765,6 +781,7 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public whereNot(statement: (query: this) => void): this
   public whereNot(statement: Partial<M>): this
   public whereNot(statement: Record<string, any>): this
   public whereNot(key: ModelColumns<M>, value: any): this
@@ -773,6 +790,21 @@ export class ModelQueryBuilder<
    * Set a where not statement in your query.
    */
   public whereNot(statement: any, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.driver.clone()
+
+      super.whereNot(query => {
+        const modelQb = new ModelQueryBuilder(
+          this.Model,
+          driver.setQueryBuilder(query, { useSetQB: true })
+        )
+
+        statement(modelQb)
+      })
+
+      return this
+    }
+
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -876,6 +908,7 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public orWhere(statement: (query: this) => void): this
   public orWhere(statement: Partial<M>): this
   public orWhere(statement: Record<string, any>): this
   public orWhere(key: ModelColumns<M>, value: any): this
@@ -885,6 +918,21 @@ export class ModelQueryBuilder<
    * Set a orWhere statement in your query.
    */
   public orWhere(statement: any, operation?: any | Operations, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.driver.clone()
+
+      super.orWhere(query => {
+        const modelQb = new ModelQueryBuilder(
+          this.Model,
+          driver.setQueryBuilder(query, { useSetQB: true })
+        )
+
+        statement(modelQb)
+      })
+
+      return this
+    }
+
     if (!operation) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -900,6 +948,7 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public orWhereNot(statement: (query: this) => void): this
   public orWhereNot(statement: Partial<M>): this
   public orWhereNot(statement: Record<string, any>): this
   public orWhereNot(key: ModelColumns<M>, value: any): this
@@ -908,6 +957,21 @@ export class ModelQueryBuilder<
    * Set a orWhere not statement in your query.
    */
   public orWhereNot(statement: any, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.driver.clone()
+
+      super.orWhereNot(query => {
+        const modelQb = new ModelQueryBuilder(
+          this.Model,
+          driver.setQueryBuilder(query, { useSetQB: true })
+        )
+
+        statement(modelQb)
+      })
+
+      return this
+    }
+
     if (!value) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 

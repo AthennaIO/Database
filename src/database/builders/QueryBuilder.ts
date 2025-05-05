@@ -24,7 +24,7 @@ export class QueryBuilder<
   /**
    * The drivers responsible for handling database operations.
    */
-  private driver: Driver
+  protected driver: Driver
 
   /**
    * Creates a new instance of QueryBuilder.
@@ -723,6 +723,7 @@ export class QueryBuilder<
     return this
   }
 
+  public where(statement: (query: this) => void): this
   public where(statement: Partial<T>): this
   public where(statement: Record<string, any>): this
   public where(key: string | ModelColumns<T>, value: any): this
@@ -741,6 +742,7 @@ export class QueryBuilder<
     return this
   }
 
+  public whereNot(statement: (query: this) => void): this
   public whereNot(statement: Partial<T>): this
   public whereNot(statement: Record<string, any>): this
   public whereNot(key: string | ModelColumns<T>, value: any): this
@@ -853,6 +855,7 @@ export class QueryBuilder<
     return this
   }
 
+  public orWhere(statement: (query: this) => void): this
   public orWhere(statement: Partial<T>): this
   public orWhere(statement: Record<string, any>): this
   public orWhere(key: string | ModelColumns<T>, value: any): this
@@ -871,6 +874,7 @@ export class QueryBuilder<
     return this
   }
 
+  public orWhereNot(statement: (query: this) => void): this
   public orWhereNot(statement: Partial<T>): this
   public orWhereNot(statement: Record<string, any>): this
   public orWhereNot(key: string | ModelColumns<T>, value: any): this
