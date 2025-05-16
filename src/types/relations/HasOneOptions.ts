@@ -59,6 +59,16 @@ export type HasOneOptions<
   isIncluded?: boolean
 
   /**
+   * Set if the model will be included when fetching
+   * data.
+   * If this option is true, you don't need to call
+   * methods like `whereHas()` to eager load your relation.
+   *
+   * @default false
+   */
+  isWhereHasIncluded?: boolean
+
+  /**
    * The primary key is always the primary key
    * of the main model.
    *

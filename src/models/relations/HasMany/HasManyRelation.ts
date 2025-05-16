@@ -25,6 +25,10 @@ export class HasManyRelation {
       .when(relation.closure, relation.closure)
       .findMany()
 
+    if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
+      return undefined
+    }
+
     return model
   }
 
@@ -53,10 +57,16 @@ export class HasManyRelation {
       map.set(result[relation.foreignKey], array)
     })
 
-    return models.map(model => {
-      model[relation.property] = map.get(model[relation.primaryKey]) || []
+    return models
+      .map(model => {
+        model[relation.property] = map.get(model[relation.primaryKey]) || []
 
-      return model
-    })
+        if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
+          return undefined
+        }
+
+        return model
+      })
+      .filter(Boolean)
   }
 }

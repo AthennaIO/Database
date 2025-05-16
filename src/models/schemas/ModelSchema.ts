@@ -322,7 +322,7 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
    * that are included.
    */
   public getIncludedRelations(): RelationOptions[] {
-    return this.relations.filter(r => r.isIncluded)
+    return this.relations.filter(r => r.isIncluded || r.isWhereHasIncluded)
   }
 
   /**
@@ -362,6 +362,43 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
     const i = this.relations.indexOf(options)
 
     options.isIncluded = true
+    options.closure = closure
+
+    this.relations[i] = options
+
+    return options
+  }
+
+  /**
+   * Include a relation by setting the isWhereHasIncluded
+   * option to true.
+   */
+  public includeWhereHasRelation(
+    property: string | ModelRelations<M>,
+    closure?: (query: ModelQueryBuilder) => any
+  ) {
+    const model = this.Model.name
+
+    if (property.includes('.')) {
+      const [first, ...rest] = property.split('.')
+
+      property = first
+      closure = this.createdNestedRelationClosure(rest)
+    }
+
+    const options = this.getRelationByProperty(property)
+
+    if (!options) {
+      throw new NotImplementedRelationException(
+        property as string,
+        model,
+        this.relations.map(r => r.property).join(', ')
+      )
+    }
+
+    const i = this.relations.indexOf(options)
+
+    options.isWhereHasIncluded = true
     options.closure = closure
 
     this.relations[i] = options
