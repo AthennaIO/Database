@@ -70,14 +70,16 @@ export class BelongsToRelation {
 
     results.forEach(result => map.set(result[relation.primaryKey], result))
 
-    return models.map(model => {
-      model[relation.property] = map.get(model[relation.foreignKey])
+    return models
+      .map(model => {
+        model[relation.property] = map.get(model[relation.foreignKey])
 
-      if (relation.isWhereHasIncluded && !model[relation.property]) {
-        return undefined
-      }
+        if (relation.isWhereHasIncluded && !model[relation.property]) {
+          return undefined
+        }
 
-      return model
-    })
+        return model
+      })
+      .filter(Boolean)
   }
 }

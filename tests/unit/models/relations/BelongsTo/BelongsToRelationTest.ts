@@ -74,8 +74,7 @@ export default class BelongsToRelationTest {
       .whereHas('user', query => query.where('id', 99))
       .find()
 
-    assert.instanceOf(profile, Profile)
-    assert.isUndefined(profile.user)
+    assert.isUndefined(profile)
   }
 
   @Test()
