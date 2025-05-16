@@ -128,6 +128,10 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
       model = await this.includeRelation(model, relation)
     }
 
+    if (!model) {
+      return undefined
+    }
+
     return model.setOriginal()
   }
 

@@ -42,6 +42,10 @@ export class BelongsToRelation {
       .when(relation.closure, relation.closure)
       .find()
 
+    if (relation.isWhereHasIncluded && !model[relation.property]) {
+      return undefined
+    }
+
     return model
   }
 
@@ -66,10 +70,16 @@ export class BelongsToRelation {
 
     results.forEach(result => map.set(result[relation.primaryKey], result))
 
-    return models.map(model => {
-      model[relation.property] = map.get(model[relation.foreignKey])
+    return models
+      .map(model => {
+        model[relation.property] = map.get(model[relation.foreignKey])
 
-      return model
-    })
+        if (relation.isWhereHasIncluded && !model[relation.property]) {
+          return undefined
+        }
+
+        return model
+      })
+      .filter(Boolean)
   }
 }

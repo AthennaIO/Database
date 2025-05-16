@@ -51,6 +51,10 @@ export class BelongsToManyRelation {
       .when(relation.closure, relation.closure)
       .findMany()
 
+    if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
+      return undefined
+    }
+
     return model
   }
 
@@ -96,14 +100,20 @@ export class BelongsToManyRelation {
       map.set(result[relation.relationPrimaryKey], result)
     )
 
-    return models.map(model => {
-      const ids = pivotDataMap.get(model[relation.primaryKey]) || []
+    return models
+      .map(model => {
+        const ids = pivotDataMap.get(model[relation.primaryKey]) || []
 
-      model[relation.property] = ids
-        .map(id => map.get(id))
-        .filter(data => data !== undefined)
+        model[relation.property] = ids
+          .map(id => map.get(id))
+          .filter(data => data !== undefined)
 
-      return model
-    })
+        if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
+          return undefined
+        }
+
+        return model
+      })
+      .filter(Boolean)
   }
 }

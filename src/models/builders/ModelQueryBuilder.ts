@@ -513,6 +513,23 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Only returns the data if the closure returns a result.
+   */
+  public whereHas<K extends ModelRelations<M>>(
+    relation: K | string,
+    closure: (
+      query: ModelQueryBuilder<
+        Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
+        Driver
+      >
+    ) => any
+  ) {
+    this.schema.includeWhereHasRelation(relation, closure)
+
+    return this
+  }
+
+  /**
    * Executes the given closure when the first argument is true.
    */
   public when(

@@ -25,6 +25,10 @@ export class HasOneRelation {
       .when(relation.closure, relation.closure)
       .find()
 
+    if (relation.isWhereHasIncluded && !model[relation.property]) {
+      return undefined
+    }
+
     return model
   }
 
@@ -47,10 +51,16 @@ export class HasOneRelation {
 
     results.forEach(result => map.set(result[relation.foreignKey], result))
 
-    return models.map(model => {
-      model[relation.property] = map.get(model[relation.primaryKey])
+    return models
+      .map(model => {
+        model[relation.property] = map.get(model[relation.primaryKey])
 
-      return model
-    })
+        if (relation.isWhereHasIncluded && !model[relation.property]) {
+          return undefined
+        }
+
+        return model
+      })
+      .filter(Boolean)
   }
 }
