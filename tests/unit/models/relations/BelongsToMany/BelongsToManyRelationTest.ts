@@ -59,6 +59,25 @@ export default class BelongsToManyRelationTest {
   }
 
   @Test()
+  public async shouldBeAbleToLoadOneRelationUsingFindOneAndWhereHas({ assert }: Context) {
+    const course = await Course.query()
+      .whereHas('students', query => query.where('id', 1))
+      .find()
+
+    assert.instanceOf(course, Course)
+    assert.instanceOf(course.students[0], Student)
+  }
+
+  @Test()
+  public async shouldBeAbleToNotLoadOneRelationUsingFindOneIfRelationIsNotPresent({ assert }: Context) {
+    const course = await Course.query()
+      .whereHas('students', query => query.where('id', 99))
+      .find()
+
+    assert.isUndefined(course)
+  }
+
+  @Test()
   public async shouldBeAbleToLoadOneRelationUsingFindOneAndExecuteClosure({ assert }: Context) {
     const course = await Course.query()
       .select('id', 'name')
@@ -81,6 +100,25 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(courses[0], Course)
     assert.instanceOf(courses[0].students[0], Student)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationUsingFindManyAndWhereHas({ assert }: Context) {
+    const courses = await Course.query()
+      .whereHas('students', query => query.where('id', 1))
+      .findMany()
+
+    assert.instanceOf(courses[0], Course)
+    assert.instanceOf(courses[0].students[0], Student)
+  }
+
+  @Test()
+  public async shouldBeAbleToNotLoadOneRelationUsingFindManyAndWhereHasIfRelationIsNotPresent({ assert }: Context) {
+    const courses = await Course.query()
+      .whereHas('students', query => query.where('id', 99))
+      .findMany()
+
+    assert.isUndefined(courses[0])
   }
 
   @Test()
@@ -111,6 +149,25 @@ export default class BelongsToManyRelationTest {
   }
 
   @Test()
+  public async shouldBeAbleToLoadOppositeRelationUsingFindOneAndWhereHas({ assert }: Context) {
+    const student = await Student.query()
+      .whereHas('courses', query => query.where('id', 1))
+      .find()
+
+    assert.instanceOf(student, Student)
+    assert.instanceOf(student.courses[0], Course)
+  }
+
+  @Test()
+  public async shouldBeAbleToNotLoadOppositeRelationUsingFindOneAndWhereHasIfRelationIsNotPresent({ assert }: Context) {
+    const student = await Student.query()
+      .whereHas('courses', query => query.where('id', 99))
+      .find()
+
+    assert.isUndefined(student)
+  }
+
+  @Test()
   public async shouldBeAbleToLoadOppositeRelationUsingFindOneAndExecuteClosure({ assert }: Context) {
     const student = await Student.query()
       .select('id', 'name')
@@ -133,6 +190,27 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(students[0], Student)
     assert.instanceOf(students[0].courses[0], Course)
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOppositeRelationUsingFindManyAndWhereHas({ assert }: Context) {
+    const students = await Student.query()
+      .whereHas('courses', query => query.where('id', 1))
+      .findMany()
+
+    assert.instanceOf(students[0], Student)
+    assert.instanceOf(students[0].courses[0], Course)
+  }
+
+  @Test()
+  public async shouldBeAbleToNotLoadOppositeRelationUsingFindManyAndWhereHasIfRelationIsNotPresent({
+    assert
+  }: Context) {
+    const students = await Student.query()
+      .whereHas('courses', query => query.where('id', 99))
+      .findMany()
+
+    assert.isUndefined(students[0])
   }
 
   @Test()
