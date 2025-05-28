@@ -38,7 +38,7 @@ export default {
       driver: 'mysql',
       connection: {
         host: 'localhost',
-        port: 3307,
+        port: 3308,
         user: 'root',
         password: '12345',
         database: 'athenna'
