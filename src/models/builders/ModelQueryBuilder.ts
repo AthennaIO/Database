@@ -13,20 +13,26 @@ import {
   Options,
   type PaginationOptions
 } from '@athenna/common'
+
 import type {
   Direction,
   Operations,
   ModelColumns,
   ModelRelations
 } from '#src/types'
+
 import type { BaseModel } from '#src/models/BaseModel'
 import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
+import { HasOneRelation } from '#src/models/relations/HasOne/HasOneRelation'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { NullableValueException } from '#src/exceptions/NullableValueException'
+import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
+import { BelongsToManyRelation } from '../relations/BelongsToMany/BelongsToManyRelation.js'
 
 export class ModelQueryBuilder<
   M extends BaseModel = any,
@@ -517,14 +523,27 @@ export class ModelQueryBuilder<
    */
   public whereHas<K extends ModelRelations<M>>(
     relation: K | string,
-    closure: (
+    closure?: (
       query: ModelQueryBuilder<
         Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
         Driver
       >
     ) => any
   ) {
-    this.schema.includeWhereHasRelation(relation, closure)
+    const options = this.schema.includeRelation(relation, closure)
+
+    super.whereExists(query => {
+      switch (options.type) {
+        case 'hasOne':
+          return HasOneRelation.whereHas(this.Model, query, options)
+        case 'hasMany':
+          return HasManyRelation.whereHas(this.Model, query, options)
+        case 'belongsTo':
+          return BelongsToRelation.whereHas(this.Model, query, options)
+        case 'belongsToMany':
+          return BelongsToManyRelation.whereHas(this.Model, query, options)
+      }
+    })
 
     return this
   }
