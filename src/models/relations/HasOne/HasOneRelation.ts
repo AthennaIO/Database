@@ -65,23 +65,27 @@ export class HasOneRelation {
     query: Driver,
     relation: HasOneOptions
   ) {
+    const schema = Model.schema()
     const RelationModel = relation.model()
 
-    const primaryKey = Model.schema().getMainPrimaryKeyName()
+    const primaryKey = schema.getMainPrimaryKeyName()
     const foreignKey =
-      Model.schema().getColumnNameByProperty(relation.foreignKey) ||
-      Model.schema().getColumnNameByProperty(
+      schema.getColumnNameByProperty(relation.foreignKey) ||
+      schema.getColumnNameByProperty(
         `${String.toCamelCase(RelationModel.name)}Id`
       )
 
-    query.table(RelationModel.table())
+    let whereRaw = `${RelationModel.table()}.${foreignKey} = ${Model.table()}.${primaryKey}`
+
+    switch (RelationModel.schema().getModelDriverName()) {
+      case 'sqlite':
+      case 'postgres':
+        whereRaw = `"${RelationModel.table()}"."${foreignKey}" = "${Model.table()}"."${primaryKey}"`
+    }
 
     RelationModel.query()
-      .setQueryBuilder(query)
-      .select()
-      .whereRaw(
-        `${RelationModel.table()}.${foreignKey} = ${Model.table()}.${primaryKey}`
-      )
+      .setDriver(query, RelationModel.table())
+      .whereRaw(whereRaw)
       .when(relation.closure, relation.closure)
   }
 }

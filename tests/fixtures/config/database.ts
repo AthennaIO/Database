@@ -56,7 +56,7 @@ export default {
       driver: 'postgres',
       connection: {
         host: 'localhost',
-        port: 5433,
+        port: 5434,
         user: 'postgres',
         password: '12345',
         database: 'postgres'

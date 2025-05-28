@@ -143,7 +143,7 @@ export abstract class Driver<Client = any, QB = any> {
     })
 
     this.qb = queryBuilder
-    this.useSetQB = options.useSetQB
+    this.useSetQB = !this.qb ? false : options.useSetQB
 
     return this
   }

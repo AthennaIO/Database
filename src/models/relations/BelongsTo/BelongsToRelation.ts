@@ -83,23 +83,27 @@ export class BelongsToRelation {
     query: Driver,
     relation: BelongsToOptions
   ) {
+    const schema = Model.schema()
     const RelationModel = relation.model()
 
-    const primaryKey = Model.schema().getMainPrimaryKeyName()
+    const primaryKey = schema.getMainPrimaryKeyName()
     const foreignKey =
-      Model.schema().getColumnNameByProperty(relation.foreignKey) ||
-      Model.schema().getColumnNameByProperty(
+      schema.getColumnNameByProperty(relation.foreignKey) ||
+      schema.getColumnNameByProperty(
         `${String.toCamelCase(RelationModel.name)}Id`
       )
 
-    query.table(RelationModel.table())
+    let whereRaw = `${Model.table()}.${foreignKey} = ${RelationModel.table()}.${primaryKey}`
+
+    switch (RelationModel.schema().getModelDriverName()) {
+      case 'sqlite':
+      case 'postgres':
+        whereRaw = `"${Model.table()}"."${foreignKey}" = "${RelationModel.table()}"."${primaryKey}"`
+    }
 
     RelationModel.query()
-      .setQueryBuilder(query)
-      .select()
-      .whereRaw(
-        `${Model.table()}.${foreignKey} = ${RelationModel.table()}.${primaryKey}`
-      )
+      .setDriver(query, RelationModel.table())
+      .whereRaw(whereRaw)
       .when(relation.closure, relation.closure)
   }
 }

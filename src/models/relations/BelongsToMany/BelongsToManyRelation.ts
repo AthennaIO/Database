@@ -118,31 +118,51 @@ export class BelongsToManyRelation {
     relation: BelongsToManyOptions
   ) {
     const PivotModel = relation.pivotModel()
-    const RelatedModel = relation.model()
+    const RelationModel = relation.model()
 
     const modelTable = Model.table()
     const pivotTable = PivotModel.table()
-    const relatedTable = RelatedModel.table()
+    const relatedTable = RelationModel.table()
 
     const modelPK = Model.schema().getMainPrimaryKeyName()
-    const relatedPK = RelatedModel.schema().getMainPrimaryKeyName()
+    const relatedPK = RelationModel.schema().getMainPrimaryKeyName()
 
-    const pivotFK = PivotModel.schema().getColumnNameByProperty(
-      relation.foreignKey
-    )
-    const pivotRK = PivotModel.schema().getColumnNameByProperty(
-      relation.relationForeignKey
-    )
+    const pivotFK =
+      PivotModel.schema().getColumnNameByProperty(relation.foreignKey) ||
+      PivotModel.schema().getColumnNameByProperty(
+        `${String.toCamelCase(Model.name)}Id`
+      )
+    const pivotRK =
+      PivotModel.schema().getColumnNameByProperty(
+        relation.relationForeignKey
+      ) ||
+      PivotModel.schema().getColumnNameByProperty(
+        `${String.toCamelCase(RelationModel.name)}Id`
+      )
 
-    query.table(pivotTable)
+    let whereRaw = `${pivotTable}.${pivotFK} = ${modelTable}.${modelPK}`
+
+    switch (PivotModel.schema().getModelDriverName()) {
+      case 'sqlite':
+      case 'postgres':
+        whereRaw = `"${pivotTable}"."${pivotFK}" = "${modelTable}"."${modelPK}"`
+    }
 
     PivotModel.query()
-      .setQueryBuilder(query)
-      .whereRaw(`${pivotTable}.${pivotFK} = ${modelTable}.${modelPK}`)
+      .setDriver(query, pivotTable)
+      .whereRaw(whereRaw)
       .whereExists(innerQuery => {
-        RelatedModel.query()
-          .setQueryBuilder(innerQuery)
-          .whereRaw(`${relatedTable}.${relatedPK} = ${pivotTable}.${pivotRK}`)
+        let whereRaw = `${relatedTable}.${relatedPK} = ${pivotTable}.${pivotRK}`
+
+        switch (RelationModel.schema().getModelDriverName()) {
+          case 'sqlite':
+          case 'postgres':
+            whereRaw = `"${relatedTable}"."${relatedPK}" = "${pivotTable}"."${pivotRK}"`
+        }
+
+        RelationModel.query()
+          .setDriver(innerQuery, relatedTable)
+          .whereRaw(whereRaw)
           .when(relation.closure, relation.closure)
       })
   }

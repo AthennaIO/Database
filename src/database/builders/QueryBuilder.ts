@@ -27,11 +27,17 @@ export class QueryBuilder<
   protected driver: Driver
 
   /**
+   * The initial table that the query is going to work with.
+   */
+  protected tableName: string
+
+  /**
    * Creates a new instance of QueryBuilder.
    */
   public constructor(driver: Driver, tableName: string) {
     super()
     this.driver = driver
+    this.tableName = tableName
     this.driver.table(tableName)
   }
 
@@ -53,7 +59,24 @@ export class QueryBuilder<
    * Set the query builder of driver.
    */
   public setQueryBuilder(queryBuilder: any) {
-    this.driver.setQueryBuilder(queryBuilder)
+    this.driver.setQueryBuilder(queryBuilder, { useSetQB: true })
+
+    return this
+  }
+
+  /**
+   * Return the driver of the query builder.
+   */
+  public getDriver() {
+    return this.driver
+  }
+
+  /**
+   * Set the driver of the query builder.
+   */
+  public setDriver(driver: any, tableName?: string) {
+    this.driver = driver
+    this.driver.table(tableName || this.tableName)
 
     return this
   }
