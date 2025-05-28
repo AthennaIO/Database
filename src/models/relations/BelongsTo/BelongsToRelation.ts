@@ -10,6 +10,7 @@
 import { String } from '@athenna/common'
 import type { BelongsToOptions } from '#src/types'
 import type { BaseModel } from '#src/models/BaseModel'
+import type { Driver } from '#src/database/drivers/Driver'
 
 export class BelongsToRelation {
   /**
@@ -42,10 +43,6 @@ export class BelongsToRelation {
       .when(relation.closure, relation.closure)
       .find()
 
-    if (relation.isWhereHasIncluded && !model[relation.property]) {
-      return undefined
-    }
-
     return model
   }
 
@@ -70,16 +67,39 @@ export class BelongsToRelation {
 
     results.forEach(result => map.set(result[relation.primaryKey], result))
 
-    return models
-      .map(model => {
-        model[relation.property] = map.get(model[relation.foreignKey])
+    return models.map(model => {
+      model[relation.property] = map.get(model[relation.foreignKey])
 
-        if (relation.isWhereHasIncluded && !model[relation.property]) {
-          return undefined
-        }
+      return model
+    })
+  }
 
-        return model
-      })
-      .filter(Boolean)
+  /**
+   * Apply a where has relation to the query when the relation
+   * is a belongs to the given model.
+   */
+  public static whereHas(
+    Model: typeof BaseModel,
+    query: Driver,
+    relation: BelongsToOptions
+  ) {
+    const RelationModel = relation.model()
+
+    const primaryKey = Model.schema().getMainPrimaryKeyName()
+    const foreignKey =
+      Model.schema().getColumnNameByProperty(relation.foreignKey) ||
+      Model.schema().getColumnNameByProperty(
+        `${String.toCamelCase(RelationModel.name)}Id`
+      )
+
+    query.table(RelationModel.table())
+
+    RelationModel.query()
+      .setQueryBuilder(query)
+      .select()
+      .whereRaw(
+        `${Model.table()}.${foreignKey} = ${RelationModel.table()}.${primaryKey}`
+      )
+      .when(relation.closure, relation.closure)
   }
 }

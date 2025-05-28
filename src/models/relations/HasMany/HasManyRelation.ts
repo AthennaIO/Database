@@ -7,8 +7,10 @@
  * file that was distributed with this source code.
  */
 
+import { String } from '@athenna/common'
 import type { HasManyOptions } from '#src/types'
 import type { BaseModel } from '#src/models/BaseModel'
+import type { Driver } from '#src/database/drivers/Driver'
 
 export class HasManyRelation {
   /**
@@ -24,10 +26,6 @@ export class HasManyRelation {
       .where(relation.foreignKey as never, model[relation.primaryKey])
       .when(relation.closure, relation.closure)
       .findMany()
-
-    if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
-      return undefined
-    }
 
     return model
   }
@@ -57,16 +55,39 @@ export class HasManyRelation {
       map.set(result[relation.foreignKey], array)
     })
 
-    return models
-      .map(model => {
-        model[relation.property] = map.get(model[relation.primaryKey]) || []
+    return models.map(model => {
+      model[relation.property] = map.get(model[relation.primaryKey]) || []
 
-        if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
-          return undefined
-        }
+      return model
+    })
+  }
 
-        return model
-      })
-      .filter(Boolean)
+  /**
+   * Apply a where has relation to the query when the given model
+   * has many of the relation.
+   */
+  public static whereHas(
+    Model: typeof BaseModel,
+    query: Driver,
+    relation: HasManyOptions
+  ) {
+    const RelationModel = relation.model()
+
+    const primaryKey = Model.schema().getMainPrimaryKeyName()
+    const foreignKey =
+      Model.schema().getColumnNameByProperty(relation.foreignKey) ||
+      Model.schema().getColumnNameByProperty(
+        `${String.toCamelCase(RelationModel.name)}Id`
+      )
+
+    query.table(RelationModel.table())
+
+    RelationModel.query()
+      .setQueryBuilder(query)
+      .select()
+      .whereRaw(
+        `${RelationModel.table()}.${foreignKey} = ${Model.table()}.${primaryKey}`
+      )
+      .when(relation.closure, relation.closure)
   }
 }

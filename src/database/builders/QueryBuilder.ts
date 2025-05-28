@@ -50,6 +50,15 @@ export class QueryBuilder<
   }
 
   /**
+   * Set the query builder of driver.
+   */
+  public setQueryBuilder(queryBuilder: any) {
+    this.driver.setQueryBuilder(queryBuilder)
+
+    return this
+  }
+
+  /**
    * Set the driver primary key that will be used
    * when creating new data.
    */

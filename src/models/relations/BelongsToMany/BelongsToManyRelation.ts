@@ -10,6 +10,7 @@
 import { String } from '@athenna/common'
 import type { BaseModel } from '#src/models/BaseModel'
 import type { BelongsToManyOptions } from '#src/types'
+import type { Driver } from '#src/database/drivers/Driver'
 
 export class BelongsToManyRelation {
   /**
@@ -50,10 +51,6 @@ export class BelongsToManyRelation {
       .whereIn(relation.relationPrimaryKey as never, relationIds)
       .when(relation.closure, relation.closure)
       .findMany()
-
-    if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
-      return undefined
-    }
 
     return model
   }
@@ -100,20 +97,53 @@ export class BelongsToManyRelation {
       map.set(result[relation.relationPrimaryKey], result)
     )
 
-    return models
-      .map(model => {
-        const ids = pivotDataMap.get(model[relation.primaryKey]) || []
+    return models.map(model => {
+      const ids = pivotDataMap.get(model[relation.primaryKey]) || []
 
-        model[relation.property] = ids
-          .map(id => map.get(id))
-          .filter(data => data !== undefined)
+      model[relation.property] = ids
+        .map(id => map.get(id))
+        .filter(data => data !== undefined)
 
-        if (relation.isWhereHasIncluded && !model[relation.property]?.length) {
-          return undefined
-        }
+      return model
+    })
+  }
 
-        return model
+  /**
+   * Apply a where has relation to the query when the given model
+   * belongs to many relations.
+   */
+  public static whereHas(
+    Model: typeof BaseModel,
+    query: Driver,
+    relation: BelongsToManyOptions
+  ) {
+    const PivotModel = relation.pivotModel()
+    const RelatedModel = relation.model()
+
+    const modelTable = Model.table()
+    const pivotTable = PivotModel.table()
+    const relatedTable = RelatedModel.table()
+
+    const modelPK = Model.schema().getMainPrimaryKeyName()
+    const relatedPK = RelatedModel.schema().getMainPrimaryKeyName()
+
+    const pivotFK = PivotModel.schema().getColumnNameByProperty(
+      relation.foreignKey
+    )
+    const pivotRK = PivotModel.schema().getColumnNameByProperty(
+      relation.relationForeignKey
+    )
+
+    query.table(pivotTable)
+
+    PivotModel.query()
+      .setQueryBuilder(query)
+      .whereRaw(`${pivotTable}.${pivotFK} = ${modelTable}.${modelPK}`)
+      .whereExists(innerQuery => {
+        RelatedModel.query()
+          .setQueryBuilder(innerQuery)
+          .whereRaw(`${relatedTable}.${relatedPK} = ${pivotTable}.${pivotRK}`)
+          .when(relation.closure, relation.closure)
       })
-      .filter(Boolean)
   }
 }
