@@ -335,6 +335,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
   }
 
   /**
+   * Alter a table in database.
+   */
+  public async alterTable(): Promise<void> {
+    throw new NotImplementedMethodException(this.alterTable.name, 'mongo')
+  }
+
+  /**
    * Drop a table in database.
    */
   public async dropTable(table: string): Promise<void> {

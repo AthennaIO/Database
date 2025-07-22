@@ -184,6 +184,19 @@ export default class TransactionTest {
   }
 
   @Test()
+  public async shouldBeAbleToAlterTableInDatabase({ assert }: Context) {
+    Mock.when(FakeDriver, 'alterTable').resolve(undefined)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
+
+    const trx = new Transaction(FakeDriver)
+    await trx.alterTable('users', builder => {
+      builder.string('id').primary()
+    })
+
+    assert.calledOnceWith(trx.driver.alterTable, 'users')
+  }
+
+  @Test()
   public async shouldBeAbleToDropTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'dropTable').resolve(undefined)
     Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
