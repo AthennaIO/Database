@@ -234,6 +234,11 @@ export class FakeDriver {
   }
 
   /**
+   * Alter a table in database.
+   */
+  public static async alterTable(): Promise<void> {}
+
+  /**
    * Drop a table in database.
    */
   public static async dropTable(table: string): Promise<void> {

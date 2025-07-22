@@ -279,6 +279,14 @@ export abstract class Driver<Client = any, QB = any> {
   ): Promise<void>
 
   /**
+   * Alter a table in database.
+   */
+  public abstract alterTable(
+    table: string,
+    closure?: TableBuilder
+  ): Promise<void>
+
+  /**
    * Drop a table in database.
    */
   public abstract dropTable(table: string): Promise<void>

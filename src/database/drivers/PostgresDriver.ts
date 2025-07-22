@@ -273,6 +273,16 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
+   * Alter a table in database.
+   */
+  public async alterTable(
+    table: string,
+    closure: (builder: Knex.TableBuilder) => void | Promise<void>
+  ): Promise<void> {
+    await this.client.schema.alterTable(table, closure)
+  }
+
+  /**
    * Drop a table in database.
    */
   public async dropTable(table: string): Promise<void> {

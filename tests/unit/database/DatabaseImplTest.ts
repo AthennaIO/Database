@@ -235,6 +235,19 @@ export default class DatabaseImplTest {
   }
 
   @Test()
+  public async shouldBeAbleToAlterTableInDatabase({ assert }: Context) {
+    Mock.when(FakeDriver, 'alterTable').resolve(undefined)
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
+
+    const database = new DatabaseImpl().connection('postgres')
+    await database.alterTable('users', builder => {
+      builder.string('id').primary()
+    })
+
+    assert.calledOnceWith(database.driver.alterTable, 'users')
+  }
+
+  @Test()
   public async shouldBeAbleToDropTheDatabaseTable({ assert }: Context) {
     Mock.when(FakeDriver, 'dropTable').resolve(undefined)
     Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)

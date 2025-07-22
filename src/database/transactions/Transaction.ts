@@ -128,6 +128,16 @@ export class Transaction<Client = any, QB = any> extends Macroable {
   }
 
   /**
+   * Alter a table in database.
+   */
+  public async alterTable(
+    table: string,
+    closure?: (builder: Knex.TableBuilder) => void | Promise<void>
+  ): Promise<void> {
+    return this.driver.alterTable(table, closure)
+  }
+
+  /**
    * Drop a table in database.
    */
   public async dropTable(table: string): Promise<void> {
