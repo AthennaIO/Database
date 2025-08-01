@@ -17,7 +17,6 @@ import {
   type PaginationOptions
 } from '@athenna/common'
 
-import equal from 'fast-deep-equal'
 import { Database } from '#src/facades/Database'
 import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
@@ -574,11 +573,29 @@ export class BaseModel {
         return
       }
 
-      if (equal(this.original[key], this[key])) {
+      const delta = Json.diff(this.original[key], this[key])
+
+      if (Is.Object(delta)) {
+        if (!Object.keys(delta).length) {
+          return
+        }
+
+        dirty[key] = delta
+
         return
       }
 
-      dirty[key] = Json.copy(this[key])
+      if (Is.Array(delta)) {
+        if (!delta.length) {
+          return
+        }
+
+        dirty[key] = delta
+
+        return
+      }
+
+      dirty[key] = delta
     })
 
     return dirty
