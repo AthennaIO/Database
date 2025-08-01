@@ -38,7 +38,7 @@ export default {
       driver: 'mysql',
       connection: {
         host: 'localhost',
-        port: 3308,
+        port: 3309,
         user: 'root',
         password: '12345',
         database: 'athenna'
@@ -56,7 +56,7 @@ export default {
       driver: 'postgres',
       connection: {
         host: 'localhost',
-        port: 5434,
+        port: 5435,
         user: 'postgres',
         password: '12345',
         database: 'postgres'
