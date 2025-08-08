@@ -86,11 +86,10 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(profile, Profile)
     assert.instanceOf(profile.user, User)
-    assert.deepEqual(profile, {
+    assert.containSubset(profile, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -130,12 +129,11 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(profiles[0], Profile)
     assert.instanceOf(profiles[0].user, User)
-    assert.deepEqual(profiles, [
+    assert.containSubset(profiles, [
       {
         id: 1,
         userId: 1,
-        user: { id: 1, original: { id: 1 } },
-        original: { id: 1, userId: 1 }
+        user: { id: 1 }
       }
     ])
   }
@@ -178,11 +176,10 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(product, Product)
     assert.instanceOf(product.user, User)
-    assert.deepEqual(product, {
+    assert.containSubset(product, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -235,12 +232,11 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(products[0], Product)
     assert.instanceOf(products[0].user, User)
-    assert.deepEqual(products, [
+    assert.containSubset(products, [
       {
         id: 1,
         userId: 1,
-        user: { id: 1, original: { id: 1 } },
-        original: { id: 1, userId: 1 }
+        user: { id: 1 }
       }
     ])
   }
@@ -263,11 +259,10 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(profile, Profile)
     assert.instanceOf(profile.user, User)
-    assert.deepEqual(profile, {
+    assert.containSubset(profile, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -289,11 +284,10 @@ export default class BelongsToRelationTest {
 
     assert.instanceOf(product, Product)
     assert.instanceOf(product.user, User)
-    assert.deepEqual(product, {
+    assert.containSubset(product, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 

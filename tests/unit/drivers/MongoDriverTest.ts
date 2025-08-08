@@ -565,7 +565,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').findOrFail()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -582,7 +582,7 @@ export default class MongoDriverTest {
       return { _id: '1', name: 'Marie Curie' }
     })
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -619,7 +619,7 @@ export default class MongoDriverTest {
       })
       .find()
 
-    assert.containsSubset(result, { _id: '1', name: 'Marie Curie' })
+    assert.containSubset(result, { _id: '1', name: 'Marie Curie' })
   }
 
   @Test()
@@ -629,7 +629,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').find()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -656,7 +656,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').findMany()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -666,7 +666,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').pluck('name')
 
-    assert.containsSubset(result, 'Charles Babbage')
+    assert.containSubset(result, 'Charles Babbage')
   }
 
   @Test()
@@ -676,7 +676,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').pluckMany('name')
 
-    assert.containsSubset(result, ['Charles Babbage'])
+    assert.containSubset(result, ['Charles Babbage'])
   }
 
   @Test()
@@ -693,7 +693,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').findMany()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -710,7 +710,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').paginate()
 
-    assert.containsSubset(result.data, data)
+    assert.containSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -733,7 +733,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').paginate(0, 10, '/users')
 
-    assert.containsSubset(result.data, data)
+    assert.containSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -762,7 +762,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').create(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -782,7 +782,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').createMany(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -799,7 +799,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('users').createOrUpdate(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -809,7 +809,7 @@ export default class MongoDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').createOrUpdate({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -819,7 +819,7 @@ export default class MongoDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').update({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -835,7 +835,7 @@ export default class MongoDriverTest {
       .whereIn('_id', ['1', '2'])
       .update({ name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, [
+    assert.containSubset(result, [
       { _id: '1', name: 'Robert Kiyosaki Millennials' },
       { _id: '2', name: 'Robert Kiyosaki Millennials' }
     ])
@@ -891,7 +891,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').select('*').where('_id', '1').findMany()
 
-    assert.containsSubset(data, [{ _id: '1', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ _id: '1', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1258,7 +1258,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').groupBy('_id', 'name').havingNotIn('_id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ _id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ _id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1279,7 +1279,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').groupBy('_id', 'name').havingBetween('_id', ['1', '3']).findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { _id: '1', name: 'Robert Kiyosaki' },
       { _id: '2', name: 'Warren Buffet' },
       { _id: '3', name: 'Alan Turing' }
@@ -1477,7 +1477,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').groupBy('_id', 'name').orHavingNotIn('_id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ _id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ _id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1498,7 +1498,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').groupBy('_id', 'name').orHavingBetween('_id', ['1', '3']).findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { _id: '1', name: 'Robert Kiyosaki' },
       { _id: '2', name: 'Warren Buffet' },
       { _id: '3', name: 'Alan Turing' }
@@ -1801,7 +1801,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').whereNotIn('_id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ _id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ _id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1822,7 +1822,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').whereBetween('_id', ['1', '3']).findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { _id: '1', name: 'Robert Kiyosaki' },
       { _id: '2', name: 'Warren Buffet' },
       { _id: '3', name: 'Alan Turing' }
@@ -2115,7 +2115,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').orWhereNotIn('_id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ _id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ _id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -2128,7 +2128,7 @@ export default class MongoDriverTest {
 
     const data = await this.driver.table('users').orWhereBetween('_id', ['1', '3']).findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { _id: '1', name: 'Robert Kiyosaki' },
       { _id: '2', name: 'Warren Buffet' },
       { _id: '3', name: 'Alan Turing' }

@@ -575,13 +575,12 @@ export default class BaseModelTest {
     assert.calledWith(Database.driver.createMany, [
       Mock.match({ id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2' })
     ])
-    assert.containsSubset(user, {
+    assert.containSubset(user, {
       id: '1',
       name: 'lenon',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
-      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+      deletedAt: null
     })
   }
 
@@ -607,13 +606,12 @@ export default class BaseModelTest {
       Database.driver.update,
       Mock.match({ id: '2', name: 'txsoura', metadata1: 'random-1', metadata2: 'random-2' })
     )
-    assert.containsSubset(user, {
+    assert.containSubset(user, {
       id: '2',
       name: 'txsoura',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
-      original: { id: '2', name: 'txsoura', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+      deletedAt: null
     })
   }
 
@@ -633,13 +631,12 @@ export default class BaseModelTest {
     await user.save()
 
     assert.calledWith(Database.driver.update, Mock.match({ metadata1: 'random-1', metadata2: 'random-2' }))
-    assert.containsSubset(user, {
+    assert.containSubset(user, {
       id: '1',
       name: 'lenon',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
-      original: { id: '1', name: 'lenon', metadata1: 'random-1', metadata2: 'random-2', deletedAt: null }
+      deletedAt: null
     })
   }
 
@@ -666,21 +663,13 @@ export default class BaseModelTest {
 
     assert.notCalled(Database.driver.update)
     assert.notCalled(Database.driver.createMany)
-    assert.containsSubset(user, {
+    assert.containSubset(user, {
       id: '1',
       name: 'lenon',
       email: 'lenon@athenna.io',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
-      original: {
-        id: '1',
-        name: 'lenon',
-        email: 'lenon@athenna.io',
-        metadata1: 'random-1',
-        metadata2: 'random-2',
-        deletedAt: null
-      }
+      deletedAt: null
     })
   }
 

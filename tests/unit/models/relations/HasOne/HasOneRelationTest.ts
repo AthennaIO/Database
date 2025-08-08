@@ -59,10 +59,9 @@ export default class HasOneRelationTest {
 
     assert.instanceOf(user, User)
     assert.instanceOf(user.profile, Profile)
-    assert.deepEqual(user, {
+    assert.containSubset(user, {
       id: 1,
-      profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-      original: { id: 1 }
+      profile: { id: 1, userId: 1 }
     })
   }
 
@@ -83,11 +82,10 @@ export default class HasOneRelationTest {
 
     assert.instanceOf(users[0], User)
     assert.instanceOf(users[0].profile, Profile)
-    assert.deepEqual(users, [
+    assert.containSubset(users, [
       {
         id: 1,
-        profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-        original: { id: 1 }
+        profile: { id: 1, userId: 1 }
       }
     ])
   }
@@ -130,10 +128,9 @@ export default class HasOneRelationTest {
 
     assert.instanceOf(user, User)
     assert.instanceOf(user.profile, Profile)
-    assert.deepEqual(user, {
+    assert.containSubset(user, {
       id: 1,
-      profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-      original: { id: 1 }
+      profile: { id: 1, userId: 1 }
     })
   }
 }

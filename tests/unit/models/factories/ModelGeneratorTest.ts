@@ -29,7 +29,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateOne({ id: '1' })
 
-    assert.deepEqual(data, { id: '1', original: { id: '1' } })
+    assert.deepEqual(data, { id: '1' })
   }
 
   @Test()
@@ -41,7 +41,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateOne({ _id: '1' })
 
-    assert.deepEqual(data, { id: '1', original: { id: '1' } })
+    assert.deepEqual(data, { id: '1' })
   }
 
   @Test()
@@ -65,7 +65,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateMany([{ id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
+    assert.deepEqual(data, [{ id: '1' }])
   }
 
   @Test()
@@ -77,7 +77,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, User.schema()).generateMany([{ _id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
+    assert.deepEqual(data, [{ id: '1' }])
   }
 
   @Test()
@@ -153,7 +153,7 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, schema).generateOne({ _id: '1' })
 
-    assert.deepEqual(data, { id: '1', original: { id: '1' } })
+    assert.deepEqual(data, { id: '1' })
   }
 
   @Test()
@@ -201,6 +201,6 @@ export default class ModelGeneratorTest {
 
     const data = await new ModelGenerator(User, schema).generateMany([{ _id: '1' }])
 
-    assert.deepEqual(data, [{ id: '1', original: { id: '1' } }])
+    assert.deepEqual(data, [{ id: '1' }])
   }
 }

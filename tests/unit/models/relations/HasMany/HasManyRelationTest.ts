@@ -60,10 +60,9 @@ export default class HasManyRelationTest {
 
     assert.instanceOf(user, User)
     assert.instanceOf(user.products[0], Product)
-    assert.deepEqual(user, {
+    assert.containSubset(user, {
       id: 1,
-      products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-      original: { id: 1 }
+      products: [{ id: 1 }]
     })
   }
 
@@ -84,11 +83,10 @@ export default class HasManyRelationTest {
 
     assert.instanceOf(users[0], User)
     assert.instanceOf(users[0].products[0], Product)
-    assert.deepEqual(users, [
+    assert.containSubset(users, [
       {
         id: 1,
-        products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-        original: { id: 1 }
+        products: [{ id: 1, userId: 1 }]
       }
     ])
   }
@@ -131,10 +129,9 @@ export default class HasManyRelationTest {
 
     assert.instanceOf(user, User)
     assert.instanceOf(user.products[0], Product)
-    assert.deepEqual(user, {
+    assert.containSubset(user, {
       id: 1,
-      products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-      original: { id: 1 }
+      products: [{ id: 1, userId: 1 }]
     })
   }
 

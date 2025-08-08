@@ -8,11 +8,11 @@
  */
 
 import {
-  Collection,
   Is,
   Json,
-  Options,
   String,
+  Options,
+  Collection,
   type PaginatedResponse,
   type PaginationOptions
 } from '@athenna/common'
@@ -21,6 +21,7 @@ import { Database } from '#src/facades/Database'
 import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { ORIGINAL_SYMBOL } from '#src/constants/OriginalSymbol'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
@@ -435,31 +436,27 @@ export class BaseModel {
    * is a fresh instance and is not available in database
    * yet.
    */
-  private original?: Record<string, any>
+  private [ORIGINAL_SYMBOL]?: Record<string, any>
 
   /**
    * Set the original model values by deep copying
    * the model state.
    */
   public setOriginal() {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    this.original = {}
+    this[ORIGINAL_SYMBOL] = {}
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    Object.keys(Json.copy(Json.omit(this, ['original']))).forEach(key => {
+    Object.keys(Json.copy(this)).forEach(key => {
       const value = this[key]
 
-      if (Is.Array(value) && value[0]?.original) {
+      if (Is.Array(value) && value[0] && ORIGINAL_SYMBOL in value[0]) {
         return
       }
 
-      if (value && value.original) {
+      if (Is.Object(value) && value && ORIGINAL_SYMBOL in value) {
         return
       }
 
-      this.original[key] = value
+      this[ORIGINAL_SYMBOL][key] = value
     })
 
     return this
@@ -482,10 +479,6 @@ export class BaseModel {
      * Execute the toJSON of relations.
      */
     Object.keys(this).forEach(key => {
-      if (key === 'original') {
-        return
-      }
-
       if (relations.includes(key)) {
         if (Is.Array(this[key])) {
           json[key] = this[key].map(d => (d.toJSON ? d.toJSON() : d))
@@ -553,12 +546,12 @@ export class BaseModel {
    * or if it's a fresh instance.
    */
   public isPersisted(): boolean {
-    return !!this.original
+    return !!this[ORIGINAL_SYMBOL]
   }
 
   /**
    * Get values only that are different from
-   * the original property to avoid updating
+   * the original symbol to avoid updating
    * data that was not changed.
    */
   public dirty() {
@@ -569,33 +562,20 @@ export class BaseModel {
     const dirty: Record<string, any> = {}
 
     Object.keys(this).forEach(key => {
-      if (key === 'original') {
+      const orig = this[ORIGINAL_SYMBOL][key]
+      const curr = this[key]
+
+      if (Json.isEqual(orig, curr)) {
         return
       }
 
-      const delta = Json.diff(this.original[key], this[key])
-
-      if (Is.Object(delta)) {
-        if (!Object.keys(delta).length) {
-          return
-        }
-
-        dirty[key] = delta
-
-        return
-      }
-
-      if (Is.Array(delta)) {
-        if (!delta.length) {
-          return
-        }
-
-        dirty[key] = delta
+      if (Is.Object(curr) || Is.Array(curr)) {
+        dirty[key] = Json.copy(curr)
 
         return
       }
 
-      dirty[key] = delta
+      dirty[key] = Json.diff(orig, curr)
     })
 
     return dirty
@@ -655,7 +635,7 @@ export class BaseModel {
 
     /**
      * Means data is not dirty because there are any
-     * value that is different from original prop.
+     * value that is different from original symbol.
      */
     if (!Object.keys(data).length) {
       return this

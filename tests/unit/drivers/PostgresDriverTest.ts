@@ -613,7 +613,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').findOrFail()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -630,7 +630,7 @@ export default class PostgresDriverTest {
       return { id: '1', name: 'Marie Curie' }
     })
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -667,7 +667,7 @@ export default class PostgresDriverTest {
       })
       .find()
 
-    assert.containsSubset(result, { id: '1', name: 'Marie Curie' })
+    assert.containSubset(result, { id: '1', name: 'Marie Curie' })
   }
 
   @Test()
@@ -677,7 +677,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').find()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -704,7 +704,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').findMany()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -714,7 +714,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').pluck('name')
 
-    assert.containsSubset(result, 'Charles Babbage')
+    assert.containSubset(result, 'Charles Babbage')
   }
 
   @Test()
@@ -724,7 +724,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').pluckMany('name')
 
-    assert.containsSubset(result, ['Charles Babbage'])
+    assert.containSubset(result, ['Charles Babbage'])
   }
 
   @Test()
@@ -741,7 +741,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').findMany()
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -758,7 +758,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').paginate()
 
-    assert.containsSubset(result.data, data)
+    assert.containSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -781,7 +781,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').paginate(0, 10, '/users')
 
-    assert.containsSubset(result.data, data)
+    assert.containSubset(result.data, data)
     assert.deepEqual(result.meta, {
       currentPage: 0,
       itemCount: 1,
@@ -810,7 +810,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').create(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -830,7 +830,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').createMany(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -847,7 +847,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('users').createOrUpdate(data)
 
-    assert.containsSubset(result, data)
+    assert.containSubset(result, data)
   }
 
   @Test()
@@ -857,7 +857,7 @@ export default class PostgresDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').createOrUpdate({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -867,7 +867,7 @@ export default class PostgresDriverTest {
     await this.driver.table('users').create(data)
     const result = await this.driver.table('users').update({ ...data, name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
+    assert.containSubset(result, { ...data, name: 'Robert Kiyosaki Millennials' })
   }
 
   @Test()
@@ -883,7 +883,7 @@ export default class PostgresDriverTest {
       .whereIn('id', ['1', '2'])
       .update({ name: 'Robert Kiyosaki Millennials' })
 
-    assert.containsSubset(result, [
+    assert.containSubset(result, [
       { id: '1', name: 'Robert Kiyosaki Millennials' },
       { id: '2', name: 'Robert Kiyosaki Millennials' }
     ])
@@ -939,7 +939,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.table('users').select('*').where('id', '1').findMany()
 
-    assert.containsSubset(data, [{ id: '1', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '1', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -957,7 +957,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.select('*').from('users').where('id', '1').findMany()
 
-    assert.containsSubset(data, [{ id: '1', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '1', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1479,7 +1479,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.table('users').groupBy('id', 'name').havingNotIn('id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1504,7 +1504,7 @@ export default class PostgresDriverTest {
       .havingBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
       .findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { id: '1', name: 'Robert Kiyosaki' },
       { id: '2', name: 'Warren Buffet' },
       { id: '3', name: 'Alan Turing' }
@@ -1803,7 +1803,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.table('users').groupBy('id', 'name').orHavingNotIn('id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -1828,7 +1828,7 @@ export default class PostgresDriverTest {
       .orHavingBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
       .findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { id: '1', name: 'Robert Kiyosaki' },
       { id: '2', name: 'Warren Buffet' },
       { id: '3', name: 'Alan Turing' }
@@ -2245,7 +2245,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.table('users').whereNotIn('id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -2269,7 +2269,7 @@ export default class PostgresDriverTest {
       .whereBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
       .findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { id: '1', name: 'Robert Kiyosaki' },
       { id: '2', name: 'Warren Buffet' },
       { id: '3', name: 'Alan Turing' }
@@ -2683,7 +2683,7 @@ export default class PostgresDriverTest {
 
     const data = await this.driver.table('users').orWhereNotIn('id', ['1', '2']).findMany()
 
-    assert.containsSubset(data, [{ id: '3', name: 'Alan Turing' }])
+    assert.containSubset(data, [{ id: '3', name: 'Alan Turing' }])
   }
 
   @Test()
@@ -2707,7 +2707,7 @@ export default class PostgresDriverTest {
       .orWhereBetween('created_at', [new Date('12/09/2001'), new Date('12/09/2050')])
       .findMany()
 
-    assert.containsSubset(data, [
+    assert.containSubset(data, [
       { id: '1', name: 'Robert Kiyosaki' },
       { id: '2', name: 'Warren Buffet' },
       { id: '3', name: 'Alan Turing' }
