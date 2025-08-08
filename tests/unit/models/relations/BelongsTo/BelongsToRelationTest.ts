@@ -89,8 +89,7 @@ export default class BelongsToRelationTest {
     assert.deepEqual(profile, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -134,8 +133,7 @@ export default class BelongsToRelationTest {
       {
         id: 1,
         userId: 1,
-        user: { id: 1, original: { id: 1 } },
-        original: { id: 1, userId: 1 }
+        user: { id: 1 }
       }
     ])
   }
@@ -181,8 +179,7 @@ export default class BelongsToRelationTest {
     assert.deepEqual(product, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -239,8 +236,7 @@ export default class BelongsToRelationTest {
       {
         id: 1,
         userId: 1,
-        user: { id: 1, original: { id: 1 } },
-        original: { id: 1, userId: 1 }
+        user: { id: 1 }
       }
     ])
   }
@@ -266,8 +262,7 @@ export default class BelongsToRelationTest {
     assert.deepEqual(profile, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 
@@ -292,8 +287,7 @@ export default class BelongsToRelationTest {
     assert.deepEqual(product, {
       id: 1,
       userId: 1,
-      user: { id: 1, original: { id: 1 } },
-      original: { id: 1, userId: 1 }
+      user: { id: 1 }
     })
   }
 

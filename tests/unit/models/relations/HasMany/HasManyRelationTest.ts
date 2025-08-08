@@ -62,8 +62,7 @@ export default class HasManyRelationTest {
     assert.instanceOf(user.products[0], Product)
     assert.deepEqual(user, {
       id: 1,
-      products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-      original: { id: 1 }
+      products: [{ id: 1 }]
     })
   }
 
@@ -87,8 +86,7 @@ export default class HasManyRelationTest {
     assert.deepEqual(users, [
       {
         id: 1,
-        products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-        original: { id: 1 }
+        products: [{ id: 1, userId: 1 }]
       }
     ])
   }
@@ -133,8 +131,7 @@ export default class HasManyRelationTest {
     assert.instanceOf(user.products[0], Product)
     assert.deepEqual(user, {
       id: 1,
-      products: [{ id: 1, userId: 1, original: { id: 1, userId: 1 } }],
-      original: { id: 1 }
+      products: [{ id: 1, userId: 1 }]
     })
   }
 

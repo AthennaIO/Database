@@ -61,8 +61,7 @@ export default class HasOneRelationTest {
     assert.instanceOf(user.profile, Profile)
     assert.deepEqual(user, {
       id: 1,
-      profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-      original: { id: 1 }
+      profile: { id: 1, userId: 1 }
     })
   }
 
@@ -86,8 +85,7 @@ export default class HasOneRelationTest {
     assert.deepEqual(users, [
       {
         id: 1,
-        profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-        original: { id: 1 }
+        profile: { id: 1, userId: 1 }
       }
     ])
   }
@@ -132,8 +130,7 @@ export default class HasOneRelationTest {
     assert.instanceOf(user.profile, Profile)
     assert.deepEqual(user, {
       id: 1,
-      profile: { id: 1, userId: 1, original: { id: 1, userId: 1 } },
-      original: { id: 1 }
+      profile: { id: 1, userId: 1 }
     })
   }
 }

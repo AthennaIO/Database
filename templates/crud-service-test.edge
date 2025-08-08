@@ -41,7 +41,7 @@ export default class {{ crudNamePascal }}ServiceTest {
       {{{ createBody }}}
     })
 
-    assert.containsSubset(data.toJSON(), {{ crudNameLower }}.toJSON())
+    assert.containSubset(data.toJSON(), {{ crudNameLower }}.toJSON())
   }
 
   @Test()
@@ -77,7 +77,7 @@ export default class {{ crudNamePascal }}ServiceTest {
       {{{ updateBody }}}
     })
 
-    assert.containsSubset(data.toJSON(), {
+    assert.containSubset(data.toJSON(), {
       {{{ updateBody }}}
     })
   }
