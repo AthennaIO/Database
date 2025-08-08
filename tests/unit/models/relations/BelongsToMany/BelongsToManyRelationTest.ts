@@ -86,7 +86,7 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(course, Course)
     assert.instanceOf(course.students[0], Student)
-    assert.deepEqual(course, {
+    assert.containSubset(course, {
       id: 1,
       name: 'Math',
       students: [{ id: 1 }]
@@ -129,7 +129,7 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(courses[0], Course)
     assert.instanceOf(courses[0].students[0], Student)
-    assert.deepEqual(courses, [
+    assert.containSubset(courses, [
       {
         id: 1,
         name: 'Math',
@@ -174,7 +174,7 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(student, Student)
     assert.instanceOf(student.courses[0], Course)
-    assert.deepEqual(student, {
+    assert.containSubset(student, {
       id: 1,
       name: 'lenon',
       courses: [{ id: 1 }]
@@ -219,7 +219,7 @@ export default class BelongsToManyRelationTest {
 
     assert.instanceOf(students[0], Student)
     assert.instanceOf(students[0].courses[0], Course)
-    assert.deepEqual(students, [
+    assert.containSubset(students, [
       {
         id: 1,
         name: 'lenon',

@@ -611,7 +611,7 @@ export default class BaseModelTest {
       name: 'txsoura',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
+      deletedAt: null
     })
   }
 
@@ -636,7 +636,7 @@ export default class BaseModelTest {
       name: 'lenon',
       metadata1: 'random-1',
       metadata2: 'random-2',
-      deletedAt: null,
+      deletedAt: null
     })
   }
 
