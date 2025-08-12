@@ -923,6 +923,16 @@ export class PostgresDriver extends Driver<Knex, Knex.QueryBuilder> {
     }
 
     if (operation === undefined) {
+      if (Is.Array(statement)) {
+        throw new Error('Arrays as statement are not supported.')
+      }
+
+      if (Is.String(statement)) {
+        throw new Error(
+          `The value for the "${statement}" column is undefined and where will not work.`
+        )
+      }
+
       this.qb.where(statement)
 
       return this
