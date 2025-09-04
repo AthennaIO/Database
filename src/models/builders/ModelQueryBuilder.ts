@@ -450,7 +450,7 @@ export class ModelQueryBuilder<
     this.isSoftDelete = false
 
     if (!this.DELETED_AT_PROP) {
-      return
+      return this
     }
 
     if (this.schema.getModelDriverName() === 'mongo') {
