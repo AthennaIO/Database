@@ -26,13 +26,14 @@ import type { Driver } from '#src/database/drivers/Driver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
+import type { Transaction } from '#src/database/transactions/Transaction'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { HasOneRelation } from '#src/models/relations/HasOne/HasOneRelation'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { NullableValueException } from '#src/exceptions/NullableValueException'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
-import { BelongsToManyRelation } from '../relations/BelongsToMany/BelongsToManyRelation.js'
+import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
 
 export class ModelQueryBuilder<
   M extends BaseModel = any,
@@ -71,6 +72,22 @@ export class ModelQueryBuilder<
 
     this.selectColumns = this.schema.getAllColumnNames()
     this.setPrimaryKey(this.primaryKeyName)
+  }
+
+  /**
+   * Define a transaction to be used by the model query builder.
+   */
+  public setTransaction(trx: Transaction) {
+    return this.setDriver(trx.driver, this.Model.table())
+  }
+
+  /**
+   * Set a different driver to the model query builder.
+   */
+  public setDriver(driver: Driver, tableName?: string) {
+    super.setDriver(driver, tableName)
+
+    return this
   }
 
   /**
