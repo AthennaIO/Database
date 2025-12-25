@@ -32,6 +32,7 @@ export class MakeMigrationCommand extends BaseCommand {
     const nameCamel = String.toCamelCase(this.name)
     const namePlural = String.pluralize(this.name)
     const namePascal = String.toPascalCase(this.name)
+    const nameSnake = String.toSnakeCase(this.name)
     const namePluralCamel = String.toCamelCase(String.pluralize(this.name))
     const namePluralPascal = String.toPascalCase(String.pluralize(this.name))
 
@@ -53,7 +54,7 @@ export class MakeMigrationCommand extends BaseCommand {
     time = time.split('.')[0].replace(/:/g, '')
 
     const file = await this.generator
-      .fileName(`${sep}${date}_${time}_create_${tableName}_table`)
+      .fileName(`${sep}${date}_${time}_${nameSnake}`)
       .destination(destination)
       .properties({
         nameUp,
