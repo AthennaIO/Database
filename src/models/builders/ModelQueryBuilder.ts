@@ -259,6 +259,19 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Find a value in database or create a new one if it doesn't exist.
+   */
+  public async findOrCreate(data: Partial<M> = {}) {
+    const hasValue = await this.find()
+
+    if (hasValue) {
+      return hasValue
+    }
+
+    return this.create(data)
+  }
+
+  /**
    * Return a single data or, if no results are found,
    * execute the given closure.
    */

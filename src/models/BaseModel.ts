@@ -288,6 +288,23 @@ export class BaseModel {
   }
 
   /**
+   * Find a value in database or create a new one if it doesn't exist.
+   */
+  public static async findOrCreate<T extends typeof BaseModel>(
+    this: T,
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>
+  ): Promise<InstanceType<T>> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.findOrCreate(data)
+  }
+
+  /**
    * Return a single data or, if no results are found,
    * execute the given closure.
    */
