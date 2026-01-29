@@ -374,6 +374,19 @@ export class FakeDriver {
   }
 
   /**
+   * Find a value in database or create a new one if it doesn't exist.
+   */
+  public static async findOrCreate(data: Partial<any>): Promise<any> {
+    const hasValue = await this.find()
+
+    if (hasValue) {
+      return hasValue
+    }
+
+    return this.create(data)
+  }
+
+  /**
    * Find a value in database or execute closure.
    */
   public static async findOr(): Promise<any> {

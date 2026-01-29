@@ -375,6 +375,19 @@ export abstract class Driver<Client = any, QB = any> {
   }
 
   /**
+   * Find a value in database or create a new one if it doesn't exist.
+   */
+  public async findOrCreate<T = any>(data: Partial<T>): Promise<T> {
+    const hasValue = await this.find()
+
+    if (hasValue) {
+      return hasValue
+    }
+
+    return this.create(data)
+  }
+
+  /**
    * Return a single model instance or, if no results are found,
    * execute the given closure.
    */
