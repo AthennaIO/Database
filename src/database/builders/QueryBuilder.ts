@@ -150,7 +150,7 @@ export class QueryBuilder<
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async count(column: string | ModelColumns<T> = '*'): Promise<string> {
+  public async count(column: string | ModelColumns<T> = '*'): Promise<number> {
     return this.driver.count(column as string)
   }
 
@@ -159,7 +159,7 @@ export class QueryBuilder<
    */
   public async countDistinct(
     column: string | ModelColumns<T>
-  ): Promise<string> {
+  ): Promise<number> {
     return this.driver.countDistinct(column as string)
   }
 
@@ -584,24 +584,6 @@ export class QueryBuilder<
   }
 
   /**
-   * Set a having exists statement in your query.
-   */
-  public havingExists(closure: (query: Driver) => void) {
-    this.driver.havingExists(closure)
-
-    return this
-  }
-
-  /**
-   * Set a having not exists statement in your query.
-   */
-  public havingNotExists(closure: (query: Driver) => void) {
-    this.driver.havingNotExists(closure)
-
-    return this
-  }
-
-  /**
    * Set a having in statement in your query.
    */
   public havingIn(column: string | ModelColumns<T>, values: any[]) {
@@ -676,33 +658,6 @@ export class QueryBuilder<
    */
   public orHavingRaw(sql: string, bindings?: any) {
     this.driver.orHavingRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Set an or having exists statement in your query.
-   */
-  public orHavingExists(closure: (query: Driver) => void) {
-    this.driver.orHavingExists(closure)
-
-    return this
-  }
-
-  /**
-   * Set an or having not exists statement in your query.
-   */
-  public orHavingNotExists(closure: (query: Driver) => void) {
-    this.driver.orHavingNotExists(closure)
-
-    return this
-  }
-
-  /**
-   * Set an or having in statement in your query.
-   */
-  public orHavingIn(column: string | ModelColumns<T>, values: any[]) {
-    this.driver.orHavingIn(column as string, values)
 
     return this
   }
@@ -887,6 +842,27 @@ export class QueryBuilder<
     return this
   }
 
+  public whereJson(
+    column: string | ModelColumns<T>,
+    operation: any,
+    value?: any
+  ): this
+
+  public whereJson(column: string | ModelColumns<T>, value: any): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public whereJson(
+    column: string | ModelColumns<T>,
+    operation: any,
+    value?: any
+  ) {
+    this.driver.whereJson(column as string, operation, value)
+
+    return this
+  }
+
   public orWhere(statement: (query: this) => void): this
   public orWhere(statement: Partial<T>): this
   public orWhere(statement: Record<string, any>): this
@@ -1026,6 +1002,27 @@ export class QueryBuilder<
    */
   public orWhereNotNull(column: string | ModelColumns<T>) {
     this.driver.orWhereNotNull(column as string)
+
+    return this
+  }
+
+  public orWhereJson(
+    column: string | ModelColumns<T>,
+    operation: Operations,
+    value?: any
+  ): this
+
+  public orWhereJson(column: string | ModelColumns<T>, value: any): this
+
+  /**
+   * Set an orWhereJson statement in your query.
+   */
+  public orWhereJson(
+    column: string | ModelColumns<T>,
+    operation: Operations,
+    value?: any
+  ) {
+    this.driver.orWhereJson(column as string, operation, value)
 
     return this
   }

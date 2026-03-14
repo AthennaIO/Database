@@ -473,7 +473,7 @@ export default class BaseModelTest {
   }
 
   @Test()
-  public async shouldBeAbleToGetModelAsJsonHiddingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
+  public async shouldBeAbleToGetModelAsJsonHidingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
     const user = new User()
 
     user.id = '1'
@@ -487,7 +487,7 @@ export default class BaseModelTest {
   }
 
   @Test()
-  public async shouldBeAbleToGetModelAsJsonWithoutHiddingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
+  public async shouldBeAbleToGetModelAsJsonWithoutHidingIsHiddenFieldsUsingToJSONMethod({ assert }: Context) {
     const user = new User()
 
     user.id = '1'
@@ -558,6 +558,36 @@ export default class BaseModelTest {
     user.name = 'lenon'
 
     assert.deepEqual(user.dirty(), { id: '1', name: 'lenon' })
+  }
+
+  @Test()
+  public async shouldBeAbleToGetOnlyDirtyJsonValuesOfModel({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.createdAt = new Date()
+    user.deletedAt = null
+    user.score = 5
+    user.metadata4 = {
+      name: 'admin',
+      age: 20,
+      address: {
+        city: 'New York',
+        state: 'NY'
+      }
+    }
+
+    user.setOriginal()
+
+    user.metadata4.name = 'editor'
+    user.metadata4.age = 21
+    user.metadata4.address.city = 'Los Angeles'
+    user.metadata4.address.state = 'CA'
+
+    assert.deepEqual(user.dirty(), {
+      metadata4: { name: 'editor', age: 21, address: { city: 'Los Angeles', state: 'CA' } }
+    })
   }
 
   @Test()

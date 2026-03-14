@@ -12,6 +12,8 @@ import { Path, Collection } from '@athenna/common'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
+import { EmptyValueException } from '#src/exceptions/EmptyValueException'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
@@ -43,6 +45,11 @@ export default class PostgresDriverTest {
       builder.string('id').primary()
       builder.string('user_id').references('id').inTable('users')
     })
+
+    await this.driver.createTable('events', builder => {
+      builder.string('id').primary()
+      builder.jsonb('metadata')
+    })
   }
 
   @AfterEach()
@@ -57,6 +64,7 @@ export default class PostgresDriverTest {
     await this.driver.dropDatabase('trx')
     await this.driver.dropTable('trx')
     await this.driver.dropTable('rents')
+    await this.driver.dropTable('events')
     await this.driver.dropTable('students_courses')
     await this.driver.dropTable('students')
     await this.driver.dropTable('courses')
@@ -603,7 +611,7 @@ export default class PostgresDriverTest {
 
     const result = await this.driver.table('products').countDistinct('quantity')
 
-    assert.equal(result, '1')
+    assert.equal(result, 1)
   }
 
   @Test()
@@ -905,7 +913,7 @@ export default class PostgresDriverTest {
 
     await this.driver.table('users').create(data)
 
-    assert.deepEqual(await this.driver.table('users').count(), '1')
+    assert.deepEqual(await this.driver.table('users').count(), 1)
   }
 
   @Test()
@@ -916,12 +924,17 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToSetInvalidTableName({ assert }: Context) {
+    assert.throws(() => this.driver.table(undefined as any), Error)
+  }
+
+  @Test()
   public async shouldBeAbleToDumpTheSQLQuery({ assert }: Context) {
-    Mock.when(console, 'log').return(undefined)
+    Mock.when(process.stdout, 'write').return(undefined)
 
     this.driver.table('users').select('*').dump()
 
-    assert.calledWith(console.log, { bindings: [], sql: 'select * from "users"' })
+    assert.calledWith(process.stdout.write, `${JSON.stringify({ sql: 'select * from "users"', bindings: [] })}\n`)
   }
 
   @Test()
@@ -1375,67 +1388,6 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToAddAHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { id: '1', name: 'Robert Kiyosaki' },
-      { id: '2', name: 'Warren Buffet' }
-    ])
-    await this.driver.table('rents').createMany([
-      { id: '1', user_id: '1' },
-      { id: '2', user_id: '1' },
-      { id: '3', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('rents')
-      .groupBy('id', 'user_id')
-      .havingExists(query => {
-        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-      })
-      .findMany()
-
-    assert.deepEqual(data, [
-      { id: '6', user_id: '2' },
-      { id: '2', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '1', user_id: '1' },
-      { id: '3', user_id: '1' }
-    ])
-  }
-
-  @Test()
-  public async shouldBeAbleToAddAHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { id: '1', name: 'Robert Kiyosaki' },
-      { id: '2', name: 'Warren Buffet' },
-      { id: '3', name: 'Alan Turing' }
-    ])
-    await this.driver.table('rents').createMany([
-      { id: '1', user_id: '1' },
-      { id: '2', user_id: '1' },
-      { id: '3', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('users')
-      .select('id', 'name')
-      .groupBy('id', 'name')
-      .havingNotExists(query => {
-        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-      })
-      .findMany()
-
-    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
-  }
-
-  @Test()
   public async shouldBeAbleToAddAHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -1699,93 +1651,6 @@ export default class PostgresDriverTest {
   }
 
   @Test()
-  public async shouldBeAbleToAddAOrHavingExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { id: '1', name: 'Robert Kiyosaki' },
-      { id: '2', name: 'Warren Buffet' }
-    ])
-    await this.driver.table('rents').createMany([
-      { id: '1', user_id: '1' },
-      { id: '2', user_id: '1' },
-      { id: '3', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('rents')
-      .groupBy('id', 'user_id')
-      .orHavingExists(query => {
-        query.select(query.raw('1')).from('users').whereRaw('users.id = rents.user_id')
-      })
-      .findMany()
-
-    assert.deepEqual(data, [
-      { id: '6', user_id: '2' },
-      { id: '2', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '1', user_id: '1' },
-      { id: '3', user_id: '1' }
-    ])
-  }
-
-  @Test()
-  public async shouldBeAbleToAddAOrHavingNotExistsClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { id: '1', name: 'Robert Kiyosaki' },
-      { id: '2', name: 'Warren Buffet' },
-      { id: '3', name: 'Alan Turing' }
-    ])
-    await this.driver.table('rents').createMany([
-      { id: '1', user_id: '1' },
-      { id: '2', user_id: '1' },
-      { id: '3', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('users')
-      .select('id', 'name')
-      .groupBy('id', 'name')
-      .orHavingNotExists(query => {
-        query.select(query.raw('1')).from('rents').whereRaw('users.id = rents.user_id')
-      })
-      .findMany()
-
-    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
-  }
-
-  @Test()
-  public async shouldBeAbleToAddAOrHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { id: '1', name: 'Robert Kiyosaki' },
-      { id: '2', name: 'Warren Buffet' },
-      { id: '3', name: 'Alan Turing' }
-    ])
-    await this.driver.table('rents').createMany([
-      { id: '1', user_id: '1' },
-      { id: '2', user_id: '1' },
-      { id: '3', user_id: '1' },
-      { id: '4', user_id: '1' },
-      { id: '5', user_id: '2' },
-      { id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('users')
-      .select('id', 'name')
-      .groupBy('id', 'name')
-      .orHavingIn('name', ['Alan Turing'])
-      .findMany()
-
-    assert.deepEqual(data, [{ id: '3', name: 'Alan Turing' }])
-  }
-
-  @Test()
   public async shouldBeAbleToAddAOrHavingNotInClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -1965,6 +1830,30 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToFilterJsonArrayByIndexUsingWhereJson({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('events').whereJson('metadata->1->name', 'editor').findMany()
+
+    assert.deepEqual(data, [{ id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] }])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterJsonArrayByWildcardUsingWhereSelector({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('events').where('metadata->*->name', 'member').findMany()
+
+    assert.deepEqual(data, [{ id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }])
+  }
+
+  @Test()
   public async shouldBeAbleToAddAWhereClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -2014,6 +1903,26 @@ export default class PostgresDriverTest {
       .findMany()
 
     assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidStatementObject({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any), EmptyValueException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidStatementKey({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any, 'value'), EmptyValueException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidColumnAndValue({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any, '=', 'value'), EmptyColumnException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereJsonWithInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.whereJson(undefined as any, 'value'), Error)
   }
 
   @Test()
@@ -2451,6 +2360,16 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToAddOrWhereWithInvalidStatementKey({ assert }: Context) {
+    assert.throws(() => this.driver.orWhere(undefined as any, 'value'), EmptyColumnException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddOrWhereJsonWithInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.orWhereJson(undefined as any, 'value'), EmptyColumnException)
+  }
+
+  @Test()
   public async shouldBeAbleToAddAOrWhereRawClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -2858,6 +2777,11 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToOrderByInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.orderBy(undefined as any), EmptyColumnException)
+  }
+
+  @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
     await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
     const latest = await this.driver.table('users').create({ id: '3', name: 'Alan Turing' })
@@ -2891,6 +2815,11 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToOffsetByInvalidValue({ assert }: Context) {
+    assert.throws(() => this.driver.offset(undefined as any), EmptyValueException)
+  }
+
+  @Test()
   public async shouldLimitTheResultsByGivenValue({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -2901,5 +2830,10 @@ export default class PostgresDriverTest {
     const data = await this.driver.table('users').select('name').limit(1).findMany()
 
     assert.deepEqual(data, [{ name: 'Robert Kiyosaki' }])
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToLimitByInvalidValue({ assert }: Context) {
+    assert.throws(() => this.driver.limit(undefined as any), EmptyValueException)
   }
 }

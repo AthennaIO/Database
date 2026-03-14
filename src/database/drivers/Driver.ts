@@ -8,16 +8,20 @@
  */
 
 import {
+  Is,
   Module,
   Options,
   Collection,
   type PaginatedResponse,
   type PaginationOptions
 } from '@athenna/common'
+
 import type { Knex, TableBuilder } from 'knex'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { Transaction } from '#src/database/transactions/Transaction'
+import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import type { Direction, ConnectionOptions, Operations } from '#src/types'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 
 export abstract class Driver<Client = any, QB = any> {
@@ -152,6 +156,10 @@ export abstract class Driver<Client = any, QB = any> {
    * Set the primary key of the driver.
    */
   public setPrimaryKey(primaryKey: string) {
+    if (!Is.String(primaryKey)) {
+      throw new Error('Primary key must be a string value')
+    }
+
     this.primaryKey = primaryKey
 
     return this
@@ -167,6 +175,10 @@ export abstract class Driver<Client = any, QB = any> {
     operation?: string | Operations,
     column2?: string
   ) {
+    if (Is.Undefined(table)) {
+      throw new Error('Table is required for join methods')
+    }
+
     if (!column1) {
       this.qb[joinType](table)
 
@@ -174,20 +186,68 @@ export abstract class Driver<Client = any, QB = any> {
     }
 
     if (!operation) {
+      if (Is.Undefined(column1)) {
+        throw new EmptyColumnException(joinType)
+      }
+
       this.qb[joinType](table, column1)
 
       return this
     }
 
     if (!column2) {
+      if (Is.Undefined(column1) || !Is.String(column1)) {
+        throw new EmptyColumnException(joinType)
+      }
+
+      if (Is.Undefined(operation) || !Is.String(operation)) {
+        throw new EmptyValueException(joinType)
+      }
+
       this.qb[joinType](table, column1, operation)
 
       return this
     }
 
+    if (Is.Undefined(column1) || !Is.String(column1)) {
+      throw new EmptyColumnException(joinType)
+    }
+
+    if (Is.Undefined(column2) || !Is.String(column2)) {
+      throw new EmptyColumnException(joinType)
+    }
+
     this.qb[joinType](table, column1, operation, column2)
 
     return this
+  }
+
+  /**
+   * Verify if a statement is using the json selector syntax.
+   */
+  public isUsingJsonSelector(statement: string) {
+    return Is.String(statement) && statement.includes('->')
+  }
+
+  /**
+   * Parse a statement using the json selector syntax.
+   */
+  public parseJsonSelector(statement: string) {
+    if (!this.isUsingJsonSelector(statement)) {
+      return null
+    }
+
+    const [column, ...pathParts] = statement.split('->')
+    const path = pathParts.join('->').trim()
+
+    if (!column?.trim() || !path) {
+      return null
+    }
+
+    return {
+      column: column.trim(),
+      path
+    }
   }
 
   /**
@@ -345,12 +405,12 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Calculate the average of a given column using distinct.
    */
-  public abstract count(column?: string): Promise<string>
+  public abstract count(column?: string): Promise<number>
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public abstract countDistinct(column?: string): Promise<string>
+  public abstract countDistinct(column?: string): Promise<number>
 
   /**
    * Find a value in database and return as boolean.
@@ -464,7 +524,7 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Create data or update if already exists.
    */
-  public abstract createOrUpdate<T = any>(data?: Partial<T>): Promise<T | T[]>
+  public abstract createOrUpdate<T = any>(data?: Partial<T>): Promise<T>
 
   /**
    * Update a value in database.
@@ -626,20 +686,6 @@ export abstract class Driver<Client = any, QB = any> {
   public abstract havingRaw(sql: string, bindings?: any): this
 
   /**
-   * Set a having exists statement in your query.
-   */
-  public abstract havingExists(
-    closure: (query: Driver<Client, QB>) => void
-  ): this
-
-  /**
-   * Set a having not exists statement in your query.
-   */
-  public abstract havingNotExists(
-    closure: (query: Driver<Client, QB>) => void
-  ): this
-
-  /**
    * Set a having in statement in your query.
    */
   public abstract havingIn(column: string, values: any[]): this
@@ -682,25 +728,6 @@ export abstract class Driver<Client = any, QB = any> {
    * Set an or having raw statement in your query.
    */
   public abstract orHavingRaw(sql: string, bindings?: any): this
-
-  /**
-   * Set an or having exists statement in your query.
-   */
-  public abstract orHavingExists(
-    closure: (query: Driver<Client, QB>) => void
-  ): this
-
-  /**
-   * Set an or having not exists statement in your query.
-   */
-  public abstract orHavingNotExists(
-    closure: (query: Driver<Client, QB>) => void
-  ): this
-
-  /**
-   * Set an or having in statement in your query.
-   */
-  public abstract orHavingIn(column: string, values: any[]): this
 
   /**
    * Set an or having not in statement in your query.
@@ -800,6 +827,22 @@ export abstract class Driver<Client = any, QB = any> {
    */
   public abstract whereNotNull(column: string): this
 
+  public abstract whereJson(column: string, value: any): this
+  public abstract whereJson(
+    column: string,
+    operation: Operations,
+    value?: any
+  ): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public abstract whereJson(
+    column: string,
+    operation: Operations,
+    value?: any
+  ): this
+
   /**
    * Set a or where statement in your query.
    */
@@ -879,6 +922,22 @@ export abstract class Driver<Client = any, QB = any> {
    * Set an or where not null statement in your query.
    */
   public abstract orWhereNotNull(column: string): this
+
+  public abstract orWhereJson(column: string, value: any): this
+  public abstract orWhereJson(
+    column: string,
+    operation: Operations,
+    value?: any
+  ): this
+
+  /**
+   * Set an orWhereJson statement in your query.
+   */
+  public abstract orWhereJson(
+    column: string,
+    operation: Operations,
+    value?: any
+  ): this
 
   /**
    * Set an order by statement in your query.

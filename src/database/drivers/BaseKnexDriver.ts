@@ -1,0 +1,1710 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/**
+ * @athenna/database
+ *
+ * (c) João Lenon <lenon@athenna.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import {
+  Exec,
+  Is,
+  Json,
+  Options,
+  type PaginatedResponse,
+  type PaginationOptions
+} from '@athenna/common'
+
+import type { Knex } from 'knex'
+import { debug } from '#src/debug'
+import { Log } from '@athenna/logger'
+import { Driver } from '#src/database/drivers/Driver'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { Transaction } from '#src/database/transactions/Transaction'
+import type { ConnectionOptions, Direction, Operations } from '#src/types'
+import { MigrationSource } from '#src/database/migrations/MigrationSource'
+import { EmptyValueException } from '#src/exceptions/EmptyValueException'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import { WrongMethodException } from '#src/exceptions/WrongMethodException'
+import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
+import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+
+export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
+  /**
+   * Connect to database.
+   */
+  public connect(options: ConnectionOptions = {}): void {
+    options = Options.create(options, {
+      force: false,
+      saveOnFactory: true,
+      connect: true
+    })
+
+    if (!options.connect) {
+      return
+    }
+
+    if (this.isConnected && !options.force) {
+      return
+    }
+
+    const knex = this.getKnex()
+    const configs = Config.get(`database.connections.${this.connection}`, {})
+    const knexOpts = {
+      migrations: {
+        tableName: 'migrations'
+      },
+      pool: {
+        min: 2,
+        max: 20,
+        acquireTimeoutMillis: 60 * 1000
+      },
+      debug: false,
+      useNullAsDefault: false,
+      ...Json.omit(configs, ['driver', 'validations'])
+    }
+
+    debug('creating new connection using Knex. options defined: %o', knexOpts)
+
+    if (Config.is('rc.bootLogs', true)) {
+      Log.channelOrVanilla('application').success(
+        `Successfully connected to ({yellow} ${this.connection}) database connection`
+      )
+    }
+
+    this.client = knex.default(knexOpts)
+
+    this.isConnected = true
+    this.isSavedOnFactory = options.saveOnFactory
+
+    if (this.isSavedOnFactory) {
+      ConnectionFactory.setClient(this.connection, this.client)
+    }
+
+    this.qb = this.query()
+  }
+
+  /**
+   * Close the connection with database in this instance.
+   */
+  public async close(): Promise<void> {
+    if (!this.isConnected) {
+      return
+    }
+
+    await this.client.destroy()
+
+    this.qb = null
+    this.tableName = null
+    this.client = null
+    this.isConnected = false
+
+    ConnectionFactory.setClient(this.connection, null)
+  }
+
+  /**
+   * Creates a new instance of query builder.
+   */
+  public query(): Knex.QueryBuilder {
+    if (!this.isConnected) {
+      throw new NotConnectedDatabaseException()
+    }
+
+    const query = this.useSetQB
+      ? this.qb.table(this.tableName)
+      : this.client.queryBuilder().table(this.tableName)
+
+    const handler = {
+      get: (target: Knex.QueryBuilder, propertyKey: string) => {
+        if (PROTECTED_QUERY_METHODS.includes(propertyKey)) {
+          this.qb = this.query()
+        }
+
+        return target[propertyKey]
+      }
+    }
+
+    return new Proxy(query, handler)
+  }
+
+  /**
+   * Sync a model schema with database.
+   */
+  public async sync(): Promise<void> {
+    debug(
+      `database sync with ${this.constructor.name} is not available yet, use migration instead.`
+    )
+  }
+
+  /**
+   * Create a new transaction.
+   */
+
+  public async startTransaction(): Promise<
+    Transaction<Knex.Transaction, Knex.QueryBuilder>
+  > {
+    const trx = await this.client.transaction()
+
+    return new Transaction(this.clone().setClient(trx))
+  }
+
+  /**
+   * Commit the transaction.
+   */
+  public async commitTransaction(): Promise<void> {
+    const client = this.client as Knex.Transaction
+
+    await client.commit()
+
+    this.tableName = null
+    this.client = null
+    this.isConnected = false
+  }
+
+  /**
+   * Rollback the transaction.
+   */
+  public async rollbackTransaction(): Promise<void> {
+    const client = this.client as Knex.Transaction
+
+    await client.rollback()
+
+    this.tableName = null
+    this.client = null
+    this.isConnected = false
+  }
+
+  /**
+   * Run database migrations.
+   */
+  public async runMigrations(): Promise<void> {
+    await this.client.migrate.latest({
+      migrationSource: new MigrationSource(this.connection)
+    })
+  }
+
+  /**
+   * Revert database migrations.
+   */
+  public async revertMigrations(): Promise<void> {
+    await this.client.migrate.rollback({
+      migrationSource: new MigrationSource(this.connection)
+    })
+  }
+
+  /**
+   * List all databases available.
+   */
+  public async getDatabases(): Promise<string[]> {
+    const [databases] = await this.raw('SHOW DATABASES')
+
+    return databases.map(database => database.Database)
+  }
+
+  /**
+   * Get the current database name.
+   */
+  public async getCurrentDatabase(): Promise<string | undefined> {
+    return this.client.client.database()
+  }
+
+  /**
+   * Verify if database exists.
+   */
+  public async hasDatabase(database: string): Promise<boolean> {
+    const databases = await this.getDatabases()
+
+    return databases.includes(database)
+  }
+
+  /**
+   * Create a new database.
+   */
+  public async createDatabase(database: string): Promise<void> {
+    await this.raw('CREATE DATABASE IF NOT EXISTS ??', database)
+  }
+
+  /**
+   * Drop some database.
+   */
+  public async dropDatabase(database: string): Promise<void> {
+    await this.raw('DROP DATABASE IF EXISTS ??', database)
+  }
+
+  /**
+   * List all tables available.
+   */
+  public async getTables(): Promise<string[]> {
+    const [tables] = await this.raw(
+      'SELECT table_name FROM information_schema.tables WHERE table_schema = ?',
+      await this.getCurrentDatabase()
+    )
+
+    return tables.map(table => table.TABLE_NAME)
+  }
+
+  /**
+   * Verify if table exists.
+   */
+  public async hasTable(table: string): Promise<boolean> {
+    return this.client.schema.hasTable(table)
+  }
+
+  /**
+   * Create a new table in database.
+   */
+  public async createTable(
+    table: string,
+    closure: (builder: Knex.TableBuilder) => void | Promise<void>
+  ): Promise<void> {
+    await this.client.schema.createTable(table, closure)
+  }
+
+  /**
+   * Alter a table in database.
+   */
+  public async alterTable(
+    table: string,
+    closure: (builder: Knex.TableBuilder) => void | Promise<void>
+  ): Promise<void> {
+    await this.client.schema.alterTable(table, closure)
+  }
+
+  /**
+   * Drop a table in database.
+   */
+  public async dropTable(table: string): Promise<void> {
+    await this.client.schema.dropTableIfExists(table)
+  }
+
+  /**
+   * Remove all data inside some database table
+   * and restart the identity of the table.
+   */
+  public async truncate(table: string): Promise<void> {
+    try {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 0')
+      await this.raw('TRUNCATE TABLE ??', table)
+    } finally {
+      await this.raw('SET FOREIGN_KEY_CHECKS = 1')
+    }
+  }
+
+  /**
+   * Make a raw query in database.
+   */
+  public raw<T = any>(sql: string, bindings?: any): T {
+    return this.client.raw(sql, bindings) as any
+  }
+
+  /**
+   * Calculate the average of a given column.
+   */
+  public async avg(column: string): Promise<string> {
+    const [{ avg }] = await this.qb.avg({ avg: column })
+
+    return avg
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   */
+  public async avgDistinct(column: string): Promise<string> {
+    const [{ avg }] = await this.qb.avgDistinct({ avg: column })
+
+    return avg
+  }
+
+  /**
+   * Get the max number of a given column.
+   */
+  public async max(column: string): Promise<string> {
+    const [{ max }] = await this.qb.max({ max: column })
+
+    return max
+  }
+
+  /**
+   * Get the min number of a given column.
+   */
+  public async min(column: string): Promise<string> {
+    const [{ min }] = await this.qb.min({ min: column })
+
+    return min
+  }
+
+  /**
+   * Sum all numbers of a given column.
+   */
+  public async sum(column: string): Promise<string> {
+    const [{ sum }] = await this.qb.sum({ sum: column })
+
+    return sum
+  }
+
+  /**
+   * Sum all numbers of a given column in distinct mode.
+   */
+  public async sumDistinct(column: string): Promise<string> {
+    const [{ sum }] = await this.qb.sumDistinct({ sum: column })
+
+    return sum
+  }
+
+  /**
+   * Increment a value of a given column.
+   */
+  public async increment(column: string): Promise<void> {
+    await this.qb.increment(column)
+  }
+
+  /**
+   * Decrement a value of a given column.
+   */
+  public async decrement(column: string): Promise<void> {
+    await this.qb.decrement(column)
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   */
+  public async count(column: string = '*'): Promise<number> {
+    const [{ count }] = await this.qb.count({ count: column })
+
+    return Number(count)
+  }
+
+  /**
+   * Calculate the average of a given column using distinct.
+   */
+  public async countDistinct(column: string): Promise<number> {
+    const [{ count }] = await this.qb.countDistinct({ count: column })
+
+    return Number(count)
+  }
+
+  /**
+   * Find a value in database.
+   */
+  public async find<T = any>(): Promise<T> {
+    return this.qb.first()
+  }
+
+  /**
+   * Find many values in database.
+   */
+  public async findMany<T = any>(): Promise<T[]> {
+    const data = await this.qb
+
+    this.qb = this.query()
+
+    return data
+  }
+
+  /**
+   * Find many values in database and return as paginated response.
+   */
+  public async paginate<T = any>(
+    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
+    limit = 10,
+    resourceUrl = '/'
+  ): Promise<PaginatedResponse<T>> {
+    if (Is.Number(page)) {
+      page = { page, limit, resourceUrl }
+    }
+
+    const [{ count }] = await this.qb
+      .clone()
+      .clearOrder()
+      .clearSelect()
+      .count({ count: '*' })
+
+    const data = await this.offset(page.page * page.limit)
+      .limit(page.limit)
+      .findMany()
+
+    return Exec.pagination(data, Number(count), page)
+  }
+
+  /**
+   * Create a value in database.
+   */
+  public async create<T = any>(data: Partial<T> = {}): Promise<T> {
+    if (Is.Array(data)) {
+      throw new WrongMethodException('create', 'createMany')
+    }
+
+    const created = await this.createMany([data])
+
+    return created[0]
+  }
+
+  /**
+   * Create many values in database.
+   */
+  public async createMany<T = any>(data: Partial<T>[] = []): Promise<T[]> {
+    if (!Is.Array(data)) {
+      throw new WrongMethodException('createMany', 'create')
+    }
+
+    const preparedData = data.map(data => this.prepareInsert(data))
+    const ids = []
+
+    const promises = preparedData.map((prepared, index) => {
+      return this.qb
+        .clone()
+        .insert(prepared)
+        .then(([id]) => ids.push(data[index][this.primaryKey] || id))
+    })
+
+    await Promise.all(promises)
+
+    return this.whereIn(this.primaryKey, ids).findMany()
+  }
+
+  /**
+   * Create data or update if already exists.
+   */
+  public async createOrUpdate<T = any>(data: Partial<T>): Promise<T> {
+    const query = this.qb.clone()
+    const hasValue = await query.first()
+    const preparedData = this.prepareInsert(data)
+
+    if (hasValue) {
+      await this.qb
+        .where(this.primaryKey, hasValue[this.primaryKey])
+        .limit(1)
+        .update(preparedData)
+
+      return this.where(this.primaryKey, hasValue[this.primaryKey]).find()
+    }
+
+    return this.create(data)
+  }
+
+  /**
+   * Update a value in database.
+   */
+  public async update<T = any>(data: Partial<T>): Promise<T | T[]> {
+    const preparedData = this.prepareInsert(data)
+
+    await this.qb.clone().update(preparedData)
+
+    const result = await this.findMany()
+
+    if (result.length === 1) {
+      return result[0]
+    }
+
+    return result
+  }
+
+  /**
+   * Stringify object-like values before persisting with Knex.
+   */
+  protected prepareInsert<T = any>(data: Partial<T>) {
+    return Object.entries(data).reduce((prepared, [key, value]) => {
+      if (!this.shouldStringifyJsonValue(value)) {
+        prepared[key] = value
+
+        return prepared
+      }
+
+      prepared[key] = JSON.stringify(value)
+
+      return prepared
+    }, {} as Partial<T>)
+  }
+
+  /**
+   * Verify if a value should be serialized before persisting.
+   */
+  private shouldStringifyJsonValue(value: any) {
+    return !!value && (Is.Array(value) || Is.Object(value))
+  }
+
+  /**
+   * Delete one value in database.
+   */
+  public async delete(): Promise<void> {
+    await this.qb.delete()
+  }
+
+  /**
+   * Set the table that this query will be executed.
+   */
+  public table(table: string) {
+    if (!this.isConnected) {
+      throw new NotConnectedDatabaseException()
+    }
+
+    if (!Is.String(table)) {
+      throw new Error('Table must be a string value')
+    }
+
+    this.tableName = table
+    this.qb = this.query()
+
+    return this
+  }
+
+  /**
+   * Log in console the actual query built.
+   */
+  public dump() {
+    process.stdout.write(`${JSON.stringify(this.qb.toSQL().toNative())}\n`)
+
+    return this
+  }
+
+  /**
+   * Set the columns that should be selected on query.
+   */
+  public select(...columns: string[]) {
+    if (!Is.Array(columns)) {
+      throw new EmptyValueException('select')
+    }
+
+    this.qb.select(...columns)
+
+    return this
+  }
+
+  /**
+   * Set the columns that should be selected on query raw.
+   */
+  public selectRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql)) {
+      throw new EmptyValueException('selectRaw')
+    }
+
+    return this.select(this.raw(sql, bindings) as any)
+  }
+
+  /**
+   * Set the table that should be used on query.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public from(table: string) {
+    if (Is.Undefined(table)) {
+      throw new Error('Table must be a string value')
+    }
+
+    this.qb.from(table)
+
+    return this
+  }
+
+  /**
+   * Set the table that should be used on query raw.
+   * Different from `table()` method, this method
+   * doesn't change the driver table.
+   */
+  public fromRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql)) {
+      throw new EmptyValueException('fromRaw')
+    }
+
+    return this.from(this.raw(sql, bindings) as any)
+  }
+
+  /**
+   * Set a join statement in your query.
+   */
+  public join(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('join', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a left join statement in your query.
+   */
+  public leftJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('leftJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a right join statement in your query.
+   */
+  public rightJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('rightJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a cross join statement in your query.
+   */
+  public crossJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('crossJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a full outer join statement in your query.
+   */
+  public fullOuterJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    // TODO https://github.com/knex/knex/issues/3949
+    return this.joinByType('leftJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a left outer join statement in your query.
+   */
+  public leftOuterJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('leftOuterJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a right outer join statement in your query.
+   */
+  public rightOuterJoin(
+    table: any,
+    column1?: any,
+    operation?: any | Operations,
+    column2?: any
+  ) {
+    return this.joinByType('rightOuterJoin', table, column1, operation, column2)
+  }
+
+  /**
+   * Set a join raw statement in your query.
+   */
+  public joinRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql)) {
+      throw new EmptyValueException('joinRaw')
+    }
+
+    this.qb.joinRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a group by statement in your query.
+   */
+  public groupBy(...columns: string[]) {
+    if (Is.Undefined(columns)) {
+      throw new EmptyColumnException('groupBy')
+    }
+
+    this.qb.groupBy(...columns)
+
+    return this
+  }
+
+  /**
+   * Set a group by raw statement in your query.
+   */
+  public groupByRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql)) {
+      throw new EmptyValueException('groupByRaw')
+    }
+
+    this.qb.groupByRaw(sql, bindings)
+
+    return this
+  }
+
+  public having(column: string): this
+  public having(column: string, value: any): this
+  public having(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set a having statement in your query.
+   */
+  public having(column: any, operation?: Operations, value?: any) {
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(column)) {
+        throw new EmptyColumnException('having')
+      }
+
+      this.qb.having(column)
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(column) || !Is.String(column)) {
+        throw new EmptyColumnException('having')
+      }
+
+      if (Is.Undefined(operation)) {
+        throw new EmptyValueException('having')
+      }
+
+      this.qb.having(column, '=', operation)
+
+      return this
+    }
+
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('having')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('having')
+    }
+
+    this.qb.having(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a having raw statement in your query.
+   */
+  public havingRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql)) {
+      throw new EmptyValueException('havingRaw')
+    }
+
+    this.qb.havingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a having in statement in your query.
+   */
+  public havingIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('havingIn')
+    }
+
+    this.qb.havingIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not in statement in your query.
+   */
+  public havingNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('havingNotIn')
+    }
+
+    this.qb.havingNotIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a having between statement in your query.
+   */
+  public havingBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('havingBetween')
+    }
+
+    this.qb.havingBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a having not between statement in your query.
+   */
+  public havingNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('havingNotBetween')
+    }
+
+    this.qb.havingNotBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a having null statement in your query.
+   */
+  public havingNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingNull')
+    }
+
+    this.qb.havingNull(column)
+
+    return this
+  }
+
+  /**
+   * Set a having not null statement in your query.
+   */
+  public havingNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('havingNotNull')
+    }
+
+    this.qb.havingNotNull(column)
+
+    return this
+  }
+
+  public orHaving(column: string): this
+  public orHaving(column: string, value: any): this
+  public orHaving(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set an or having statement in your query.
+   */
+  public orHaving(column: any, operation?: Operations, value?: any) {
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(column)) {
+        throw new EmptyColumnException('orHaving')
+      }
+
+      this.qb.orHaving(column)
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(column) || !Is.String(column)) {
+        throw new EmptyColumnException('orHaving')
+      }
+
+      if (Is.Undefined(operation)) {
+        throw new EmptyValueException('orHaving')
+      }
+
+      this.qb.orHaving(column, '=', operation)
+
+      return this
+    }
+
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHaving')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orHaving')
+    }
+
+    this.qb.orHaving(column, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set an or having raw statement in your query.
+   */
+  public orHavingRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql) || !Is.String(sql)) {
+      throw new EmptyValueException('orHavingRaw')
+    }
+
+    this.qb.orHavingRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or having not in statement in your query.
+   */
+  public orHavingNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHavingNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('orHavingNotIn')
+    }
+
+    this.qb.orHavingNotIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having between statement in your query.
+   */
+  public orHavingBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHavingBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orHavingBetween')
+    }
+
+    this.qb.orHavingBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having not between statement in your query.
+   */
+  public orHavingNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHavingNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orHavingNotBetween')
+    }
+
+    this.qb.orHavingNotBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or having null statement in your query.
+   */
+  public orHavingNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHavingNull')
+    }
+
+    this.qb.orHavingNull(column)
+
+    return this
+  }
+
+  /**
+   * Set an or having not null statement in your query.
+   */
+  public orHavingNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orHavingNotNull')
+    }
+
+    this.qb.orHavingNotNull(column)
+
+    return this
+  }
+
+  public where(statement: Record<string, any>): this
+  public where(key: string, value: any): this
+  public where(key: string, operation: Operations, value: any): this
+
+  /**
+   * Set a where statement in your query.
+   */
+  public where(statement: any, operation?: Operations, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.clone()
+
+      this.qb.where(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
+
+      return this
+    }
+
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('where')
+      }
+
+      this.qb.where(statement)
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.String(statement)) {
+        throw new EmptyValueException('where')
+      }
+
+      if (this.isUsingJsonSelector(statement)) {
+        this.whereJson(statement, operation)
+
+        return this
+      }
+
+      this.qb.where(statement, operation)
+
+      return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('where')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('where')
+    }
+
+    if (this.isUsingJsonSelector(statement)) {
+      this.whereJson(statement, operation, value)
+
+      return this
+    }
+
+    this.qb.where(statement, operation, value)
+
+    return this
+  }
+
+  public whereNot(statement: Record<string, any>): this
+  public whereNot(key: string, value: any): this
+
+  /**
+   * Set a where not statement in your query.
+   */
+  public whereNot(statement: any, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.clone()
+
+      this.qb.whereNot(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('whereNot')
+      }
+
+      this.qb.whereNot(statement)
+
+      return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('whereNot')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('whereNot')
+    }
+
+    this.qb.whereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a where raw statement in your query.
+   */
+  public whereRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql) || !Is.String(sql)) {
+      throw new EmptyValueException('whereRaw')
+    }
+
+    this.qb.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a where exists statement in your query.
+   */
+  public whereExists(closure: (query: BaseKnexDriver) => void) {
+    const driver = this.clone() as BaseKnexDriver
+
+    this.qb.whereExists(function () {
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
+    })
+
+    return this
+  }
+
+  /**
+   * Set a where not exists statement in your query.
+   */
+  public whereNotExists(closure: (query: BaseKnexDriver) => void) {
+    const driver = this.clone() as BaseKnexDriver
+
+    this.qb.whereNotExists(function () {
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
+    })
+
+    return this
+  }
+
+  /**
+   * Set a where like statement in your query.
+   */
+  public whereLike(column: string, value: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereLike')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('whereLike')
+    }
+
+    this.qb.whereLike(column, value)
+
+    return this
+  }
+
+  /**
+   * Set a where ILike statement in your query.
+   */
+  public whereILike(column: string, value: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereILike')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('whereILike')
+    }
+
+    this.qb.whereILike(column, value)
+
+    return this
+  }
+
+  /**
+   * Set a where in statement in your query.
+   */
+  public whereIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('whereIn')
+    }
+
+    this.qb.whereIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a where not in statement in your query.
+   */
+  public whereNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('whereNotIn')
+    }
+
+    this.qb.whereNotIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a where between statement in your query.
+   */
+  public whereBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('whereBetween')
+    }
+
+    this.qb.whereBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a where not between statement in your query.
+   */
+  public whereNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('whereNotBetween')
+    }
+
+    this.qb.whereNotBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set a where null statement in your query.
+   */
+  public whereNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNull')
+    }
+
+    this.qb.whereNull(column)
+
+    return this
+  }
+
+  /**
+   * Set a where not null statement in your query.
+   */
+  public whereNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotNull')
+    }
+
+    this.qb.whereNotNull(column)
+
+    return this
+  }
+
+  public whereJson(column: string, value: any): this
+  public whereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public whereJson(column: string, operator: any, value?: any) {
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const path = this.parseJsonSelectorToPath(parsed.path)
+
+    if (Is.Undefined(value)) {
+      this.qb.whereJsonPath(parsed.column, path, '=', operator)
+
+      return this
+    }
+
+    this.qb.whereJsonPath(parsed.column, path, operator, value)
+
+    return this
+  }
+
+  public orWhere(statement: Record<string, any>): this
+  public orWhere(key: string, value: any): this
+  public orWhere(key: string, operation: Operations, value: any): this
+
+  /**
+   * Set a or where statement in your query.
+   */
+  public orWhere(statement: any, operation?: Operations, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.clone()
+
+      this.qb.orWhere(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
+
+      return this
+    }
+
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('orWhere')
+      }
+
+      this.qb.orWhere(statement)
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.String(statement)) {
+        throw new EmptyColumnException('orWhere')
+      }
+
+      this.qb.orWhere(statement, operation)
+
+      return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('orWhere')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhere')
+    }
+
+    this.qb.orWhere(statement, operation, value)
+
+    return this
+  }
+
+  public orWhereNot(statement: Record<string, any>): this
+  public orWhereNot(key: string, value: any): this
+
+  /**
+   * Set an or where not statement in your query.
+   */
+  public orWhereNot(statement: any, value?: any) {
+    if (Is.Function(statement)) {
+      const driver = this.clone()
+
+      this.qb.orWhereNot(function () {
+        statement(driver.setQueryBuilder(this, { useSetQB: true }))
+      })
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('orWhereNot')
+      }
+
+      this.qb.orWhereNot(statement)
+
+      return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('orWhereNot')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhereNot')
+    }
+
+    this.qb.orWhereNot(statement, value)
+
+    return this
+  }
+
+  /**
+   * Set a or where raw statement in your query.
+   */
+  public orWhereRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql) || !Is.String(sql)) {
+      throw new EmptyValueException('orWhereRaw')
+    }
+
+    this.qb.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where exists statement in your query.
+   */
+  public orWhereExists(closure: (query: BaseKnexDriver) => void) {
+    const driver = this.clone() as BaseKnexDriver
+
+    this.qb.orWhereExists(function () {
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
+    })
+
+    return this
+  }
+
+  /**
+   * Set an or where not exists statement in your query.
+   */
+  public orWhereNotExists(closure: (query: BaseKnexDriver) => void) {
+    const driver = this.clone() as BaseKnexDriver
+
+    this.qb.orWhereNotExists(function () {
+      closure(driver.setQueryBuilder(this, { useSetQB: true }))
+    })
+
+    return this
+  }
+
+  /**
+   * Set an or where like statement in your query.
+   */
+  public orWhereLike(column: string, value: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereLike')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhereLike')
+    }
+
+    this.qb.orWhereLike(column, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where ILike statement in your query.
+   */
+  public orWhereILike(column: string, value: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereILike')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhereILike')
+    }
+
+    this.qb.orWhereILike(column, value)
+
+    return this
+  }
+
+  /**
+   * Set an or where in statement in your query.
+   */
+  public orWhereIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('orWhereIn')
+    }
+
+    this.qb.orWhereIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not in statement in your query.
+   */
+  public orWhereNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('orWhereNotIn')
+    }
+
+    this.qb.orWhereNotIn(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where between statement in your query.
+   */
+  public orWhereBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orWhereBetween')
+    }
+
+    this.qb.orWhereBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where not between statement in your query.
+   */
+  public orWhereNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orWhereNotBetween')
+    }
+
+    this.qb.orWhereNotBetween(column, values)
+
+    return this
+  }
+
+  /**
+   * Set an or where null statement in your query.
+   */
+  public orWhereNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNull')
+    }
+
+    this.qb.orWhereNull(column)
+
+    return this
+  }
+
+  /**
+   * Set an or where not null statement in your query.
+   */
+  public orWhereNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotNull')
+    }
+
+    this.qb.orWhereNotNull(column)
+
+    return this
+  }
+
+  public orWhereJson(column: string, value: any): this
+  public orWhereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set an or where json statement in your query.
+   */
+  public orWhereJson(column: string, operator: any, value?: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereJson')
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const path = this.parseJsonSelectorToPath(parsed.path)
+
+    if (Is.Undefined(value)) {
+      this.qb.orWhereJsonPath(parsed.column, path, '=', operator)
+
+      return this
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhereJson')
+    }
+
+    this.qb.orWhereJsonPath(parsed.column, path, operator, value)
+
+    return this
+  }
+
+  /**
+   * Convert a json selector path to a valid json path.
+   */
+  private parseJsonSelectorToPath(path: string) {
+    const parts = path
+      .split('->')
+      .map(part => part.trim())
+      .filter(Boolean)
+
+    return parts.reduce((jsonPath, part) => {
+      if (part === '*') {
+        return `${jsonPath}[*]`
+      }
+
+      if (/^\d+$/.test(part)) {
+        return `${jsonPath}[${part}]`
+      }
+
+      return `${jsonPath}.${part}`
+    }, '$')
+  }
+
+  /**
+   * Set an order by statement in your query.
+   */
+  public orderBy(column: string, direction: Direction = 'ASC') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orderBy')
+    }
+
+    this.qb.orderBy(column, direction.toUpperCase())
+
+    return this
+  }
+
+  /**
+   * Set an order by raw statement in your query.
+   */
+  public orderByRaw(sql: string, bindings?: any) {
+    if (Is.Undefined(sql) || !Is.String(sql)) {
+      throw new EmptyValueException('orderByRaw')
+    }
+
+    this.qb.orderByRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Order the results easily by the latest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   */
+  public latest(column: string = 'createdAt') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('latest')
+    }
+
+    return this.orderBy(column, 'DESC')
+  }
+
+  /**
+   * Order the results easily by the oldest date. By default, the result will
+   * be ordered by the table's "createdAt" column.
+   */
+  public oldest(column: string = 'createdAt') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('oldest')
+    }
+
+    return this.orderBy(column, 'ASC')
+  }
+
+  /**
+   * Set the skip number in your query.
+   */
+  public offset(number: number) {
+    if (Is.Undefined(number) || !Is.Number(number)) {
+      throw new EmptyValueException('offset')
+    }
+
+    this.qb.offset(number)
+
+    return this
+  }
+
+  /**
+   * Set the limit number in your query.
+   */
+  public limit(number: number) {
+    if (Is.Undefined(number) || !Is.Number(number)) {
+      throw new EmptyValueException('limit')
+    }
+
+    this.qb.limit(number)
+
+    return this
+  }
+}
