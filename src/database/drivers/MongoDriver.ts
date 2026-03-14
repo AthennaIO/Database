@@ -24,7 +24,9 @@ import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { Connection, Collection, ClientSession } from 'mongoose'
+import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import type { ConnectionOptions, Direction, Operations } from '#src/types'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { MONGO_OPERATIONS_DICTIONARY } from '#src/constants/MongoOperationsDictionary'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
@@ -549,7 +551,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async count(column: string = '*'): Promise<string> {
+  public async count(column: string = '*'): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -565,13 +567,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       .aggregate(pipeline, { session: this.session })
       .toArray()
 
-    return `${result[0]?.count || 0}`
+    return Number(result[0]?.count || 0)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async countDistinct(column: string): Promise<string> {
+  public async countDistinct(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -591,7 +593,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
       .aggregate(pipeline, { session: this.session })
       .toArray()
 
-    return `${count}`
+    return Number(count)
   }
 
   /**
@@ -699,9 +701,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Create data or update if already exists.
    */
-  public async createOrUpdate<T = any>(
-    data: Partial<T> = {}
-  ): Promise<T | T[]> {
+  public async createOrUpdate<T = any>(data: Partial<T> = {}): Promise<T> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -711,7 +711,9 @@ export class MongoDriver extends Driver<Connection, Collection> {
     )[0]
 
     if (hasValue) {
-      return this.where(this.primaryKey, hasValue[this.primaryKey]).update(data)
+      return this.where(this.primaryKey, hasValue[this.primaryKey]).update(
+        data
+      ) as Promise<T>
     }
 
     return this.create(data)
@@ -760,6 +762,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
       throw new NotConnectedDatabaseException()
     }
 
+    if (!Is.String(table)) {
+      throw new Error('Table must be a string value')
+    }
+
     this.tableName = table
     this.qb = this.query()
 
@@ -770,11 +776,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Log in console the actual query built.
    */
   public dump() {
-    console.log({
-      where: this._where,
-      orWhere: this._orWhere,
-      pipeline: this.pipeline
-    })
+    process.stdout.write(
+      `${JSON.stringify({
+        where: this._where,
+        orWhere: this._orWhere,
+        pipeline: this.pipeline
+      })}\n`
+    )
 
     return this
   }
@@ -783,6 +791,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set the columns that should be selected on query.
    */
   public select(...columns: string[]) {
+    if (!Is.Array(columns)) {
+      throw new EmptyValueException('select')
+    }
+
     if (columns.includes('*')) {
       return this
     }
@@ -971,6 +983,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a group by statement in your query.
    */
   public groupBy(...columns: string[]) {
+    if (Is.Undefined(columns) || !Is.Array(columns)) {
+      throw new EmptyColumnException('groupBy')
+    }
+
     const $group = { [this.primaryKey]: {} }
 
     columns.forEach(column => ($group[this.primaryKey][column] = `$${column}`))
@@ -1004,20 +1020,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public havingRaw(): this {
     throw new NotImplementedMethodException(this.havingRaw.name, 'mongo')
-  }
-
-  /**
-   * Set a having exists statement in your query.
-   */
-  public havingExists(): this {
-    throw new NotImplementedMethodException(this.havingExists.name, 'mongo')
-  }
-
-  /**
-   * Set a having not exists statement in your query.
-   */
-  public havingNotExists(): this {
-    throw new NotImplementedMethodException(this.havingNotExists.name, 'mongo')
   }
 
   /**
@@ -1081,30 +1083,6 @@ export class MongoDriver extends Driver<Connection, Collection> {
   }
 
   /**
-   * Set an or having exists statement in your query.
-   */
-  public orHavingExists(): this {
-    throw new NotImplementedMethodException(this.orHavingExists.name, 'mongo')
-  }
-
-  /**
-   * Set an or having not exists statement in your query.
-   */
-  public orHavingNotExists(): this {
-    throw new NotImplementedMethodException(
-      this.orHavingNotExists.name,
-      'mongo'
-    )
-  }
-
-  /**
-   * Set an or having in statement in your query.
-   */
-  public orHavingIn(column: string, values: any[]) {
-    return this.orWhereIn(column, values)
-  }
-
-  /**
    * Set an or having not in statement in your query.
    */
   public orHavingNotIn(column: string, values: any[]) {
@@ -1153,18 +1131,42 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return this
     }
 
-    if (operation === undefined) {
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('where')
+      }
+
       this._where.push(statement)
 
       return this
     }
 
-    if (value === undefined) {
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.String(statement)) {
+        throw new EmptyValueException('where')
+      }
+
+      if (this.isUsingJsonSelector(statement)) {
+        return this.whereJson(statement, operation)
+      }
+
       this._where.push({
         [statement]: this.setOperator(operation, '=')
       })
 
       return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('where')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('where')
+    }
+
+    if (this.isUsingJsonSelector(statement)) {
+      return this.whereJson(statement, operation, value)
     }
 
     this._where.push({ [statement]: this.setOperator(value, operation) })
@@ -1221,6 +1223,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where in statement in your query.
    */
   public whereIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('whereIn')
+    }
+
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
         return [String(value), new ObjectId(value)]
@@ -1238,6 +1248,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not in statement in your query.
    */
   public whereNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('whereNotIn')
+    }
+
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
         return [String(value), new ObjectId(value)]
@@ -1255,6 +1273,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where between statement in your query.
    */
   public whereBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('whereBetween')
+    }
+
     this._where.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1264,6 +1290,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not between statement in your query.
    */
   public whereNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('whereNotBetween')
+    }
+
     this._where.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })
@@ -1275,6 +1309,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where null statement in your query.
    */
   public whereNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNull')
+    }
+
     this._where.push({ [column]: null })
 
     return this
@@ -1284,7 +1322,45 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not null statement in your query.
    */
   public whereNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereNotNull')
+    }
+
     this._where.push({ [column]: { $ne: null } })
+
+    return this
+  }
+
+  public whereJson(column: string, value: any): this
+  public whereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public whereJson(column: string, operation: any, value?: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereJson')
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const path = this.jsonSelectorToDotPath(parsed.path)
+
+    if (value === undefined) {
+      this._where.push({
+        [`${parsed.column}.${path}`]: this.setOperator(operation, '=')
+      })
+
+      return this
+    }
+
+    this._where.push({
+      [`${parsed.column}.${path}`]: this.setOperator(value, operation)
+    })
 
     return this
   }
@@ -1303,16 +1379,40 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return this
     }
 
-    if (operation === undefined) {
+    if (Is.Undefined(operation)) {
+      if (Is.Undefined(statement) || !Is.Object(statement)) {
+        throw new EmptyValueException('orWhere')
+      }
+
       this._orWhere.push(statement)
 
       return this
     }
 
-    if (value === undefined) {
+    if (Is.Undefined(value)) {
+      if (Is.Undefined(statement) || !Is.String(statement)) {
+        throw new EmptyColumnException('orWhere')
+      }
+
+      if (this.isUsingJsonSelector(statement)) {
+        return this.orWhereJson(statement, operation)
+      }
+
       this._orWhere.push({ [statement]: this.setOperator(operation, '=') })
 
       return this
+    }
+
+    if (Is.Undefined(statement) || !Is.String(statement)) {
+      throw new EmptyColumnException('orWhere')
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException('orWhere')
+    }
+
+    if (this.isUsingJsonSelector(statement)) {
+      return this.orWhereJson(statement, operation, value)
     }
 
     this._orWhere.push({ [statement]: this.setOperator(value, operation) })
@@ -1328,6 +1428,40 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public orWhereNot(statement: any, value?: any) {
     return this.orWhere(statement, '<>', value)
+  }
+
+  public orWhereJson(column: string, value: any): this
+  public orWhereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set an or where json statement in your query.
+   */
+  public orWhereJson(column: string, operation: any, value?: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereJson')
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const path = this.jsonSelectorToDotPath(parsed.path)
+
+    if (value === undefined) {
+      this._orWhere.push({
+        [`${parsed.column}.${path}`]: this.setOperator(operation, '=')
+      })
+
+      return this
+    }
+
+    this._orWhere.push({
+      [`${parsed.column}.${path}`]: this.setOperator(value, operation)
+    })
+
+    return this
   }
 
   /**
@@ -1369,6 +1503,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where in statement in your query.
    */
   public orWhereIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('orWhereIn')
+    }
+
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
         return [String(value), new ObjectId(value)]
@@ -1386,6 +1528,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not in statement in your query.
    */
   public orWhereNotIn(column: string, values: any[]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotIn')
+    }
+
+    if (Is.Undefined(values)) {
+      throw new EmptyValueException('orWhereNotIn')
+    }
+
     values = values.flatMap(value => {
       if (ObjectId.isValidStringOrObject(value)) {
         return [String(value), new ObjectId(value)]
@@ -1403,6 +1553,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where between statement in your query.
    */
   public orWhereBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orWhereBetween')
+    }
+
     this._orWhere.push({ [column]: { $gte: values[0], $lte: values[1] } })
 
     return this
@@ -1412,6 +1570,14 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not between statement in your query.
    */
   public orWhereNotBetween(column: string, values: [any, any]) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotBetween')
+    }
+
+    if (Is.Undefined(values?.[0]) || Is.Undefined(values?.[1])) {
+      throw new EmptyValueException('orWhereNotBetween')
+    }
+
     this._orWhere.push({
       [column]: { $not: { $gte: values[0], $lte: values[1] } }
     })
@@ -1423,6 +1589,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where null statement in your query.
    */
   public orWhereNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNull')
+    }
+
     this._orWhere.push({ [column]: null })
 
     return this
@@ -1432,6 +1602,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an or where not null statement in your query.
    */
   public orWhereNotNull(column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereNotNull')
+    }
+
     this._orWhere.push({ [column]: { $ne: null } })
 
     return this
@@ -1441,6 +1615,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set an order by statement in your query.
    */
   public orderBy(column: string, direction: Direction = 'ASC') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orderBy')
+    }
+
     this.pipeline.push({
       $sort: { [column]: direction.toLowerCase() === 'asc' ? 1 : -1 }
     })
@@ -1460,6 +1638,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * be ordered by the table's "createdAt" column.
    */
   public latest(column: string = 'createdAt') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('latest')
+    }
+
     return this.orderBy(column, 'DESC')
   }
 
@@ -1468,6 +1650,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * be ordered by the table's "createdAt" column.
    */
   public oldest(column: string = 'createdAt') {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('oldest')
+    }
+
     return this.orderBy(column, 'ASC')
   }
 
@@ -1475,6 +1661,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set the skip number in your query.
    */
   public offset(number: number) {
+    if (Is.Undefined(number) || !Is.Number(number)) {
+      throw new EmptyValueException('offset')
+    }
+
     this.pipeline.push({ $skip: number })
 
     return this
@@ -1484,6 +1674,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set the limit number in your query.
    */
   public limit(number: number) {
+    if (Is.Undefined(number) || !Is.Number(number)) {
+      throw new EmptyValueException('limit')
+    }
+
     this.pipeline.push({ $limit: number })
 
     return this
@@ -1518,6 +1712,18 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     return object
+  }
+
+  /**
+   * Convert a json selector path to mongo dot notation.
+   */
+  private jsonSelectorToDotPath(path: string) {
+    return path
+      .split('->')
+      .map(part => part.trim())
+      .filter(Boolean)
+      .filter(part => part !== '*')
+      .join('.')
   }
 
   /**

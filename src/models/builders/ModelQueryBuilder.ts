@@ -8,9 +8,9 @@
  */
 
 import {
-  Collection,
   Is,
   Options,
+  Collection,
   type PaginationOptions
 } from '@athenna/common'
 
@@ -181,7 +181,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async count(column?: ModelColumns<M>): Promise<string> {
+  public async count(column?: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     if (!column) {
@@ -196,7 +196,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async countDistinct(column: ModelColumns<M>): Promise<string> {
+  public async countDistinct(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -208,9 +208,13 @@ export class ModelQueryBuilder<
    * Find value in database but returns only the value of
    * selected column directly.
    */
-  public async pluck<K extends keyof M = ModelColumns<M>>(
+  public async pluck<K extends Extract<ModelColumns<M>, keyof M>>(
     column: K
-  ): Promise<M[K]> {
+  ): Promise<M[K]>
+
+  public async pluck(column: ModelColumns<M>): Promise<any>
+
+  public async pluck(column: any): Promise<any> {
     this.setInternalQueries()
 
     const columnName: any = this.schema.getColumnNameByProperty(column as any)
@@ -222,9 +226,13 @@ export class ModelQueryBuilder<
    * Find many values in database but returns only the
    * values of selected column directly.
    */
-  public async pluckMany<K extends keyof M = ModelColumns<M>>(
+  public async pluckMany<K extends Extract<ModelColumns<M>, keyof M>>(
     column: K
-  ): Promise<M[K][]> {
+  ): Promise<M[K][]>
+
+  public async pluckMany(column: ModelColumns<M>): Promise<any[]>
+
+  public async pluckMany(column: any): Promise<any[]> {
     this.setInternalQueries()
 
     const columnName: any = this.schema.getColumnNameByProperty(column as any)
@@ -742,17 +750,6 @@ export class ModelQueryBuilder<
   }
 
   /**
-   * Set a orHaving in statement in your query.
-   */
-  public orHavingIn(column: ModelColumns<M>, values: any[]) {
-    const name = this.schema.getColumnNameByProperty(column)
-
-    super.orHavingIn(name, values)
-
-    return this
-  }
-
-  /**
    * Set a orHaving not in statement in your query.
    */
   public orHavingNotIn(column: ModelColumns<M>, values: any[]) {
@@ -974,6 +971,24 @@ export class ModelQueryBuilder<
     return this
   }
 
+  public whereJson(column: ModelColumns<M>, value: any): this
+  public whereJson(
+    column: ModelColumns<M>,
+    operation: Operations,
+    value: any
+  ): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public whereJson(column: ModelColumns<M>, operation: any, value?: any) {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.whereJson(name, operation, value)
+
+    return this
+  }
+
   public orWhere(statement: (query: this) => void): this
   public orWhere(statement: Partial<M>): this
   public orWhere(statement: Record<string, any>): this
@@ -1161,6 +1176,28 @@ export class ModelQueryBuilder<
     const name = this.schema.getColumnNameByProperty(column)
 
     super.orWhereNotNull(name)
+
+    return this
+  }
+
+  public orWhereJson(column: ModelColumns<M>, value: any): this
+  public orWhereJson(
+    column: ModelColumns<M>,
+    operation: Operations,
+    value: any
+  ): this
+
+  /**
+   * Set an orWhereJson statement in your query.
+   */
+  public orWhereJson(
+    column: ModelColumns<M>,
+    operation: Operations,
+    value?: any
+  ) {
+    const name = this.schema.getColumnNameByProperty(column)
+
+    super.orWhereJson(name, operation, value)
 
     return this
   }

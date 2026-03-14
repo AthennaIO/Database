@@ -1363,30 +1363,6 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
-  public async shouldAddAHavingExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(Database.driver, 'havingExists').resolve(undefined)
-
-    User.query().havingExists(closure)
-
-    assert.calledOnce(Database.driver.havingExists)
-  }
-
-  @Test()
-  public async shouldAddAHavingNotExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(Database.driver, 'havingNotExists').resolve(undefined)
-
-    User.query().havingNotExists(closure)
-
-    assert.calledOnce(Database.driver.havingNotExists)
-  }
-
-  @Test()
   public async shouldAddAHavingInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
@@ -1543,52 +1519,6 @@ export default class ModelQueryBuilderTest {
     User.query().orHavingRaw(sql)
 
     assert.calledOnceWith(Database.driver.orHavingRaw, sql)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(Database.driver, 'orHavingExists').resolve(undefined)
-
-    User.query().orHavingExists(closure)
-
-    assert.calledOnce(Database.driver.orHavingExists)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingNotExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(Database.driver, 'orHavingNotExists').resolve(undefined)
-
-    User.query().orHavingNotExists(closure)
-
-    assert.calledOnce(Database.driver.orHavingNotExists)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingInClauseToTheQuery({ assert }: Context) {
-    const column = 'id'
-    const values = [1, 2, 3]
-    Mock.when(Database.driver, 'orHavingIn').resolve(undefined)
-
-    User.query().orHavingIn(column, values)
-
-    assert.calledOnce(Database.driver.orHavingIn)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingInClauseToTheQueryParsingColumnNames({ assert }: Context) {
-    const column = 'rate'
-    const values = [1, 2, 3]
-    Mock.when(Database.driver, 'orHavingIn').resolve(undefined)
-
-    User.query().orHavingIn(column, values)
-
-    assert.calledOnceWith(Database.driver.orHavingIn, 'rate_number', [1, 2, 3])
   }
 
   @Test()

@@ -317,15 +317,15 @@ export class FakeDriver {
   /**
    * Calculate the average of a given column using distinct.
    */
-  public static async count(): Promise<string> {
-    return '1'
+  public static async count(): Promise<number> {
+    return 1
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public static async countDistinct(): Promise<string> {
-    return '1'
+  public static async countDistinct(): Promise<number> {
+    return 1
   }
 
   /**
@@ -471,7 +471,7 @@ export class FakeDriver {
    */
   public static async createOrUpdate<T = any>(
     data: Partial<T> = {}
-  ): Promise<T | T[]> {
+  ): Promise<T> {
     return data as T
   }
 
@@ -636,20 +636,6 @@ export class FakeDriver {
   }
 
   /**
-   * Set a having exists statement in your query.
-   */
-  public static havingExists() {
-    return this
-  }
-
-  /**
-   * Set a having not exists statement in your query.
-   */
-  public static havingNotExists() {
-    return this
-  }
-
-  /**
    * Set a having in statement in your query.
    */
   public static havingIn() {
@@ -710,27 +696,6 @@ export class FakeDriver {
    * Set an or having raw statement in your query.
    */
   public static orHavingRaw() {
-    return this
-  }
-
-  /**
-   * Set an or having exists statement in your query.
-   */
-  public static orHavingExists() {
-    return this
-  }
-
-  /**
-   * Set an or having not exists statement in your query.
-   */
-  public static orHavingNotExists() {
-    return this
-  }
-
-  /**
-   * Set an or having in statement in your query.
-   */
-  public static orHavingIn() {
     return this
   }
 
@@ -871,6 +836,20 @@ export class FakeDriver {
     return this
   }
 
+  public static whereJson(column: string, value: any): typeof FakeDriver
+  public static whereJson(
+    column: string,
+    operation: Operations,
+    value: any
+  ): typeof FakeDriver
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public static whereJson() {
+    return this
+  }
+
   public static orWhere(statement: Record<string, any>): typeof FakeDriver
   public static orWhere(key: string, value: any): typeof FakeDriver
   public static orWhere(
@@ -972,6 +951,20 @@ export class FakeDriver {
     return this
   }
 
+  public static orWhereJson(column: string, value: any): typeof FakeDriver
+  public static orWhereJson(
+    column: string,
+    operation: Operations,
+    value: any
+  ): typeof FakeDriver
+
+  /**
+   * Set an or where json statement in your query.
+   */
+  public static orWhereJson() {
+    return this
+  }
+
   /**
    * Set an order by statement in your query.
    */
@@ -1014,5 +1007,17 @@ export class FakeDriver {
    */
   public static limit() {
     return this
+  }
+
+  public static isUsingJsonSelector() {
+    return false
+  }
+
+  public static parseJsonSelector() {
+    return null
+  }
+
+  public static parseJsonSelectorToPath(path: string) {
+    return path
   }
 }

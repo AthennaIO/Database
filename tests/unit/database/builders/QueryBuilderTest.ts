@@ -600,32 +600,6 @@ export default class QueryBuilderTest {
   }
 
   @Test()
-  public async shouldAddAHavingExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(FakeDriver, 'havingExists').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.havingExists(closure)
-
-    assert.calledOnce(FakeDriver.havingExists)
-  }
-
-  @Test()
-  public async shouldAddAHavingNotExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(FakeDriver, 'havingNotExists').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.havingNotExists(closure)
-
-    assert.calledOnce(FakeDriver.havingNotExists)
-  }
-
-  @Test()
   public async shouldAddAHavingInClauseToTheQuery({ assert }: Context) {
     const column = 'id'
     const values = [1, 2, 3]
@@ -714,56 +688,6 @@ export default class QueryBuilderTest {
     queryBuilder.orHavingRaw('age > 100')
 
     assert.calledOnce(FakeDriver.orHavingRaw)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(FakeDriver, 'orHavingExists').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.orHavingExists(closure)
-
-    assert.calledOnce(FakeDriver.orHavingExists)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingNotExistsClauseToTheQuery({ assert }: Context) {
-    const closure = query => {
-      query.table('profiles').select('*').whereRaw('users.account_id = accounts.id')
-    }
-    Mock.when(FakeDriver, 'orHavingNotExists').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.orHavingNotExists(closure)
-
-    assert.calledOnce(FakeDriver.orHavingNotExists)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingInClauseToTheQuery({ assert }: Context) {
-    const column = 'id'
-    const values = [1, 2, 3]
-    Mock.when(FakeDriver, 'orHavingIn').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.orHavingIn(column, values)
-
-    assert.calledOnce(FakeDriver.orHavingIn)
-  }
-
-  @Test()
-  public async shouldAddAnOrHavingNotInClauseToTheQuery({ assert }: Context) {
-    const column = 'id'
-    const values = [1, 2, 3]
-    Mock.when(FakeDriver, 'orHavingNotIn').resolve(undefined)
-
-    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
-    queryBuilder.orHavingNotIn(column, values)
-
-    assert.calledOnce(FakeDriver.orHavingNotIn)
   }
 
   @Test()

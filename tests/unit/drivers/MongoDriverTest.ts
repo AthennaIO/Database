@@ -11,7 +11,9 @@ import { Config } from '@athenna/config'
 import { Path, Sleep, Collection } from '@athenna/common'
 import { MongoDriver } from '#src/database/drivers/MongoDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, Mock, AfterEach, BeforeEach, type Context } from '@athenna/test'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
@@ -46,6 +48,7 @@ export default class MongoDriverTest {
     await this.driver.dropTable('products')
     await this.driver.dropTable('users')
     await this.driver.dropTable('orders')
+    await this.driver.dropTable('events')
     await this.driver.dropTable('migrations')
     await this.driver.dropTable('migrations_lock')
 
@@ -555,7 +558,7 @@ export default class MongoDriverTest {
 
     const result = await this.driver.table('products').countDistinct('quantity')
 
-    assert.equal(result, '1')
+    assert.equal(result, 1)
   }
 
   @Test()
@@ -857,7 +860,7 @@ export default class MongoDriverTest {
 
     await this.driver.table('users').create(data)
 
-    assert.deepEqual(await this.driver.table('users').count(), '1')
+    assert.deepEqual(await this.driver.table('users').count(), 1)
   }
 
   @Test()
@@ -868,12 +871,17 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToSetInvalidTableName({ assert }: Context) {
+    assert.throws(() => this.driver.table(undefined as any), Error)
+  }
+
+  @Test()
   public async shouldBeAbleToDumpTheSQLQuery({ assert }: Context) {
-    Mock.when(console, 'log').return(undefined)
+    Mock.when(process.stdout, 'write').return(undefined)
 
     this.driver.table('users').select('*').dump()
 
-    assert.calledWith(console.log, { where: [], orWhere: [], pipeline: [] })
+    assert.calledWith(process.stdout.write, `${JSON.stringify({ where: [], orWhere: [], pipeline: [] })}\n`)
   }
 
   @Test()
@@ -1200,18 +1208,44 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToFilterJsonByIndexUsingWhereJson({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { _id: '1', metadata: { name: 'admin' } },
+      { _id: '2', metadata: { name: 'member' } }
+    ])
+
+    const data = await this.driver.table('events').whereJson('metadata->name', 'admin').findMany()
+
+    assert.deepEqual(data, [{ _id: '1', metadata: { name: 'admin' } }])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterJsonArrayByIndexUsingWhereJson({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('events').whereJson('metadata->1->name', 'editor').findMany()
+
+    assert.deepEqual(data, [{ _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] }])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterJsonArrayByWildcardUsingWhereSelector({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('events').where('metadata->*->name', 'member').findMany()
+
+    assert.deepEqual(data, [{ _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }])
+  }
+
+  @Test()
   public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingRaw({ assert }: Context) {
     await assert.rejects(() => this.driver.havingRaw(), NotImplementedMethodException)
-  }
-
-  @Test()
-  public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingExistsMethod({ assert }: Context) {
-    await assert.rejects(() => this.driver.havingExists(), NotImplementedMethodException)
-  }
-
-  @Test()
-  public async shouldThrowNotImplementedExceptionWhenTryingToRunHavingNotExistsMethod({ assert }: Context) {
-    await assert.rejects(() => this.driver.havingNotExists(), NotImplementedMethodException)
   }
 
   @Test()
@@ -1424,42 +1458,6 @@ export default class MongoDriverTest {
   }
 
   @Test()
-  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrHavingExistsMethod({ assert }: Context) {
-    await assert.rejects(() => this.driver.orHavingExists(), NotImplementedMethodException)
-  }
-
-  @Test()
-  public async shouldThrowNotImplementedExceptionWhenTryingToRunOrHavingNotExistsMethod({ assert }: Context) {
-    await assert.rejects(() => this.driver.orHavingNotExists(), NotImplementedMethodException)
-  }
-
-  @Test()
-  public async shouldBeAbleToAddAOrHavingInClauseToTheQueryUsingDriver({ assert }: Context) {
-    await this.driver.table('users').createMany([
-      { _id: '1', name: 'Robert Kiyosaki' },
-      { _id: '2', name: 'Warren Buffet' },
-      { _id: '3', name: 'Alan Turing' }
-    ])
-    await this.driver.table('rents').createMany([
-      { _id: '1', user_id: '1' },
-      { _id: '2', user_id: '1' },
-      { _id: '3', user_id: '1' },
-      { _id: '4', user_id: '1' },
-      { _id: '5', user_id: '2' },
-      { _id: '6', user_id: '2' }
-    ])
-
-    const data = await this.driver
-      .table('users')
-      .select('_id', 'name')
-      .groupBy('_id', 'name')
-      .orHavingIn('name', ['Alan Turing'])
-      .findMany()
-
-    assert.deepEqual(data, [{ _id: '3', name: 'Alan Turing' }])
-  }
-
-  @Test()
   public async shouldBeAbleToAddAOrHavingNotInClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { _id: '1', name: 'Robert Kiyosaki' },
@@ -1635,6 +1633,54 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToAddAWhereJsonClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { _id: '1', metadata: { roles: ['admin', 'editor'] } },
+      { _id: '2', metadata: { roles: ['member'] } }
+    ])
+
+    const data = await this.driver.table('users').whereJson('metadata->roles->0', 'admin').findMany()
+
+    assert.deepEqual(data, [{ _id: '1', metadata: { roles: ['admin', 'editor'] } }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseJsonSelectorDirectlyInsideWhereUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { _id: '1', metadata: { roles: ['admin', 'editor'] } },
+      { _id: '2', metadata: { roles: ['member'] } }
+    ])
+
+    const data = await this.driver.table('users').where('metadata->roles->0', 'admin').findMany()
+
+    assert.deepEqual(data, [{ _id: '1', metadata: { roles: ['admin', 'editor'] } }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseArrayIndexInJsonSelectorInsideWhereUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('users').where('metadata->1->name', 'editor').findMany()
+
+    assert.deepEqual(data, [{ _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseArrayWildcardInJsonSelectorInsideWhereUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { _id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
+      { _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }
+    ])
+
+    const data = await this.driver.table('users').where('metadata->*->name', 'member').findMany()
+
+    assert.deepEqual(data, [{ _id: '2', metadata: [{ name: 'user' }, { name: 'member' }] }])
+  }
+
+  @Test()
   public async shouldBeAbleToAddAWhereClauseAsClosureToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { _id: '1', name: 'Robert Kiyosaki' },
@@ -1659,6 +1705,26 @@ export default class MongoDriverTest {
       .findMany()
 
     assert.deepEqual(data, [{ user_id: '2' }, { user_id: '2' }])
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidStatementObject({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any), EmptyValueException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidStatementKey({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any, 'value'), EmptyValueException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereWithInvalidColumnAndValue({ assert }: Context) {
+    assert.throws(() => this.driver.where(undefined as any, '=', 'value'), EmptyColumnException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddWhereJsonWithInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.whereJson(undefined as any, 'value'), EmptyColumnException)
   }
 
   @Test()
@@ -1976,6 +2042,16 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToAddOrWhereWithInvalidStatementKey({ assert }: Context) {
+    assert.throws(() => this.driver.orWhere(undefined as any, 'value'), EmptyColumnException)
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToAddOrWhereJsonWithInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.orWhereJson(undefined as any, 'value'), EmptyColumnException)
+  }
+
+  @Test()
   public async shouldThrowNotImplementedExceptionWhenTryingToRunOrWhereRaw({ assert }: Context) {
     await assert.rejects(() => this.driver.orWhereRaw(), NotImplementedMethodException)
   }
@@ -2246,6 +2322,11 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToOrderByInvalidColumn({ assert }: Context) {
+    assert.throws(() => this.driver.orderBy(undefined as any), EmptyColumnException)
+  }
+
+  @Test()
   public async shouldBeAbleToAutomaticallyOrderTheDataByDatesUsingLatest({ assert }: Context) {
     await this.driver.table('users').create({ _id: '1', name: 'Robert Kiyosaki', created_at: new Date() })
     const latest = await this.driver.table('users').create({ _id: '3', name: 'Alan Turing', created_at: new Date() })
@@ -2281,6 +2362,11 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldThrowWhenTryingToOffsetByInvalidValue({ assert }: Context) {
+    assert.throws(() => this.driver.offset(undefined as any), EmptyValueException)
+  }
+
+  @Test()
   public async shouldLimitTheResultsByGivenValue({ assert }: Context) {
     await this.driver.table('users').createMany([
       { _id: '1', name: 'Robert Kiyosaki' },
@@ -2291,5 +2377,10 @@ export default class MongoDriverTest {
     const data = await this.driver.table('users').select('name').limit(1).findMany()
 
     assert.deepEqual(data, [{ name: 'Robert Kiyosaki' }])
+  }
+
+  @Test()
+  public async shouldThrowWhenTryingToLimitByInvalidValue({ assert }: Context) {
+    assert.throws(() => this.driver.limit(undefined as any), EmptyValueException)
   }
 }

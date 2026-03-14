@@ -18,9 +18,9 @@ import {
 } from '@athenna/common'
 
 import { Database } from '#src/facades/Database'
-import type { ModelRelations } from '#src/types'
 import { faker, type Faker } from '@faker-js/faker'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import type { ModelColumns, ModelRelations } from '#src/types'
 import { ORIGINAL_SYMBOL } from '#src/constants/OriginalSymbol'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { ModelGenerator } from '#src/models/factories/ModelGenerator'
@@ -203,12 +203,24 @@ export class BaseModel {
    */
   public static async pluck<
     T extends typeof BaseModel,
-    K extends keyof InstanceType<T> = keyof InstanceType<T>
+    K extends Extract<ModelColumns<InstanceType<T>>, keyof InstanceType<T>>
   >(
     this: T,
     key: K,
     where?: Partial<InstanceType<T>>
-  ): Promise<InstanceType<T>[K]> {
+  ): Promise<InstanceType<T>[K]>
+
+  public static async pluck<T extends typeof BaseModel>(
+    this: T,
+    key: ModelColumns<InstanceType<T>>,
+    where?: Partial<InstanceType<T>>
+  ): Promise<any>
+
+  public static async pluck<T extends typeof BaseModel>(
+    this: T,
+    key: any,
+    where?: Partial<InstanceType<T>>
+  ): Promise<any> {
     const query = this.query()
 
     if (where) {
@@ -224,12 +236,24 @@ export class BaseModel {
    */
   public static async pluckMany<
     T extends typeof BaseModel,
-    K extends keyof InstanceType<T> = keyof InstanceType<T>
+    K extends Extract<ModelColumns<InstanceType<T>>, keyof InstanceType<T>>
   >(
     this: T,
     key: K,
     where?: Partial<InstanceType<T>>
-  ): Promise<InstanceType<T>[K][]> {
+  ): Promise<InstanceType<T>[K][]>
+
+  public static async pluckMany<T extends typeof BaseModel>(
+    this: T,
+    key: ModelColumns<InstanceType<T>>,
+    where?: Partial<InstanceType<T>>
+  ): Promise<any[]>
+
+  public static async pluckMany<T extends typeof BaseModel>(
+    this: T,
+    key: any,
+    where?: Partial<InstanceType<T>>
+  ): Promise<any[]> {
     const query = this.query()
 
     if (where) {
@@ -461,8 +485,9 @@ export class BaseModel {
    */
   public setOriginal() {
     this[ORIGINAL_SYMBOL] = {}
+    const copied = Json.copy(this)
 
-    Object.keys(Json.copy(this)).forEach(key => {
+    Object.keys(copied).forEach(key => {
       const value = this[key]
 
       if (Is.Array(value) && value[0] && ORIGINAL_SYMBOL in value[0]) {
@@ -473,7 +498,7 @@ export class BaseModel {
         return
       }
 
-      this[ORIGINAL_SYMBOL][key] = value
+      this[ORIGINAL_SYMBOL][key] = copied[key]
     })
 
     return this

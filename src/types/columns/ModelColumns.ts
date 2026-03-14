@@ -9,6 +9,8 @@
 
 import type { BaseModel } from '#src/models/BaseModel'
 
+type UnsafeColumnSelector = `${string}.${string}` | `${string}->${string}`
+
 export type ColumnKeys<T> = {
   [K in keyof T]: T[K] extends BaseModel | BaseModel[] ? never : K
 }[keyof Omit<
@@ -27,4 +29,6 @@ export type ColumnKeys<T> = {
   | 'toJSON'
 >]
 
-export type ModelColumns<T> = Extract<ColumnKeys<T>, string>
+export type ModelColumns<T> =
+  | Extract<ColumnKeys<T>, string>
+  | UnsafeColumnSelector

@@ -7,30 +7,17 @@
  * file that was distributed with this source code.
  */
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
-import {
-  Exec,
-  Is,
-  Json,
-  Options,
-  type PaginatedResponse,
-  type PaginationOptions
-} from '@athenna/common'
-
-import type { Knex } from 'knex'
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
-import { Driver } from '#src/database/drivers/Driver'
+import type { Operations } from '#src/types'
+import { Is, Json, Options } from '@athenna/common'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
-import { Transaction } from '#src/database/transactions/Transaction'
-import type { ConnectionOptions, Direction, Operations } from '#src/types'
-import { MigrationSource } from '#src/database/migrations/MigrationSource'
+import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
+import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
-import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
-import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
+import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 
-export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
+export class SqliteDriver extends BaseKnexDriver {
   /**
    * Connect to database.
    */
@@ -87,135 +74,12 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
-   * Close the connection with database in this instance.
-   */
-  public async close(): Promise<void> {
-    if (!this.isConnected) {
-      return
-    }
-
-    await this.client.destroy()
-
-    this.qb = null
-    this.tableName = null
-    this.client = null
-    this.isConnected = false
-
-    ConnectionFactory.setClient(this.connection, null)
-  }
-
-  /**
-   * Creates a new instance of query builder.
-   */
-  public query(): Knex.QueryBuilder {
-    if (!this.isConnected) {
-      throw new NotConnectedDatabaseException()
-    }
-
-    const query = this.useSetQB
-      ? this.qb.table(this.tableName)
-      : this.client.queryBuilder().table(this.tableName)
-
-    const handler = {
-      get: (target: Knex.QueryBuilder, propertyKey: string) => {
-        if (PROTECTED_QUERY_METHODS.includes(propertyKey)) {
-          this.qb = this.query()
-        }
-
-        return target[propertyKey]
-      }
-    }
-
-    return new Proxy(query, handler)
-  }
-
-  /**
-   * Sync a model schema with database.
-   */
-  public async sync(): Promise<void> {
-    debug(
-      `database sync with ${SqliteDriver.name} is not available yet, use migration instead.`
-    )
-  }
-
-  /**
-   * Create a new transaction.
-   */
-  public async startTransaction(): Promise<
-    Transaction<Knex.Transaction, Knex.QueryBuilder>
-  > {
-    const trx = await this.client.transaction()
-
-    return new Transaction(this.clone().setClient(trx))
-  }
-
-  /**
-   * Commit the transaction.
-   */
-  public async commitTransaction(): Promise<void> {
-    const client = this.client as Knex.Transaction
-
-    await client.commit()
-
-    this.tableName = null
-    this.client = null
-    this.isConnected = false
-  }
-
-  /**
-   * Rollback the transaction.
-   */
-  public async rollbackTransaction(): Promise<void> {
-    const client = this.client as Knex.Transaction
-
-    await client.rollback()
-
-    this.tableName = null
-    this.client = null
-    this.isConnected = false
-  }
-
-  /**
-   * Run database migrations.
-   */
-  public async runMigrations(): Promise<void> {
-    await this.client.migrate.latest({
-      migrationSource: new MigrationSource(this.connection)
-    })
-  }
-
-  /**
-   * Revert database migrations.
-   */
-  public async revertMigrations(): Promise<void> {
-    await this.client.migrate.rollback({
-      migrationSource: new MigrationSource(this.connection)
-    })
-  }
-
-  /**
    * List all databases available.
    */
   public async getDatabases(): Promise<string[]> {
     const databases = await this.raw('PRAGMA database_list')
 
     return databases.map(database => database.name)
-  }
-
-  /**
-   * Get the current database name.
-   */
-  public async getCurrentDatabase(): Promise<string | undefined> {
-    return this.client.client.database()
-  }
-
-  /**
-   * Verify if database exists.
-   */
-  public async hasDatabase(database: string): Promise<boolean> {
-    const databases = await this.getDatabases()
-
-    return databases.includes(database)
   }
 
   /**
@@ -255,194 +119,11 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
-   * Verify if table exists.
-   */
-  public async hasTable(table: string): Promise<boolean> {
-    return this.client.schema.hasTable(table)
-  }
-
-  /**
-   * Create a new table in database.
-   */
-  public async createTable(
-    table: string,
-    closure: (builder: Knex.TableBuilder) => void | Promise<void>
-  ): Promise<void> {
-    await this.client.schema.createTable(table, closure)
-  }
-
-  /**
-   * Alter a table in database.
-   */
-  public async alterTable(
-    table: string,
-    closure: (builder: Knex.TableBuilder) => void | Promise<void>
-  ): Promise<void> {
-    await this.client.schema.alterTable(table, closure)
-  }
-
-  /**
-   * Drop a table in database.
-   */
-  public async dropTable(table: string): Promise<void> {
-    await this.client.schema.dropTableIfExists(table)
-  }
-
-  /**
    * Remove all data inside some database table
    * and restart the identity of the table.
    */
   public async truncate(table: string): Promise<void> {
     await this.raw('DELETE FROM ??', table)
-  }
-
-  /**
-   * Make a raw query in database.
-   */
-  public raw<T = any>(sql: string, bindings?: any): T {
-    return this.client.raw(sql, bindings) as any
-  }
-
-  /**
-   * Calculate the average of a given column.
-   */
-  public async avg(column: string): Promise<string> {
-    const [{ avg }] = await this.qb.avg({ avg: column })
-
-    return avg
-  }
-
-  /**
-   * Calculate the average of a given column using distinct.
-   */
-  public async avgDistinct(column: string): Promise<string> {
-    const [{ avg }] = await this.qb.avgDistinct({ avg: column })
-
-    return avg
-  }
-
-  /**
-   * Get the max number of a given column.
-   */
-  public async max(column: string): Promise<string> {
-    const [{ max }] = await this.qb.max({ max: column })
-
-    return max
-  }
-
-  /**
-   * Get the min number of a given column.
-   */
-  public async min(column: string): Promise<string> {
-    const [{ min }] = await this.qb.min({ min: column })
-
-    return min
-  }
-
-  /**
-   * Sum all numbers of a given column.
-   */
-  public async sum(column: string): Promise<string> {
-    const [{ sum }] = await this.qb.sum({ sum: column })
-
-    return sum
-  }
-
-  /**
-   * Sum all numbers of a given column in distinct mode.
-   */
-  public async sumDistinct(column: string): Promise<string> {
-    const [{ sum }] = await this.qb.sumDistinct({ sum: column })
-
-    return sum
-  }
-
-  /**
-   * Increment a value of a given column.
-   */
-  public async increment(column: string): Promise<void> {
-    await this.qb.increment(column)
-  }
-
-  /**
-   * Decrement a value of a given column.
-   */
-  public async decrement(column: string): Promise<void> {
-    await this.qb.decrement(column)
-  }
-
-  /**
-   * Calculate the average of a given column using distinct.
-   */
-  public async count(column: string = '*'): Promise<string> {
-    const [{ count }] = await this.qb.count({ count: column })
-
-    return `${count}`
-  }
-
-  /**
-   * Calculate the average of a given column using distinct.
-   */
-  public async countDistinct(column: string): Promise<string> {
-    const [{ count }] = await this.qb.countDistinct({ count: column })
-
-    return `${count}`
-  }
-
-  /**
-   * Find a value in database.
-   */
-  public async find<T = any>(): Promise<T> {
-    return this.qb.first()
-  }
-
-  /**
-   * Find many values in database.
-   */
-  public async findMany<T = any>(): Promise<T[]> {
-    const data = await this.qb
-
-    this.qb = this.query()
-
-    return data
-  }
-
-  /**
-   * Find many values in database and return as paginated response.
-   */
-  public async paginate<T = any>(
-    page: PaginationOptions | number = { page: 0, limit: 10, resourceUrl: '/' },
-    limit = 10,
-    resourceUrl = '/'
-  ): Promise<PaginatedResponse<T>> {
-    if (Is.Number(page)) {
-      page = { page, limit, resourceUrl }
-    }
-
-    const [{ count }] = await this.qb
-      .clone()
-      .clearOrder()
-      .clearSelect()
-      .count({ count: '*' })
-
-    const data = await this.offset(page.page * page.limit)
-      .limit(page.limit)
-      .findMany()
-
-    return Exec.pagination(data, parseInt(count), page)
-  }
-
-  /**
-   * Create a value in database.
-   */
-  public async create<T = any>(data: Partial<T> = {}): Promise<T> {
-    if (Is.Array(data)) {
-      throw new WrongMethodException('create', 'createMany')
-    }
-
-    const created = await this.createMany([data])
-
-    return created[0]
   }
 
   /**
@@ -453,571 +134,207 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
       throw new WrongMethodException('createMany', 'create')
     }
 
-    return this.qb.insert(data, '*')
+    const preparedData = data.map(data => this.prepareInsert(data))
+
+    return this.qb.insert(preparedData, '*')
   }
 
   /**
-   * Create data or update if already exists.
+   * Find a value in database.
    */
-  public async createOrUpdate<T = any>(
-    data: Partial<T> = {}
-  ): Promise<T | T[]> {
-    const query = this.qb.clone()
-    const hasValue = await query.first()
+  public async find<T = any>(): Promise<T> {
+    const data = await super.find<T>()
 
-    if (hasValue) {
-      await this.qb
-        .where(this.primaryKey, hasValue[this.primaryKey])
-        .update(data)
+    return this.normalizeRow(data)
+  }
 
-      return this.where(this.primaryKey, hasValue[this.primaryKey]).find()
+  /**
+   * Find many values in database.
+   */
+  public async findMany<T = any>(): Promise<T[]> {
+    const data = await super.findMany<T>()
+
+    return data.map(row => this.normalizeRow(row))
+  }
+
+  public whereJson(column: string, value: any): this
+  public whereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set a where json statement in your query.
+   */
+  public whereJson(column: string, operator: any, value?: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('whereJson')
     }
 
-    return this.create(data)
-  }
+    const parsed = this.parseJsonSelector(column)
 
-  /**
-   * Update a value in database.
-   */
-  public async update<T = any>(data: Partial<T>): Promise<T | T[]> {
-    await this.qb.clone().update(data)
-
-    const result = await this.findMany()
-
-    if (result.length === 1) {
-      return result[0]
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
     }
 
-    return result
-  }
+    const normalized = this.normalizeJsonOperation(operator, value)
 
-  /**
-   * Delete one value in database.
-   */
-  public async delete(): Promise<void> {
-    await this.qb.delete()
-  }
-
-  /**
-   * Set the table that this query will be executed.
-   */
-  public table(table: string) {
-    if (!this.isConnected) {
-      throw new NotConnectedDatabaseException()
-    }
-
-    this.tableName = table
-    this.qb = this.query()
-
-    return this
-  }
-
-  /**
-   * Log in console the actual query built.
-   */
-  public dump() {
-    console.log(this.qb.toSQL().toNative())
-
-    return this
-  }
-
-  /**
-   * Set the columns that should be selected on query.
-   */
-  public select(...columns: string[]) {
-    this.qb.select(...columns)
-
-    return this
-  }
-
-  /**
-   * Set the columns that should be selected on query raw.
-   */
-  public selectRaw(sql: string, bindings?: any) {
-    return this.select(this.raw(sql, bindings) as any)
-  }
-
-  /**
-   * Set the table that should be used on query.
-   * Different from `table()` method, this method
-   * doesn't change the driver table.
-   */
-  public from(table: string) {
-    this.qb.from(table)
-
-    return this
-  }
-
-  /**
-   * Set the table that should be used on query raw.
-   * Different from `table()` method, this method
-   * doesn't change the driver table.
-   */
-  public fromRaw(sql: string, bindings?: any) {
-    return this.from(this.raw(sql, bindings) as any)
-  }
-
-  /**
-   * Set a join statement in your query.
-   */
-  public join(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('join', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a left join statement in your query.
-   */
-  public leftJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('leftJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a right join statement in your query.
-   */
-  public rightJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('rightJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a cross join statement in your query.
-   */
-  public crossJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('crossJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a full outer join statement in your query.
-   */
-  public fullOuterJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('fullOuterJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a left outer join statement in your query.
-   */
-  public leftOuterJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('leftOuterJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a right outer join statement in your query.
-   */
-  public rightOuterJoin(
-    table: any,
-    column1?: any,
-    operation?: any | Operations,
-    column2?: any
-  ) {
-    return this.joinByType('rightOuterJoin', table, column1, operation, column2)
-  }
-
-  /**
-   * Set a join raw statement in your query.
-   */
-  public joinRaw(sql: string, bindings?: any) {
-    this.qb.joinRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Set a group by statement in your query.
-   */
-  public groupBy(...columns: string[]) {
-    this.qb.groupBy(...columns)
-
-    return this
-  }
-
-  /**
-   * Set a group by raw statement in your query.
-   */
-  public groupByRaw(sql: string, bindings?: any) {
-    this.qb.groupByRaw(sql, bindings)
-
-    return this
-  }
-
-  public having(column: string): this
-  public having(column: string, value: any): this
-  public having(column: string, operation: Operations, value: any): this
-
-  /**
-   * Set a having statement in your query.
-   */
-  public having(column: any, operation?: Operations, value?: any) {
-    if (operation === undefined) {
-      this.qb.having(column)
+    if (!parsed.path.includes('*')) {
+      this.qb.whereRaw('json_extract(??, ?) ' + normalized.operator + ' ?', [
+        parsed.column,
+        this.parseJsonSelectorToSqlitePath(parsed.path),
+        normalized.value
+      ])
 
       return this
     }
 
-    if (value === undefined) {
-      this.qb.having(column, '=', operation)
+    const wildcard = this.parseJsonSelectorToWildcardParts(parsed.path)
+
+    this.qb.whereRaw(
+      'exists (select 1 from json_each(??, ?) where json_extract(json_each.value, ?) ' +
+        normalized.operator +
+        ' ?)',
+      [parsed.column, wildcard.arrayPath, wildcard.valuePath, normalized.value]
+    )
+
+    return this
+  }
+
+  public orWhereJson(column: string, value: any): this
+  public orWhereJson(column: string, operation: Operations, value: any): this
+
+  /**
+   * Set an or where json statement in your query.
+   */
+  public orWhereJson(column: string, operator: any, value?: any) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException('orWhereJson')
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const normalized = this.normalizeJsonOperation(operator, value)
+
+    if (!parsed.path.includes('*')) {
+      this.qb.orWhereRaw('json_extract(??, ?) ' + normalized.operator + ' ?', [
+        parsed.column,
+        this.parseJsonSelectorToSqlitePath(parsed.path),
+        normalized.value
+      ])
 
       return this
     }
 
-    this.qb.having(column, operation, value)
+    const wildcard = this.parseJsonSelectorToWildcardParts(parsed.path)
+
+    this.qb.orWhereRaw(
+      'exists (select 1 from json_each(??, ?) where json_extract(json_each.value, ?) ' +
+        normalized.operator +
+        ' ?)',
+      [parsed.column, wildcard.arrayPath, wildcard.valuePath, normalized.value]
+    )
 
     return this
   }
 
   /**
-   * Set a having raw statement in your query.
+   * Convert a json selector path to sqlite json path.
    */
-  public havingRaw(sql: string, bindings?: any) {
-    this.qb.havingRaw(sql, bindings)
+  private parseJsonSelectorToSqlitePath(path: string) {
+    const parts = path
+      .split('->')
+      .map(part => part.trim())
+      .filter(Boolean)
 
-    return this
+    return this.toJsonPath(parts)
   }
 
   /**
-   * Set a having exists statement in your query.
+   * Split a json selector around the wildcard.
    */
-  public havingExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
+  private parseJsonSelectorToWildcardParts(path: string) {
+    const parts = path
+      .split('->')
+      .map(part => part.trim())
+      .filter(Boolean)
 
-    // @ts-ignore
-    this.qb.havingExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
+    const wildcardIndex = parts.indexOf('*')
 
-    return this
-  }
-
-  /**
-   * Set a having not exists statement in your query.
-   */
-  public havingNotExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    // @ts-ignore
-    this.qb.havingNotExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set a having in statement in your query.
-   */
-  public havingIn(column: string, values: any[]) {
-    this.qb.havingIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a having not in statement in your query.
-   */
-  public havingNotIn(column: string, values: any[]) {
-    this.qb.havingNotIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a having between statement in your query.
-   */
-  public havingBetween(column: string, values: [any, any]) {
-    this.qb.havingBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a having not between statement in your query.
-   */
-  public havingNotBetween(column: string, values: [any, any]) {
-    this.qb.havingNotBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a having null statement in your query.
-   */
-  public havingNull(column: string) {
-    this.qb.havingNull(column)
-
-    return this
-  }
-
-  /**
-   * Set a having not null statement in your query.
-   */
-  public havingNotNull(column: string) {
-    this.qb.havingNotNull(column)
-
-    return this
-  }
-
-  public orHaving(column: string): this
-  public orHaving(column: string, value: any): this
-  public orHaving(column: string, operation: Operations, value: any): this
-
-  /**
-   * Set an or having statement in your query.
-   */
-  public orHaving(column: any, operation?: Operations, value?: any) {
-    if (operation === undefined) {
-      this.qb.orHaving(column)
-
-      return this
+    return {
+      arrayPath: this.toJsonPath(parts.slice(0, wildcardIndex)),
+      valuePath: this.toJsonPath(parts.slice(wildcardIndex + 1))
     }
-
-    if (value === undefined) {
-      this.qb.orHaving(column, '=', operation)
-
-      return this
-    }
-
-    this.qb.orHaving(column, operation, value)
-
-    return this
   }
 
   /**
-   * Set an or having raw statement in your query.
+   * Convert path parts to a valid json path.
    */
-  public orHavingRaw(sql: string, bindings?: any) {
-    this.qb.orHavingRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Set an or having exists statement in your query.
-   */
-  public orHavingExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    // @ts-ignore
-    this.qb.orHavingExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set an or having not exists statement in your query.
-   */
-  public orHavingNotExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    // @ts-ignore
-    this.qb.orHavingNotExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set an or having in statement in your query.
-   */
-  public orHavingIn(column: string, values: any[]) {
-    // @ts-ignore
-    this.qb.orHavingIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or having not in statement in your query.
-   */
-  public orHavingNotIn(column: string, values: any[]) {
-    this.qb.orHavingNotIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or having between statement in your query.
-   */
-  public orHavingBetween(column: string, values: [any, any]) {
-    this.qb.orHavingBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or having not between statement in your query.
-   */
-  public orHavingNotBetween(column: string, values: [any, any]) {
-    this.qb.orHavingNotBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or having null statement in your query.
-   */
-  public orHavingNull(column: string) {
-    // @ts-ignore
-    this.qb.orHavingNull(column)
-
-    return this
-  }
-
-  /**
-   * Set an or having not null statement in your query.
-   */
-  public orHavingNotNull(column: string) {
-    // @ts-ignore
-    this.qb.orHavingNotNull(column)
-
-    return this
-  }
-
-  public where(statement: Record<string, any>): this
-  public where(key: string, value: any): this
-  public where(key: string, operation: Operations, value: any): this
-
-  /**
-   * Set a where statement in your query.
-   */
-  public where(statement: any, operation?: Operations, value?: any) {
-    if (Is.Function(statement)) {
-      const driver = this.clone()
-
-      this.qb.where(function () {
-        statement(driver.setQueryBuilder(this, { useSetQB: true }))
-      })
-
-      return this
-    }
-
-    if (operation === undefined) {
-      if (Is.Array(statement)) {
-        throw new Error('Arrays as statement are not supported.')
+  private toJsonPath(parts: string[]) {
+    return parts.reduce((jsonPath, part) => {
+      if (/^\d+$/.test(part)) {
+        return `${jsonPath}[${part}]`
       }
 
-      if (Is.String(statement)) {
-        throw new Error(
-          `The value for the "${statement}" column is undefined and where will not work.`
-        )
+      return `${jsonPath}.${part}`
+    }, '$')
+  }
+
+  /**
+   * Normalize operator/value pairs from the whereJson overloads.
+   */
+  private normalizeJsonOperation(operator: any, value?: any) {
+    if (Is.Undefined(value)) {
+      return {
+        operator: '=',
+        value: operator
       }
-
-      this.qb.where(statement)
-
-      return this
     }
 
-    if (value === undefined) {
-      this.qb.where(statement, operation)
+    return {
+      operator,
+      value
+    }
+  }
 
-      return this
+  /**
+   * Normalize json strings returned by sqlite into arrays/objects.
+   */
+  private normalizeRow<T = any>(row: T): T {
+    if (!row || !Is.Object(row)) {
+      return row
     }
 
-    this.qb.where(statement, operation, value)
+    return Object.entries(row).reduce((normalized, [key, value]) => {
+      normalized[key] = this.normalizeJsonValue(value)
 
-    return this
+      return normalized
+    }, {} as T)
   }
 
-  public whereNot(statement: Record<string, any>): this
-  public whereNot(key: string, value: any): this
-
   /**
-   * Set a where not statement in your query.
+   * Parse stringified json objects/arrays returned by sqlite.
    */
-  public whereNot(statement: any, value?: any) {
-    if (Is.Function(statement)) {
-      const driver = this.clone()
-
-      this.qb.whereNot(function () {
-        statement(driver.setQueryBuilder(this, { useSetQB: true }))
-      })
-
-      return this
+  private normalizeJsonValue(value: any) {
+    if (!Is.String(value)) {
+      return value
     }
 
-    if (value === undefined) {
-      this.qb.whereNot(statement)
+    const trimmed = value.trim()
 
-      return this
+    if (
+      !(trimmed.startsWith('{') && trimmed.endsWith('}')) &&
+      !(trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      return value
     }
 
-    this.qb.whereNot(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a where raw statement in your query.
-   */
-  public whereRaw(sql: string, bindings?: any) {
-    this.qb.whereRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Set a where exists statement in your query.
-   */
-  public whereExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    this.qb.whereExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set a where not exists statement in your query.
-   */
-  public whereNotExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    this.qb.whereNotExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set a where like statement in your query.
-   */
-  public whereLike(column: string, value: any) {
-    this.qb.whereLike(column, value)
-
-    return this
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      return value
+    }
   }
 
   /**
@@ -1030,277 +347,10 @@ export class SqliteDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
-   * Set a where in statement in your query.
-   */
-  public whereIn(column: string, values: any[]) {
-    this.qb.whereIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a where not in statement in your query.
-   */
-  public whereNotIn(column: string, values: any[]) {
-    this.qb.whereNotIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a where between statement in your query.
-   */
-  public whereBetween(column: string, values: [any, any]) {
-    this.qb.whereBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a where not between statement in your query.
-   */
-  public whereNotBetween(column: string, values: [any, any]) {
-    this.qb.whereNotBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set a where null statement in your query.
-   */
-  public whereNull(column: string) {
-    this.qb.whereNull(column)
-
-    return this
-  }
-
-  /**
-   * Set a where not null statement in your query.
-   */
-  public whereNotNull(column: string) {
-    this.qb.whereNotNull(column)
-
-    return this
-  }
-
-  public orWhere(statement: Record<string, any>): this
-  public orWhere(key: string, value: any): this
-  public orWhere(key: string, operation: Operations, value: any): this
-
-  /**
-   * Set a or where statement in your query.
-   */
-  public orWhere(statement: any, operation?: Operations, value?: any) {
-    if (Is.Function(statement)) {
-      const driver = this.clone()
-
-      this.qb.orWhere(function () {
-        statement(driver.setQueryBuilder(this, { useSetQB: true }))
-      })
-
-      return this
-    }
-
-    if (operation === undefined) {
-      this.qb.orWhere(statement)
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.orWhere(statement, operation)
-
-      return this
-    }
-
-    this.qb.orWhere(statement, operation, value)
-
-    return this
-  }
-
-  public orWhereNot(statement: Record<string, any>): this
-  public orWhereNot(key: string, value: any): this
-
-  /**
-   * Set an or where not statement in your query.
-   */
-  public orWhereNot(statement: any, value?: any) {
-    if (Is.Function(statement)) {
-      const driver = this.clone()
-
-      this.qb.orWhereNot(function () {
-        statement(driver.setQueryBuilder(this, { useSetQB: true }))
-      })
-
-      return this
-    }
-
-    if (value === undefined) {
-      this.qb.orWhereNot(statement)
-
-      return this
-    }
-
-    this.qb.orWhereNot(statement, value)
-
-    return this
-  }
-
-  /**
-   * Set a or where raw statement in your query.
-   */
-  public orWhereRaw(sql: string, bindings?: any) {
-    this.qb.orWhereRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Set an or where exists statement in your query.
-   */
-  public orWhereExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    this.qb.orWhereExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set an or where not exists statement in your query.
-   */
-  public orWhereNotExists(closure: (query: SqliteDriver) => void) {
-    const driver = this.clone() as SqliteDriver
-
-    this.qb.orWhereNotExists(function () {
-      closure(driver.setQueryBuilder(this, { useSetQB: true }))
-    })
-
-    return this
-  }
-
-  /**
-   * Set an or where like statement in your query.
-   */
-  public orWhereLike(column: string, value: any) {
-    this.qb.orWhereLike(column, value)
-
-    return this
-  }
-
-  /**
-   * Set an or where ILike statement in your query.
+   * Set a where ILike statement in your query.
    */
   public orWhereILike(column: string, value: any) {
     this.qb.orWhereLike(column, value)
-
-    return this
-  }
-
-  /**
-   * Set an or where in statement in your query.
-   */
-  public orWhereIn(column: string, values: any[]) {
-    this.qb.orWhereIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or where not in statement in your query.
-   */
-  public orWhereNotIn(column: string, values: any[]) {
-    this.qb.orWhereNotIn(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or where between statement in your query.
-   */
-  public orWhereBetween(column: string, values: [any, any]) {
-    this.qb.orWhereBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or where not between statement in your query.
-   */
-  public orWhereNotBetween(column: string, values: [any, any]) {
-    this.qb.orWhereNotBetween(column, values)
-
-    return this
-  }
-
-  /**
-   * Set an or where null statement in your query.
-   */
-  public orWhereNull(column: string) {
-    this.qb.orWhereNull(column)
-
-    return this
-  }
-
-  /**
-   * Set an or where not null statement in your query.
-   */
-  public orWhereNotNull(column: string) {
-    this.qb.orWhereNotNull(column)
-
-    return this
-  }
-
-  /**
-   * Set an order by statement in your query.
-   */
-  public orderBy(column: string, direction: Direction = 'ASC') {
-    this.qb.orderBy(column, direction.toUpperCase())
-
-    return this
-  }
-
-  /**
-   * Set an order by raw statement in your query.
-   */
-  public orderByRaw(sql: string, bindings?: any) {
-    this.qb.orderByRaw(sql, bindings)
-
-    return this
-  }
-
-  /**
-   * Order the results easily by the latest date. By default, the result will
-   * be ordered by the table's "createdAt" column.
-   */
-  public latest(column: string = 'createdAt') {
-    return this.orderBy(column, 'DESC')
-  }
-
-  /**
-   * Order the results easily by the oldest date. By default, the result will
-   * be ordered by the table's "createdAt" column.
-   */
-  public oldest(column: string = 'createdAt') {
-    return this.orderBy(column, 'ASC')
-  }
-
-  /**
-   * Set the skip number in your query.
-   */
-  public offset(number: number) {
-    this.qb.offset(number)
-
-    return this
-  }
-
-  /**
-   * Set the limit number in your query.
-   */
-  public limit(number: number) {
-    this.qb.limit(number)
 
     return this
   }
