@@ -252,7 +252,7 @@ export class QueryBuilder<
   /**
    * Create data or update if already exists.
    */
-  public async createOrUpdate(data?: Partial<T>): Promise<T | T[]> {
+  public async createOrUpdate(data?: Partial<T>): Promise<T> {
     return this.driver.createOrUpdate(data)
   }
 

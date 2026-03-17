@@ -390,7 +390,7 @@ export class ModelQueryBuilder<
     if (hasValue) {
       const pk = this.primaryKeyProperty
 
-      return this.where(pk, hasValue[pk as any]).update(data, cleanPersist)
+      return this.where(pk, hasValue[pk as any]).update(data, cleanPersist) as Promise<M>
     }
 
     return this.create(data, cleanPersist)

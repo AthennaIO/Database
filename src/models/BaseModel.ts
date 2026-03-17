@@ -426,7 +426,7 @@ export class BaseModel {
     where: Partial<InstanceType<T>>,
     data: Partial<InstanceType<T>>,
     cleanPersist = true
-  ): Promise<InstanceType<T> | InstanceType<T>[]> {
+  ): Promise<InstanceType<T>> {
     const query = this.query()
 
     if (where) {
