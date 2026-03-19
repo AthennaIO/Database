@@ -832,7 +832,7 @@ export class ModelQueryBuilder<
       return this
     }
 
-    if (!operation) {
+    if (!Is.String(statement) && Is.Undefined(operation)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.where(parsed)
@@ -871,7 +871,7 @@ export class ModelQueryBuilder<
       return this
     }
 
-    if (!value) {
+    if (!Is.String(statement) && Is.Undefined(value)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.whereNot(parsed)
@@ -1017,7 +1017,7 @@ export class ModelQueryBuilder<
       return this
     }
 
-    if (!operation) {
+    if (!Is.String(statement) && Is.Undefined(operation)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhere(parsed)
@@ -1056,7 +1056,7 @@ export class ModelQueryBuilder<
       return this
     }
 
-    if (!value) {
+    if (!Is.String(statement) && Is.Undefined(value)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereNot(parsed)
@@ -1079,7 +1079,7 @@ export class ModelQueryBuilder<
    * Set a orWhere like statement in your query.
    */
   public orWhereLike(statement: any, value?: any) {
-    if (!value) {
+    if (!Is.String(statement) && Is.Undefined(value)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereLike(parsed)
@@ -1102,7 +1102,7 @@ export class ModelQueryBuilder<
    * Set a orWhere ILike statement in your query.
    */
   public orWhereILike(statement: any, value?: any) {
-    if (!value) {
+    if (!Is.String(statement) && Is.Undefined(value)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
       super.orWhereILike(parsed)
