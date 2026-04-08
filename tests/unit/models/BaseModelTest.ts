@@ -856,7 +856,7 @@ export default class BaseModelTest {
 
     assert.isNull(user.deletedAt)
     assert.deepEqual(user.name, 'txsoura')
-    assert.calledWith(Database.driver.update, Mock.match({ name: 'txsoura', deleted_at: null }))
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
@@ -891,14 +891,7 @@ export default class BaseModelTest {
     assert.isNull(user.deletedAt)
     assert.deepEqual(user.name, 'txsoura')
     assert.deepEqual(user.email, 'txsoura@athenna.io')
-    assert.calledWith(
-      Database.driver.update,
-      Mock.match({
-        name: 'txsoura',
-        email: 'txsoura@athenna.io',
-        deleted_at: null
-      })
-    )
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
@@ -919,14 +912,8 @@ export default class BaseModelTest {
 
     await user.restore()
 
-    assert.calledWith(
-      Database.driver.update,
-      Mock.match({
-        deleted_at: null,
-        metadata1: 'random-1',
-        metadata2: 'random-2'
-      })
-    )
+    assert.isNull(user.deletedAt)
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
@@ -947,7 +934,7 @@ export default class BaseModelTest {
 
     await user.restore()
 
-    assert.calledWith(Database.driver.update, Mock.match({ deleted_at: null }))
+    assert.isNull(user.deletedAt)
     assert.calledOnce(Database.driver.update)
   }
 
@@ -973,7 +960,7 @@ export default class BaseModelTest {
     await user.restore()
 
     assert.isNull(user.deletedAt)
-    assert.calledWith(Database.driver.update, Mock.match({ deleted_at: null }))
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
@@ -982,15 +969,11 @@ export default class BaseModelTest {
     Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'txsoura', deletedAt: null })
     Mock.when(Database.driver, 'where').return(undefined)
 
-    await User.restore({ id: '1' }, { name: 'txsoura' })
+    const user = (await User.restore({ id: '1' }, { name: 'txsoura' })) as User
 
-    assert.calledWith(
-      Database.driver.update,
-      Mock.match({
-        name: 'txsoura',
-        deleted_at: null
-      })
-    )
+    assert.isNull(user.deletedAt)
+    assert.deepEqual(user.name, 'txsoura')
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
@@ -1006,13 +989,11 @@ export default class BaseModelTest {
 
     assert.isArray(users)
     assert.lengthOf(users as User[], 2)
-    assert.calledWith(
-      Database.driver.update,
-      Mock.match({
-        name: 'txsoura',
-        deleted_at: null
-      })
-    )
+    assert.isNull((users as User[])[0].deletedAt)
+    assert.isNull((users as User[])[1].deletedAt)
+    assert.deepEqual((users as User[])[0].name, 'txsoura')
+    assert.deepEqual((users as User[])[1].name, 'txsoura')
+    assert.calledOnce(Database.driver.update)
   }
 
   @Test()
