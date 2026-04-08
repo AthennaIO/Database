@@ -447,21 +447,29 @@ export class ModelQueryBuilder<
   /**
    * Restore one or multiple soft deleted models.
    */
-  public async restore() {
+  public async restore(data?: Partial<M>) {
     this.setInternalQueries({ addSoftDelete: false })
 
     if (!this.DELETED_AT_PROP) {
       return
     }
 
+    const date = new Date()
     const updatedAt = this.schema.getUpdatedAtColumn()
-    const data = { [this.DELETED_AT_PROP]: null } as any
+    const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
 
-    if (updatedAt) {
-      data[updatedAt.name] = new Date()
+    const parsed = this.schema.propertiesToColumnNames(
+      { ...data, [this.DELETED_AT_PROP]: null } as any,
+      {
+        attributes
+      }
+    )
+
+    if (updatedAt && parsed[updatedAt.name] === undefined) {
+      parsed[updatedAt.name] = date
     }
 
-    const updated = await super.update(data)
+    const updated = await super.update(parsed)
 
     if (Is.Array(updated)) {
       return this.generator.generateMany(updated)

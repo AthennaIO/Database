@@ -455,6 +455,23 @@ export class BaseModel {
   }
 
   /**
+   * Restore a soft deleted value from database.
+   */
+  public static async restore<T extends typeof BaseModel>(
+    this: T,
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>
+  ): Promise<InstanceType<T> | InstanceType<T>[]> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.restore(data)
+  }
+
+  /**
    * Delete or soft delete a value in database.
    */
   public static async delete<T extends typeof BaseModel>(
@@ -758,14 +775,44 @@ export class BaseModel {
    */
   public async restore() {
     const Model = this.constructor as any
-    const primaryKey = Model.schema().getMainPrimaryKeyProperty()
+    const schema = Model.schema()
+    const primaryKey = schema.getMainPrimaryKeyProperty()
+    const date = new Date()
+    const createdAt = schema.getCreatedAtColumn()
+    const updatedAt = schema.getUpdatedAtColumn()
+    const deletedAt = schema.getDeletedAtColumn()
+    const attributes = Model.isToSetAttributes ? Model.attributes() : {}
 
-    const restored = await Model.query()
-      .where(primaryKey, this[primaryKey])
-      .restore()
+    Object.keys(attributes).forEach(key => {
+      if (this[key]) {
+        return
+      }
+
+      this[key] = attributes[key]
+    })
+
+    if (createdAt && this[createdAt.property] === undefined) {
+      this[createdAt.property] = date
+    }
+
+    if (updatedAt && this[updatedAt.property] === undefined) {
+      this[updatedAt.property] = date
+    }
+
+    /**
+     * Forcing the deleted at column to be null to restore the model.
+     */
+    if (deletedAt) {
+      this[deletedAt.property] = null
+    }
+
+    const data = this.dirty()
+
+    const where = { [primaryKey]: this[primaryKey] }
+    const restored = await Model.restore(where, data)
 
     Object.keys(restored).forEach(key => (this[key] = restored[key]))
 
-    return this
+    return this.setOriginal()
   }
 }

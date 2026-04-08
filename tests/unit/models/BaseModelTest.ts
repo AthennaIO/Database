@@ -832,6 +832,217 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToRestoreAModelAndSaveOtherChangesSimultaneously({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'txsoura', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.email = 'lenon@athenna.io'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    user.name = 'txsoura'
+
+    await user.restore()
+
+    assert.isNull(user.deletedAt)
+    assert.deepEqual(user.name, 'txsoura')
+    assert.calledWith(Database.driver.update, Mock.match({ name: 'txsoura', deleted_at: null }))
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreAModelWithMultipleChanges({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({
+      id: '1',
+      name: 'txsoura',
+      email: 'txsoura@athenna.io',
+      deletedAt: null
+    })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.email = 'lenon@athenna.io'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    user.name = 'txsoura'
+    user.email = 'txsoura@athenna.io'
+
+    await user.restore()
+
+    assert.isNull(user.deletedAt)
+    assert.deepEqual(user.name, 'txsoura')
+    assert.deepEqual(user.email, 'txsoura@athenna.io')
+    assert.calledWith(
+      Database.driver.update,
+      Mock.match({
+        name: 'txsoura',
+        email: 'txsoura@athenna.io',
+        deleted_at: null
+      })
+    )
+  }
+
+  @Test()
+  public async shouldApplyAttributesWhenRestoringModel({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'lenon', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    await user.restore()
+
+    assert.calledWith(
+      Database.driver.update,
+      Mock.match({
+        deleted_at: null,
+        metadata1: 'random-1',
+        metadata2: 'random-2'
+      })
+    )
+  }
+
+  @Test()
+  public async shouldUpdateTimestampsWhenRestoringModel({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    await user.restore()
+
+    assert.calledWith(Database.driver.update, Mock.match({ deleted_at: null }))
+    assert.calledOnce(Database.driver.update)
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreModelWithoutPriorChanges({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.email = 'lenon@athenna.io'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    await user.restore()
+
+    assert.isNull(user.deletedAt)
+    assert.calledWith(Database.driver.update, Mock.match({ deleted_at: null }))
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreModelUsingStaticMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'txsoura', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    await User.restore({ id: '1' }, { name: 'txsoura' })
+
+    assert.calledWith(
+      Database.driver.update,
+      Mock.match({
+        name: 'txsoura',
+        deleted_at: null
+      })
+    )
+  }
+
+  @Test()
+  public async shouldBeAbleToRestoreMultipleModelsUsingStaticMethod({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve([
+      { id: '1', name: 'txsoura', deletedAt: null },
+      { id: '2', name: 'txsoura', deletedAt: null }
+    ])
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const users = await User.restore({ name: 'lenon' }, { name: 'txsoura' })
+
+    assert.isArray(users)
+    assert.lengthOf(users as User[], 2)
+    assert.calledWith(
+      Database.driver.update,
+      Mock.match({
+        name: 'txsoura',
+        deleted_at: null
+      })
+    )
+  }
+
+  @Test()
+  public async shouldSetOriginalAfterRestoringModel({ assert }: Context) {
+    Mock.when(Database.driver, 'find').resolve(undefined)
+    Mock.when(Database.driver, 'update').resolve({ id: '1', name: 'txsoura', deletedAt: null })
+    Mock.when(Database.driver, 'where').return(undefined)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata1 = 'random-1'
+    user.metadata2 = 'random-2'
+    user.createdAt = new Date()
+    user.updatedAt = new Date()
+    user.deletedAt = new Date()
+
+    user.setOriginal()
+
+    user.name = 'txsoura'
+
+    await user.restore()
+
+    assert.isFalse(user.isDirty())
+    assert.deepEqual(user.name, 'txsoura')
+    assert.isNull(user.deletedAt)
+  }
+
+  @Test()
   public async shouldBeAbleToUseFakerProperty({ assert }: Context) {
     assert.isTrue(BaseModel.faker.internet.email().includes('@'))
   }
