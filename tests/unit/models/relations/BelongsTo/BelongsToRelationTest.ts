@@ -307,4 +307,13 @@ export default class BelongsToRelationTest {
     assert.instanceOf(product.user, User)
     assert.instanceOf(profile, Profile)
   }
+
+  @Test()
+  public async shouldBeAbleToLoadNestedBelongsToRelationUsingLoadOnlyMethod({ assert }: Context) {
+    const product = await Product.find()
+    const profile = await product.loadOnly('user.profile')
+
+    assert.isUndefined(product.user)
+    assert.instanceOf(profile, Profile)
+  }
 }

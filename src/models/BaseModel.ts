@@ -600,6 +600,54 @@ export class BaseModel {
     return this[relation as any]
   }
 
+  public loadOnly(relation: string): Promise<any>
+  public loadOnly<K extends ModelRelations<this>>(
+    relation: K,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<this[K] extends BaseModel[] ? this[K][0] : this[K], BaseModel>
+      >
+    ) => any
+  ): Promise<this[K]>
+
+  /**
+   * Eager load a model relation without mutating
+   * the current model instance.
+   */
+  public async loadOnly<K extends ModelRelations<this>>(
+    relation: K | string,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<this[K] extends BaseModel[] ? this[K][0] : this[K], BaseModel>
+      >
+    ) => any
+  ) {
+    const Model = this.constructor as any
+    const schema = Model.schema()
+    const generator = new ModelGenerator(Model, schema)
+    const copy = new Model()
+    const relations = schema.getRelationProperties()
+
+    Object.keys(this).forEach(key => {
+      if (relations.includes(key)) {
+        return
+      }
+
+      copy[key] = Json.copy(this[key])
+    })
+
+    await generator.includeRelation(
+      copy,
+      schema.includeRelation(relation, closure)
+    )
+
+    if (relation.includes('.')) {
+      return Json.get(copy, relation)
+    }
+
+    return copy[relation as any]
+  }
+
   /**
    * Validate if model is persisted in database
    * or if it's a fresh instance.
