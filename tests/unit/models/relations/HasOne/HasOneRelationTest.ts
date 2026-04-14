@@ -133,4 +133,14 @@ export default class HasOneRelationTest {
       profile: { id: 1, userId: 1 }
     })
   }
+
+  @Test()
+  public async shouldBeAbleToLoadOneRelationFromInstanceWithoutMutatingTheModel({ assert }: Context) {
+    const user = await User.query().find()
+    const profile = await user.loadOnly('profile')
+
+    assert.instanceOf(user, User)
+    assert.instanceOf(profile, Profile)
+    assert.isUndefined(user.profile)
+  }
 }

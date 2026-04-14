@@ -17,6 +17,7 @@ import { Product } from '#tests/fixtures/models/Product'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { ModelFactory } from '#src/models/factories/ModelFactory'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
+import { ModelGenerator } from '#src/models/factories/ModelGenerator'
 import { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import { Test, type Context, BeforeEach, AfterEach, Mock } from '@athenna/test'
@@ -498,6 +499,54 @@ export default class BaseModelTest {
 
     assert.notInstanceOf(json, User)
     assert.deepEqual(json, { id: '1', name: 'lenon', metadata3: 'metadata3' })
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOnlyOneObjectRelationFromInstanceWithoutMutatingIt({ assert }: Context) {
+    Mock.stub(ModelGenerator.prototype, 'includeRelation').callsFake((async (model: any) => {
+      const userModel = model as User
+
+      userModel.profile = new Profile()
+      userModel.profile.id = '1'
+
+      return userModel
+    }) as any)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    const profile = await user.loadOnly('profile')
+
+    assert.instanceOf(profile, Profile)
+    assert.isUndefined(user.profile)
+    assert.deepEqual(user.id, '1')
+    assert.deepEqual(user.name, 'lenon')
+  }
+
+  @Test()
+  public async shouldBeAbleToLoadOnlyOneArrayRelationFromInstanceWithoutMutatingIt({ assert }: Context) {
+    Mock.stub(ModelGenerator.prototype, 'includeRelation').callsFake((async (model: any) => {
+      const userModel = model as User
+
+      userModel.products = [new Product()]
+      userModel.products[0].id = '1'
+
+      return userModel
+    }) as any)
+
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+
+    const products = await user.loadOnly('products')
+
+    assert.instanceOf(products[0], Product)
+    assert.isUndefined(user.products)
+    assert.deepEqual(user.id, '1')
+    assert.deepEqual(user.name, 'lenon')
   }
 
   @Test()
