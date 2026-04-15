@@ -502,20 +502,12 @@ export class ModelQueryBuilder<
   }
 
   /**
-   * Retrieve values that are soft deleted in database.
+   * Retrieve active and soft deleted values from database.
    */
   public withTrashed() {
     this.isSoftDelete = false
 
-    if (!this.DELETED_AT_PROP) {
-      return this
-    }
-
-    if (this.schema.getModelDriverName() === 'mongo') {
-      this.orWhereNull(this.DELETED_AT_PROP)
-    }
-
-    return this.orWhereNotNull(this.DELETED_AT_PROP)
+    return this
   }
 
   /**
