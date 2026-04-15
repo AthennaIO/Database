@@ -294,6 +294,15 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Find a value in database and return as boolean.
+   */
+  public async exists() {
+    this.setInternalQueries()
+
+    return super.exists()
+  }
+
+  /**
    * Find many values in database.
    */
   public async findMany() {
