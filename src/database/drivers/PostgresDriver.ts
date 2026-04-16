@@ -176,10 +176,6 @@ export class PostgresDriver extends BaseKnexDriver {
       throw new Error(`Invalid JSON selector: ${column}`)
     }
 
-    if (!parsed.path.includes('*')) {
-      return super.whereJson(column, operator, value)
-    }
-
     const path = this.parseJsonSelectorToWildcardPath(parsed.path)
     const normalized = this.normalizeJsonOperation(operator, value)
 
@@ -207,10 +203,6 @@ export class PostgresDriver extends BaseKnexDriver {
 
     if (!parsed) {
       throw new Error(`Invalid JSON selector: ${column}`)
-    }
-
-    if (!parsed.path.includes('*')) {
-      return super.orWhereJson(column, operator, value)
     }
 
     const path = this.parseJsonSelectorToWildcardPath(parsed.path)

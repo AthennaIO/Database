@@ -1351,6 +1351,12 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
         throw new EmptyColumnException('orWhere')
       }
 
+      if (this.isUsingJsonSelector(statement)) {
+        this.orWhereJson(statement, operation)
+
+        return this
+      }
+
       this.qb.orWhere(statement, operation)
 
       return this
@@ -1362,6 +1368,12 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
 
     if (Is.Undefined(value)) {
       throw new EmptyValueException('orWhere')
+    }
+
+    if (this.isUsingJsonSelector(statement)) {
+      this.orWhereJson(statement, operation, value)
+
+      return this
     }
 
     this.qb.orWhere(statement, operation, value)
