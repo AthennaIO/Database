@@ -1830,6 +1830,18 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToFilterJsonByKeyUsingWhereSelector({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { name: 'admin' } },
+      { id: '2', metadata: { name: 'member' } }
+    ])
+
+    const data = await this.driver.table('events').where('metadata->name', 'admin').findMany()
+
+    assert.deepEqual(data, [{ id: '1', metadata: { name: 'admin' } }])
+  }
+
+  @Test()
   public async shouldBeAbleToFilterJsonArrayByIndexUsingWhereJson({ assert }: Context) {
     await this.driver.table('events').createMany([
       { id: '1', metadata: [{ name: 'admin' }, { name: 'editor' }] },
@@ -2255,6 +2267,18 @@ export default class PostgresDriverTest {
       { id: '2', name: 'Warren Buffet' },
       { id: '3', name: 'Alan Turing' }
     ])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterJsonUsingOrWhereSelector({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { name: 'admin' } },
+      { id: '2', metadata: { name: 'member' } }
+    ])
+
+    const data = await this.driver.table('events').where('id', '0').orWhere('metadata->name', 'member').findMany()
+
+    assert.deepEqual(data, [{ id: '2', metadata: { name: 'member' } }])
   }
 
   @Test()
