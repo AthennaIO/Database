@@ -248,6 +248,12 @@ export class ModelQueryBuilder<
 
     const data = await super.find()
 
+    this.resetCustomSelect()
+
+    if (this.hasCustomSelect) {
+      return data
+    }
+
     return this.generator.generateOne(data)
   }
 
@@ -310,6 +316,12 @@ export class ModelQueryBuilder<
 
     const data = await super.findMany()
 
+    this.resetCustomSelect()
+
+    if (this.hasCustomSelect) {
+      return data
+    }
+
     return this.generator.generateMany(data)
   }
 
@@ -324,6 +336,12 @@ export class ModelQueryBuilder<
     this.setInternalQueries()
 
     const data = await super.paginate(page, limit, resourceUrl)
+
+    this.resetCustomSelect()
+
+    if (this.hasCustomSelect) {
+      return data
+    }
 
     data.data = await this.generator.generateMany(data.data)
 
@@ -618,24 +636,20 @@ export class ModelQueryBuilder<
    * Set the columns that should be selected on query.
    */
   public select(...columns: ModelColumns<M>[]) {
-    if (!this.hasCustomSelect) {
-      this.hasCustomSelect = true
-      this.selectColumns = columns.map(c =>
-        this.schema.getColumnNameByProperty(c)
-      )
+    const selectColumns = this.schema.getColumnNamesByProperties(columns)
 
-      return this
-    }
+    super.select(...selectColumns)
+    this.hasCustomSelect = true
 
-    columns.forEach(column => {
-      const index = this.selectColumns.indexOf(column)
+    return this
+  }
 
-      if (index) {
-        return
-      }
-
-      this.selectColumns.push(this.schema.getColumnNameByProperty(column))
-    })
+  /**
+   * Set the columns that should be selected on query raw.
+   */
+  public selectRaw(sql: string, bindings?: any) {
+    super.selectRaw(sql, bindings)
+    this.hasCustomSelect = true
 
     return this
   }
@@ -1274,7 +1288,7 @@ export class ModelQueryBuilder<
       addSoftDelete: true
     })
 
-    if (options.addSelect) {
+    if (options.addSelect && !this.hasCustomSelect) {
       super.select(...this.selectColumns)
     }
 
@@ -1283,6 +1297,18 @@ export class ModelQueryBuilder<
         query.whereNull(this.DELETED_AT_NAME as any)
       )
     }
+  }
+
+  /**
+   * Reset select state after terminal custom select queries.
+   */
+  private resetCustomSelect() {
+    if (!this.hasCustomSelect) {
+      return
+    }
+
+    this.hasCustomSelect = false
+    this.selectColumns = this.schema.getAllColumnNames()
   }
 
   /**
