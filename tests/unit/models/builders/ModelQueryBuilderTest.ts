@@ -1174,6 +1174,62 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldReturnRawDataWhenFindingWithCustomSelect({ assert }: Context) {
+    const expectedData = { name: 'John Doe' }
+    Mock.when(Database.driver, 'find').resolve(expectedData)
+    Mock.when(Database.driver, 'select').resolve(undefined)
+
+    const result = await User.query().select('name').find()
+
+    assert.calledOnceWith(Database.driver.select, 'name')
+    assert.deepEqual(result, expectedData)
+  }
+
+  @Test()
+  public async shouldReturnRawDataWhenFindingManyWithCustomSelect({ assert }: Context) {
+    const expectedData = [{ name: 'John Doe' }, { name: 'Jane Doe' }]
+    Mock.when(Database.driver, 'findMany').resolve(expectedData)
+    Mock.when(Database.driver, 'select').resolve(undefined)
+
+    const result = await User.query().select('name').findMany()
+
+    assert.calledOnceWith(Database.driver.select, 'name')
+    assert.deepEqual(result, expectedData)
+  }
+
+  @Test()
+  public async shouldReturnRawDataWhenFindingManyWithRawCustomSelect({ assert }: Context) {
+    const sql = 'MIN(phone) as phone'
+    const groupBy = "REGEXP_REPLACE(phone, '[^0-9]', '', 'g')"
+    const expectedData = [{ phone: '123456789' }]
+    Mock.when(Database.driver, 'findMany').resolve(expectedData)
+    Mock.when(Database.driver, 'select').resolve(undefined)
+    Mock.when(Database.driver, 'selectRaw').resolve(undefined)
+    Mock.when(Database.driver, 'groupByRaw').resolve(undefined)
+    Mock.when(Database.driver, 'whereNull').resolve(undefined)
+
+    const result = await User.query().selectRaw(sql).groupByRaw(groupBy).findMany()
+
+    assert.calledOnceWith(Database.driver.selectRaw, sql)
+    assert.calledOnceWith(Database.driver.groupByRaw, groupBy)
+    assert.calledOnceWith(Database.driver.whereNull, 'deletedAt')
+    assert.notCalled(Database.driver.select)
+    assert.deepEqual(result, expectedData)
+  }
+
+  @Test()
+  public async shouldReturnRawPaginatedDataWhenPaginatingWithCustomSelect({ assert }: Context) {
+    const expectedData = [{ name: 'John Doe' }]
+    Mock.when(Database.driver, 'findMany').resolve(expectedData)
+    Mock.when(Database.driver, 'select').resolve(undefined)
+
+    const result = await User.query().select('name').paginate()
+
+    assert.calledOnceWith(Database.driver.select, 'name')
+    assert.deepEqual(result.data, expectedData)
+  }
+
+  @Test()
   public async shouldAllowSelectingSpecificColumnsFromTableUsingFrom({ assert }: Context) {
     const columns: any[] = ['id', 'name']
     Mock.when(Database.driver, 'select').resolve(undefined)
