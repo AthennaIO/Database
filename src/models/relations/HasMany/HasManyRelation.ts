@@ -71,15 +71,18 @@ export class HasManyRelation {
     query: Driver,
     relation: HasManyOptions
   ) {
-    const schema = Model.schema()
     const RelationModel = relation.model()
+    const modelSchema = Model.schema()
+    const relationSchema = RelationModel.schema()
 
-    const primaryKey = schema.getMainPrimaryKeyName()
-    const foreignKey =
-      schema.getColumnNameByProperty(relation.foreignKey) ||
-      schema.getColumnNameByProperty(
-        `${String.toCamelCase(RelationModel.name)}Id`
-      )
+    const primaryKey = relation.primaryKey
+      ? modelSchema.getColumnNameByProperty(relation.primaryKey)
+      : modelSchema.getMainPrimaryKeyName()
+    const foreignKey = relation.foreignKey
+      ? relationSchema.getColumnNameByProperty(relation.foreignKey)
+      : relationSchema.getColumnNameByProperty(
+          `${String.toCamelCase(Model.name)}Id`
+        )
 
     let whereRaw = `${RelationModel.table()}.${foreignKey} = ${Model.table()}.${primaryKey}`
 

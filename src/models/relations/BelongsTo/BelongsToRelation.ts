@@ -83,15 +83,18 @@ export class BelongsToRelation {
     query: Driver,
     relation: BelongsToOptions
   ) {
-    const schema = Model.schema()
     const RelationModel = relation.model()
+    const modelSchema = Model.schema()
+    const relationSchema = RelationModel.schema()
 
-    const primaryKey = schema.getMainPrimaryKeyName()
-    const foreignKey =
-      schema.getColumnNameByProperty(relation.foreignKey) ||
-      schema.getColumnNameByProperty(
-        `${String.toCamelCase(RelationModel.name)}Id`
-      )
+    const primaryKey = relation.primaryKey
+      ? relationSchema.getColumnNameByProperty(relation.primaryKey)
+      : relationSchema.getMainPrimaryKeyName()
+    const foreignKey = relation.foreignKey
+      ? modelSchema.getColumnNameByProperty(relation.foreignKey)
+      : modelSchema.getColumnNameByProperty(
+          `${String.toCamelCase(RelationModel.name)}Id`
+        )
 
     let whereRaw = `${Model.table()}.${foreignKey} = ${RelationModel.table()}.${primaryKey}`
 
