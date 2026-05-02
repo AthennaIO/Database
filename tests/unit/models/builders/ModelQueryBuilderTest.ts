@@ -2307,4 +2307,62 @@ export default class ModelQueryBuilderTest {
 
     assert.calledOnceWith(Database.driver.limit, limitValue)
   }
+
+  @Test()
+  public async whereHasShouldNotEagerLoadRelations({ assert }: Context) {
+    let findManyCalls = 0
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      findManyCalls++
+
+      return [{ id: '1', name: 'John Doe' }]
+    })
+
+    await User.query()
+      .whereHas('products', qb => qb.where('id', 'p1'))
+      .findMany()
+
+    assert.equal(findManyCalls, 1)
+  }
+
+  @Test()
+  public async withShouldEagerLoadRelations({ assert }: Context) {
+    let findManyCalls = 0
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      findManyCalls++
+
+      if (findManyCalls === 1) {
+        return [{ id: '1', name: 'John Doe' }]
+      }
+
+      return [{ id: 'p1', userId: '1' }]
+    })
+
+    await User.query().with('products').findMany()
+
+    assert.equal(findManyCalls, 2)
+  }
+
+  @Test()
+  public async whereHasWithSameRelationShouldStillEagerLoad({ assert }: Context) {
+    let findManyCalls = 0
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      findManyCalls++
+
+      if (findManyCalls === 1) {
+        return [{ id: '1', name: 'John Doe' }]
+      }
+
+      return [{ id: 'p1', userId: '1' }]
+    })
+
+    await User.query()
+      .whereHas('products', qb => qb.where('id', 'p1'))
+      .with('products')
+      .findMany()
+
+    assert.equal(findManyCalls, 2)
+  }
 }

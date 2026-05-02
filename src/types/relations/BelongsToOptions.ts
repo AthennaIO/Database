@@ -59,10 +59,8 @@ export type BelongsToOptions<
   isIncluded?: boolean
 
   /**
-   * Set if the model will be included when fetching
-   * data.
-   * If this option is true, you don't need to call
-   * methods like `whereHas()` to eager load your relation.
+   * Internal flag when `whereHas()` applies a constraint on this relation.
+   * Does not eager-load; use {@link isIncluded} / `with()` to load related rows.
    *
    * @default false
    */
