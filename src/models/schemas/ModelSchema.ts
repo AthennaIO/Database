@@ -318,11 +318,13 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
   }
 
   /**
-   * Return the relation options only from relations
-   * that are included.
+   * Relation options used only when eager-loading related rows (`with()` /
+   * {@link ModelSchema.includeRelation includeRelation}). Constraints from
+   * `whereHas()` are not included here; use `with()` when the response must
+   * contain related models.
    */
   public getIncludedRelations(): RelationOptions[] {
-    return this.relations.filter(r => r.isIncluded || r.isWhereHasIncluded)
+    return this.relations.filter(r => r.isIncluded)
   }
 
   /**
@@ -370,8 +372,9 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
   }
 
   /**
-   * Include a relation by setting the isWhereHasIncluded
-   * option to true.
+   * Marks relation metadata for a `whereHas()` constraint (stores closure).
+   * Does not eager-load related rows; only {@link ModelSchema.includeRelation}
+   * participates in {@link ModelSchema.getIncludedRelations eager loading}.
    */
   public includeWhereHasRelation(
     property: string | ModelRelations<M>,

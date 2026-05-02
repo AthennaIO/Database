@@ -598,7 +598,7 @@ export class ModelQueryBuilder<
       >
     ) => any
   ) {
-    const options = this.schema.includeRelation(relation, closure)
+    const options = this.schema.includeWhereHasRelation(relation, closure)
 
     super.whereExists(query => {
       switch (options.type) {

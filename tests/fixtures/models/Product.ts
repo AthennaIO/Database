@@ -17,4 +17,8 @@ export class Product extends BaseModel {
 
   @Column()
   public id: string
+
+  /** FK for User `HasMany` products (defaults to userId). */
+  @Column()
+  public userId: string
 }
