@@ -364,7 +364,7 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
     const i = this.relations.indexOf(options)
 
     options.isIncluded = true
-    options.closure = closure
+    options.withClosure = closure
 
     this.relations[i] = options
 

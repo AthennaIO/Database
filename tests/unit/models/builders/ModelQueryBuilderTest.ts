@@ -2365,4 +2365,104 @@ export default class ModelQueryBuilderTest {
 
     assert.equal(findManyCalls, 2)
   }
+
+  @Test()
+  public async withBeforeWhereHasShouldStillEagerLoad({ assert }: Context) {
+    let findManyCalls = 0
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      findManyCalls++
+
+      if (findManyCalls === 1) {
+        return [{ id: '1', name: 'John Doe' }]
+      }
+
+      return [{ id: 'p1', userId: '1' }]
+    })
+
+    await User.query()
+      .with('products')
+      .whereHas('products', qb => qb.where('id', 'p1'))
+      .findMany()
+
+    assert.equal(findManyCalls, 2)
+  }
+
+  @Test()
+  public async whereHasClosureShouldNotLeakIntoEagerLoad({ assert }: Context) {
+    const whereCalls: string[] = []
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      return [{ id: '1', name: 'John Doe' }]
+    })
+
+    Mock.stub(Database.driver, 'where').callsFake((...args: any[]) => {
+      whereCalls.push(args[0])
+      return Database.driver
+    })
+
+    await User.query()
+      .with('products')
+      .whereHas('products', qb => qb.where('whereHasFilter', 'value'))
+      .findMany()
+
+    assert.isFalse(whereCalls.includes('whereHasFilter'))
+  }
+
+  @Test()
+  public async whereHasClosureShouldNotLeakIntoEagerLoadWhenWhereHasRunsFirst({ assert }: Context) {
+    const whereCalls: string[] = []
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      return [{ id: '1', name: 'John Doe' }]
+    })
+
+    Mock.stub(Database.driver, 'where').callsFake((...args: any[]) => {
+      whereCalls.push(args[0])
+      return Database.driver
+    })
+
+    await User.query()
+      .whereHas('products', qb => qb.where('whereHasFilter', 'value'))
+      .with('products')
+      .findMany()
+
+    assert.isFalse(whereCalls.includes('whereHasFilter'))
+  }
+
+  @Test()
+  public async whereExistsIsRegisteredForWhereHasBeforeWith({ assert }: Context) {
+    let whereExistsCalled = false
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => [])
+    Mock.stub(Database.driver, 'whereExists').callsFake(() => {
+      whereExistsCalled = true
+      return Database.driver
+    })
+
+    await User.query()
+      .whereHas('products', qb => qb.where('id', 'p1'))
+      .with('products')
+      .findMany()
+
+    assert.isTrue(whereExistsCalled)
+  }
+
+  @Test()
+  public async whereExistsIsRegisteredForWithBeforeWhereHas({ assert }: Context) {
+    let whereExistsCalled = false
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => [])
+    Mock.stub(Database.driver, 'whereExists').callsFake(() => {
+      whereExistsCalled = true
+      return Database.driver
+    })
+
+    await User.query()
+      .with('products')
+      .whereHas('products', qb => qb.where('id', 'p1'))
+      .findMany()
+
+    assert.isTrue(whereExistsCalled)
+  }
 }

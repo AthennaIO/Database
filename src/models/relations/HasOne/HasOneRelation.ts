@@ -24,7 +24,7 @@ export class HasOneRelation {
       .model()
       .query()
       .where(relation.foreignKey as never, model[relation.primaryKey])
-      .when(relation.closure, relation.closure)
+      .when(relation.withClosure, relation.withClosure)
       .find()
 
     return model
@@ -42,7 +42,7 @@ export class HasOneRelation {
       .model()
       .query()
       .whereIn(relation.foreignKey as never, primaryValues)
-      .when(relation.closure, relation.closure)
+      .when(relation.withClosure, relation.withClosure)
       .findMany()
 
     const map = new Map()
