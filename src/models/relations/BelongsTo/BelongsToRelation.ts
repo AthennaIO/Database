@@ -40,7 +40,7 @@ export class BelongsToRelation {
       .model()
       .query()
       .where(relation.primaryKey as never, model[relation.foreignKey])
-      .when(relation.closure, relation.closure)
+      .when(relation.withClosure, relation.withClosure)
       .find()
 
     return model
@@ -60,7 +60,7 @@ export class BelongsToRelation {
       .model()
       .query()
       .whereIn(relation.primaryKey as never, foreignValues)
-      .when(relation.closure, relation.closure)
+      .when(relation.withClosure, relation.withClosure)
       .findMany()
 
     const map = new Map()

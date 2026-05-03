@@ -27,9 +27,20 @@ export type HasManyOptions<
    * The closure that should be executed while
    * querying the relation data from database.
    *
+   * Used by `whereHas()` for the WHERE EXISTS subquery.
+   *
    * @default undefined
    */
   closure?: (query: ModelQueryBuilder<R>) => any
+
+  /**
+   * The closure provided to `with()` for eager loading.
+   * Kept separate from {@link closure} so that a `whereHas()` call
+   * on the same relation never overwrites the eager-load filter.
+   *
+   * @default undefined
+   */
+  withClosure?: (query: ModelQueryBuilder<R>) => any
 
   /**
    * The property name in class of the relation.

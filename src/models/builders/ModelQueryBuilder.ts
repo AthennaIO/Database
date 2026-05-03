@@ -600,16 +600,25 @@ export class ModelQueryBuilder<
   ) {
     const options = this.schema.includeWhereHasRelation(relation, closure)
 
+    /**
+     * Snapshot the full options object immediately at call time, before any
+     * subsequent `with(sameRelation)` call can mutate the shared `options`
+     * object (e.g. overwriting `closure` or `withClosure`).  Because this
+     * spread happens here — outside the Knex callback — the snapshot is
+     * frozen regardless of what happens to `options` afterwards.
+     */
+    const snapshot = { ...options }
+
     super.whereExists(query => {
-      switch (options.type) {
+      switch (snapshot.type) {
         case 'hasOne':
-          return HasOneRelation.whereHas(this.Model, query, options)
+          return HasOneRelation.whereHas(this.Model, query, snapshot)
         case 'hasMany':
-          return HasManyRelation.whereHas(this.Model, query, options)
+          return HasManyRelation.whereHas(this.Model, query, snapshot)
         case 'belongsTo':
-          return BelongsToRelation.whereHas(this.Model, query, options)
+          return BelongsToRelation.whereHas(this.Model, query, snapshot)
         case 'belongsToMany':
-          return BelongsToManyRelation.whereHas(this.Model, query, options)
+          return BelongsToManyRelation.whereHas(this.Model, query, snapshot)
       }
     })
 
