@@ -601,15 +601,33 @@ export class ModelQueryBuilder<
     const options = this.schema.includeWhereHasRelation(relation, closure)
 
     super.whereExists(query => {
+      /**
+       * Spread inside each case (after TypeScript has narrowed the type)
+       * to snapshot `closure` at call time. This prevents a later
+       * `with(sameRelation)` call from overwriting `options.closure` and
+       * silently dropping the WHERE condition inside the EXISTS subquery.
+       */
       switch (options.type) {
         case 'hasOne':
-          return HasOneRelation.whereHas(this.Model, query, options)
+          return HasOneRelation.whereHas(this.Model, query, {
+            ...options,
+            closure
+          })
         case 'hasMany':
-          return HasManyRelation.whereHas(this.Model, query, options)
+          return HasManyRelation.whereHas(this.Model, query, {
+            ...options,
+            closure
+          })
         case 'belongsTo':
-          return BelongsToRelation.whereHas(this.Model, query, options)
+          return BelongsToRelation.whereHas(this.Model, query, {
+            ...options,
+            closure
+          })
         case 'belongsToMany':
-          return BelongsToManyRelation.whereHas(this.Model, query, options)
+          return BelongsToManyRelation.whereHas(this.Model, query, {
+            ...options,
+            closure
+          })
       }
     })
 
