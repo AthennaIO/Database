@@ -899,6 +899,33 @@ export default class MySqlDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToUpdateDataUsingARawValueWithoutThrowingCircularStructureError({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
+
+    await assert.doesNotReject(() =>
+      this.driver
+        .table('users')
+        .where('id', '1')
+        .update({ name: this.driver.raw("'Warren Buffet'") } as any)
+    )
+
+    const result = await this.driver.table('users').where('id', '1').find()
+
+    assert.containSubset(result, { id: '1', name: 'Warren Buffet' })
+  }
+
+  @Test()
+  public async shouldBeAbleToCreateDataUsingARawValueWithoutThrowingCircularStructureError({ assert }: Context) {
+    await assert.doesNotReject(() =>
+      this.driver.table('users').create({ id: '1', name: this.driver.raw("'Robert Kiyosaki'") } as any)
+    )
+
+    const result = await this.driver.table('users').where('id', '1').find()
+
+    assert.containSubset(result, { id: '1', name: 'Robert Kiyosaki' })
+  }
+
+  @Test()
   public async shouldBeAbleToDeleteDataUsingDeleteMethod({ assert }: Context) {
     const data = { id: '1', name: 'Robert Kiyosaki' }
 

@@ -520,9 +520,26 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
 
   /**
    * Verify if a value should be serialized before persisting.
+   *
+   * Knex `Raw` instances must NEVER be stringified: they hold an internal
+   * reference to the database client (and its connection pool, which contains
+   * Node.js `Timeout` objects with circular references), so calling
+   * `JSON.stringify` on them throws `TypeError: Converting circular structure
+   * to JSON`. Knex marks every `Raw` instance with `isRawInstance = true` and
+   * relies on it internally during query compilation, so we trust the same
+   * marker here. The same precaution applies to Knex `QueryBuilder` instances
+   * (subqueries) which expose `isQueryBuilder = true`.
    */
   private shouldStringifyJsonValue(value: any) {
-    return !!value && (Is.Array(value) || Is.Object(value))
+    if (!value) {
+      return false
+    }
+
+    if (value.isRawInstance || value.isQueryBuilder) {
+      return false
+    }
+
+    return Is.Array(value) || Is.Object(value)
   }
 
   /**
