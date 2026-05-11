@@ -365,32 +365,32 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Calculate the average of a given column.
    */
-  public abstract avg(column: string): Promise<string>
+  public abstract avg(column: string): Promise<number>
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public abstract avgDistinct(column: string): Promise<string>
+  public abstract avgDistinct(column: string): Promise<number>
 
   /**
    * Get the max number of a given column.
    */
-  public abstract max(column: string): Promise<string>
+  public abstract max(column: string): Promise<number>
 
   /**
    * Get the min number of a given column.
    */
-  public abstract min(column: string): Promise<string>
+  public abstract min(column: string): Promise<number>
 
   /**
    * Sum all numbers of a given column.
    */
-  public abstract sum(column: string): Promise<string>
+  public abstract sum(column: string): Promise<number>
 
   /**
    * Sum all numbers of a given column in distinct mode.
    */
-  public abstract sumDistinct(column: string): Promise<string>
+  public abstract sumDistinct(column: string): Promise<number>
 
   /**
    * Increment a value of a given column.

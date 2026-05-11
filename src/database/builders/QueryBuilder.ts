@@ -94,42 +94,42 @@ export class QueryBuilder<
   /**
    * Calculate the average of a given column.
    */
-  public async avg(column: string | ModelColumns<T>): Promise<string> {
+  public async avg(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.avg(column as string)
   }
 
   /**
    * Calculate the average of a given column.
    */
-  public async avgDistinct(column: string | ModelColumns<T>): Promise<string> {
+  public async avgDistinct(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.avgDistinct(column as string)
   }
 
   /**
    * Get the max number of a given column.
    */
-  public async max(column: string | ModelColumns<T>): Promise<string> {
+  public async max(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.max(column as string)
   }
 
   /**
    * Get the min number of a given column.
    */
-  public async min(column: string | ModelColumns<T>): Promise<string> {
+  public async min(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.min(column as string)
   }
 
   /**
    * Sum all numbers of a given column.
    */
-  public async sum(column: string | ModelColumns<T>): Promise<string> {
+  public async sum(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.sum(column as string)
   }
 
   /**
    * Sum all numbers of a given column.
    */
-  public async sumDistinct(column: string | ModelColumns<T>): Promise<string> {
+  public async sumDistinct(column: string | ModelColumns<T>): Promise<number> {
     return this.driver.sumDistinct(column as string)
   }
 

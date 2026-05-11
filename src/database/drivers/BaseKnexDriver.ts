@@ -302,55 +302,55 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Calculate the average of a given column.
    */
-  public async avg(column: string): Promise<string> {
-    const [{ avg }] = await this.qb.avg({ avg: column })
+  public async avg(column: string): Promise<number> {
+    const [{ avg }] = await this.qb.clearSelect().avg({ avg: column })
 
-    return avg
+    return avg == null ? null : Number(avg)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async avgDistinct(column: string): Promise<string> {
-    const [{ avg }] = await this.qb.avgDistinct({ avg: column })
+  public async avgDistinct(column: string): Promise<number> {
+    const [{ avg }] = await this.qb.clearSelect().avgDistinct({ avg: column })
 
-    return avg
+    return avg == null ? null : Number(avg)
   }
 
   /**
    * Get the max number of a given column.
    */
-  public async max(column: string): Promise<string> {
-    const [{ max }] = await this.qb.max({ max: column })
+  public async max(column: string): Promise<number> {
+    const [{ max }] = await this.qb.clearSelect().max({ max: column })
 
-    return max
+    return max == null ? null : Number(max)
   }
 
   /**
    * Get the min number of a given column.
    */
-  public async min(column: string): Promise<string> {
-    const [{ min }] = await this.qb.min({ min: column })
+  public async min(column: string): Promise<number> {
+    const [{ min }] = await this.qb.clearSelect().min({ min: column })
 
-    return min
+    return min == null ? null : Number(min)
   }
 
   /**
    * Sum all numbers of a given column.
    */
-  public async sum(column: string): Promise<string> {
-    const [{ sum }] = await this.qb.sum({ sum: column })
+  public async sum(column: string): Promise<number> {
+    const [{ sum }] = await this.qb.clearSelect().sum({ sum: column })
 
-    return sum
+    return sum == null ? null : Number(sum)
   }
 
   /**
    * Sum all numbers of a given column in distinct mode.
    */
-  public async sumDistinct(column: string): Promise<string> {
-    const [{ sum }] = await this.qb.sumDistinct({ sum: column })
+  public async sumDistinct(column: string): Promise<number> {
+    const [{ sum }] = await this.qb.clearSelect().sumDistinct({ sum: column })
 
-    return sum
+    return sum == null ? null : Number(sum)
   }
 
   /**
@@ -371,7 +371,7 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Calculate the average of a given column using distinct.
    */
   public async count(column: string = '*'): Promise<number> {
-    const [{ count }] = await this.qb.count({ count: column })
+    const [{ count }] = await this.qb.clearSelect().count({ count: column })
 
     return Number(count)
   }
@@ -380,7 +380,7 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Calculate the average of a given column using distinct.
    */
   public async countDistinct(column: string): Promise<number> {
-    const [{ count }] = await this.qb.countDistinct({ count: column })
+    const [{ count }] = await this.qb.clearSelect().countDistinct({ count: column })
 
     return Number(count)
   }

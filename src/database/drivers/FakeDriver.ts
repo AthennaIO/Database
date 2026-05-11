@@ -265,43 +265,43 @@ export class FakeDriver {
   /**
    * Calculate the average of a given column.
    */
-  public static async avg() {
-    return '1'
+  public static async avg(): Promise<number> {
+    return 1
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public static async avgDistinct() {
-    return '1'
+  public static async avgDistinct(): Promise<number> {
+    return 1
   }
 
   /**
    * Get the max number of a given column.
    */
-  public static async max() {
-    return '1'
+  public static async max(): Promise<number> {
+    return 1
   }
 
   /**
    * Get the min number of a given column.
    */
-  public static async min(): Promise<string> {
-    return '1'
+  public static async min(): Promise<number> {
+    return 1
   }
 
   /**
    * Sum all numbers of a given column.
    */
-  public static async sum(): Promise<string> {
-    return '1'
+  public static async sum(): Promise<number> {
+    return 1
   }
 
   /**
    * Sum all numbers of a given column in distinct mode.
    */
-  public static async sumDistinct(): Promise<string> {
-    return '1'
+  public static async sumDistinct(): Promise<number> {
+    return 1
   }
 
   /**

@@ -377,7 +377,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Calculate the average of a given column.
    */
-  public async avg(column: string): Promise<string> {
+  public async avg(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -395,13 +395,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].avg}`
+    return Number(result[0].avg)
   }
 
   /**
    * Calculate the average of a given column using distinct.
    */
-  public async avgDistinct(column: string): Promise<string> {
+  public async avgDistinct(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -419,13 +419,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].avg}`
+    return Number(result[0].avg)
   }
 
   /**
    * Get the max number of a given column.
    */
-  public async max(column: string): Promise<string> {
+  public async max(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -443,13 +443,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].max}`
+    return Number(result[0].max)
   }
 
   /**
    * Get the min number of a given column.
    */
-  public async min(column: string): Promise<string> {
+  public async min(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -467,13 +467,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].min}`
+    return Number(result[0].min)
   }
 
   /**
    * Sum all numbers of a given column.
    */
-  public async sum(column: string): Promise<string> {
+  public async sum(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -491,13 +491,13 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].sum}`
+    return Number(result[0].sum)
   }
 
   /**
    * Sum all numbers of a given column in distinct mode.
    */
-  public async sumDistinct(column: string): Promise<string> {
+  public async sumDistinct(column: string): Promise<number> {
     await this.client.asPromise()
 
     const pipeline = this.createPipeline()
@@ -515,7 +515,7 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return null
     }
 
-    return `${result[0].sum}`
+    return Number(result[0].sum)
   }
 
   /**
