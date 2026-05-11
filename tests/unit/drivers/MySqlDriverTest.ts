@@ -616,6 +616,102 @@ export default class MySqlDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToGetAvgWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').avg('quantity')
+
+    assert.equal(result, 10)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetAvgDistinctWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').avgDistinct('quantity')
+
+    assert.equal(result, 10)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetMaxWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 20 }
+    ])
+
+    const result = await this.driver.table('products').select('*').max('quantity')
+
+    assert.equal(result, 20)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetMinWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 20 }
+    ])
+
+    const result = await this.driver.table('products').select('*').min('quantity')
+
+    assert.equal(result, 10)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetSumWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').sum('quantity')
+
+    assert.equal(result, 20)
+  }
+
+  @Test()
+  public async shouldBeAbleToGetSumDistinctWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').sumDistinct('quantity')
+
+    assert.equal(result, 10)
+  }
+
+  @Test()
+  public async shouldBeAbleToCountWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').count()
+
+    assert.equal(result, 2)
+  }
+
+  @Test()
+  public async shouldBeAbleToCountDistinctWithPreSelectedColumns({ assert }: Context) {
+    await this.driver.table('products').createMany([
+      { id: '1', quantity: 10 },
+      { id: '2', quantity: 10 }
+    ])
+
+    const result = await this.driver.table('products').select('*').countDistinct('quantity')
+
+    assert.equal(result, 1)
+  }
+
+  @Test()
   public async shouldBeAbleToFindDataUsingFindOrFail({ assert }: Context) {
     const data = { id: '1', name: 'John Doe' }
     await this.driver.table('users').create(data)

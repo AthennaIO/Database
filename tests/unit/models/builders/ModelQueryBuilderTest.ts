@@ -50,7 +50,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheAvgOfAGivenColumn({ assert }: Context) {
-    const fakeAvg = '200'
+    const fakeAvg = 200
     Mock.when(Database.driver, 'avg').resolve(fakeAvg)
 
     const result = await User.query().avg('score')
@@ -61,7 +61,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheAvgDistinctOfAGivenColumn({ assert }: Context) {
-    const fakeAvg = '200'
+    const fakeAvg = 200
     Mock.when(Database.driver, 'avgDistinct').resolve(fakeAvg)
 
     const result = await User.query().avgDistinct('score')
@@ -72,7 +72,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheAvgOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeAvg = '200'
+    const fakeAvg = 200
     Mock.when(Database.driver, 'avg').resolve(fakeAvg)
 
     const result = await User.query().avg('rate')
@@ -83,7 +83,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheAvgDistinctOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeAvg = '200'
+    const fakeAvg = 200
     Mock.when(Database.driver, 'avgDistinct').resolve(fakeAvg)
 
     const result = await User.query().avgDistinct('rate')
@@ -94,7 +94,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheMaxNumberOfAGivenColumn({ assert }: Context) {
-    const fakeMax = '200'
+    const fakeMax = 200
     Mock.when(Database.driver, 'max').resolve(fakeMax)
 
     const result = await User.query().max('score')
@@ -105,7 +105,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheMinNumberOfAGivenColumn({ assert }: Context) {
-    const fakeMin = '10'
+    const fakeMin = 10
     Mock.when(Database.driver, 'min').resolve(fakeMin)
 
     const result = await User.query().min('score')
@@ -116,7 +116,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheMaxNumberOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeMax = '200'
+    const fakeMax = 200
     Mock.when(Database.driver, 'max').resolve(fakeMax)
 
     const result = await User.query().max('rate')
@@ -127,7 +127,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToGetTheMinNumberOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeMin = '10'
+    const fakeMin = 10
     Mock.when(Database.driver, 'min').resolve(fakeMin)
 
     const result = await User.query().min('rate')
@@ -138,7 +138,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToSumAllNumbersOfAGivenColumn({ assert }: Context) {
-    const fakeSum = '1000'
+    const fakeSum = 1000
     Mock.when(Database.driver, 'sum').resolve(fakeSum)
 
     const result = await User.query().sum('score')
@@ -149,7 +149,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToSumDistinctValuesOfAGivenColumn({ assert }: Context) {
-    const fakeSumDistinct = '900'
+    const fakeSumDistinct = 900
     Mock.when(Database.driver, 'sumDistinct').resolve(fakeSumDistinct)
 
     const result = await User.query().sumDistinct('score')
@@ -160,7 +160,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToSumAllNumbersOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeSum = '1000'
+    const fakeSum = 1000
     Mock.when(Database.driver, 'sum').resolve(fakeSum)
 
     const result = await User.query().sum('rate')
@@ -171,7 +171,7 @@ export default class ModelQueryBuilderTest {
 
   @Test()
   public async shouldBeAbleToSumDistinctValuesOfAGivenColumnParsingColumnName({ assert }: Context) {
-    const fakeSumDistinct = '900'
+    const fakeSumDistinct = 900
     Mock.when(Database.driver, 'sumDistinct').resolve(fakeSumDistinct)
 
     const result = await User.query().sumDistinct('rate')

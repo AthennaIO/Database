@@ -93,7 +93,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column.
    */
-  public async avg(column: ModelColumns<M>): Promise<string> {
+  public async avg(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -104,7 +104,7 @@ export class ModelQueryBuilder<
   /**
    * Calculate the average of a given column.
    */
-  public async avgDistinct(column: ModelColumns<M>): Promise<string> {
+  public async avgDistinct(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -115,7 +115,7 @@ export class ModelQueryBuilder<
   /**
    * Get the max number of a given column.
    */
-  public async max(column: ModelColumns<M>): Promise<string> {
+  public async max(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -126,7 +126,7 @@ export class ModelQueryBuilder<
   /**
    * Get the min number of a given column.
    */
-  public async min(column: ModelColumns<M>): Promise<string> {
+  public async min(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -137,7 +137,7 @@ export class ModelQueryBuilder<
   /**
    * Sum all numbers of a given column.
    */
-  public async sum(column: ModelColumns<M>): Promise<string> {
+  public async sum(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
@@ -148,7 +148,7 @@ export class ModelQueryBuilder<
   /**
    * Sum all numbers of a given column.
    */
-  public async sumDistinct(column: ModelColumns<M>): Promise<string> {
+  public async sumDistinct(column: ModelColumns<M>): Promise<number> {
     this.setInternalQueries()
 
     const name = this.schema.getColumnNameByProperty(column)
