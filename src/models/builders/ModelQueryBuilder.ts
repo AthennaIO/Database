@@ -940,15 +940,8 @@ export class ModelQueryBuilder<
    */
   public where(statement: any, operation?: any | Operations, value?: any) {
     if (Is.Function(statement)) {
-      const driver = this.driver.clone()
-
       super.where(query => {
-        const modelQb = new ModelQueryBuilder(
-          this.Model,
-          driver.setQueryBuilder(query, { useSetQB: true })
-        )
-
-        statement(modelQb)
+        statement(new ModelQueryBuilder(this.Model, query as unknown as Driver))
       })
 
       return this
@@ -979,15 +972,8 @@ export class ModelQueryBuilder<
    */
   public whereNot(statement: any, value?: any) {
     if (Is.Function(statement)) {
-      const driver = this.driver.clone()
-
       super.whereNot(query => {
-        const modelQb = new ModelQueryBuilder(
-          this.Model,
-          driver.setQueryBuilder(query, { useSetQB: true })
-        )
-
-        statement(modelQb)
+        statement(new ModelQueryBuilder(this.Model, query as unknown as Driver))
       })
 
       return this
@@ -1125,15 +1111,8 @@ export class ModelQueryBuilder<
    */
   public orWhere(statement: any, operation?: any | Operations, value?: any) {
     if (Is.Function(statement)) {
-      const driver = this.driver.clone()
-
       super.orWhere(query => {
-        const modelQb = new ModelQueryBuilder(
-          this.Model,
-          driver.setQueryBuilder(query, { useSetQB: true })
-        )
-
-        statement(modelQb)
+        statement(new ModelQueryBuilder(this.Model, query as unknown as Driver))
       })
 
       return this
@@ -1164,15 +1143,8 @@ export class ModelQueryBuilder<
    */
   public orWhereNot(statement: any, value?: any) {
     if (Is.Function(statement)) {
-      const driver = this.driver.clone()
-
       super.orWhereNot(query => {
-        const modelQb = new ModelQueryBuilder(
-          this.Model,
-          driver.setQueryBuilder(query, { useSetQB: true })
-        )
-
-        statement(modelQb)
+        statement(new ModelQueryBuilder(this.Model, query as unknown as Driver))
       })
 
       return this
