@@ -626,6 +626,96 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Same as {@link ModelQueryBuilder.whereHas}, but joins the resulting
+   * `EXISTS (...)` clause to the surrounding WHERE with `OR` instead of `AND`.
+   *
+   * Useful inside a grouped `where(qb => ...)` closure to build expressions
+   * like `(directCol ILIKE x OR relation.col ILIKE x)` without resorting to
+   * raw SQL.
+   */
+  public orWhereHas<K extends ModelRelations<M>>(
+    relation: K | string,
+    closure?: (
+      query: ModelQueryBuilder<
+        Extract<M[K] extends BaseModel[] ? M[K][0] : M[K], BaseModel>,
+        Driver
+      >
+    ) => any
+  ) {
+    const options = this.schema.includeWhereHasRelation(relation, closure)
+
+    /**
+     * Snapshot the full options object immediately at call time, before any
+     * subsequent `with(sameRelation)` call can mutate the shared `options`
+     * object (e.g. overwriting `closure` or `withClosure`).  Because this
+     * spread happens here — outside the Knex callback — the snapshot is
+     * frozen regardless of what happens to `options` afterwards.
+     */
+    const snapshot = { ...options }
+
+    super.orWhereExists(query => {
+      switch (snapshot.type) {
+        case 'hasOne':
+          return HasOneRelation.whereHas(this.Model, query, snapshot)
+        case 'hasMany':
+          return HasManyRelation.whereHas(this.Model, query, snapshot)
+        case 'belongsTo':
+          return BelongsToRelation.whereHas(this.Model, query, snapshot)
+        case 'belongsToMany':
+          return BelongsToManyRelation.whereHas(this.Model, query, snapshot)
+      }
+    })
+
+    return this
+  }
+
+  /**
+   * Build a grouped OR search across any mix of direct columns and
+   * relation columns in a single `WHERE (...)` clause.
+   *
+   * Each entry in `fields` is either a direct column property (e.g. `name`)
+   * or a `relation.column` path (e.g. `profile.bio`). The resulting SQL is a
+   * single parenthesized group joined exclusively by `OR`. Passing a falsy
+   * `term` short-circuits and the query is left untouched.
+   *
+   * @example
+   * ```ts
+   * User.query().search(['name', 'email', 'profile.bio'], 'john')
+   * ```
+   */
+  public search(
+    fields: (ModelColumns<M> | ModelRelations<M> | string)[],
+    term: string
+  ) {
+    if (!term) {
+      return this
+    }
+
+    const value = `%${term}%`
+
+    this.where(qb => {
+      fields.forEach((field, i) => {
+        const isRelation = (field as string).includes('.')
+
+        if (isRelation) {
+          const [relation, column] = (field as string).split('.')
+          const relOp = i === 0 ? 'whereHas' : 'orWhereHas'
+
+          ;(qb as any)[relOp](relation, (q: any) => q.whereILike(column, value))
+
+          return
+        }
+
+        const op = i === 0 ? 'whereILike' : 'orWhereILike'
+
+        ;(qb as any)[op](field, value)
+      })
+    })
+
+    return this
+  }
+
+  /**
    * Executes the given closure when the first argument is true.
    */
   public when(

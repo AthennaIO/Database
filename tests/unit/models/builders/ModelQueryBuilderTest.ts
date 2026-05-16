@@ -2465,4 +2465,168 @@ export default class ModelQueryBuilderTest {
 
     assert.isTrue(whereExistsCalled)
   }
+
+  @Test()
+  public async orWhereHasShouldRegisterAnOrWhereExistsClause({ assert }: Context) {
+    let orWhereExistsCalled = false
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => [])
+    Mock.stub(Database.driver, 'orWhereExists').callsFake(() => {
+      orWhereExistsCalled = true
+      return Database.driver
+    })
+
+    await User.query()
+      .where('name', 'John')
+      .orWhereHas('products', qb => qb.where('id', 'p1'))
+      .findMany()
+
+    assert.isTrue(orWhereExistsCalled)
+  }
+
+  @Test()
+  public async orWhereHasShouldBeChainable({ assert }: Context) {
+    Mock.when(Database.driver, 'orWhereExists').return(Database.driver)
+
+    const builder = User.query().orWhereHas('products', qb => qb.where('id', 'p1'))
+
+    assert.equal(typeof (builder as any).findMany, 'function')
+  }
+
+  @Test()
+  public async orWhereHasShouldNotEagerLoadRelations({ assert }: Context) {
+    let findManyCalls = 0
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      findManyCalls++
+
+      return [{ id: '1', name: 'John Doe' }]
+    })
+
+    await User.query()
+      .where('name', 'John')
+      .orWhereHas('products', qb => qb.where('id', 'p1'))
+      .findMany()
+
+    assert.equal(findManyCalls, 1)
+  }
+
+  @Test()
+  public async orWhereHasClosureShouldNotLeakIntoEagerLoad({ assert }: Context) {
+    const whereCalls: string[] = []
+
+    Mock.stub(Database.driver, 'findMany').callsFake(async () => {
+      return [{ id: '1', name: 'John Doe' }]
+    })
+
+    Mock.stub(Database.driver, 'where').callsFake((...args: any[]) => {
+      whereCalls.push(args[0])
+      return Database.driver
+    })
+
+    await User.query()
+      .with('products')
+      .orWhereHas('products', qb => qb.where('orWhereHasFilter', 'value'))
+      .findMany()
+
+    assert.isFalse(whereCalls.includes('orWhereHasFilter'))
+  }
+
+  @Test()
+  public async searchShouldBeANoOpWhenTermIsEmpty({ assert }: Context) {
+    let whereCalled = false
+
+    Mock.stub(Database.driver, 'where').callsFake(() => {
+      whereCalled = true
+      return Database.driver
+    })
+
+    const builder = User.query().search(['name', 'email'], '')
+
+    assert.isFalse(whereCalled)
+    assert.equal(typeof (builder as any).findMany, 'function')
+  }
+
+  @Test()
+  public async searchShouldBeANoOpWhenTermIsUndefined({ assert }: Context) {
+    let whereCalled = false
+
+    Mock.stub(Database.driver, 'where').callsFake(() => {
+      whereCalled = true
+      return Database.driver
+    })
+
+    User.query().search(['name', 'email'], undefined as any)
+
+    assert.isFalse(whereCalled)
+  }
+
+  @Test()
+  public async searchShouldOpenASingleGroupedWhereClause({ assert }: Context) {
+    let whereClosureCalls = 0
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        whereClosureCalls++
+      }
+
+      return Database.driver
+    })
+
+    User.query().search(['name', 'email'], 'john')
+
+    assert.equal(whereClosureCalls, 1)
+  }
+
+  @Test()
+  public async searchShouldOpenASingleGroupedWhereClauseForRelationOnly({ assert }: Context) {
+    let whereClosureCalls = 0
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        whereClosureCalls++
+      }
+
+      return Database.driver
+    })
+
+    User.query().search(['products.id'], 'p1')
+
+    assert.equal(whereClosureCalls, 1)
+  }
+
+  @Test()
+  public async searchShouldOpenASingleGroupedWhereClauseForMixedFields({ assert }: Context) {
+    let whereClosureCalls = 0
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        whereClosureCalls++
+      }
+
+      return Database.driver
+    })
+
+    User.query().search(['name', 'products.id'], 'john')
+
+    assert.equal(whereClosureCalls, 1)
+  }
+
+  @Test()
+  public async searchShouldBeChainable({ assert }: Context) {
+    Mock.when(Database.driver, 'where').return(Database.driver)
+
+    const builder = User.query().search(['name'], 'john')
+
+    assert.equal(typeof (builder as any).findMany, 'function')
+  }
+
+  @Test()
+  public async modelQueryBuilderShouldExposeOrWhereHasOnTheInstance({ assert }: Context) {
+    const builder = User.query()
+
+    assert.equal(typeof (builder as any).whereHas, 'function')
+    assert.equal(typeof (builder as any).orWhereHas, 'function')
+    assert.equal(typeof (builder as any).search, 'function')
+  }
 }
