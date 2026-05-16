@@ -59,6 +59,10 @@ export default class DatabaseConfigurer extends BaseConfigurer {
           path: '@athenna/database/commands/DbWipeCommand',
           loadApp: true
         })
+        .setTo('commands', 'db:query', {
+          path: '@athenna/database/commands/DbQueryCommand',
+          loadApp: true
+        })
         .setTo('commands', 'migration:run', {
           path: '@athenna/database/commands/MigrationRunCommand',
           loadApp: true

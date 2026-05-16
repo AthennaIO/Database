@@ -1,6 +1,6 @@
 {
   "name": "@athenna/database",
-  "version": "5.52.0",
+  "version": "5.53.0",
   "description": "The Athenna database handler for SQL/NoSQL.",
   "license": "MIT",
   "author": "João Lenon <lenon@athenna.io>",
@@ -51,6 +51,7 @@
     "./package.json": "./package.json",
     "./testing/plugins": "./src/testing/plugins/index.js",
     "./commands/DbFreshCommand": "./src/commands/DbFreshCommand.js",
+    "./commands/DbQueryCommand": "./src/commands/DbQueryCommand.js",
     "./commands/DbSeedCommand": "./src/commands/DbSeedCommand.js",
     "./commands/DbWipeCommand": "./src/commands/DbWipeCommand.js",
     "./commands/MakeCrudCommand": "./src/commands/MakeCrudCommand.js",
@@ -214,6 +215,9 @@
       },
       "db:wipe": {
         "path": "#src/commands/DbWipeCommand"
+      },
+      "db:query": {
+        "path": "#src/commands/DbQueryCommand"
       },
       "make:model": {
         "path": "#src/commands/MakeModelCommand"

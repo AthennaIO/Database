@@ -380,7 +380,9 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Calculate the average of a given column using distinct.
    */
   public async countDistinct(column: string): Promise<number> {
-    const [{ count }] = await this.qb.clearSelect().countDistinct({ count: column })
+    const [{ count }] = await this.qb
+      .clearSelect()
+      .countDistinct({ count: column })
 
     return Number(count)
   }
