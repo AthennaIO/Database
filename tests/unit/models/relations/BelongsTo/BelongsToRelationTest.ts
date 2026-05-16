@@ -316,4 +316,32 @@ export default class BelongsToRelationTest {
     assert.isUndefined(product.user)
     assert.instanceOf(profile, Profile)
   }
+
+  @Test()
+  public async shouldFilterByRelationColumnInsideAGroupedWhereClosure({ assert }: Context) {
+    const matching = await Product.query()
+      .where(qb => qb.whereHas('user', q => q.where('id', 1)))
+      .findMany()
+
+    assert.instanceOf(matching[0], Product)
+    assert.equal(matching.length, 1)
+
+    const none = await Product.query()
+      .where(qb => qb.whereHas('user', q => q.where('id', 99)))
+      .findMany()
+
+    assert.lengthOf(none, 0)
+  }
+
+  @Test()
+  public async shouldFilterUsingSearchAcrossDirectAndRelationColumns({ assert }: Context) {
+    const matchingByRelation = await Product.query().search(['user.name'], 'lenon').findMany()
+
+    assert.equal(matchingByRelation.length, 1)
+    assert.instanceOf(matchingByRelation[0], Product)
+
+    const noneByRelation = await Product.query().search(['user.name'], 'nobody').findMany()
+
+    assert.lengthOf(noneByRelation, 0)
+  }
 }
