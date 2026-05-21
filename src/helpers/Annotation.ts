@@ -11,6 +11,8 @@ import {
   COLUMNS_KEY,
   HAS_ONE_KEY,
   HAS_MANY_KEY,
+  HAS_ONE_THROUGH_KEY,
+  HAS_MANY_THROUGH_KEY,
   BELONGS_TO_KEY,
   BELONGS_TO_MANY_KEY
 } from '#src/constants/MetadataKeys'
@@ -19,6 +21,8 @@ import type {
   ColumnOptions,
   HasOneOptions,
   HasManyOptions,
+  HasOneThroughOptions,
+  HasManyThroughOptions,
   BelongsToOptions,
   BelongsToManyOptions
 } from '#src/types'
@@ -40,6 +44,8 @@ export class Annotation {
     return [
       ...this.getHasOnesMeta(target),
       ...this.getHasManyMeta(target),
+      ...this.getHasOneThroughMeta(target),
+      ...this.getHasManyThroughMeta(target),
       ...this.getBelongsToMeta(target),
       ...this.getBelongsToManyMeta(target)
     ]
@@ -67,6 +73,37 @@ export class Annotation {
     hasMany.push(options)
 
     Reflect.defineMetadata(HAS_MANY_KEY, hasMany, target)
+  }
+
+  public static getHasOneThroughMeta(target: any): HasOneThroughOptions[] {
+    return Reflect.getMetadata(HAS_ONE_THROUGH_KEY, target) || []
+  }
+
+  public static defineHasOneThroughMeta(
+    target: any,
+    options: HasOneThroughOptions
+  ) {
+    const hasOneThrough = Reflect.getMetadata(HAS_ONE_THROUGH_KEY, target) || []
+
+    hasOneThrough.push(options)
+
+    Reflect.defineMetadata(HAS_ONE_THROUGH_KEY, hasOneThrough, target)
+  }
+
+  public static getHasManyThroughMeta(target: any): HasManyThroughOptions[] {
+    return Reflect.getMetadata(HAS_MANY_THROUGH_KEY, target) || []
+  }
+
+  public static defineHasManyThroughMeta(
+    target: any,
+    options: HasManyThroughOptions
+  ) {
+    const hasManyThrough =
+      Reflect.getMetadata(HAS_MANY_THROUGH_KEY, target) || []
+
+    hasManyThrough.push(options)
+
+    Reflect.defineMetadata(HAS_MANY_THROUGH_KEY, hasManyThrough, target)
   }
 
   public static getBelongsToMeta(target: any): BelongsToOptions[] {
