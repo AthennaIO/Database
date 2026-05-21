@@ -15,6 +15,8 @@ export * from '#src/models/schemas/ModelSchema'
 export * from '#src/models/annotations/Column'
 export * from '#src/models/annotations/HasOne'
 export * from '#src/models/annotations/HasMany'
+export * from '#src/models/annotations/HasOneThrough'
+export * from '#src/models/annotations/HasManyThrough'
 export * from '#src/models/annotations/BelongsTo'
 export * from '#src/models/annotations/BelongsToMany'
 

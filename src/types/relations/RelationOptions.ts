@@ -9,11 +9,15 @@
 
 import type { HasOneOptions } from '#src/types/relations/HasOneOptions'
 import type { HasManyOptions } from '#src/types/relations/HasManyOptions'
+import type { HasOneThroughOptions } from '#src/types/relations/HasOneThroughOptions'
+import type { HasManyThroughOptions } from '#src/types/relations/HasManyThroughOptions'
 import type { BelongsToOptions } from '#src/types/relations/BelongsToOptions'
 import type { BelongsToManyOptions } from '#src/types/relations/BelongsToManyOptions'
 
 export type RelationOptions =
   | HasOneOptions
   | HasManyOptions
+  | HasOneThroughOptions
+  | HasManyThroughOptions
   | BelongsToOptions
   | BelongsToManyOptions

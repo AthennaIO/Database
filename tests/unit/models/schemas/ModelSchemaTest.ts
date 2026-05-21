@@ -537,7 +537,7 @@ export default class ModelSchemaTest {
       public profile: Profile
     }
 
-    const relation = new ModelSchema(User).getRelationByProperty('profile')
+    const relation = new ModelSchema(User).getRelationByProperty('profile') as any
 
     assert.isFalse(relation.isIncluded)
     assert.isUndefined(relation.closure)
@@ -557,7 +557,7 @@ export default class ModelSchemaTest {
     }
 
     const schema = new ModelSchema(User)
-    const relation = schema.includeRelation('profile')
+    const relation = schema.includeRelation('profile') as any
 
     assert.isTrue(relation.isIncluded)
     assert.isUndefined(relation.closure)
@@ -579,7 +579,7 @@ export default class ModelSchemaTest {
     }
 
     const schema = new ModelSchema(User)
-    const meta = schema.relations[0]
+    const meta = schema.relations[0] as any
 
     assert.throws(() => schema.includeRelation('not-found'), NotImplementedRelationException)
     assert.isFalse(meta.isIncluded)

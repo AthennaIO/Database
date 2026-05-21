@@ -14,6 +14,8 @@ import type { BaseModel } from '#src/models/BaseModel'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import { HasOneRelation } from '#src/models/relations/HasOne/HasOneRelation'
 import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
+import { HasOneThroughRelation } from '#src/models/relations/HasOneThrough/HasOneThroughRelation'
+import { HasManyThroughRelation } from '#src/models/relations/HasManyThrough/HasManyThroughRelation'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
 import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
 
@@ -105,6 +107,10 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
         return HasOneRelation.load(model, relation)
       case 'hasMany':
         return HasManyRelation.load(model, relation)
+      case 'hasOneThrough':
+        return HasOneThroughRelation.load(model, relation)
+      case 'hasManyThrough':
+        return HasManyThroughRelation.load(model, relation)
       case 'belongsTo':
         return BelongsToRelation.load(model, relation)
       case 'belongsToMany':
@@ -147,6 +153,10 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
         return HasOneRelation.loadAll(models, relation)
       case 'hasMany':
         return HasManyRelation.loadAll(models, relation)
+      case 'hasOneThrough':
+        return HasOneThroughRelation.loadAll(models, relation)
+      case 'hasManyThrough':
+        return HasManyThroughRelation.loadAll(models, relation)
       case 'belongsTo':
         return BelongsToRelation.loadAll(models, relation)
       case 'belongsToMany':

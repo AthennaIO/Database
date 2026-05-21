@@ -34,6 +34,8 @@ import { HasManyRelation } from '#src/models/relations/HasMany/HasManyRelation'
 import { NullableValueException } from '#src/exceptions/NullableValueException'
 import { BelongsToRelation } from '#src/models/relations/BelongsTo/BelongsToRelation'
 import { BelongsToManyRelation } from '#src/models/relations/BelongsToMany/BelongsToManyRelation'
+import { HasOneThroughRelation } from '#src/models/relations/HasOneThrough/HasOneThroughRelation'
+import { HasManyThroughRelation } from '#src/models/relations/HasManyThrough/HasManyThroughRelation'
 
 export class ModelQueryBuilder<
   M extends BaseModel = any,
@@ -615,6 +617,10 @@ export class ModelQueryBuilder<
           return HasOneRelation.whereHas(this.Model, query, snapshot)
         case 'hasMany':
           return HasManyRelation.whereHas(this.Model, query, snapshot)
+        case 'hasOneThrough':
+          return HasOneThroughRelation.whereHas(this.Model, query, snapshot)
+        case 'hasManyThrough':
+          return HasManyThroughRelation.whereHas(this.Model, query, snapshot)
         case 'belongsTo':
           return BelongsToRelation.whereHas(this.Model, query, snapshot)
         case 'belongsToMany':
@@ -659,6 +665,10 @@ export class ModelQueryBuilder<
           return HasOneRelation.whereHas(this.Model, query, snapshot)
         case 'hasMany':
           return HasManyRelation.whereHas(this.Model, query, snapshot)
+        case 'hasOneThrough':
+          return HasOneThroughRelation.whereHas(this.Model, query, snapshot)
+        case 'hasManyThrough':
+          return HasManyThroughRelation.whereHas(this.Model, query, snapshot)
         case 'belongsTo':
           return BelongsToRelation.whereHas(this.Model, query, snapshot)
         case 'belongsToMany':
