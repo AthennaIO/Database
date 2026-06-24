@@ -437,6 +437,45 @@ export class BaseModel {
   }
 
   /**
+   * Create a value, doing nothing if it would violate a unique constraint.
+   * The `where` is used to detect the conflict. Returns the created model, or
+   * `null` when a matching row already exists.
+   */
+  public static async createOrIgnore<T extends typeof BaseModel>(
+    this: T,
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>,
+    cleanPersist = true
+  ): Promise<InstanceType<T>> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.createOrIgnore(data, cleanPersist)
+  }
+
+  /**
+   * Find the first value matching `where` or create it, never throwing on a
+   * concurrent unique violation. Always returns a model.
+   */
+  public static async createOrFirst<T extends typeof BaseModel>(
+    this: T,
+    where: Partial<InstanceType<T>>,
+    data: Partial<InstanceType<T>>,
+    cleanPersist = true
+  ): Promise<InstanceType<T>> {
+    const query = this.query()
+
+    if (where) {
+      query.where(where)
+    }
+
+    return query.createOrFirst(data, cleanPersist)
+  }
+
+  /**
    * Update a value in database.
    */
   public static async update<T extends typeof BaseModel>(

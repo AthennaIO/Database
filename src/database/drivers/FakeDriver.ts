@@ -476,6 +476,40 @@ export class FakeDriver {
   }
 
   /**
+   * Create data, doing nothing on a unique conflict.
+   */
+  public static async createOrIgnore<T = any>(
+    data: Partial<T> = {}
+  ): Promise<T> {
+    return data as T
+  }
+
+  /**
+   * Find the first value matching the current query or create it.
+   */
+  public static async createOrFirst<T = any>(
+    data: Partial<T> = {}
+  ): Promise<T> {
+    return data as T
+  }
+
+  /**
+   * Translate a driver error into a normalized constraint violation.
+   */
+  public static parseError(): any {
+    return null
+  }
+
+  /**
+   * Run an operation translating any recognized driver error.
+   */
+  public static async runTranslatingErrors<T = any>(
+    operation: () => any
+  ): Promise<T> {
+    return operation()
+  }
+
+  /**
    * Update a value in database.
    */
   public static async update<T = any>(data: Partial<T>): Promise<T | T[]> {

@@ -16,6 +16,10 @@ import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import { CheckViolationException } from '#src/exceptions/CheckViolationException'
+import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
+import { NotNullViolationException } from '#src/exceptions/NotNullViolationException'
+import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class SqliteDriver extends BaseKnexDriver {
   /**
@@ -353,5 +357,87 @@ export class SqliteDriver extends BaseKnexDriver {
     this.qb.orWhereLike(column, value)
 
     return this
+  }
+
+  /**
+   * Translate a SQLite error into a normalized Athenna constraint violation
+   * exception. SQLite exposes extended result codes (e.g.
+   * `SQLITE_CONSTRAINT_UNIQUE`) and a message like
+   * `UNIQUE constraint failed: table.column`.
+   *
+   * @see https://www.sqlite.org/rescode.html
+   */
+  public parseError(error: any) {
+    const code = error?.code ?? ''
+    const message = error?.message ?? ''
+    const driver = 'sqlite'
+
+    /**
+     * Parses `table.column[, table.column]` lists out of the failure message.
+     */
+    const parseColumns = () => {
+      const match = /constraint failed:\s*(.+)$/i.exec(message)
+
+      if (!match) {
+        return { table: undefined, columns: undefined }
+      }
+
+      const refs = match[1].split(',').map(ref => ref.trim())
+      const columns = refs.map(ref => ref.split('.').pop())
+      const table = refs[0]?.includes('.') ? refs[0].split('.')[0] : undefined
+
+      return { table, columns }
+    }
+
+    if (
+      code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+      code === 'SQLITE_CONSTRAINT_PRIMARYKEY' ||
+      /UNIQUE constraint failed/i.test(message)
+    ) {
+      const { table, columns } = parseColumns()
+
+      return new UniqueViolationException({
+        table,
+        columns,
+        driver,
+        raw: error
+      })
+    }
+
+    if (
+      code === 'SQLITE_CONSTRAINT_NOTNULL' ||
+      /NOT NULL constraint failed/i.test(message)
+    ) {
+      const { table, columns } = parseColumns()
+
+      return new NotNullViolationException({
+        table,
+        column: columns?.[0],
+        driver,
+        raw: error
+      })
+    }
+
+    if (
+      code === 'SQLITE_CONSTRAINT_FOREIGNKEY' ||
+      /FOREIGN KEY constraint failed/i.test(message)
+    ) {
+      return new ForeignKeyViolationException({ driver, raw: error })
+    }
+
+    if (
+      code === 'SQLITE_CONSTRAINT_CHECK' ||
+      /CHECK constraint failed/i.test(message)
+    ) {
+      const match = /CHECK constraint failed:\s*(.+)$/i.exec(message)
+
+      return new CheckViolationException({
+        constraint: match?.[1]?.trim(),
+        driver,
+        raw: error
+      })
+    }
+
+    return null
   }
 }

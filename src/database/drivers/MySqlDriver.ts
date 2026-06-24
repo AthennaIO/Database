@@ -16,6 +16,10 @@ import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import { CheckViolationException } from '#src/exceptions/CheckViolationException'
+import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
+import { NotNullViolationException } from '#src/exceptions/NotNullViolationException'
+import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class MySqlDriver extends BaseKnexDriver {
   /**
@@ -289,5 +293,61 @@ export class MySqlDriver extends BaseKnexDriver {
       operator,
       value
     }
+  }
+
+  /**
+   * Translate a MySQL error (`errno`) into a normalized Athenna constraint
+   * violation exception. MySQL errors are less structured than PostgreSQL,
+   * so the offending column/key is parsed from the message when possible.
+   *
+   * @see https://dev.mysql.com/doc/mysql-errors/en/server-error-reference.html
+   */
+  public parseError(error: any) {
+    const errno = error?.errno
+    const code = error?.code
+    const message = error?.message ?? ''
+    const driver = 'mysql'
+
+    if (errno === 1062 || code === 'ER_DUP_ENTRY') {
+      const match = /for key '([^']+)'/.exec(message)
+
+      return new UniqueViolationException({
+        constraint: match?.[1],
+        driver,
+        raw: error
+      })
+    }
+
+    if (errno === 1048 || code === 'ER_BAD_NULL_ERROR') {
+      const match = /Column '([^']+)'/.exec(message)
+
+      return new NotNullViolationException({
+        column: match?.[1],
+        driver,
+        raw: error
+      })
+    }
+
+    if (errno === 1451 || errno === 1452) {
+      const match = /CONSTRAINT `([^`]+)`/.exec(message)
+
+      return new ForeignKeyViolationException({
+        constraint: match?.[1],
+        driver,
+        raw: error
+      })
+    }
+
+    if (errno === 3819 || code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
+      const match = /constraint '([^']+)'/.exec(message)
+
+      return new CheckViolationException({
+        constraint: match?.[1],
+        driver,
+        raw: error
+      })
+    }
+
+    return null
   }
 }

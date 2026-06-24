@@ -257,6 +257,23 @@ export class QueryBuilder<
   }
 
   /**
+   * Create a value, doing nothing if it would violate a unique constraint.
+   * The current query's where clauses are used to detect the conflict.
+   * Returns the created value, or `null` when it already existed.
+   */
+  public async createOrIgnore(data?: Partial<T>): Promise<T> {
+    return this.driver.createOrIgnore(data)
+  }
+
+  /**
+   * Find the first value matching the current query or create it, never
+   * throwing on a concurrent unique violation. Always returns a value.
+   */
+  public async createOrFirst(data?: Partial<T>): Promise<T> {
+    return this.driver.createOrFirst(data)
+  }
+
+  /**
    * Update data in database.
    */
   public async update(data: Partial<T>): Promise<T | T[]> {
