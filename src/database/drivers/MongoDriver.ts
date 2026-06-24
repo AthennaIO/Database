@@ -28,6 +28,7 @@ import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
+import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
 import { MONGO_OPERATIONS_DICTIONARY } from '#src/constants/MongoOperationsDictionary'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
@@ -717,6 +718,65 @@ export class MongoDriver extends Driver<Connection, Collection> {
     }
 
     return this.create(data)
+  }
+
+  /**
+   * Create a value, doing nothing if a matching document already exists.
+   * Returns the created value, or `null` when it already existed.
+   */
+  public async createOrIgnore<T = any>(data: Partial<T> = {}): Promise<T> {
+    await this.client.asPromise()
+
+    const pipeline = this.createPipeline()
+
+    const hasValue = (
+      await this.qb.aggregate(pipeline, { session: this.session }).toArray()
+    )[0]
+
+    if (hasValue) {
+      return null
+    }
+
+    return this.runTranslatingErrors(() => this.create(data))
+  }
+
+  /**
+   * Find the first document matching the current query or create it.
+   */
+  public async createOrFirst<T = any>(data: Partial<T> = {}): Promise<T> {
+    await this.client.asPromise()
+
+    const pipeline = this.createPipeline()
+
+    const hasValue = (
+      await this.qb.aggregate(pipeline, { session: this.session }).toArray()
+    )[0]
+
+    if (hasValue) {
+      return hasValue as T
+    }
+
+    return this.runTranslatingErrors(() => this.create(data))
+  }
+
+  /**
+   * Translate a MongoDB duplicate-key error (code 11000) into a normalized
+   * Athenna unique violation exception.
+   */
+  public parseError(error: any) {
+    if (error?.code !== 11000 && error?.code !== 11001) {
+      return null
+    }
+
+    const columns = error?.keyPattern
+      ? Object.keys(error.keyPattern)
+      : undefined
+
+    return new UniqueViolationException({
+      columns,
+      driver: 'mongo',
+      raw: error
+    })
   }
 
   /**

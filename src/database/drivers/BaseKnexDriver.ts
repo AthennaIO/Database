@@ -461,7 +461,7 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
         .then(([id]) => ids.push(data[index][this.primaryKey] || id))
     })
 
-    await Promise.all(promises)
+    await this.runTranslatingErrors(() => Promise.all(promises))
 
     return this.whereIn(this.primaryKey, ids).findMany()
   }
@@ -475,10 +475,12 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
     const preparedData = this.prepareInsert(data)
 
     if (hasValue) {
-      await this.qb
-        .where(this.primaryKey, hasValue[this.primaryKey])
-        .limit(1)
-        .update(preparedData)
+      await this.runTranslatingErrors(() =>
+        this.qb
+          .where(this.primaryKey, hasValue[this.primaryKey])
+          .limit(1)
+          .update(preparedData)
+      )
 
       return this.where(this.primaryKey, hasValue[this.primaryKey]).find()
     }
@@ -487,12 +489,63 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
+   * Create a value in database, doing nothing if it would violate a unique
+   * (or exclusion) constraint — `ON CONFLICT DO NOTHING`/`INSERT IGNORE`. The
+   * current query's where clauses act as the conflict-find predicate. Returns
+   * the created value, or `null` when a matching row already exists and the
+   * insert was skipped.
+   */
+  public async createOrIgnore<T = any>(data: Partial<T> = {}): Promise<T> {
+    if (Is.Array(data)) {
+      throw new WrongMethodException('createOrIgnore', 'createMany')
+    }
+
+    const existing = await this.qb.clone().first()
+
+    if (existing) {
+      return null
+    }
+
+    const preparedData = this.prepareInsert(data)
+
+    await this.runTranslatingErrors(() =>
+      this.qb.clone().insert(preparedData).onConflict().ignore()
+    )
+
+    return this.find()
+  }
+
+  /**
+   * Find the first value matching the current query or create it. The insert
+   * uses `ON CONFLICT DO NOTHING` so concurrent callers never throw a unique
+   * violation; the matching row (created here or by a racing writer) is then
+   * returned. Always returns a value.
+   */
+  public async createOrFirst<T = any>(data: Partial<T> = {}): Promise<T> {
+    if (Is.Array(data)) {
+      throw new WrongMethodException('createOrFirst', 'createMany')
+    }
+
+    const existing = await this.qb.clone().first()
+
+    if (!existing) {
+      const preparedData = this.prepareInsert(data)
+
+      await this.runTranslatingErrors(() =>
+        this.qb.clone().insert(preparedData).onConflict().ignore()
+      )
+    }
+
+    return this.find()
+  }
+
+  /**
    * Update a value in database.
    */
   public async update<T = any>(data: Partial<T>): Promise<T | T[]> {
     const preparedData = this.prepareInsert(data)
 
-    await this.qb.clone().update(preparedData)
+    await this.runTranslatingErrors(() => this.qb.clone().update(preparedData))
 
     const result = await this.findMany()
 

@@ -35,3 +35,9 @@ export * from '#src/helpers/ObjectId'
 
 export * from '#src/facades/Database'
 export * from '#src/providers/DatabaseProvider'
+
+export * from '#src/exceptions/ConstraintViolationException'
+export * from '#src/exceptions/UniqueViolationException'
+export * from '#src/exceptions/NotNullViolationException'
+export * from '#src/exceptions/ForeignKeyViolationException'
+export * from '#src/exceptions/CheckViolationException'

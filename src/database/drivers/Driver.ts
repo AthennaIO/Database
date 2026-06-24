@@ -23,6 +23,7 @@ import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
+import type { ConstraintViolationException } from '#src/exceptions/ConstraintViolationException'
 
 export abstract class Driver<Client = any, QB = any> {
   /**
@@ -247,6 +248,36 @@ export abstract class Driver<Client = any, QB = any> {
     return {
       column: column.trim(),
       path
+    }
+  }
+
+  /**
+   * Translate a driver-specific error into a normalized Athenna constraint
+   * violation exception. Each concrete driver overrides this with the error
+   * codes/shapes of its own database. Returns `null` when the error is not a
+   * recognized constraint violation, so the original error is rethrown as-is.
+   */
+  public parseError(_error: any): ConstraintViolationException | null {
+    return null
+  }
+
+  /**
+   * Run a database operation translating any recognized driver error into a
+   * normalized Athenna constraint violation exception. Unknown errors are
+   * rethrown untouched. This is the single boundary where driver-specific
+   * error shapes are normalized, so every write goes through it.
+   */
+  public async runTranslatingErrors<T = any>(operation: () => any): Promise<T> {
+    try {
+      return await operation()
+    } catch (error) {
+      const parsed = this.parseError(error)
+
+      if (parsed) {
+        throw parsed
+      }
+
+      throw error
     }
   }
 
@@ -525,6 +556,18 @@ export abstract class Driver<Client = any, QB = any> {
    * Create data or update if already exists.
    */
   public abstract createOrUpdate<T = any>(data?: Partial<T>): Promise<T>
+
+  /**
+   * Create data, doing nothing if it would violate a unique constraint.
+   * Returns the created value, or `null` when a matching row already exists.
+   */
+  public abstract createOrIgnore<T = any>(data?: Partial<T>): Promise<T>
+
+  /**
+   * Find the first value matching the current query or create it, without
+   * throwing on a concurrent unique violation.
+   */
+  public abstract createOrFirst<T = any>(data?: Partial<T>): Promise<T>
 
   /**
    * Update a value in database.

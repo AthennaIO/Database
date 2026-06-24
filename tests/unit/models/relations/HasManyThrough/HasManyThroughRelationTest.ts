@@ -179,10 +179,7 @@ export default class HasManyThroughRelationTest {
 
   @Test()
   public async shouldSupportNestedWithThroughRelations({ assert }: Context) {
-    const appointment = await Appointment.query()
-      .with('saleItems')
-      .where('id', 1)
-      .find()
+    const appointment = await Appointment.query().with('saleItems').where('id', 1).find()
 
     assert.lengthOf(appointment.saleItems, 3)
     assert.instanceOf(appointment.saleItems[0], SaleItem)

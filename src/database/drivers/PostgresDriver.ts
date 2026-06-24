@@ -16,6 +16,10 @@ import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import { CheckViolationException } from '#src/exceptions/CheckViolationException'
+import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
+import { NotNullViolationException } from '#src/exceptions/NotNullViolationException'
+import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class PostgresDriver extends BaseKnexDriver {
   /**
@@ -272,5 +276,72 @@ export class PostgresDriver extends BaseKnexDriver {
     }
 
     return operators[operator] || operator
+  }
+
+  /**
+   * Translate a PostgreSQL error (SQLSTATE codes) into a normalized Athenna
+   * constraint violation exception.
+   *
+   * @see https://www.postgresql.org/docs/current/errcodes-appendix.html
+   */
+  public parseError(error: any) {
+    const code = error?.code
+
+    if (!code) {
+      return null
+    }
+
+    const table = error.table
+    const driver = 'postgres'
+
+    /**
+     * Both unique and foreign key violations expose the offending columns in
+     * the `detail` field, e.g. `Key (avatar_id, section_id)=(...) already
+     * exists.`
+     */
+    const columnsFromDetail = () => {
+      const match = /\(([^)]+)\)=/.exec(error.detail ?? '')
+
+      if (!match) {
+        return undefined
+      }
+
+      return match[1].split(',').map(column => column.trim())
+    }
+
+    switch (code) {
+      case '23505':
+        return new UniqueViolationException({
+          table,
+          constraint: error.constraint,
+          columns: columnsFromDetail(),
+          driver,
+          raw: error
+        })
+      case '23502':
+        return new NotNullViolationException({
+          table,
+          column: error.column,
+          driver,
+          raw: error
+        })
+      case '23503':
+        return new ForeignKeyViolationException({
+          table,
+          constraint: error.constraint,
+          column: columnsFromDetail()?.[0],
+          driver,
+          raw: error
+        })
+      case '23514':
+        return new CheckViolationException({
+          table,
+          constraint: error.constraint,
+          driver,
+          raw: error
+        })
+      default:
+        return null
+    }
   }
 }

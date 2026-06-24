@@ -375,28 +375,7 @@ export class ModelQueryBuilder<
   public async createMany(data: Partial<M>[], cleanPersist = true) {
     data = await Promise.all(
       data.map(async d => {
-        const date = new Date()
-        const createdAt = this.schema.getCreatedAtColumn()
-        const updatedAt = this.schema.getUpdatedAtColumn()
-        const deletedAt = this.schema.getDeletedAtColumn()
-        const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
-
-        const parsed = this.schema.propertiesToColumnNames(d, {
-          attributes,
-          cleanPersist
-        })
-
-        if (createdAt && parsed[createdAt.name] === undefined) {
-          parsed[createdAt.name] = date
-        }
-
-        if (updatedAt && parsed[updatedAt.name] === undefined) {
-          parsed[updatedAt.name] = date
-        }
-
-        if (deletedAt && parsed[deletedAt.name] === undefined) {
-          parsed[deletedAt.name] = null
-        }
+        const parsed = this.toPersistColumns(d, cleanPersist)
 
         this.validateNullable(parsed)
         await this.validateUnique(parsed)
@@ -408,6 +387,38 @@ export class ModelQueryBuilder<
     const created = await super.createMany(data)
 
     return this.generator.generateMany(created)
+  }
+
+  /**
+   * Map model properties to columns and stamp the timestamp columns, without
+   * running the (race-prone) unique pre-check. Used by the conflict-aware
+   * persistence methods that rely on the database to enforce uniqueness.
+   */
+  private toPersistColumns(data: Partial<M>, cleanPersist = true) {
+    const date = new Date()
+    const createdAt = this.schema.getCreatedAtColumn()
+    const updatedAt = this.schema.getUpdatedAtColumn()
+    const deletedAt = this.schema.getDeletedAtColumn()
+    const attributes = this.isToSetAttributes ? this.Model.attributes() : {}
+
+    const parsed = this.schema.propertiesToColumnNames(data, {
+      attributes,
+      cleanPersist
+    })
+
+    if (createdAt && parsed[createdAt.name] === undefined) {
+      parsed[createdAt.name] = date
+    }
+
+    if (updatedAt && parsed[updatedAt.name] === undefined) {
+      parsed[updatedAt.name] = date
+    }
+
+    if (deletedAt && parsed[deletedAt.name] === undefined) {
+      parsed[deletedAt.name] = null
+    }
+
+    return parsed
   }
 
   /**
@@ -426,6 +437,45 @@ export class ModelQueryBuilder<
     }
 
     return this.create(data, cleanPersist)
+  }
+
+  /**
+   * Create a value, doing nothing if it would violate a unique constraint
+   * (`ON CONFLICT DO NOTHING`/`INSERT IGNORE`). The current query's where
+   * clauses detect the conflict. Returns the created model, or `null` when a
+   * matching row already exists. Relies on the database constraint instead of
+   * the race-prone model unique pre-check.
+   */
+  public async createOrIgnore(data: Partial<M> = {}, cleanPersist = true) {
+    this.setInternalQueries()
+
+    const parsed = this.toPersistColumns(data, cleanPersist)
+
+    this.validateNullable(parsed)
+
+    const created = await super.createOrIgnore(parsed)
+
+    if (!created) {
+      return null
+    }
+
+    return this.generator.generateOne(created)
+  }
+
+  /**
+   * Find the first value matching the current query or create it, never
+   * throwing on a concurrent unique violation. Always returns a model.
+   */
+  public async createOrFirst(data: Partial<M> = {}, cleanPersist = true) {
+    this.setInternalQueries()
+
+    const parsed = this.toPersistColumns(data, cleanPersist)
+
+    this.validateNullable(parsed)
+
+    const value = await super.createOrFirst(parsed)
+
+    return this.generator.generateOne(value)
   }
 
   /**
