@@ -45,11 +45,7 @@ export class ThroughTablesMigration extends BaseMigration {
     await db.createTable('sale_items', table => {
       table.increments('id')
       table.integer('quantity').defaultTo(1)
-      table
-        .integer('appointmentId')
-        .unsigned()
-        .references('id')
-        .inTable('appointments')
+      table.integer('appointmentId').unsigned().references('id').inTable('appointments')
       table.integer('saleId').unsigned().references('id').inTable('sales')
     })
   }
