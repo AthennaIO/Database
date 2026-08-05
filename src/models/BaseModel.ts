@@ -546,7 +546,11 @@ export class BaseModel {
     Object.keys(copied).forEach(key => {
       const value = this[key]
 
-      if (Is.Array(value) && value[0] && ORIGINAL_SYMBOL in value[0]) {
+      if (
+        Is.Array(value) &&
+        Is.Object(value[0]) &&
+        ORIGINAL_SYMBOL in value[0]
+      ) {
         return
       }
 

@@ -36,10 +36,7 @@ export class HasOneThroughRelation {
     models: BaseModel[],
     relation: HasOneThroughOptions
   ): Promise<any[]> {
-    const result = await HasManyThroughRelation.loadAll(
-      models,
-      relation as any
-    )
+    const result = await HasManyThroughRelation.loadAll(models, relation as any)
 
     return result.map(m => {
       const arr = (m[relation.property] as any[]) || []

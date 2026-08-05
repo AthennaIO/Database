@@ -564,6 +564,20 @@ export default class BaseModelTest {
   }
 
   @Test()
+  public async shouldBeAbleToSetOriginalWhenModelHasAnArrayOfPrimitivesValue({ assert }: Context) {
+    const user = new User()
+
+    user.id = '1'
+    user.name = 'lenon'
+    user.metadata4 = { name: 'lenon', age: 30, address: { city: 'foo', state: 'bar' } } as any
+    ;(user as any).images = ['https://example.com/a.png', 'https://example.com/b.png']
+
+    assert.doesNotThrow(() => user.setOriginal())
+    assert.isTrue(user.isPersisted())
+    assert.isFalse(user.isDirty())
+  }
+
+  @Test()
   public async shouldBeAbleToValidateThatAModelIsDirty({ assert }: Context) {
     const user = new User()
 

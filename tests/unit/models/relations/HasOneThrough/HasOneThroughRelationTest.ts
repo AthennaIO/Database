@@ -35,9 +35,7 @@ export default class HasOneThroughRelationTest {
       { id: 1, name: 'South' },
       { id: 2, name: 'North' }
     ])
-    await pg.table('members').createMany([
-      { id: 1, name: 'lenon', regionId: 1 }
-    ])
+    await pg.table('members').createMany([{ id: 1, name: 'lenon', regionId: 1 }])
     await pg.table('articles').createMany([
       { id: 1, title: 'first', memberId: 1 },
       { id: 2, title: 'second', memberId: 1 }
