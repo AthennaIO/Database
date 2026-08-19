@@ -417,15 +417,31 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
       page = { page, limit, resourceUrl }
     }
 
-    const [{ count }] = await this.qb
+    const countQuery = this.qb
       .clone()
       .clearOrder()
       .clearSelect()
       .count({ count: '*' })
 
-    const data = await this.offset(page.page * page.limit)
-      .limit(page.limit)
-      .findMany()
+    this.offset(page.page * page.limit).limit(page.limit)
+
+    /**
+     * Inside a transaction both queries share a single connection,
+     * so they run sequentially to keep the dispatch order explicit.
+     * Sqlite also runs sequentially: with `:memory:` databases each
+     * pool connection holds a different (empty) database, so the
+     * queries can't be split across two connections.
+     */
+    const isSqlite = this.client.client?.driverName?.includes('sqlite')
+
+    if (this.client.isTransaction || isSqlite) {
+      const [{ count }] = await countQuery
+      const data = await this.findMany()
+
+      return Exec.pagination(data, Number(count), page)
+    }
+
+    const [[{ count }], data] = await Promise.all([countQuery, this.findMany()])
 
     return Exec.pagination(data, Number(count), page)
   }

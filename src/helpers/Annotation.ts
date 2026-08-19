@@ -32,6 +32,48 @@ import type {
 } from '#src/types'
 
 export class Annotation {
+  /**
+   * Cache of the parsed metadata per model class. Reading and
+   * merging the reflect-metadata entries on every `Model.schema()`
+   * call is expensive, and the metadata only changes when a
+   * `define*Meta()` method runs, which invalidates the entry.
+   */
+  private static metaCache = new WeakMap<
+    any,
+    {
+      columns: ColumnOptions[]
+      relations: RelationOptions[]
+      hooks: ModelHookOptions[]
+    }
+  >()
+
+  /**
+   * Get the columns, relations and hooks metadata of the model,
+   * cached per model class.
+   *
+   * The returned arrays and objects are shared: callers that need
+   * to mutate them (per-query state) must copy them first.
+   */
+  public static getMeta(target: any) {
+    let meta = this.metaCache.get(target)
+
+    if (!meta) {
+      meta = {
+        columns: this.getColumnsMeta(target),
+        relations: this.getRelationsMeta(target),
+        hooks: this.getHooksMeta(target)
+      }
+
+      this.metaCache.set(target, meta)
+    }
+
+    return meta
+  }
+
+  private static invalidateMeta(target: any) {
+    this.metaCache.delete(target)
+  }
+
   public static getColumnsMeta(target: any): ColumnOptions[] {
     return Reflect.getMetadata(COLUMNS_KEY, target) || []
   }
@@ -42,6 +84,7 @@ export class Annotation {
     columns.push(options)
 
     Reflect.defineMetadata(COLUMNS_KEY, columns, target)
+    this.invalidateMeta(target)
   }
 
   /**
@@ -74,6 +117,7 @@ export class Annotation {
     hooks.push(options)
 
     Reflect.defineMetadata(HOOKS_KEY, hooks, target)
+    this.invalidateMeta(target)
   }
 
   public static getRelationsMeta(target: any): RelationOptions[] {
@@ -97,6 +141,7 @@ export class Annotation {
     hasOne.push(options)
 
     Reflect.defineMetadata(HAS_ONE_KEY, hasOne, target)
+    this.invalidateMeta(target)
   }
 
   public static getHasManyMeta(target: any): HasManyOptions[] {
@@ -109,6 +154,7 @@ export class Annotation {
     hasMany.push(options)
 
     Reflect.defineMetadata(HAS_MANY_KEY, hasMany, target)
+    this.invalidateMeta(target)
   }
 
   public static getHasOneThroughMeta(target: any): HasOneThroughOptions[] {
@@ -124,6 +170,7 @@ export class Annotation {
     hasOneThrough.push(options)
 
     Reflect.defineMetadata(HAS_ONE_THROUGH_KEY, hasOneThrough, target)
+    this.invalidateMeta(target)
   }
 
   public static getHasManyThroughMeta(target: any): HasManyThroughOptions[] {
@@ -140,6 +187,7 @@ export class Annotation {
     hasManyThrough.push(options)
 
     Reflect.defineMetadata(HAS_MANY_THROUGH_KEY, hasManyThrough, target)
+    this.invalidateMeta(target)
   }
 
   public static getBelongsToMeta(target: any): BelongsToOptions[] {
@@ -152,6 +200,7 @@ export class Annotation {
     belongsTo.push(options)
 
     Reflect.defineMetadata(BELONGS_TO_KEY, belongsTo, target)
+    this.invalidateMeta(target)
   }
 
   public static getBelongsToManyMeta(target: any): BelongsToManyOptions[] {
@@ -167,5 +216,6 @@ export class Annotation {
     belongsToMany.push(options)
 
     Reflect.defineMetadata(BELONGS_TO_MANY_KEY, belongsToMany, target)
+    this.invalidateMeta(target)
   }
 }

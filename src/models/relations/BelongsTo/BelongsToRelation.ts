@@ -55,7 +55,9 @@ export class BelongsToRelation {
   ): Promise<any[]> {
     this.options(relation)
 
-    const foreignValues = models.map(model => model[relation.foreignKey])
+    const foreignValues = [
+      ...new Set(models.map(model => model[relation.foreignKey]))
+    ]
     const results = await relation
       .model()
       .query()

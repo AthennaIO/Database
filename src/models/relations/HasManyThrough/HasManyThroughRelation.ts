@@ -123,7 +123,7 @@ export class HasManyThroughRelation {
       ? await relation
           .model()
           .query()
-          .whereIn(relation.secondKey as never, allLinks)
+          .whereIn(relation.secondKey as never, [...new Set(allLinks)])
           .when(relation.withClosure, relation.withClosure)
           .findMany()
       : []

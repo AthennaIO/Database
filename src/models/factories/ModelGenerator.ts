@@ -61,7 +61,7 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
       return []
     }
 
-    const models = await Promise.all(data.map(d => this.instantiateOne(d)))
+    const models = data.map(d => this.instantiateOne(d))
 
     return this.includeRelationsOfAll(models)
   }
@@ -122,6 +122,9 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
 
   /**
    * Include all relations to one model.
+   *
+   * Relations load concurrently: each one queries and writes
+   * only its own `relation.property` on the model.
    */
   private async includeRelations(model: M) {
     const relations = this.schema.getIncludedRelations()
@@ -130,13 +133,9 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
       return model.setOriginal()
     }
 
-    for (const relation of relations) {
-      model = await this.includeRelation(model, relation)
-    }
-
-    if (!model) {
-      return undefined
-    }
+    await Promise.all(
+      relations.map(relation => this.includeRelation(model, relation))
+    )
 
     return model.setOriginal()
   }
@@ -168,6 +167,9 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
 
   /**
    * Include all relations for all models.
+   *
+   * Relations load concurrently: each one queries and writes
+   * only its own `relation.property` on the models.
    */
   private async includeRelationsOfAll(models: M[]) {
     const relations = this.schema.getIncludedRelations()
@@ -176,9 +178,9 @@ export class ModelGenerator<M extends BaseModel = any> extends Macroable {
       return models.map(model => model.setOriginal())
     }
 
-    for (const relation of relations) {
-      models = await this.includeRelationOfAll(models, relation)
-    }
+    await Promise.all(
+      relations.map(relation => this.includeRelationOfAll(models, relation))
+    )
 
     return models.map(model => model.setOriginal())
   }
