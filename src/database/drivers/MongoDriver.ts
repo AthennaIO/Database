@@ -648,17 +648,28 @@ export class MongoDriver extends Driver<Connection, Collection> {
     pipeline.push({ $group: { [this.primaryKey]: null, count: { $sum: 1 } } })
     pipeline.push({ $project: { [this.primaryKey]: 0, count: 1 } })
 
-    const result = await this.qb
-      .aggregate(pipeline, { session: this.session })
-      .toArray()
+    this.offset(page.page * page.limit).limit(page.limit)
 
-    const count = result[0]?.count || 0
+    /**
+     * MongoDB sessions don't support concurrent operations,
+     * so inside a transaction the queries run sequentially.
+     */
+    if (this.session) {
+      const result = await this.qb
+        .aggregate(pipeline, { session: this.session })
+        .toArray()
 
-    const data = await this.offset(page.page * page.limit)
-      .limit(page.limit)
-      .findMany()
+      const data = await this.findMany()
 
-    return Exec.pagination(data, count, page)
+      return Exec.pagination(data, result[0]?.count || 0, page)
+    }
+
+    const [result, data] = await Promise.all([
+      this.qb.aggregate(pipeline).toArray(),
+      this.findMany()
+    ])
+
+    return Exec.pagination(data, result[0]?.count || 0, page)
   }
 
   /**

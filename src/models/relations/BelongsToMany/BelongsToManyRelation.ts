@@ -87,7 +87,9 @@ export class BelongsToManyRelation {
     const results = await relation
       .model()
       .query()
-      .whereIn(relation.relationPrimaryKey as never, relationForeignKey)
+      .whereIn(relation.relationPrimaryKey as never, [
+        ...new Set(relationForeignKey)
+      ])
       .when(relation.withClosure, relation.withClosure)
       .findMany()
 

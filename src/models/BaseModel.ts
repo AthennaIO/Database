@@ -536,14 +536,17 @@ export class BaseModel {
   private [ORIGINAL_SYMBOL]?: Record<string, any>
 
   /**
-   * Set the original model values by deep copying
-   * the model state.
+   * Set the original model values by copying the model state.
+   *
+   * Loaded relations are skipped before any copy happens and
+   * primitives are stored by value: only object values (json
+   * columns, dates) need a deep copy to keep the snapshot
+   * decoupled from in-place mutations.
    */
   public setOriginal() {
     this[ORIGINAL_SYMBOL] = {}
-    const copied = Json.copy(this)
 
-    Object.keys(copied).forEach(key => {
+    Object.keys(this).forEach(key => {
       const value = this[key]
 
       if (
@@ -558,7 +561,8 @@ export class BaseModel {
         return
       }
 
-      this[ORIGINAL_SYMBOL][key] = copied[key]
+      this[ORIGINAL_SYMBOL][key] =
+        typeof value === 'object' && value !== null ? Json.copy(value) : value
     })
 
     return this

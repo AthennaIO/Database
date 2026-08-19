@@ -18,7 +18,7 @@ import type {
 import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
 import type { BaseModel } from '#src/models/BaseModel'
-import { Json, Options, Macroable } from '@athenna/common'
+import { Options, Macroable } from '@athenna/common'
 import type { ModelQueryBuilder } from '#src/models/builders/ModelQueryBuilder'
 import { NotImplementedRelationException } from '#src/exceptions/NotImplementedRelationException'
 
@@ -47,12 +47,42 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
    */
   private Model: typeof BaseModel
 
+  /**
+   * O(1) column lookup indexes. Rebuilt whenever a column
+   * name is mutated after construction (mongo `_id` case).
+   */
+  private columnsByName: Map<string, ColumnOptions>
+  private columnsByProperty: Map<string, ColumnOptions>
+
   public constructor(model: any) {
     super()
     this.Model = model
-    this.columns = Json.copy(Annotation.getColumnsMeta(model))
-    this.relations = Json.copy(Annotation.getRelationsMeta(model))
-    this.hooks = Annotation.getHooksMeta(model)
+
+    /**
+     * Schemas carry per-query state (`isIncluded`, `withClosure`,
+     * the mongo `_id` rename), so each instance gets its own copy
+     * of the cached metadata. A shallow copy per object is enough:
+     * only top-level option fields are ever mutated.
+     */
+    const meta = Annotation.getMeta(model)
+
+    this.columns = meta.columns.map(column => ({ ...column }))
+    this.relations = meta.relations.map(relation => ({ ...relation }))
+    this.hooks = meta.hooks
+    this.buildColumnIndexes()
+  }
+
+  /**
+   * Build the column lookup maps from the columns array.
+   */
+  private buildColumnIndexes() {
+    this.columnsByName = new Map()
+    this.columnsByProperty = new Map()
+
+    this.columns.forEach(column => {
+      this.columnsByName.set(column.name, column)
+      this.columnsByProperty.set(column.property, column)
+    })
   }
 
   /**
@@ -139,6 +169,7 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
       if (options) {
         if (!options.hasSetName && this.getModelDriverName() === 'mongo') {
           options.name = '_id'
+          this.buildColumnIndexes()
         }
       }
     }
@@ -287,7 +318,7 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
    * Get the column options by the column database name.
    */
   public getColumnByName(column: string | ModelColumns<M>): ColumnOptions {
-    return this.columns.find(c => c.name === column)
+    return this.columnsByName.get(column as string)
   }
 
   /**
@@ -316,7 +347,7 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
   public getColumnByProperty(
     property: string | ModelColumns<M>
   ): ColumnOptions {
-    return this.columns.find(c => c.property === property)
+    return this.columnsByProperty.get(property as string)
   }
 
   /**

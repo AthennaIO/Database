@@ -611,7 +611,7 @@ export class ModelQueryBuilder<
       parsed[updatedAt.name] = date
     }
 
-    await this.validateUnique(parsed, true)
+    await this.validateUnique(parsed)
 
     const updated = await super.update(parsed)
 
@@ -1587,43 +1587,37 @@ export class ModelQueryBuilder<
   /**
    * Verify that columns with isUnique property
    * can be created in database.
+   *
+   * One `exists()` per unique column, all running concurrently.
+   * The old update path (`findMany().length > 1`, falling through
+   * to `exists()`) flagged a conflict in exactly the same cases —
+   * whenever the value exists in any row — while also hydrating
+   * full models for nothing.
    */
-  private async validateUnique(data: any, isUpdate = false) {
+  private async validateUnique(data: any) {
     if (!this.isToValidateUnique) {
       return
     }
 
     const records = {}
+    const columns = this.schema
+      .getAllUniqueColumns()
+      .filter(column => data[column.name] !== undefined)
 
-    for (const column of this.schema.getAllUniqueColumns()) {
-      const value = data[column.name]
+    await Promise.all(
+      columns.map(async column => {
+        const value = data[column.name]
 
-      if (value === undefined) {
-        continue
-      }
-
-      if (isUpdate) {
-        const data = await this.Model.query()
+        const isDuplicated = await this.Model.query()
           .withoutHooks()
           .where(column.name as never, value)
-          .findMany()
+          .exists()
 
-        if (data.length > 1) {
+        if (isDuplicated) {
           records[column.property] = value
-
-          continue
         }
-      }
-
-      const isDuplicated = await this.Model.query()
-        .withoutHooks()
-        .where(column.name as never, value)
-        .exists()
-
-      if (isDuplicated) {
-        records[column.property] = value
-      }
-    }
+      })
+    )
 
     if (!Is.Empty(records)) {
       throw new UniqueValueException(records)

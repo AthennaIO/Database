@@ -117,11 +117,13 @@ export default class ModelGeneratorTest {
       @HasOne(() => Profile)
       public profile: Profile
     }
-    Mock.when(HasOneRelation, 'load').resolve({
-      id: '1',
-      profile: { userId: '1' },
-      setOriginal: () => ({ id: '1', profile: { userId: '1' } })
-    })
+    Mock.when(HasOneRelation, 'load')
+      .get()
+      .callsFake(async (model: any) => {
+        model.profile = { userId: '1' }
+
+        return model
+      })
     const schema = User.schema()
     schema.relations[0].isIncluded = true
 
@@ -169,9 +171,13 @@ export default class ModelGeneratorTest {
       @HasOne(() => Profile)
       public profile: Profile
     }
-    Mock.when(HasOneRelation, 'loadAll').resolve([
-      { id: '1', profile: { userId: '1' }, setOriginal: () => ({ id: '1', profile: { userId: '1' } }) }
-    ])
+    Mock.when(HasOneRelation, 'loadAll')
+      .get()
+      .callsFake(async (models: any[]) => {
+        models.forEach(model => (model.profile = { userId: '1' }))
+
+        return models
+      })
     const schema = User.schema()
     schema.relations[0].isIncluded = true
 
