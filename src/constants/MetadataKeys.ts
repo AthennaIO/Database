@@ -8,6 +8,7 @@
  */
 
 export const COLUMNS_KEY = 'database:columns:options'
+export const HOOKS_KEY = 'database:hooks:options'
 export const HAS_ONE_KEY = 'database:hasOne:options'
 export const HAS_MANY_KEY = 'database:hasMany:options'
 export const HAS_ONE_THROUGH_KEY = 'database:hasOneThrough:options'

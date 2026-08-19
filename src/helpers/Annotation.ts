@@ -7,8 +7,11 @@
  * file that was distributed with this source code.
  */
 
+import 'reflect-metadata'
+
 import {
   COLUMNS_KEY,
+  HOOKS_KEY,
   HAS_ONE_KEY,
   HAS_MANY_KEY,
   HAS_ONE_THROUGH_KEY,
@@ -19,6 +22,7 @@ import {
 import type {
   RelationOptions,
   ColumnOptions,
+  ModelHookOptions,
   HasOneOptions,
   HasManyOptions,
   HasOneThroughOptions,
@@ -38,6 +42,38 @@ export class Annotation {
     columns.push(options)
 
     Reflect.defineMetadata(COLUMNS_KEY, columns, target)
+  }
+
+  /**
+   * Get the lifecycle hooks of the model, including the ones inherited
+   * from parent models. Hooks are returned in firing order: parent
+   * class hooks first, each class in declaration order.
+   *
+   * Metadata is intentionally read per-class (own metadata) and merged
+   * by walking the prototype chain: `Reflect.getMetadata()` alone would
+   * return only the closest metadata in the chain, either hiding parent
+   * hooks or (worse) leaking child hooks into the parent when the child
+   * pushes into the parent's inherited array.
+   */
+  public static getHooksMeta(target: any): ModelHookOptions[] {
+    const hooks: ModelHookOptions[] = []
+    let current = target
+
+    while (current && current !== Function.prototype) {
+      hooks.unshift(...(Reflect.getOwnMetadata(HOOKS_KEY, current) || []))
+
+      current = Object.getPrototypeOf(current)
+    }
+
+    return hooks
+  }
+
+  public static defineHookMeta(target: any, options: ModelHookOptions) {
+    const hooks = Reflect.getOwnMetadata(HOOKS_KEY, target) || []
+
+    hooks.push(options)
+
+    Reflect.defineMetadata(HOOKS_KEY, hooks, target)
   }
 
   public static getRelationsMeta(target: any): RelationOptions[] {

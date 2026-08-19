@@ -47,6 +47,7 @@ export class ModelQueryBuilder<
   private primaryKeyName: string
   private primaryKeyProperty: ModelColumns<M>
   private isToSetAttributes: boolean = true
+  private isToFireHooks: boolean = true
   private isToValidateUnique: boolean = true
   private isToValidateNullable: boolean = true
   private selectColumns: string[] = []
@@ -243,9 +244,25 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Disable firing the model lifecycle hooks for this query
+   * instance. Used internally by the instance operations
+   * (`model.save()`, `model.delete()`), which fire the hooks
+   * themselves with the model instance as payload.
+   */
+  public withoutHooks() {
+    this.isToFireHooks = false
+
+    return this
+  }
+
+  /**
    * Find a value in database.
    */
   public async find() {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeFind', this)
+    }
+
     this.setInternalQueries()
 
     const data = await super.find()
@@ -256,7 +273,13 @@ export class ModelQueryBuilder<
       return data
     }
 
-    return this.generator.generateOne(data)
+    const model = await this.generator.generateOne(data)
+
+    if (model && this.isToFireHooks) {
+      await this.schema.fireHooks('afterFind', model)
+    }
+
+    return model
   }
 
   /**
@@ -314,6 +337,10 @@ export class ModelQueryBuilder<
    * Find many values in database.
    */
   public async findMany() {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeFind', this)
+    }
+
     this.setInternalQueries()
 
     const data = await super.findMany()
@@ -324,7 +351,15 @@ export class ModelQueryBuilder<
       return data
     }
 
-    return this.generator.generateMany(data)
+    const models = await this.generator.generateMany(data)
+
+    if (this.isToFireHooks) {
+      for (const model of models) {
+        await this.schema.fireHooks('afterFind', model)
+      }
+    }
+
+    return models
   }
 
   /**
@@ -335,6 +370,10 @@ export class ModelQueryBuilder<
     limit = 10,
     resourceUrl = '/'
   ) {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeFind', this)
+    }
+
     this.setInternalQueries()
 
     const data = await super.paginate(page, limit, resourceUrl)
@@ -346,6 +385,12 @@ export class ModelQueryBuilder<
     }
 
     data.data = await this.generator.generateMany(data.data)
+
+    if (this.isToFireHooks) {
+      for (const model of data.data) {
+        await this.schema.fireHooks('afterFind', model)
+      }
+    }
 
     return data
   }
@@ -373,6 +418,13 @@ export class ModelQueryBuilder<
    * Create many values in database.
    */
   public async createMany(data: Partial<M>[], cleanPersist = true) {
+    if (this.isToFireHooks) {
+      for (const d of data) {
+        await this.schema.fireHooks('beforeSave', d)
+        await this.schema.fireHooks('beforeCreate', d)
+      }
+    }
+
     data = await Promise.all(
       data.map(async d => {
         const parsed = this.toPersistColumns(d, cleanPersist)
@@ -385,8 +437,16 @@ export class ModelQueryBuilder<
     )
 
     const created = await super.createMany(data)
+    const models = await this.generator.generateMany(created)
 
-    return this.generator.generateMany(created)
+    if (this.isToFireHooks) {
+      for (const model of models) {
+        await this.schema.fireHooks('afterCreate', model)
+        await this.schema.fireHooks('afterSave', model)
+      }
+    }
+
+    return models
   }
 
   /**
@@ -447,6 +507,11 @@ export class ModelQueryBuilder<
    * the race-prone model unique pre-check.
    */
   public async createOrIgnore(data: Partial<M> = {}, cleanPersist = true) {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeSave', data)
+      await this.schema.fireHooks('beforeCreate', data)
+    }
+
     this.setInternalQueries()
 
     const parsed = this.toPersistColumns(data, cleanPersist)
@@ -459,14 +524,30 @@ export class ModelQueryBuilder<
       return null
     }
 
-    return this.generator.generateOne(created)
+    const model = await this.generator.generateOne(created)
+
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('afterCreate', model)
+      await this.schema.fireHooks('afterSave', model)
+    }
+
+    return model
   }
 
   /**
    * Find the first value matching the current query or create it, never
    * throwing on a concurrent unique violation. Always returns a model.
+   *
+   * Since the driver can't tell apart a created row from a concurrently
+   * found one, the `afterCreate`/`afterSave` hooks always fire with the
+   * returned model, even when it already existed.
    */
   public async createOrFirst(data: Partial<M> = {}, cleanPersist = true) {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeSave', data)
+      await this.schema.fireHooks('beforeCreate', data)
+    }
+
     this.setInternalQueries()
 
     const parsed = this.toPersistColumns(data, cleanPersist)
@@ -474,14 +555,47 @@ export class ModelQueryBuilder<
     this.validateNullable(parsed)
 
     const value = await super.createOrFirst(parsed)
+    const model = await this.generator.generateOne(value)
 
-    return this.generator.generateOne(value)
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('afterCreate', model)
+      await this.schema.fireHooks('afterSave', model)
+    }
+
+    return model
   }
 
   /**
    * Update a value in database.
    */
   public async update(data: Partial<M>, cleanPersist = true) {
+    if (this.isToFireHooks) {
+      await this.schema.fireHooks('beforeSave', data)
+      await this.schema.fireHooks('beforeUpdate', data)
+    }
+
+    const updated = await this.rawUpdate(data, cleanPersist)
+
+    if (this.isToFireHooks) {
+      const models = (Is.Array(updated) ? updated : [updated]).filter(
+        model => !!model
+      )
+
+      for (const model of models) {
+        await this.schema.fireHooks('afterUpdate', model)
+        await this.schema.fireHooks('afterSave', model)
+      }
+    }
+
+    return updated
+  }
+
+  /**
+   * Update a value in database without firing the lifecycle hooks.
+   * Used by the soft delete path, which must not masquerade as an
+   * update to the hooks.
+   */
+  private async rawUpdate(data: Partial<M>, cleanPersist = true) {
     this.setInternalQueries()
 
     const date = new Date()
@@ -510,6 +624,10 @@ export class ModelQueryBuilder<
 
   /**
    * Delete or soft delete a value in database.
+   *
+   * Delete hooks are fired only by instance deletes (`model.delete()`),
+   * where the model instance is known. Query deletes fire no hooks —
+   * not even update hooks on the soft delete path.
    */
   public async delete(force = false): Promise<void> {
     this.setInternalQueries({ addSelect: false })
@@ -520,7 +638,7 @@ export class ModelQueryBuilder<
       return
     }
 
-    await this.update({ [this.DELETED_AT_PROP]: new Date() } as any)
+    await this.rawUpdate({ [this.DELETED_AT_PROP]: new Date() } as any)
   }
 
   /**
@@ -1486,6 +1604,7 @@ export class ModelQueryBuilder<
 
       if (isUpdate) {
         const data = await this.Model.query()
+          .withoutHooks()
           .where(column.name as never, value)
           .findMany()
 
@@ -1497,6 +1616,7 @@ export class ModelQueryBuilder<
       }
 
       const isDuplicated = await this.Model.query()
+        .withoutHooks()
         .where(column.name as never, value)
         .exists()
 

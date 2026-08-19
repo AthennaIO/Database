@@ -742,6 +742,10 @@ export class BaseModel {
 
   /**
    * Save the changes done in the model in database.
+   *
+   * Lifecycle hooks are fired here with the model instance as
+   * payload, so the persistence queries run `withoutHooks()` to
+   * avoid firing them a second time at the query builder level.
    */
   public async save(cleanPersist = true) {
     const Model = this.constructor as any
@@ -773,30 +777,50 @@ export class BaseModel {
       this[deletedAt.property] = null
     }
 
+    const isNew = !this.isPersisted()
+
+    await schema.fireHooks('beforeSave', this)
+    await schema.fireHooks(isNew ? 'beforeCreate' : 'beforeUpdate', this)
+
     const data = this.dirty()
 
-    if (!this.isPersisted()) {
-      const created = await Model.create(data, cleanPersist)
+    if (isNew) {
+      const created = await Model.query()
+        .withoutHooks()
+        .create(data, cleanPersist)
 
       Object.keys(created).forEach(key => (this[key] = created[key]))
 
-      return this.setOriginal()
+      this.setOriginal()
+
+      await schema.fireHooks('afterCreate', this)
+      await schema.fireHooks('afterSave', this)
+
+      return this
     }
 
     /**
      * Means data is not dirty because there are any
      * value that is different from original symbol.
+     * No query runs, so no after hook fires either.
      */
     if (!Object.keys(data).length) {
       return this
     }
 
-    const where = { [primaryKey]: this[primaryKey] }
-    const updated = await Model.update(where, data, cleanPersist)
+    const updated = await Model.query()
+      .withoutHooks()
+      .where(primaryKey, this[primaryKey])
+      .update(data, cleanPersist)
 
     Object.keys(updated).forEach(key => (this[key] = updated[key]))
 
-    return this.setOriginal()
+    this.setOriginal()
+
+    await schema.fireHooks('afterUpdate', this)
+    await schema.fireHooks('afterSave', this)
+
+    return this
   }
 
   /**
@@ -853,12 +877,23 @@ export class BaseModel {
 
   /**
    * Delete or soft delete your model from database.
+   *
+   * The `beforeDelete`/`afterDelete` hooks are fired here with the
+   * model instance as payload. Query deletes fire no delete hooks.
    */
   public async delete(force = false) {
     const Model = this.constructor as any
-    const primaryKey = Model.schema().getMainPrimaryKeyProperty()
+    const schema = Model.schema()
+    const primaryKey = schema.getMainPrimaryKeyProperty()
 
-    await Model.query().where(primaryKey, this[primaryKey]).delete(force)
+    await schema.fireHooks('beforeDelete', this)
+
+    await Model.query()
+      .withoutHooks()
+      .where(primaryKey, this[primaryKey])
+      .delete(force)
+
+    await schema.fireHooks('afterDelete', this)
   }
 
   /**
