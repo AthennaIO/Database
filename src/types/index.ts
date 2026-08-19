@@ -15,6 +15,7 @@ export * from '#src/types/columns/ColumnType'
 export * from '#src/types/relations/Relation'
 export * from '#src/types/columns/ModelColumns'
 export * from '#src/types/columns/ColumnOptions'
+export * from '#src/types/ModelHookOptions'
 
 export * from '#src/types/relations/HasOneOptions'
 export * from '#src/types/relations/HasManyOptions'

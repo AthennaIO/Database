@@ -11,7 +11,9 @@ import type {
   ColumnOptions,
   ModelColumns,
   ModelRelations,
-  RelationOptions
+  RelationOptions,
+  ModelHookType,
+  ModelHookOptions
 } from '#src/types'
 import { Database } from '#src/facades/Database'
 import { Annotation } from '#src/helpers/Annotation'
@@ -33,6 +35,13 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
   public relations: RelationOptions[]
 
   /**
+   * Save the lifecycle hooks defined by the \@Before...() and
+   * \@After...() annotations. Not copied like columns/relations
+   * because hooks hold function references.
+   */
+  public hooks: ModelHookOptions[]
+
+  /**
    * The model class that is going to be used
    * to craft the schema.
    */
@@ -43,6 +52,26 @@ export class ModelSchema<M extends BaseModel = any> extends Macroable {
     this.Model = model
     this.columns = Json.copy(Annotation.getColumnsMeta(model))
     this.relations = Json.copy(Annotation.getRelationsMeta(model))
+    this.hooks = Annotation.getHooksMeta(model)
+  }
+
+  /**
+   * Get all the lifecycle hooks registered for a given type,
+   * in firing order.
+   */
+  public getHooksByType(type: ModelHookType): ModelHookOptions[] {
+    return this.hooks.filter(hook => hook.type === type)
+  }
+
+  /**
+   * Fire all the lifecycle hooks of a given type sequentially,
+   * awaiting async hooks. Hooks are called with the model class
+   * as `this` and receive the given payload.
+   */
+  public async fireHooks(type: ModelHookType, payload: any): Promise<void> {
+    for (const hook of this.getHooksByType(type)) {
+      await hook.method.call(this.Model, payload)
+    }
   }
 
   /**
