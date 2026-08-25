@@ -53,9 +53,6 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
     const knex = this.getKnex()
     const configs = Config.get(`database.connections.${this.connection}`, {})
     const knexOpts = {
-      migrations: {
-        tableName: 'migrations'
-      },
       pool: {
         min: 2,
         max: 20,
@@ -63,7 +60,11 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
       },
       debug: false,
       useNullAsDefault: false,
-      ...Json.omit(configs, ['driver', 'validations'])
+      ...Json.omit(configs, ['driver', 'validations']),
+      migrations: {
+        tableName: 'migrations',
+        ...(configs.migrations || {})
+      }
     }
 
     debug('creating new connection using Knex. options defined: %o', knexOpts)
@@ -177,9 +178,124 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   }
 
   /**
+   * Get the table name where the migrations are registered.
+   */
+  private getMigrationsTableName(): string {
+    return Config.get(
+      `database.connections.${this.connection}.migrations.tableName`,
+      'migrations'
+    )
+  }
+
+  /**
+   * Migrations used to be registered in the migrations table with the
+   * file extension (".ts"/".js"), which makes the same migration be
+   * registered twice when running it from source code and from the
+   * compiled code. This method removes the extension from the
+   * migrations that were registered by older versions.
+   *
+   * This runs automatically before running/reverting migrations and it
+   * is idempotent. It can be turned off by setting the
+   * "migrations.normalizeNames" option to "false" in your connection
+   * configuration. Turn it off only if you still need to run older
+   * versions of "@athenna/database" against the same database, since
+   * they expect the file extension to be in the migration name.
+   */
+  private async normalizeMigrationsTable(): Promise<void> {
+    if (
+      Config.is(
+        `database.connections.${this.connection}.migrations.normalizeNames`,
+        false
+      )
+    ) {
+      debug('skipping migrations table normalization by configuration')
+
+      return
+    }
+
+    const tableName = this.getMigrationsTableName()
+
+    if (!(await this.hasTable(tableName))) {
+      return
+    }
+
+    const hasExtension = (name: string) => /\.(js|ts)$/.test(name)
+    const rows = await this.client
+      .from(tableName)
+      .select('*')
+      .orderBy('id', 'asc')
+
+    if (!rows.some(row => hasExtension(row.name))) {
+      return
+    }
+
+    const names = new Set(
+      rows.filter(row => !hasExtension(row.name)).map(row => row.name)
+    )
+
+    let renamed = 0
+    let deleted = 0
+
+    await this.client.transaction(async trx => {
+      for (const row of rows) {
+        if (!hasExtension(row.name)) {
+          continue
+        }
+
+        const name = row.name.replace(/\.(js|ts)$/, '')
+
+        if (names.has(name)) {
+          debug(
+            'removing duplicated migration %s from %s table, migration %s is already registered',
+            row.name,
+            tableName,
+            name
+          )
+
+          await trx.from(tableName).where('id', row.id).delete()
+
+          deleted++
+
+          continue
+        }
+
+        debug(
+          'renaming migration %s to %s in %s table',
+          row.name,
+          name,
+          tableName
+        )
+
+        names.add(name)
+
+        await trx.from(tableName).where('id', row.id).update({ name })
+
+        renamed++
+      }
+    })
+
+    debug(
+      'normalized %s migrations and deleted %s duplicated ones in %s table',
+      renamed,
+      deleted,
+      tableName
+    )
+
+    if (Config.is('rc.bootLogs', true)) {
+      Log.channelOrVanilla('application').info(
+        `Removed the file extension of ({yellow} ${renamed}) migrations in the ({yellow} ${tableName}) table${
+          deleted ? ` and deleted ({yellow} ${deleted}) duplicated ones` : ''
+        }. Older versions of ({yellow} @athenna/database) will not be able to run migrations in this database anymore.`
+      )
+    }
+  }
+
+  /**
    * Run database migrations.
    */
   public async runMigrations(): Promise<void> {
+    await this.normalizeMigrationsTable()
+
     await this.client.migrate.latest({
       migrationSource: new MigrationSource(this.connection)
     })
@@ -189,6 +305,8 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Revert database migrations.
    */
   public async revertMigrations(): Promise<void> {
+    await this.normalizeMigrationsTable()
+
     await this.client.migrate.rollback({
       migrationSource: new MigrationSource(this.connection)
     })

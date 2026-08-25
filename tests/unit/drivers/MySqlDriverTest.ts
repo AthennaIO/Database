@@ -300,6 +300,88 @@ export default class MySqlDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToRunMigrationsWithoutTheFileExtensionInMigrationsTable({ assert }: Context) {
+    await this.driver.dropTable('rents')
+    await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
+    await this.driver.dropTable('users')
+
+    Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
+
+    await this.driver.runMigrations()
+
+    const migrations = await this.driver.table('migrations').findMany()
+
+    assert.isAbove(migrations.length, 0)
+    migrations.forEach(migration => assert.notMatch(migration.name, /\.(js|ts)$/))
+  }
+
+  @Test()
+  public async shouldBeAbleToNormalizeMigrationsThatWereRegisteredWithFileExtension({ assert }: Context) {
+    await this.driver.dropTable('rents')
+    await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
+    await this.driver.dropTable('users')
+
+    Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
+
+    await this.driver.runMigrations()
+
+    const migrations = await this.driver.table('migrations').findMany()
+
+    /**
+     * Simulate the migrations that were registered by older versions
+     * of @athenna/database using the file extension in the name.
+     */
+    for (const migration of migrations) {
+      await this.driver
+        .table('migrations')
+        .where('id', migration.id)
+        .update({ name: `${migration.name}.ts` })
+    }
+
+    await this.driver.runMigrations()
+
+    const normalized = await this.driver.table('migrations').findMany()
+
+    assert.lengthOf(normalized, migrations.length)
+    normalized.forEach(migration => assert.notMatch(migration.name, /\.(js|ts)$/))
+    assert.isTrue(await this.driver.hasTable('users'))
+  }
+
+  @Test()
+  public async shouldBeAbleToRemoveDuplicatedMigrationsRegisteredWithAndWithoutFileExtension({ assert }: Context) {
+    await this.driver.dropTable('rents')
+    await this.driver.dropTable('products')
+    await this.driver.dropTable('profiles')
+    await this.driver.dropTable('users')
+
+    Mock.when(Path, 'migrations').return(Path.fixtures('migrations'))
+
+    await this.driver.runMigrations()
+
+    const migrations = await this.driver.table('migrations').findMany()
+    const batch = Math.max(...migrations.map(migration => migration.batch)) + 1
+
+    /**
+     * Simulate a migration that was registered twice, once running
+     * the source code and once running the compiled code.
+     */
+    await this.driver.table('migrations').create({
+      name: `${migrations[0].name}.js`,
+      batch,
+      migration_time: new Date()
+    })
+
+    await this.driver.runMigrations()
+
+    const normalized = await this.driver.table('migrations').findMany()
+
+    assert.lengthOf(normalized, migrations.length)
+    normalized.forEach(migration => assert.notMatch(migration.name, /\.(js|ts)$/))
+  }
+
+  @Test()
   public async shouldBeAbleToGetTheDatabasesOfDriver({ assert }: Context) {
     const databases = await this.driver.getDatabases()
 

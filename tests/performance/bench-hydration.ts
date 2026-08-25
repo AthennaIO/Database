@@ -49,7 +49,9 @@ for (let i = 0; i < 5; i++) {
 }
 
 console.log(
-  `generateMany ${ROWS}x20: median ${runs.sort((a, b) => a - b)[2].toFixed(1)}ms | runs: ${runs.map(r => r.toFixed(1)).join(', ')}`
+  `generateMany ${ROWS}x20: median ${runs.sort((a, b) => a - b)[2].toFixed(1)}ms | runs: ${runs
+    .map(r => r.toFixed(1))
+    .join(', ')}`
 )
 
 let start = performance.now()

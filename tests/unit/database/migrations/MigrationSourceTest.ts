@@ -29,8 +29,8 @@ export default class MigrationSourceTest {
 
     const migrations = await new MigrationSource('fake').getMigrations()
 
-    assert.deepEqual(migrations[0].name, '2022_10_08_0000012_create_countries_table.ts')
-    assert.deepEqual(migrations[1].name, '2022_10_08_0000013_create_capitals_table.ts')
+    assert.deepEqual(migrations[0].name, '2022_10_08_0000012_create_countries_table')
+    assert.deepEqual(migrations[1].name, '2022_10_08_0000013_create_capitals_table')
   }
 
   @Test()
@@ -40,7 +40,7 @@ export default class MigrationSourceTest {
     const migrations = await new MigrationSource('postgres-docker').getMigrations()
 
     assert.lengthOf(migrations, 9)
-    assert.deepEqual(migrations[0].name, '2022_10_08_000000_create_uuid_function_postgres.ts')
+    assert.deepEqual(migrations[0].name, '2022_10_08_000000_create_uuid_function_postgres')
   }
 
   @Test()
@@ -51,7 +51,7 @@ export default class MigrationSourceTest {
     const migrations = await migrationSource.getMigrations()
     const name = migrationSource.getMigrationName(migrations[0])
 
-    assert.deepEqual(name, '2022_10_08_0000012_create_countries_table.ts')
+    assert.deepEqual(name, '2022_10_08_0000012_create_countries_table')
   }
 
   @Test()

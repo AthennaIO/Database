@@ -44,9 +44,6 @@ export class MySqlDriver extends BaseKnexDriver {
     const configs = Config.get(`database.connections.${this.connection}`, {})
     const knexOpts = {
       client: 'mysql2',
-      migrations: {
-        tableName: 'migrations'
-      },
       pool: {
         min: 2,
         max: 20,
@@ -54,7 +51,11 @@ export class MySqlDriver extends BaseKnexDriver {
       },
       debug: false,
       useNullAsDefault: false,
-      ...Json.omit(configs, ['driver', 'validations'])
+      ...Json.omit(configs, ['driver', 'validations']),
+      migrations: {
+        tableName: 'migrations',
+        ...(configs.migrations || {})
+      }
     }
 
     debug('creating new connection using Knex. options defined: %o', knexOpts)

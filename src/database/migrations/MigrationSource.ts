@@ -36,6 +36,11 @@ export class MigrationSource {
    * Get all the migrations from migrations path and import
    * as modules. This method will be used by "getMigration"
    * method later to get the migrations "up"/"down" methods.
+   *
+   * The migration name is registered without the file extension
+   * to keep the same name between the source code (".ts") and the
+   * compiled code (".js"). Otherwise the same migration would be
+   * registered twice in the migrations table.
    */
   public async getMigrations(): Promise<Source[]> {
     const migrations = []
@@ -45,7 +50,7 @@ export class MigrationSource {
       const Migration = await Module.getFrom(file.path)
 
       if (this.isAbleToRun(Migration)) {
-        migrations.push({ name: file.base, Migration })
+        migrations.push({ name: file.name, Migration })
       }
     }
 
