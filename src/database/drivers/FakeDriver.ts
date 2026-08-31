@@ -1043,6 +1043,45 @@ export class FakeDriver {
     return this
   }
 
+  /**
+   * Lock the rows selected by the query for update.
+   */
+  public static forUpdate() {
+    return this
+  }
+
+  /**
+   * Lock the rows selected by the query with a shared lock.
+   */
+  public static forShare() {
+    return this
+  }
+
+  /**
+   * Skip rows that are already locked by another transaction.
+   */
+  public static skipLocked() {
+    return this
+  }
+
+  /**
+   * Fail immediately if any selected row is already locked.
+   */
+  public static noWait() {
+    return this
+  }
+
+  /**
+   * Run the closure while holding an exclusive named lock. The fake
+   * driver just runs the closure.
+   */
+  public static async lock<T = any>(
+    _key: string,
+    closure: () => T | Promise<T>
+  ): Promise<T> {
+    return closure()
+  }
+
   public static isUsingJsonSelector() {
     return false
   }

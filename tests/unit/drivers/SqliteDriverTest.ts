@@ -8,9 +8,10 @@
  */
 
 import { Config } from '@athenna/config'
-import { Path, Sleep, Collection } from '@athenna/common'
+import { Path, Exec, Sleep, Collection } from '@athenna/common'
 import { SqliteDriver } from '#src/database/drivers/SqliteDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
@@ -261,6 +262,80 @@ export default class SqliteDriverTest {
     await trx.commitTransaction()
 
     assert.isDefined(await this.driver.table('users').where('id', '1').find())
+  }
+
+  @Test()
+  public async shouldSerializeConcurrentNamedLockClosuresWithTheSameKey({ assert }: Context) {
+    const events: string[] = []
+
+    await Promise.all([
+      this.driver.lock('athenna:lock:test', async () => {
+        events.push('first:start')
+        await Exec.sleep(200)
+        events.push('first:end')
+      }),
+      (async () => {
+        await Exec.sleep(50)
+
+        return this.driver.lock('athenna:lock:test', async () => {
+          events.push('second:start')
+        })
+      })()
+    ])
+
+    assert.deepEqual(events, ['first:start', 'first:end', 'second:start'])
+  }
+
+  @Test()
+  public async shouldReturnTheNamedLockClosureResult({ assert }: Context) {
+    const result = await this.driver.lock('athenna:lock:test', async () => {
+      return { id: '1' }
+    })
+
+    assert.deepEqual(result, { id: '1' })
+  }
+
+  @Test()
+  public async shouldReleaseTheNamedLockWhenTheClosureThrows({ assert }: Context) {
+    await assert.rejects(() =>
+      this.driver.lock('athenna:lock:test', () => {
+        throw new Error('boom')
+      })
+    )
+
+    const result = await this.driver.lock('athenna:lock:test', () => 'acquired', { timeout: 1000 })
+
+    assert.deepEqual(result, 'acquired')
+  }
+
+  @Test()
+  public async shouldThrowLockTimeoutExceptionWhenNamedLockIsNotAcquiredInTime({ assert }: Context) {
+    const holder = this.driver.lock('athenna:lock:test', () => Exec.sleep(500))
+
+    await Exec.sleep(50)
+
+    await assert.rejects(() => this.driver.lock('athenna:lock:test', () => {}, { timeout: 100 }), LockTimeoutException)
+
+    await holder
+  }
+
+  @Test()
+  public async shouldHandTheNamedLockThroughAfterAWaiterTimesOut({ assert }: Context) {
+    const holder = this.driver.lock('athenna:lock:test', () => Exec.sleep(300))
+
+    await Exec.sleep(50)
+
+    await assert.rejects(() => this.driver.lock('athenna:lock:test', () => {}, { timeout: 100 }), LockTimeoutException)
+
+    /**
+     * The timed out waiter was the tail of the chain: a third caller
+     * must still be able to acquire the lock once the holder releases.
+     */
+    const result = await this.driver.lock('athenna:lock:test', () => 'acquired', { timeout: 1000 })
+
+    assert.deepEqual(result, 'acquired')
+
+    await holder
   }
 
   @Test()

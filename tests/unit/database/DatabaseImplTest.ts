@@ -123,6 +123,17 @@ export default class DatabaseImplTest {
   }
 
   @Test()
+  public async shouldBeAbleToRunClosuresInsideNamedLocks({ assert }: Context) {
+    Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)
+
+    const database = new DatabaseImpl().connection('postgres')
+    const closure = async () => 'done'
+    const result = await database.lock('bookings', closure, { timeout: 1000 })
+
+    assert.deepEqual(result, 'done')
+  }
+
+  @Test()
   public async shouldBeAbleToRunMigrations({ assert }: Context) {
     Mock.when(FakeDriver, 'runMigrations').resolve(undefined)
     Mock.when(ConnectionFactory, 'fabricate').return(FakeDriver)

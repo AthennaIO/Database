@@ -16,11 +16,17 @@ import {
   type PaginationOptions
 } from '@athenna/common'
 
+import type {
+  Direction,
+  Operations,
+  LockOptions,
+  ConnectionOptions
+} from '#src/types'
+
 import type { Knex, TableBuilder } from 'knex'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
-import type { Direction, ConnectionOptions, Operations } from '#src/types'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { NotFoundDataException } from '#src/exceptions/NotFoundDataException'
 import type { ConstraintViolationException } from '#src/exceptions/ConstraintViolationException'
@@ -300,6 +306,18 @@ export abstract class Driver<Client = any, QB = any> {
    * Sync a model schema with the driver.
    */
   public abstract sync(schema: ModelSchema): Promise<any>
+
+  /**
+   * Run the closure while holding an exclusive named lock. Only one
+   * process/connection at a time can hold the lock for a given key,
+   * so concurrent calls with the same key are serialized. The lock is
+   * always released when the closure resolves or rejects.
+   */
+  public abstract lock<T = any>(
+    key: string,
+    closure: () => T | Promise<T>,
+    options?: LockOptions
+  ): Promise<T>
 
   /**
    * Create a new transaction.
@@ -1013,4 +1031,32 @@ export abstract class Driver<Client = any, QB = any> {
    * Set the limit number in your query.
    */
   public abstract limit(number: number): this
+
+  /**
+   * Lock the rows selected by the query for update ("SELECT ... FOR
+   * UPDATE"). Must be used inside a transaction: other transactions
+   * trying to read the same rows with a lock wait until this
+   * transaction ends.
+   */
+  public abstract forUpdate(): this
+
+  /**
+   * Lock the rows selected by the query with a shared lock ("SELECT
+   * ... FOR SHARE"). Must be used inside a transaction: other
+   * transactions can still read the rows, but cannot modify them
+   * until this transaction ends.
+   */
+  public abstract forShare(): this
+
+  /**
+   * Skip rows that are already locked by another transaction instead
+   * of waiting for them. Combine with forUpdate/forShare.
+   */
+  public abstract skipLocked(): this
+
+  /**
+   * Fail immediately if any selected row is already locked by another
+   * transaction instead of waiting. Combine with forUpdate/forShare.
+   */
+  public abstract noWait(): this
 }

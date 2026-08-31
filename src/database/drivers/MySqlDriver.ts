@@ -9,11 +9,12 @@
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
-import type { Operations } from '#src/types'
 import { Is, Json, Options } from '@athenna/common'
+import type { Operations, LockOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
+import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { CheckViolationException } from '#src/exceptions/CheckViolationException'
@@ -293,6 +294,49 @@ export class MySqlDriver extends BaseKnexDriver {
     return {
       operator,
       value
+    }
+  }
+
+  /**
+   * Run the closure while holding an exclusive named lock, implemented
+   * with GET_LOCK/RELEASE_LOCK. The lock is session-scoped, so a
+   * transaction is used only to pin one connection for the lock's whole
+   * lifetime — MySQL releases it if that connection dies, so a killed
+   * process can't leak it. The closure runs OUTSIDE that transaction:
+   * its queries use their own connections and are already committed
+   * when RELEASE_LOCK runs, which must happen BEFORE the commit gives
+   * the pinned connection back to the pool.
+   */
+  public async lock<T = any>(
+    key: string,
+    closure: () => T | Promise<T>,
+    options: LockOptions = {}
+  ): Promise<T> {
+    /**
+     * GET_LOCK's timeout is in seconds and a negative value waits
+     * indefinitely. Sub-second timeouts round UP so they still wait
+     * instead of failing immediately.
+     */
+    const timeout = options.timeout ? Math.ceil(options.timeout / 1000) : -1
+    const trx = await this.startTransaction()
+
+    try {
+      const [[{ acquired }]] = await trx.raw(
+        'SELECT GET_LOCK(?, ?) AS acquired',
+        [key, timeout]
+      )
+
+      if (acquired !== 1) {
+        throw new LockTimeoutException(key, options.timeout)
+      }
+
+      try {
+        return await closure()
+      } finally {
+        await trx.raw('SELECT RELEASE_LOCK(?)', [key])
+      }
+    } finally {
+      await trx.commitTransaction().catch(() => {})
     }
   }
 

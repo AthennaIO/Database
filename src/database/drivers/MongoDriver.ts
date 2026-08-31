@@ -1755,6 +1755,44 @@ export class MongoDriver extends Driver<Connection, Collection> {
   }
 
   /**
+   * Run the closure while holding an exclusive named lock. Not
+   * available for mongo.
+   */
+  public async lock<T = any>(): Promise<T> {
+    throw new NotImplementedMethodException(this.lock.name, 'mongo')
+  }
+
+  /**
+   * Lock the rows selected by the query for update. Not available
+   * for mongo.
+   */
+  public forUpdate(): this {
+    throw new NotImplementedMethodException(this.forUpdate.name, 'mongo')
+  }
+
+  /**
+   * Lock the rows selected by the query with a shared lock. Not
+   * available for mongo.
+   */
+  public forShare(): this {
+    throw new NotImplementedMethodException(this.forShare.name, 'mongo')
+  }
+
+  /**
+   * Skip rows locked by another transaction. Not available for mongo.
+   */
+  public skipLocked(): this {
+    throw new NotImplementedMethodException(this.skipLocked.name, 'mongo')
+  }
+
+  /**
+   * Fail immediately on locked rows. Not available for mongo.
+   */
+  public noWait(): this {
+    throw new NotImplementedMethodException(this.noWait.name, 'mongo')
+  }
+
+  /**
    * Set the mongo operation in value.
    */
   private setOperator(value: any, operator: string) {

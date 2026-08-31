@@ -17,18 +17,25 @@ import {
   type PaginationOptions
 } from '@athenna/common'
 
+import type {
+  Direction,
+  Operations,
+  LockOptions,
+  ConnectionOptions
+} from '#src/types'
+
 import type { Knex } from 'knex'
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Driver } from '#src/database/drivers/Driver'
-import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { Transaction } from '#src/database/transactions/Transaction'
-import type { ConnectionOptions, Direction, Operations } from '#src/types'
-import { MigrationSource } from '#src/database/migrations/MigrationSource'
+import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
+import { MigrationSource } from '#src/database/migrations/MigrationSource'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { PROTECTED_QUERY_METHODS } from '#src/constants/ProtectedQueryMethods'
+import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMethodException'
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 
 export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
@@ -281,7 +288,13 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
       tableName
     )
 
-    if (Config.is('rc.bootLogs', true)) {
+    /**
+     * "Log" is a facade, it throws if the logger provider is not
+     * registered, and "bootLogs" is usually "false" when running
+     * commands. Checking the container keeps the message visible for
+     * apps that do have a logger without breaking the ones that don't.
+     */
+    if (ioc.has('Athenna/Core/Logger')) {
       Log.channelOrVanilla('application').info(
         `Removed the file extension of ({yellow} ${renamed}) migrations in the ({yellow} ${tableName}) table${
           deleted ? ` and deleted ({yellow} ${deleted}) duplicated ones` : ''
@@ -1924,5 +1937,58 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
     this.qb.limit(number)
 
     return this
+  }
+
+  /**
+   * Lock the rows selected by the query for update ("SELECT ... FOR
+   * UPDATE"). Must be used inside a transaction.
+   */
+  public forUpdate() {
+    this.qb.forUpdate()
+
+    return this
+  }
+
+  /**
+   * Lock the rows selected by the query with a shared lock ("SELECT
+   * ... FOR SHARE"). Must be used inside a transaction.
+   */
+  public forShare() {
+    this.qb.forShare()
+
+    return this
+  }
+
+  /**
+   * Skip rows that are already locked by another transaction instead
+   * of waiting for them. Combine with forUpdate/forShare.
+   */
+  public skipLocked() {
+    this.qb.skipLocked()
+
+    return this
+  }
+
+  /**
+   * Fail immediately if any selected row is already locked by another
+   * transaction instead of waiting. Combine with forUpdate/forShare.
+   */
+  public noWait() {
+    this.qb.noWait()
+
+    return this
+  }
+
+  /**
+   * Run the closure while holding an exclusive named lock. Each SQL
+   * driver implements it with its own locking primitive, so this base
+   * implementation only exists to keep the class concrete.
+   */
+  public async lock<T = any>(
+    _key: string,
+    _closure: () => T | Promise<T>,
+    _options?: LockOptions
+  ): Promise<T> {
+    throw new NotImplementedMethodException(this.lock.name, this.connection)
   }
 }

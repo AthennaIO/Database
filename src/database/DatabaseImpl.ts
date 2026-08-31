@@ -8,7 +8,6 @@
  */
 
 import type { Knex } from 'knex'
-import type { Connections, ConnectionOptions } from '#src/types'
 import type { FakeDriver } from '#src/database/drivers/FakeDriver'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { Path, Module, Options, Macroable } from '@athenna/common'
@@ -19,6 +18,7 @@ import type { SqliteDriver } from '#src/database/drivers/SqliteDriver'
 import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import type { PostgresDriver } from '#src/database/drivers/PostgresDriver'
+import type { Connections, ConnectionOptions, LockOptions } from '#src/types'
 
 export class DatabaseImpl<Driver extends DriverImpl = any> extends Macroable {
   /**
@@ -148,6 +148,31 @@ export class DatabaseImpl<Driver extends DriverImpl = any> extends Macroable {
    */
   public async startTransaction(): Promise<Transaction<Driver>> {
     return this.driver.startTransaction()
+  }
+
+  /**
+   * Run the closure while holding an exclusive named lock. Only one
+   * process/connection at a time can hold the lock for a given key, so
+   * concurrent calls with the same key are serialized — the classic use
+   * is closing a check-then-insert race. The lock is always released
+   * when the closure resolves or rejects:
+   *
+   * ```ts
+   * await Database.lock(`booking:${professionalId}`, async () => {
+   *   const available = await isSlotAvailable(data)
+   *
+   *   if (!available) throw new SlotTakenException()
+   *
+   *   await createBooking(data)
+   * })
+   * ```
+   */
+  public async lock<T = any>(
+    key: string,
+    closure: () => T | Promise<T>,
+    options?: LockOptions
+  ): Promise<T> {
+    return this.driver.lock(key, closure, options)
   }
 
   /**

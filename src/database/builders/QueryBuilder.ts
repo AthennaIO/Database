@@ -1102,4 +1102,47 @@ export class QueryBuilder<
 
     return this
   }
+
+  /**
+   * Lock the rows selected by the query for update ("SELECT ... FOR
+   * UPDATE"). Must be used inside a transaction: other transactions
+   * trying to lock the same rows wait until this transaction ends.
+   */
+  public forUpdate() {
+    this.driver.forUpdate()
+
+    return this
+  }
+
+  /**
+   * Lock the rows selected by the query with a shared lock ("SELECT
+   * ... FOR SHARE"). Must be used inside a transaction: other
+   * transactions can still read the rows, but cannot modify them
+   * until this transaction ends.
+   */
+  public forShare() {
+    this.driver.forShare()
+
+    return this
+  }
+
+  /**
+   * Skip rows that are already locked by another transaction instead
+   * of waiting for them. Combine with forUpdate/forShare.
+   */
+  public skipLocked() {
+    this.driver.skipLocked()
+
+    return this
+  }
+
+  /**
+   * Fail immediately if any selected row is already locked by another
+   * transaction instead of waiting. Combine with forUpdate/forShare.
+   */
+  public noWait() {
+    this.driver.noWait()
+
+    return this
+  }
 }

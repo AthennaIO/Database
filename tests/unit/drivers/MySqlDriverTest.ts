@@ -8,9 +8,10 @@
  */
 
 import { Config } from '@athenna/config'
-import { Path, Sleep, Collection } from '@athenna/common'
+import { Path, Exec, Sleep, Collection } from '@athenna/common'
 import { MySqlDriver } from '#src/database/drivers/MySqlDriver'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
+import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
@@ -262,6 +263,112 @@ export default class MySqlDriverTest {
     await trx.commitTransaction()
 
     assert.isDefined(await this.driver.table('users').where('id', '1').find())
+  }
+
+  @Test()
+  public async shouldBeAbleToLockRowsForUpdateInsideTransactions({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Lenon' })
+
+    const trx = await this.driver.startTransaction()
+    const data = await trx.table('users').where('id', '1').forUpdate().find()
+
+    await trx.commitTransaction()
+
+    assert.deepEqual(data.id, '1')
+  }
+
+  @Test()
+  public async shouldBeAbleToSkipRowsLockedByOtherTransactions({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Lenon' },
+      { id: '2', name: 'Victor' }
+    ])
+
+    const trxOne = await this.driver.startTransaction()
+    await trxOne.table('users').where('id', '1').forUpdate().find()
+
+    const trxTwo = await this.driver.startTransaction()
+    const rows = await trxTwo.table('users').forUpdate().skipLocked().findMany()
+
+    await trxTwo.commitTransaction()
+    await trxOne.commitTransaction()
+
+    assert.lengthOf(rows, 1)
+    assert.deepEqual(rows[0].id, '2')
+  }
+
+  @Test()
+  public async shouldFailImmediatelyWhenRowIsLockedByAnotherTransactionUsingNoWait({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Lenon' })
+
+    const trxOne = await this.driver.startTransaction()
+    await trxOne.table('users').where('id', '1').forUpdate().find()
+
+    const trxTwo = await this.driver.startTransaction()
+
+    await assert.rejects(() => trxTwo.table('users').where('id', '1').forUpdate().noWait().find())
+
+    await trxTwo.rollbackTransaction()
+    await trxOne.commitTransaction()
+  }
+
+  @Test()
+  public async shouldSerializeConcurrentNamedLockClosuresWithTheSameKey({ assert }: Context) {
+    const events: string[] = []
+
+    await Promise.all([
+      this.driver.lock('athenna:lock:test', async () => {
+        events.push('first:start')
+        await Exec.sleep(200)
+        events.push('first:end')
+      }),
+      (async () => {
+        await Exec.sleep(50)
+
+        return this.driver.lock('athenna:lock:test', async () => {
+          events.push('second:start')
+        })
+      })()
+    ])
+
+    assert.deepEqual(events, ['first:start', 'first:end', 'second:start'])
+  }
+
+  @Test()
+  public async shouldReturnTheNamedLockClosureResult({ assert }: Context) {
+    const result = await this.driver.lock('athenna:lock:test', async () => {
+      return { id: '1' }
+    })
+
+    assert.deepEqual(result, { id: '1' })
+  }
+
+  @Test()
+  public async shouldReleaseTheNamedLockWhenTheClosureThrows({ assert }: Context) {
+    await assert.rejects(() =>
+      this.driver.lock('athenna:lock:test', () => {
+        throw new Error('boom')
+      })
+    )
+
+    const result = await this.driver.lock('athenna:lock:test', () => 'acquired', { timeout: 2000 })
+
+    assert.deepEqual(result, 'acquired')
+  }
+
+  @Test()
+  public async shouldThrowLockTimeoutExceptionWhenNamedLockIsNotAcquiredInTime({ assert }: Context) {
+    /**
+     * GET_LOCK rounds the timeout UP to whole seconds, so the holder
+     * must outlive the rounded 1s wait for the timeout to fire.
+     */
+    const holder = this.driver.lock('athenna:lock:test', () => Exec.sleep(1500))
+
+    await Exec.sleep(50)
+
+    await assert.rejects(() => this.driver.lock('athenna:lock:test', () => {}, { timeout: 1000 }), LockTimeoutException)
+
+    await holder
   }
 
   @Test()

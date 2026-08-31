@@ -1085,4 +1085,44 @@ export default class QueryBuilderTest {
 
     assert.calledOnceWith(FakeDriver.limit, limitValue)
   }
+
+  @Test()
+  public async shouldBeAbleToLockRowsForUpdate({ assert }: Context) {
+    Mock.when(FakeDriver, 'forUpdate').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.forUpdate()
+
+    assert.calledOnce(FakeDriver.forUpdate)
+  }
+
+  @Test()
+  public async shouldBeAbleToLockRowsForShare({ assert }: Context) {
+    Mock.when(FakeDriver, 'forShare').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.forShare()
+
+    assert.calledOnce(FakeDriver.forShare)
+  }
+
+  @Test()
+  public async shouldBeAbleToSkipLockedRows({ assert }: Context) {
+    Mock.when(FakeDriver, 'skipLocked').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.skipLocked()
+
+    assert.calledOnce(FakeDriver.skipLocked)
+  }
+
+  @Test()
+  public async shouldBeAbleToFailImmediatelyOnLockedRowsUsingNoWait({ assert }: Context) {
+    Mock.when(FakeDriver, 'noWait').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.noWait()
+
+    assert.calledOnce(FakeDriver.noWait)
+  }
 }

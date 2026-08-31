@@ -9,11 +9,12 @@
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
-import type { Operations } from '#src/types'
 import { Is, Json, Options } from '@athenna/common'
+import type { Operations, LockOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
+import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { CheckViolationException } from '#src/exceptions/CheckViolationException'
@@ -277,6 +278,49 @@ export class PostgresDriver extends BaseKnexDriver {
     }
 
     return operators[operator] || operator
+  }
+
+  /**
+   * Run the closure while holding an exclusive named lock, implemented
+   * with a transaction-level advisory lock. The lock is tied to a
+   * dedicated transaction: Postgres releases it on commit, rollback or
+   * connection death, so it can never leak, not even if the process is
+   * killed while holding it. The closure itself runs OUTSIDE that
+   * transaction — its queries use their own connections and are already
+   * committed by the time the lock is released.
+   */
+  public async lock<T = any>(
+    key: string,
+    closure: () => T | Promise<T>,
+    options: LockOptions = {}
+  ): Promise<T> {
+    const trx = await this.startTransaction()
+
+    try {
+      if (options.timeout) {
+        await trx.raw("SELECT set_config('lock_timeout', ?, true)", [
+          `${options.timeout}ms`
+        ])
+      }
+
+      await trx.raw('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', [
+        key
+      ])
+
+      const result = await closure()
+
+      await trx.commitTransaction()
+
+      return result
+    } catch (error) {
+      await trx.rollbackTransaction().catch(() => {})
+
+      if (error?.code === '55P03') {
+        throw new LockTimeoutException(key, options.timeout)
+      }
+
+      throw error
+    }
   }
 
   /**

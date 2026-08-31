@@ -272,6 +272,31 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToRunNamedLocks({ assert }: Context) {
+    await assert.rejects(() => this.driver.lock('key', () => {}), NotImplementedMethodException)
+  }
+
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToLockRowsForUpdate({ assert }: Context) {
+    assert.throws(() => this.driver.forUpdate(), NotImplementedMethodException)
+  }
+
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToLockRowsForShare({ assert }: Context) {
+    assert.throws(() => this.driver.forShare(), NotImplementedMethodException)
+  }
+
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToSkipLockedRows({ assert }: Context) {
+    assert.throws(() => this.driver.skipLocked(), NotImplementedMethodException)
+  }
+
+  @Test()
+  public async shouldThrowNotImplementedExceptionWhenTryingToUseNoWait({ assert }: Context) {
+    assert.throws(() => this.driver.noWait(), NotImplementedMethodException)
+  }
+
+  @Test()
   public async shouldBeAbleToGetTheDatabasesOfDriver({ assert }: Context) {
     const databases = await this.driver.getDatabases()
 

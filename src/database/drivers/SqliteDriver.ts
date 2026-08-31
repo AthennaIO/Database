@@ -9,11 +9,12 @@
 
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
-import type { Operations } from '#src/types'
 import { Is, Json, Options } from '@athenna/common'
+import type { Operations, LockOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
+import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { CheckViolationException } from '#src/exceptions/CheckViolationException'
@@ -22,6 +23,74 @@ import { NotNullViolationException } from '#src/exceptions/NotNullViolationExcep
 import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class SqliteDriver extends BaseKnexDriver {
+  /**
+   * The tail of each named lock's waiting chain, keyed by
+   * "connection:key". A lock() call waits on the current tail and
+   * installs its own promise as the new one, which serializes all
+   * callers for the same key.
+   */
+  private static lockTails: Map<string, Promise<void>> = new Map()
+
+  /**
+   * Run the closure while holding an exclusive named lock. SQLite is
+   * an embedded, single-file database, so the lock is an in-process
+   * mutex: callers of the same key inside this process are serialized.
+   * It does NOT protect against other processes writing to the same
+   * database file.
+   */
+  public async lock<T = any>(
+    key: string,
+    closure: () => T | Promise<T>,
+    options: LockOptions = {}
+  ): Promise<T> {
+    const tailKey = `${this.connection}:${key}`
+    const previous = SqliteDriver.lockTails.get(tailKey) || Promise.resolve()
+
+    let release: () => void
+    const current = new Promise<void>(resolve => (release = resolve))
+
+    SqliteDriver.lockTails.set(tailKey, current)
+
+    if (options.timeout) {
+      let timer: NodeJS.Timeout
+
+      try {
+        await Promise.race([
+          previous,
+          new Promise((_resolve, reject) => {
+            timer = setTimeout(
+              () => reject(new LockTimeoutException(key, options.timeout)),
+              options.timeout
+            )
+          })
+        ])
+      } catch (error) {
+        /**
+         * This call is already the tail other callers wait on, so a
+         * timed out waiter can't just leave: it hands its slot through
+         * as soon as the previous holder releases.
+         */
+        previous.then(() => release())
+
+        throw error
+      } finally {
+        clearTimeout(timer)
+      }
+    } else {
+      await previous
+    }
+
+    try {
+      return await closure()
+    } finally {
+      release()
+
+      if (SqliteDriver.lockTails.get(tailKey) === current) {
+        SqliteDriver.lockTails.delete(tailKey)
+      }
+    }
+  }
+
   /**
    * Connect to database.
    */
