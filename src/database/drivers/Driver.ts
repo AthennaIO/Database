@@ -512,14 +512,15 @@ export abstract class Driver<Client = any, QB = any> {
 
   /**
    * Find value in database but returns only the value of
-   * selected column directly.
+   * selected column directly. Returns `undefined` when the
+   * query matches no row, mirroring `find()`.
    */
   public async pluck<T = any, K extends keyof T = keyof T>(
     column: K
   ): Promise<T[K]> {
     const data = await this.find()
 
-    return data[column]
+    return data?.[column]
   }
 
   /**

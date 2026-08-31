@@ -698,6 +698,13 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldReturnUndefinedWhenPluckingWithNoMatchingRow({ assert }: Context) {
+    const result = await this.driver.table('users').where('_id', 'not-found').pluck('name')
+
+    assert.isUndefined(result)
+  }
+
+  @Test()
   public async shouldBeAbleToPluckManyDataUsingDriver({ assert }: Context) {
     const data = [{ _id: '1', name: 'Charles Babbage' }]
     await this.driver.table('users').createMany(data)

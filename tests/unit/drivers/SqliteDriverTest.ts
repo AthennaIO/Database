@@ -1010,6 +1010,13 @@ export default class SqliteDriverTest {
   }
 
   @Test()
+  public async shouldReturnUndefinedWhenPluckingWithNoMatchingRow({ assert }: Context) {
+    const result = await this.driver.table('users').where('id', 'not-found').pluck('name')
+
+    assert.isUndefined(result)
+  }
+
+  @Test()
   public async shouldBeAbleToPluckManyDataUsingDriver({ assert }: Context) {
     const data = [{ id: '1', name: 'Charles Babbage' }]
     await this.driver.table('users').createMany(data)
