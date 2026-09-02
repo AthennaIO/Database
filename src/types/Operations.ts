@@ -7,4 +7,13 @@
  * file that was distributed with this source code.
  */
 
-export type Operations = '=' | '>' | '>=' | '<' | '<=' | '<>' | 'like' | 'ilike'
+export type Operations =
+  | '='
+  | '>'
+  | '>='
+  | '<'
+  | '<='
+  | '<>'
+  | '!='
+  | 'like'
+  | 'ilike'

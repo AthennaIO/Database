@@ -2233,6 +2233,28 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToAddAWhereClauseWithNotEqualOperatorToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { id: '1', user_id: '1' },
+      { id: '2', user_id: '1' },
+      { id: '3', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .where('user_id', '!=', '1')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }])
+  }
+
+  @Test()
   public async shouldBeAbleToAddAWhereNotClauseAsRawToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },

@@ -18,6 +18,7 @@ export const MONGO_OPERATIONS_DICTIONARY = {
   '<': '$lt',
   '<=': '$lte',
   '<>': '$ne',
+  '!=': '$ne',
   like: '$regex',
   ilike: '$regex'
 }

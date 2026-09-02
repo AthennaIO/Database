@@ -1790,6 +1790,28 @@ export default class MongoDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToAddAWhereClauseWithNotEqualOperatorToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { _id: '1', name: 'Robert Kiyosaki' },
+      { _id: '2', name: 'Warren Buffet' }
+    ])
+    await this.driver.table('rents').createMany([
+      { _id: '1', user_id: '1' },
+      { _id: '2', user_id: '1' },
+      { _id: '3', user_id: '2' }
+    ])
+
+    const data = await this.driver
+      .table('rents')
+      .select('user_id')
+      .where('user_id', '!=', '1')
+      .orderBy('user_id')
+      .findMany()
+
+    assert.deepEqual(data, [{ user_id: '2' }])
+  }
+
+  @Test()
   public async shouldBeAbleToAddAWhereNotClauseAsFunctionToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { _id: '1', name: 'Robert Kiyosaki' },
