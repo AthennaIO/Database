@@ -11,6 +11,7 @@ import { Config } from '@athenna/config'
 import { Database } from '#src/facades/Database'
 import { Collection, Path } from '@athenna/common'
 import { User } from '#tests/fixtures/models/User'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import { DatabaseProvider } from '#src/providers/DatabaseProvider'
 import { UniqueValueException } from '#src/exceptions/UniqueValueException'
 import { UserNotSoftDelete } from '#tests/fixtures/models/UserNotSoftDelete'
@@ -1836,6 +1837,24 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenWhereFullTextClause({ assert }: Context) {
+    Mock.when(Database.driver, 'whereFullText').resolve(undefined)
+
+    User.query().whereFullText('name', 'Lenon', { mode: 'boolean' })
+
+    assert.calledOnceWith(Database.driver.whereFullText, ['name'], 'Lenon', { mode: 'boolean' })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenWhereFullTextClauseParsingColumnName({ assert }: Context) {
+    Mock.when(Database.driver, 'whereFullText').resolve(undefined)
+
+    User.query().whereFullText(['name', 'rate'], 'Lenon')
+
+    assert.calledOnceWith(Database.driver.whereFullText, ['name', 'rate_number'], 'Lenon', undefined)
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenWhereInClause({ assert }: Context) {
     Mock.when(Database.driver, 'whereIn').resolve(undefined)
 
@@ -2113,6 +2132,24 @@ export default class ModelQueryBuilderTest {
     User.query().orWhereILike({ rate: 100 })
 
     assert.calledOnceWith(Database.driver.orWhereILike, { rate_number: 100 })
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereFullTextClause({ assert }: Context) {
+    Mock.when(Database.driver, 'orWhereFullText').resolve(undefined)
+
+    User.query().orWhereFullText('name', 'Lenon')
+
+    assert.calledOnceWith(Database.driver.orWhereFullText, ['name'], 'Lenon', undefined)
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereFullTextClauseParsingColumnName({ assert }: Context) {
+    Mock.when(Database.driver, 'orWhereFullText').resolve(undefined)
+
+    User.query().orWhereFullText(['name', 'rate'], 'Lenon')
+
+    assert.calledOnceWith(Database.driver.orWhereFullText, ['name', 'rate_number'], 'Lenon', undefined)
   }
 
   @Test()
@@ -2622,11 +2659,386 @@ export default class ModelQueryBuilderTest {
   }
 
   @Test()
+  public async fullTextSearchShouldBeANoOpWhenTermIsEmpty({ assert }: Context) {
+    let whereCalled = false
+
+    Mock.stub(Database.driver, 'where').callsFake(() => {
+      whereCalled = true
+      return Database.driver
+    })
+
+    const builder = User.query().fullTextSearch(['name', 'email'], '')
+
+    assert.isFalse(whereCalled)
+    assert.equal(typeof (builder as any).findMany, 'function')
+  }
+
+  @Test()
+  public async fullTextSearchShouldOpenASingleGroupedWhereClause({ assert }: Context) {
+    let whereClosureCalls = 0
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        whereClosureCalls++
+      }
+
+      return Database.driver
+    })
+
+    User.query().fullTextSearch(['name', 'email', 'products.id'], 'john')
+
+    assert.equal(whereClosureCalls, 1)
+  }
+
+  @Test()
+  public async fullTextSearchShouldGroupDirectColumnsInASingleWhereFullTextCall({ assert }: Context) {
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        arg(Database.driver)
+      }
+
+      return Database.driver
+    })
+    Mock.when(Database.driver, 'whereFullText').return(Database.driver)
+
+    User.query().fullTextSearch(['name', 'rate'], 'john', { mode: 'boolean' })
+
+    assert.calledOnceWith(Database.driver.whereFullText, ['name', 'rate_number'], 'john', { mode: 'boolean' })
+  }
+
+  @Test()
+  public async fullTextSearchShouldGroupRelationColumnsPerRelationUsingWhereHas({ assert }: Context) {
+    const relationCalls: string[] = []
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        arg(Database.driver)
+      }
+
+      return Database.driver
+    })
+    Mock.stub(Database.driver, 'whereExists').callsFake(() => {
+      relationCalls.push('whereHas')
+      return Database.driver
+    })
+    Mock.stub(Database.driver, 'orWhereExists').callsFake(() => {
+      relationCalls.push('orWhereHas')
+      return Database.driver
+    })
+
+    User.query().fullTextSearch(['products.id', 'products.name', 'profile.id'], 'john')
+
+    assert.deepEqual(relationCalls, ['whereHas', 'orWhereHas'])
+  }
+
+  @Test()
+  public async fullTextSearchShouldUseOrWhereHasForRelationsWhenThereAreDirectColumns({ assert }: Context) {
+    const relationCalls: string[] = []
+
+    Mock.stub(Database.driver, 'where').callsFake((arg: any) => {
+      if (typeof arg === 'function') {
+        arg(Database.driver)
+      }
+
+      return Database.driver
+    })
+    Mock.when(Database.driver, 'whereFullText').return(Database.driver)
+    Mock.stub(Database.driver, 'whereExists').callsFake(() => {
+      relationCalls.push('whereHas')
+      return Database.driver
+    })
+    Mock.stub(Database.driver, 'orWhereExists').callsFake(() => {
+      relationCalls.push('orWhereHas')
+      return Database.driver
+    })
+
+    User.query().fullTextSearch(['name', 'products.id'], 'john')
+
+    assert.calledOnce(Database.driver.whereFullText)
+    assert.deepEqual(relationCalls, ['orWhereHas'])
+  }
+
+  @Test()
   public async modelQueryBuilderShouldExposeOrWhereHasOnTheInstance({ assert }: Context) {
     const builder = User.query()
 
     assert.equal(typeof (builder as any).whereHas, 'function')
     assert.equal(typeof (builder as any).orWhereHas, 'function')
     assert.equal(typeof (builder as any).search, 'function')
+  }
+
+  @Test()
+  public async shouldBeAbleToMergeJsonUsingAJsonOperationMarkerInUpdate({ assert }: Context) {
+    let data: any = null
+    Mock.when(Database.driver, 'exists').resolve(false)
+    Mock.stub(Database.driver, 'update').callsFake(async value => {
+      data = value
+      return []
+    })
+
+    await User.query().where('id', '1').mergeJson('rate', { crawlFinished: true })
+
+    assert.isTrue(JsonOperation.is(data.rate_number))
+    assert.equal(data.rate_number.type, 'merge')
+    assert.deepEqual(data.rate_number.value, { crawlFinished: true })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncrementAndDecrementJsonUsingAJsonOperationMarkerInUpdate({ assert }: Context) {
+    const calls: any[] = []
+    Mock.when(Database.driver, 'exists').resolve(false)
+    Mock.stub(Database.driver, 'update').callsFake(async value => {
+      calls.push(value)
+      return []
+    })
+
+    await User.query().incrementJson('rate->stats->count', 2)
+    await User.query().decrementJson('rate->count')
+
+    assert.isTrue(JsonOperation.is(calls[0].rate_number))
+    assert.equal(calls[0].rate_number.type, 'increment')
+    assert.deepEqual(calls[0].rate_number.path, ['stats', 'count'])
+    assert.equal(calls[0].rate_number.value, 2)
+    assert.deepEqual(calls[1].rate_number.path, ['count'])
+    assert.equal(calls[1].rate_number.value, -1)
+  }
+
+  @Test()
+  public async shouldThrowWhenIncrementingJsonWithAnInvalidSelector({ assert }: Context) {
+    await assert.rejects(() => User.query().incrementJson('metadata'), Error)
+  }
+
+  @Test()
+  public async shouldNotValidateUniqueColumnsThatReceiveAJsonOperation({ assert }: Context) {
+    Mock.when(Database.driver, 'update').resolve([])
+    Mock.when(Database.driver, 'exists').resolve(true)
+
+    await User.query().mergeJson('email', { should: 'not validate unique' })
+
+    assert.notCalled(Database.driver.exists)
+  }
+
+  @Test()
+  public async shouldBeAbleToAddWhereJsonNullClausesParsingTheColumnName({ assert }: Context) {
+    Mock.when(Database.driver, 'whereJsonNull').return(undefined)
+    Mock.when(Database.driver, 'whereJsonNotNull').return(undefined)
+    Mock.when(Database.driver, 'orWhereJsonNull').return(undefined)
+    Mock.when(Database.driver, 'orWhereJsonNotNull').return(undefined)
+
+    User.query()
+      .whereJsonNull('rate->a')
+      .whereJsonNotNull('metadata->b')
+      .orWhereJsonNull('metadata->c')
+      .orWhereJsonNotNull('rate->d')
+
+    assert.calledWith(Database.driver.whereJsonNull, 'rate_number->a')
+    assert.calledWith(Database.driver.whereJsonNotNull, 'metadata->b')
+    assert.calledWith(Database.driver.orWhereJsonNull, 'metadata->c')
+    assert.calledWith(Database.driver.orWhereJsonNotNull, 'rate_number->d')
+  }
+
+  @Test()
+  public async shouldBeAbleToOrderByWithNullsOptionAndJsonPath({ assert }: Context) {
+    Mock.when(Database.driver, 'orderBy').return(undefined)
+
+    User.query().orderBy('rate', 'ASC', { nulls: 'last' }).orderBy('metadata->title', 'DESC')
+
+    assert.calledWith(Database.driver.orderBy, 'rate_number', 'ASC', { nulls: 'last' })
+    assert.calledWith(Database.driver.orderBy, 'metadata->title', 'DESC', undefined)
+  }
+
+  @Test()
+  public async shouldForwardTheUnaccentOptionToWhereILike({ assert }: Context) {
+    Mock.when(Database.driver, 'whereILike').return(undefined)
+    Mock.when(Database.driver, 'orWhereILike').return(undefined)
+
+    User.query()
+      .whereILike('name', '%x%', { unaccent: true })
+      .orWhereILike('rate->title' as any, '%x%', { unaccent: true })
+
+    assert.calledWith(Database.driver.whereILike, 'name', '%x%', { unaccent: true })
+    assert.calledWith(Database.driver.orWhereILike, 'rate_number->title', '%x%', { unaccent: true })
+  }
+
+  /**
+   * Make the fake driver run the where closures so the calls made
+   * inside them can be asserted.
+   */
+  private stubWhereClosures() {
+    const run = (statement: any) => {
+      if (typeof statement === 'function') {
+        statement(Database.driver)
+      }
+
+      return Database.driver
+    }
+
+    Mock.stub(Database.driver, 'where').callsFake(run)
+    Mock.stub(Database.driver, 'orWhere').callsFake(run)
+    Mock.stub(Database.driver, 'whereNot').callsFake(run)
+    Mock.when(Database.driver, 'whereExists').return(Database.driver)
+    Mock.when(Database.driver, 'orWhereExists').return(Database.driver)
+  }
+
+  @Test()
+  public async searchShouldSupportJsonPathsRelationsAndTheUnaccentOption({ assert }: Context) {
+    this.stubWhereClosures()
+    Mock.when(Database.driver, 'whereILike').return(Database.driver)
+    Mock.when(Database.driver, 'orWhereILike').return(Database.driver)
+
+    User.query().search(['name', 'metadata->title', 'profile.bio'], 'john', { unaccent: true })
+
+    assert.calledWith(Database.driver.whereILike, 'name', '%john%', { unaccent: true })
+    assert.calledWith(Database.driver.orWhereILike, 'metadata->title', '%john%', { unaccent: true })
+    assert.calledOnce(Database.driver.orWhereExists)
+  }
+
+  @Test()
+  public async filterShouldBeANoOpWithEmptyOptions({ assert }: Context) {
+    this.stubWhereClosures()
+    Mock.when(Database.driver, 'orderBy').return(Database.driver)
+    Mock.when(Database.driver, 'limit').return(Database.driver)
+    Mock.when(Database.driver, 'offset').return(Database.driver)
+
+    const builder = User.query().filter({ page: 2, limit: 5, search: 'ignored', where: [], orderBy: [], select: [] })
+
+    assert.notCalled(Database.driver.where)
+    assert.notCalled(Database.driver.orderBy)
+    assert.notCalled(Database.driver.limit)
+    assert.notCalled(Database.driver.offset)
+    assert.equal(typeof builder.findMany, 'function')
+  }
+
+  @Test()
+  public async filterShouldCombineFiltersOnTheSameFieldWithAnd({ assert }: Context) {
+    this.stubWhereClosures()
+
+    User.query().filter({
+      where: [
+        { field: 'rate', op: '>', value: 1 },
+        { field: 'rate', op: '<', value: 5 }
+      ]
+    })
+
+    assert.calledWith(Database.driver.where, 'rate_number', '>', 1)
+    assert.calledWith(Database.driver.where, 'rate_number', '<', 5)
+    assert.calledTimes(Database.driver.where, 3)
+  }
+
+  @Test()
+  public async filterShouldApplyEveryOperatorInPlainColumns({ assert }: Context) {
+    this.stubWhereClosures()
+    Mock.when(Database.driver, 'whereNull').return(Database.driver)
+    Mock.when(Database.driver, 'whereNotNull').return(Database.driver)
+    Mock.when(Database.driver, 'whereIn').return(Database.driver)
+    Mock.when(Database.driver, 'whereNotIn').return(Database.driver)
+    Mock.when(Database.driver, 'whereBetween').return(Database.driver)
+    Mock.when(Database.driver, 'whereNotBetween').return(Database.driver)
+    Mock.when(Database.driver, 'whereILike').return(Database.driver)
+
+    User.query().filter({
+      where: [
+        { field: 'name', op: '=', value: 'lenon' },
+        { field: 'name', op: '!=', value: 'victor' },
+        { field: 'deletedAt', op: '=', value: null },
+        { field: 'createdAt', op: '!=', value: null },
+        { field: 'rate', op: '>=', value: 1 },
+        { field: 'rate', op: '<=', value: 5 },
+        { field: 'email', op: 'in', value: ['a', 'b'] },
+        { field: 'email', op: 'not_in', value: ['c'] },
+        { field: 'score', op: 'between', value: [1, 2] },
+        { field: 'score', op: 'not_between', value: [3, 4] },
+        { field: 'name', op: 'contains', value: 'len' },
+        { field: 'name', op: 'not_contains', value: 'vic' }
+      ]
+    })
+
+    assert.calledWith(Database.driver.where, 'name', '=', 'lenon')
+    assert.calledWith(Database.driver.where, 'name', '<>', 'victor')
+    assert.calledWith(Database.driver.whereNull, 'deletedAt')
+    assert.calledWith(Database.driver.whereNotNull, 'created_at')
+    assert.calledWith(Database.driver.where, 'rate_number', '>=', 1)
+    assert.calledWith(Database.driver.where, 'rate_number', '<=', 5)
+    assert.calledWith(Database.driver.whereIn, 'email', ['a', 'b'])
+    assert.calledWith(Database.driver.whereNotIn, 'email', ['c'])
+    assert.calledWith(Database.driver.whereBetween, 'score', [1, 2])
+    assert.calledWith(Database.driver.whereNotBetween, 'score', [3, 4])
+    assert.calledWith(Database.driver.whereILike, 'name', '%len%')
+    assert.calledWith(Database.driver.whereILike, 'name', '%vic%')
+    assert.calledOnce(Database.driver.whereNot)
+  }
+
+  @Test()
+  public async filterShouldApplyEveryOperatorInJsonPaths({ assert }: Context) {
+    this.stubWhereClosures()
+    Mock.when(Database.driver, 'whereJson').return(Database.driver)
+    Mock.when(Database.driver, 'whereJsonNull').return(Database.driver)
+    Mock.when(Database.driver, 'whereJsonNotNull').return(Database.driver)
+    Mock.when(Database.driver, 'whereILike').return(Database.driver)
+
+    User.query().filter({
+      where: [
+        { field: 'metadata->mode', op: '=', value: 'x' },
+        { field: 'metadata->mode', op: '!=', value: 'y' },
+        { field: 'metadata->mode', op: '=', value: null },
+        { field: 'metadata->mode', op: '!=', value: null },
+        { field: 'metadata->count', op: '>', value: 1 },
+        { field: 'metadata->mode', op: 'in', value: ['a'] },
+        { field: 'metadata->mode', op: 'not_in', value: ['b'] },
+        { field: 'metadata->count', op: 'between', value: [1, 2] },
+        { field: 'metadata->count', op: 'not_between', value: [3, 4] },
+        { field: 'metadata->mode', op: 'contains', value: 'len' },
+        { field: 'metadata->mode', op: 'not_contains', value: 'vic' }
+      ]
+    })
+
+    assert.calledWith(Database.driver.whereJson, 'metadata->mode', '=', 'x')
+    assert.calledWith(Database.driver.whereJson, 'metadata->mode', '<>', 'y')
+    assert.calledWith(Database.driver.whereJsonNull, 'metadata->mode')
+    assert.calledWith(Database.driver.whereJsonNotNull, 'metadata->mode')
+    assert.calledWith(Database.driver.whereJson, 'metadata->count', '>', 1)
+    assert.calledWith(Database.driver.whereJson, 'metadata->mode', 'in', ['a'])
+    assert.calledWith(Database.driver.whereJson, 'metadata->mode', 'not in', ['b'])
+    assert.calledWith(Database.driver.whereJson, 'metadata->count', 'between', [1, 2])
+    assert.calledWith(Database.driver.whereJson, 'metadata->count', 'not between', [3, 4])
+    assert.calledWith(Database.driver.whereILike, 'metadata->mode', '%len%')
+    assert.calledWith(Database.driver.whereJson, 'metadata->mode', 'not ilike', '%vic%')
+  }
+
+  @Test()
+  public async filterShouldApplyRelationFiltersUsingWhereHas({ assert }: Context) {
+    this.stubWhereClosures()
+
+    User.query().filter({
+      where: [
+        { field: 'profile.bio', op: '=', value: 'x' },
+        { field: 'products.name', op: 'contains', value: 'y' }
+      ]
+    })
+
+    assert.calledTimes(Database.driver.whereExists, 2)
+  }
+
+  @Test()
+  public async filterShouldApplyOrderBySelectAndIncludes({ assert }: Context) {
+    Mock.when(Database.driver, 'orderBy').return(Database.driver)
+    Mock.when(Database.driver, 'select').return(Database.driver)
+
+    const builder = User.query()
+    const withSpy = Mock.spy(builder, 'with')
+
+    builder.filter({
+      select: ['id', 'name'],
+      includes: ['profile'],
+      orderBy: [
+        { field: 'createdAt', direction: 'DESC' },
+        { field: 'metadata->title', direction: 'ASC' }
+      ]
+    })
+
+    assert.calledWith(Database.driver.select, 'id', 'name')
+    assert.calledWith(Database.driver.orderBy, 'created_at', 'DESC')
+    assert.calledWith(Database.driver.orderBy, 'metadata->title', 'ASC')
+    assert.calledWith(withSpy, 'profile')
   }
 }

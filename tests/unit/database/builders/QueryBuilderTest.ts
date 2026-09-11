@@ -820,6 +820,16 @@ export default class QueryBuilderTest {
   }
 
   @Test()
+  public async shouldFilterResultsUsingGivenWhereFullTextClause({ assert }: Context) {
+    Mock.when(FakeDriver, 'whereFullText').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.whereFullText(['name', 'email'], 'Lenon', { mode: 'boolean' })
+
+    assert.calledOnceWith(FakeDriver.whereFullText, ['name', 'email'], 'Lenon', { mode: 'boolean' })
+  }
+
+  @Test()
   public async shouldFilterResultsUsingGivenWhereInClause({ assert }: Context) {
     Mock.when(FakeDriver, 'whereIn').resolve(undefined)
 
@@ -960,6 +970,16 @@ export default class QueryBuilderTest {
     queryBuilder.orWhereILike('name', 'Lenon')
 
     assert.calledOnceWith(FakeDriver.orWhereILike, 'name', 'Lenon')
+  }
+
+  @Test()
+  public async shouldFilterResultsUsingGivenOrWhereFullTextClause({ assert }: Context) {
+    Mock.when(FakeDriver, 'orWhereFullText').resolve(undefined)
+
+    const queryBuilder = new QueryBuilder(FakeDriver, 'users')
+    queryBuilder.orWhereFullText('name', 'Lenon')
+
+    assert.calledOnceWith(FakeDriver.orWhereFullText, 'name', 'Lenon', undefined)
   }
 
   @Test()

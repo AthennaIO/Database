@@ -7,6 +7,15 @@
  * file that was distributed with this source code.
  */
 
+import type {
+  Direction,
+  Operations,
+  SearchOptions,
+  OrderByOptions,
+  ConnectionOptions,
+  FullTextSearchOptions
+} from '#src/types'
+
 import {
   Is,
   Json,
@@ -21,11 +30,11 @@ import { Log } from '@athenna/logger'
 import { ObjectId } from '#src/helpers/ObjectId'
 import { Driver } from '#src/database/drivers/Driver'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { Connection, Collection, ClientSession } from 'mongoose'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
-import type { ConnectionOptions, Direction, Operations } from '#src/types'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
@@ -799,11 +808,10 @@ export class MongoDriver extends Driver<Connection, Collection> {
     const where = this.createWhere({ clearWhere: false, clearOrWhere: false })
     const pipeline = this.createPipeline()
 
-    await this.qb.updateMany(
-      where,
-      { $set: data },
-      { upsert: false, session: this.session }
-    )
+    await this.qb.updateMany(where, this.createUpdate(data), {
+      upsert: false,
+      session: this.session
+    })
 
     const result = await this.qb
       .aggregate(pipeline, { session: this.session })
@@ -1197,7 +1205,11 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public where(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
-      statement(this)
+      const condition = this.groupClosure(statement)
+
+      if (condition) {
+        this._where.push(condition)
+      }
 
       return this
     }
@@ -1252,7 +1264,48 @@ export class MongoDriver extends Driver<Connection, Collection> {
    * Set a where not statement in your query.
    */
   public whereNot(statement: any, value?: any) {
+    if (Is.Function(statement)) {
+      const condition = this.groupClosure(statement)
+
+      if (condition) {
+        this._where.push({ $nor: [condition] })
+      }
+
+      return this
+    }
+
     return this.where(statement, '<>', value)
+  }
+
+  /**
+   * Run a where closure and collect the clauses it added into a
+   * single grouped condition, the same as the parenthesis of a SQL
+   * `WHERE (a AND b OR c)`: the `where` clauses are joined with
+   * `$and` and the `orWhere` clauses are alternatives to that
+   * group. Returns `null` when the closure added nothing.
+   */
+  private groupClosure(closure: (driver: this) => any) {
+    const whereLength = this._where.length
+    const orWhereLength = this._orWhere.length
+
+    closure(this)
+
+    const where = this._where.splice(whereLength)
+    const orWhere = this._orWhere.splice(orWhereLength)
+
+    if (!where.length && !orWhere.length) {
+      return null
+    }
+
+    if (!orWhere.length) {
+      return where.length === 1 ? where[0] : { $and: where }
+    }
+
+    const alternatives = where.length
+      ? [where.length === 1 ? where[0] : { $and: where }, ...orWhere]
+      : orWhere
+
+    return { $or: alternatives }
   }
 
   /**
@@ -1286,8 +1339,31 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string, value: any) {
+  public whereILike(column: string, value: any, _options?: SearchOptions) {
     return this.where(column, 'ilike', value)
+  }
+
+  /**
+   * Set a where full text search statement in your query using the
+   * `$text` operator. Mongo REQUIRES a text index in the collection
+   * and there can be only one per collection, so the `columns`
+   * argument is ignored: the index decides which fields are searched.
+   * Create it in your migration:
+   *
+   * ```ts
+   * db.getClient().collection('users').createIndex({ name: 'text' })
+   * ```
+   *
+   * `options.language` is forwarded as `$language`.
+   */
+  public whereFullText(
+    _columns: string | string[],
+    value: string,
+    options: FullTextSearchOptions = {}
+  ) {
+    this._where.push(this.compileFullText('whereFullText', value, options))
+
+    return this
   }
 
   /**
@@ -1402,6 +1478,79 @@ export class MongoDriver extends Driver<Connection, Collection> {
     return this
   }
 
+  /**
+   * Build the update document. Plain data is a `$set`, but when a
+   * `JsonOperation` marker is present an aggregation pipeline is
+   * used so the merge and the increment read the current value of
+   * the field atomically and treat a missing/null field as `{}`.
+   */
+  private createUpdate(data: Record<string, any>) {
+    const entries = Object.entries(data)
+    const hasOperation = entries.some(([, value]) => JsonOperation.is(value))
+
+    if (!hasOperation) {
+      return { $set: data }
+    }
+
+    const $set = entries.reduce((set, [column, value]) => {
+      if (!JsonOperation.is(value)) {
+        set[column] = { $literal: value }
+
+        return set
+      }
+
+      if (value.type === 'merge') {
+        set[column] = {
+          $mergeObjects: [
+            { $ifNull: [`$${column}`, {}] },
+            { $literal: value.value }
+          ]
+        }
+
+        return set
+      }
+
+      set[column] = this.createIncrementExpression(
+        column,
+        value.path,
+        value.value
+      )
+
+      return set
+    }, {})
+
+    return [{ $set }]
+  }
+
+  /**
+   * Build the `$mergeObjects` chain that adds `by` to the number at
+   * `path`, creating the missing parents and counting a missing key
+   * as `0`.
+   */
+  private createIncrementExpression(
+    column: string,
+    path: string[],
+    by: number
+  ) {
+    const fullPath = [column, ...path].join('.')
+    let expression: any = {
+      $add: [{ $ifNull: [`$${fullPath}`, 0] }, by]
+    }
+
+    for (let depth = path.length - 1; depth >= 0; depth--) {
+      const parent = [column, ...path.slice(0, depth)].join('.')
+
+      expression = {
+        $mergeObjects: [
+          { $ifNull: [`$${parent}`, {}] },
+          { [path[depth]]: expression }
+        ]
+      }
+    }
+
+    return expression
+  }
+
   public whereJson(column: string, value: any): this
   public whereJson(column: string, operation: Operations, value: any): this
 
@@ -1445,7 +1594,11 @@ export class MongoDriver extends Driver<Connection, Collection> {
    */
   public orWhere(statement: any, operation?: Operations, value?: any) {
     if (Is.Function(statement)) {
-      statement(this)
+      const condition = this.groupClosure(statement)
+
+      if (condition) {
+        this._orWhere.push(condition)
+      }
 
       return this
     }
@@ -1536,6 +1689,68 @@ export class MongoDriver extends Driver<Connection, Collection> {
   }
 
   /**
+   * Set a where json null statement in your query. Matches when
+   * the key is missing or its value is `null`.
+   */
+  public whereJsonNull(column: string) {
+    this._where.push({
+      [this.jsonSelectorToKey('whereJsonNull', column)]: null
+    })
+
+    return this
+  }
+
+  /**
+   * Set a where json not null statement in your query.
+   */
+  public whereJsonNotNull(column: string) {
+    this._where.push({
+      [this.jsonSelectorToKey('whereJsonNotNull', column)]: { $ne: null }
+    })
+
+    return this
+  }
+
+  /**
+   * Set an or where json null statement in your query.
+   */
+  public orWhereJsonNull(column: string) {
+    this._orWhere.push({
+      [this.jsonSelectorToKey('orWhereJsonNull', column)]: null
+    })
+
+    return this
+  }
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public orWhereJsonNotNull(column: string) {
+    this._orWhere.push({
+      [this.jsonSelectorToKey('orWhereJsonNotNull', column)]: { $ne: null }
+    })
+
+    return this
+  }
+
+  /**
+   * Convert a `column->a->b` selector to the `column.a.b` key.
+   */
+  private jsonSelectorToKey(method: string, column: string) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException(method)
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    return `${parsed.column}.${this.jsonSelectorToDotPath(parsed.path)}`
+  }
+
+  /**
    * Set a or where raw statement in your query.
    */
   public orWhereRaw(): this {
@@ -1566,8 +1781,44 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: string, value: any) {
+  public orWhereILike(column: string, value: any, _options?: SearchOptions) {
     return this.orWhere(column, 'ilike', value)
+  }
+
+  /**
+   * Set an or where full text search statement in your query. Same
+   * requirements of `whereFullText()`. Mongo also requires every
+   * other clause of the `$or` to be covered by an index.
+   */
+  public orWhereFullText(
+    _columns: string | string[],
+    value: string,
+    options: FullTextSearchOptions = {}
+  ) {
+    this._orWhere.push(this.compileFullText('orWhereFullText', value, options))
+
+    return this
+  }
+
+  /**
+   * Build the `$text` clause validating the search term.
+   */
+  private compileFullText(
+    method: string,
+    value: string,
+    options: FullTextSearchOptions
+  ) {
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException(method)
+    }
+
+    const $text: Record<string, any> = { $search: value }
+
+    if (options.language) {
+      $text.$language = options.language
+    }
+
+    return { $text }
   }
 
   /**
@@ -1685,13 +1936,21 @@ export class MongoDriver extends Driver<Connection, Collection> {
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: string, direction: Direction = 'ASC') {
+  public orderBy(
+    column: string,
+    direction: Direction = 'ASC',
+    _options: OrderByOptions = {}
+  ) {
     if (Is.Undefined(column) || !Is.String(column)) {
       throw new EmptyColumnException('orderBy')
     }
 
+    const key = this.isUsingJsonSelector(column)
+      ? this.jsonSelectorToKey('orderBy', column)
+      : column
+
     this.pipeline.push({
-      $sort: { [column]: direction.toLowerCase() === 'asc' ? 1 : -1 }
+      $sort: { [key]: direction.toLowerCase() === 'asc' ? 1 : -1 }
     })
 
     return this
@@ -1800,11 +2059,19 @@ export class MongoDriver extends Driver<Connection, Collection> {
       return value
     }
 
+    if (operator === 'between') {
+      return { $gte: value[0], $lte: value[1] }
+    }
+
+    if (operator === 'not between') {
+      return { $not: { $gte: value[0], $lte: value[1] } }
+    }
+
     const mongoOperator = MONGO_OPERATIONS_DICTIONARY[operator]
 
     const object: any = { [mongoOperator]: value }
 
-    if (operator === 'like' || operator === 'ilike') {
+    if (['like', 'ilike', 'not like', 'not ilike'].includes(operator)) {
       let valueRegexString = value.replace(/%/g, '')
 
       if (!value.startsWith('%') && value.endsWith('%')) {
@@ -1813,11 +2080,17 @@ export class MongoDriver extends Driver<Connection, Collection> {
         valueRegexString = `${valueRegexString}$`
       }
 
-      object[mongoOperator] = new RegExp(valueRegexString)
-    }
+      const flags = operator.endsWith('ilike') ? 'i' : ''
 
-    if (operator === 'ilike') {
-      object.$options = 'i'
+      if (operator.startsWith('not')) {
+        return { $not: new RegExp(valueRegexString, flags) }
+      }
+
+      object[mongoOperator] = new RegExp(valueRegexString)
+
+      if (flags) {
+        object.$options = flags
+      }
     }
 
     return object
@@ -1947,8 +2220,29 @@ export class MongoDriver extends Driver<Connection, Collection> {
       this.pipeline = []
     }
 
-    pipeline.push({ $match: this.createWhere(options) })
+    const $match = this.createWhere(options)
+
+    /**
+     * Mongo only accepts `$text` when the `$match`
+     * is the first stage of the pipeline.
+     */
+    if (this.hasFullTextSearch($match)) {
+      pipeline.unshift({ $match })
+
+      return pipeline
+    }
+
+    pipeline.push({ $match })
 
     return pipeline
+  }
+
+  /**
+   * Check if the where clause has a `$text` operator.
+   */
+  private hasFullTextSearch(where: any) {
+    const conditions = [...(where.$and || []), ...(where.$or || [])]
+
+    return conditions.some(condition => '$text' in condition)
   }
 }

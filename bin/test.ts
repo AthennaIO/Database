@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import '#src/factories/ConnectionFactory'
+
 import { parseArgs } from 'node:util'
 import { Runner } from '@athenna/test'
 import { MongoMemory } from '#tests/helpers/MongoMemory'

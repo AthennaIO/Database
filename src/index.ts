@@ -33,6 +33,7 @@ export * from '#src/factories/ConnectionFactory'
 
 export * from '#src/helpers/Annotation'
 export * from '#src/helpers/ObjectId'
+export * from '#src/helpers/JsonOperation'
 
 export * from '#src/facades/Database'
 export * from '#src/providers/DatabaseProvider'

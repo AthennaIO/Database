@@ -13,8 +13,16 @@ import {
   type PaginatedResponse,
   type PaginationOptions
 } from '@athenna/common'
+import type {
+  Direction,
+  ModelColumns,
+  SearchOptions,
+  OrderByOptions,
+  FullTextSearchOptions
+} from '#src/types'
+
 import type { Operations } from '#src/types/Operations'
-import type { Direction, ModelColumns } from '#src/types'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import type { Driver as DriverImpl } from '#src/database/drivers/Driver'
 
 export class QueryBuilder<
@@ -281,6 +289,63 @@ export class QueryBuilder<
   }
 
   /**
+   * Shallow merge `object` into the JSON `column` atomically: first
+   * level keys replace the existing ones and everything else in the
+   * column is kept. A `NULL` column is treated as `{}`. Sugar for
+   * `update({ [column]: Database.jsonMerge(object) })`, so it
+   * returns the updated rows like `update()`.
+   *
+   * @example
+   * ```ts
+   * await Database.table('integrations')
+   *   .where('id', id)
+   *   .mergeJson('metadata', { crawlFinished: true })
+   * ```
+   */
+  public async mergeJson(
+    column: string | ModelColumns<T>,
+    object: Record<string, any>
+  ): Promise<T | T[]> {
+    return this.update({
+      [column as string]: JsonOperation.merge(object)
+    } as any)
+  }
+
+  /**
+   * Increment the number at the JSON `selector` atomically. A
+   * missing key or a `NULL` column counts as `0` and missing
+   * parents are created. Sugar for
+   * `update({ [column]: Database.jsonIncrement(path, by) })`, so it
+   * returns the updated rows like `update()`.
+   *
+   * @example
+   * ```ts
+   * await Database.table('integrations')
+   *   .where('id', id)
+   *   .incrementJson('metadata->stats->count')
+   * ```
+   */
+  public async incrementJson(selector: string, by = 1): Promise<T | T[]> {
+    const parsed = JsonOperation.parseSelector(selector)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${selector}`)
+    }
+
+    return this.update({
+      [parsed.column]: JsonOperation.increment(parsed.path, by)
+    } as any)
+  }
+
+  /**
+   * Decrement the number at the JSON `selector` atomically. Same as
+   * `incrementJson(selector, -by)`.
+   */
+  public async decrementJson(selector: string, by = 1): Promise<T | T[]> {
+    return this.incrementJson(selector, -by)
+  }
+
+  /**
    * Delete data in database.
    */
   public async delete(): Promise<T | T[] | void> {
@@ -299,6 +364,40 @@ export class QueryBuilder<
    */
   public table(tableName: string) {
     this.driver.table(tableName)
+
+    return this
+  }
+
+  /**
+   * Build a grouped `OR` search across the given columns in a
+   * single `WHERE (...)` clause using `ILIKE '%term%'`. Columns
+   * may be JSON selectors (`metadata->title`). Passing a falsy
+   * `term` short-circuits and the query is left untouched. Use
+   * `ModelQueryBuilder.search()` to also search relation columns.
+   *
+   * @example
+   * ```ts
+   * Database.table('users').search(['name', 'email'], 'john')
+   * ```
+   */
+  public search(
+    fields: (string | ModelColumns<T>)[],
+    term: string,
+    options: SearchOptions = {}
+  ) {
+    if (!term) {
+      return this
+    }
+
+    const value = `%${term}%`
+
+    this.where(query => {
+      fields.forEach((field, i) => {
+        const op = i === 0 ? 'whereILike' : 'orWhereILike'
+
+        query[op](field as string, value, options)
+      })
+    })
 
     return this
   }
@@ -799,8 +898,28 @@ export class QueryBuilder<
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string | ModelColumns<T>, value: any) {
-    this.driver.whereILike(column, value)
+  public whereILike(
+    column: string | ModelColumns<T>,
+    value: any,
+    options?: SearchOptions
+  ) {
+    this.driver.whereILike(column, value, options)
+
+    return this
+  }
+
+  /**
+   * Set a where full text search statement in your query. The
+   * statement is dialect specific and relies on an index that
+   * YOU must create in your migrations, see each driver for the
+   * exact requirements.
+   */
+  public whereFullText(
+    columns: string | ModelColumns<T> | (string | ModelColumns<T>)[],
+    value: string,
+    options?: FullTextSearchOptions
+  ) {
+    this.driver.whereFullText(columns as string | string[], value, options)
 
     return this
   }
@@ -880,6 +999,31 @@ export class QueryBuilder<
     return this
   }
 
+  /**
+   * Set a where json null statement in your query. Matches when
+   * the key is missing or its value is `null`.
+   *
+   * @example
+   * ```ts
+   * Database.table('avatars').whereJsonNull('metadata->videoAiFreeUsed')
+   * ```
+   */
+  public whereJsonNull(column: string | ModelColumns<T>) {
+    this.driver.whereJsonNull(column as string)
+
+    return this
+  }
+
+  /**
+   * Set a where json not null statement in your query. Matches
+   * when the key exists and its value is not `null`.
+   */
+  public whereJsonNotNull(column: string | ModelColumns<T>) {
+    this.driver.whereJsonNotNull(column as string)
+
+    return this
+  }
+
   public orWhere(statement: (query: this) => void): this
   public orWhere(statement: Partial<T>): this
   public orWhere(statement: Record<string, any>): this
@@ -955,13 +1099,31 @@ export class QueryBuilder<
 
   public orWhereILike(statement: Partial<T>): this
   public orWhereILike(statement: Record<string, any>): this
-  public orWhereILike(key: string | ModelColumns<T>, value: any): this
+  public orWhereILike(
+    key: string | ModelColumns<T>,
+    value: any,
+    options?: SearchOptions
+  ): this
 
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(statement: any, value?: any) {
-    this.driver.orWhereILike(statement, value)
+  public orWhereILike(statement: any, value?: any, options?: SearchOptions) {
+    this.driver.orWhereILike(statement, value, options)
+
+    return this
+  }
+
+  /**
+   * Set an or where full text search statement in your query.
+   * Same requirements of `whereFullText()`.
+   */
+  public orWhereFullText(
+    columns: string | ModelColumns<T> | (string | ModelColumns<T>)[],
+    value: string,
+    options?: FullTextSearchOptions
+  ) {
+    this.driver.orWhereFullText(columns as string | string[], value, options)
 
     return this
   }
@@ -1045,13 +1207,36 @@ export class QueryBuilder<
   }
 
   /**
+   * Set an or where json null statement in your query.
+   */
+  public orWhereJsonNull(column: string | ModelColumns<T>) {
+    this.driver.orWhereJsonNull(column as string)
+
+    return this
+  }
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public orWhereJsonNotNull(column: string | ModelColumns<T>) {
+    this.driver.orWhereJsonNotNull(column as string)
+
+    return this
+  }
+
+  /**
    * Set an order by statement in your query.
    */
   public orderBy(
     column: string | ModelColumns<T>,
-    direction: Direction = 'ASC'
+    direction: Direction = 'ASC',
+    options?: OrderByOptions
   ) {
-    this.driver.orderBy(column as string, direction.toUpperCase() as Direction)
+    this.driver.orderBy(
+      column as string,
+      direction.toUpperCase() as Direction,
+      options
+    )
 
     return this
   }

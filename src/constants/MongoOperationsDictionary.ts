@@ -20,5 +20,9 @@ export const MONGO_OPERATIONS_DICTIONARY = {
   '<>': '$ne',
   '!=': '$ne',
   like: '$regex',
-  ilike: '$regex'
+  ilike: '$regex',
+  'not like': '$not',
+  'not ilike': '$not',
+  in: '$in',
+  'not in': '$nin'
 }

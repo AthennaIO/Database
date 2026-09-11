@@ -20,10 +20,14 @@ import type {
   Direction,
   Operations,
   LockOptions,
-  ConnectionOptions
+  SearchOptions,
+  OrderByOptions,
+  ConnectionOptions,
+  FullTextSearchOptions
 } from '#src/types'
 
 import type { Knex, TableBuilder } from 'knex'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import type { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { Transaction } from '#src/database/transactions/Transaction'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
@@ -594,6 +598,53 @@ export abstract class Driver<Client = any, QB = any> {
   public abstract update<T = any>(data: Partial<T>): Promise<T | T[]>
 
   /**
+   * Shallow merge `object` into the JSON `column` atomically: first
+   * level keys replace the existing ones and everything else in the
+   * column is kept. A `NULL` column is treated as `{}`. Sugar for
+   * `update({ [column]: Database.jsonMerge(object) })`, so it
+   * returns the updated rows like `update()`.
+   */
+  public async mergeJson<T = any>(
+    column: string,
+    object: Record<string, any>
+  ): Promise<T | T[]> {
+    return this.update({ [column]: JsonOperation.merge(object) } as any)
+  }
+
+  /**
+   * Increment the number at the JSON `selector` atomically. A
+   * missing key or a `NULL` column counts as `0` and missing
+   * parents are created. Sugar for
+   * `update({ [column]: Database.jsonIncrement(path, by) })`, so it
+   * returns the updated rows like `update()`.
+   */
+  public async incrementJson<T = any>(
+    selector: string,
+    by = 1
+  ): Promise<T | T[]> {
+    const parsed = this.parseJsonSelector(selector)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${selector}`)
+    }
+
+    return this.update({
+      [parsed.column]: JsonOperation.increment(parsed.path, by)
+    } as any)
+  }
+
+  /**
+   * Decrement the number at the JSON `selector` atomically. Same as
+   * `incrementJson(selector, -by)`.
+   */
+  public async decrementJson<T = any>(
+    selector: string,
+    by = 1
+  ): Promise<T | T[]> {
+    return this.incrementJson(selector, -by)
+  }
+
+  /**
    * Delete one value in database.
    */
   public abstract delete(): Promise<void>
@@ -857,7 +908,23 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a where ILike statement in your query.
    */
-  public abstract whereILike(statement: any, value?: any): this
+  public abstract whereILike(
+    statement: any,
+    value?: any,
+    options?: SearchOptions
+  ): this
+
+  /**
+   * Set a where full text search statement in your query. The
+   * statement is dialect specific and relies on an index that
+   * YOU must create in your migrations, see each driver for the
+   * exact requirements.
+   */
+  public abstract whereFullText(
+    columns: string | string[],
+    value: string,
+    options?: FullTextSearchOptions
+  ): this
 
   /**
    * Set a where in statement in your query.
@@ -904,6 +971,18 @@ export abstract class Driver<Client = any, QB = any> {
     operation: Operations,
     value?: any
   ): this
+
+  /**
+   * Set a where json null statement in your query. Matches when
+   * the key is missing or its value is `null`.
+   */
+  public abstract whereJsonNull(column: string): this
+
+  /**
+   * Set a where json not null statement in your query. Matches
+   * when the key exists and its value is not `null`.
+   */
+  public abstract whereJsonNotNull(column: string): this
 
   /**
    * Set a or where statement in your query.
@@ -953,7 +1032,21 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public abstract orWhereILike(statement: any, value?: any): this
+  public abstract orWhereILike(
+    statement: any,
+    value?: any,
+    options?: SearchOptions
+  ): this
+
+  /**
+   * Set an or where full text search statement in your query.
+   * Same requirements of `whereFullText()`.
+   */
+  public abstract orWhereFullText(
+    columns: string | string[],
+    value: string,
+    options?: FullTextSearchOptions
+  ): this
 
   /**
    * Set an or where in statement in your query.
@@ -1002,9 +1095,23 @@ export abstract class Driver<Client = any, QB = any> {
   ): this
 
   /**
+   * Set an or where json null statement in your query.
+   */
+  public abstract orWhereJsonNull(column: string): this
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public abstract orWhereJsonNotNull(column: string): this
+
+  /**
    * Set an order by statement in your query.
    */
-  public abstract orderBy(column: string, direction?: Direction): this
+  public abstract orderBy(
+    column: string,
+    direction?: Direction,
+    options?: OrderByOptions
+  ): this
 
   /**
    * Set an order by raw statement in your query.

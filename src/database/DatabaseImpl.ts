@@ -9,6 +9,7 @@
 
 import type { Knex } from 'knex'
 import type { FakeDriver } from '#src/database/drivers/FakeDriver'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { Path, Module, Options, Macroable } from '@athenna/common'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
@@ -313,6 +314,42 @@ export class DatabaseImpl<Driver extends DriverImpl = any> extends Macroable {
    */
   public raw<T = any>(sql: string, bindings?: any): Knex.Raw<T> {
     return this.driver.raw(sql, bindings)
+  }
+
+  /**
+   * Create a marker to shallow merge an object into a JSON column
+   * atomically inside an `update()`. First level keys replace the
+   * existing ones and everything else in the column is kept. A
+   * `NULL` column is treated as `{}`. Use it when you need to merge
+   * and update other columns in the same statement, otherwise
+   * `query.mergeJson()` is simpler.
+   *
+   * @example
+   * ```ts
+   * await Database.table('integrations')
+   *   .where('id', id)
+   *   .update({ status: 'done', metadata: Database.jsonMerge({ crawlFinished: true }) })
+   * ```
+   */
+  public jsonMerge(object: Record<string, any>) {
+    return JsonOperation.merge(object)
+  }
+
+  /**
+   * Create a marker to increment a number inside a JSON column
+   * atomically inside an `update()`. The path is relative to the
+   * column and uses the same `->` selector of `whereJson()`. A
+   * missing key or a `NULL` column counts as `0`.
+   *
+   * @example
+   * ```ts
+   * await Database.table('integrations')
+   *   .where('id', id)
+   *   .update({ metadata: Database.jsonIncrement('stats->count', 1) })
+   * ```
+   */
+  public jsonIncrement(path: string, by = 1) {
+    return JsonOperation.increment(path, by)
   }
 
   /**

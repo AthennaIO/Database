@@ -9,6 +9,8 @@
 
 import { Config } from '@athenna/config'
 import { Path, Exec, Collection } from '@athenna/common'
+import { JsonOperation } from '#src/helpers/JsonOperation'
+import { QueryBuilder } from '#src/database/builders/QueryBuilder'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { PostgresDriver } from '#src/database/drivers/PostgresDriver'
 import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
@@ -1118,6 +1120,47 @@ export default class PostgresDriverTest {
       { id: '1', name: 'Robert Kiyosaki Millennials' },
       { id: '2', name: 'Robert Kiyosaki Millennials' }
     ])
+  }
+
+  @Test()
+  public async shouldReturnUpdatedDataEvenWhenWhereClauseStopsMatchingAfterUpdate({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
+
+    const result = await this.driver
+      .table('users')
+      .where('name', 'Robert Kiyosaki')
+      .update({ name: 'Robert Kiyosaki Millennials' })
+
+    assert.containSubset(result, { id: '1', name: 'Robert Kiyosaki Millennials' })
+  }
+
+  @Test()
+  public async shouldReturnEmptyArrayWhenUpdateDoesNotMatchAnyRow({ assert }: Context) {
+    await this.driver.table('users').create({ id: '1', name: 'Robert Kiyosaki' })
+
+    const result = await this.driver
+      .table('users')
+      .where('name', 'Warren Buffet')
+      .update({ name: 'Robert Kiyosaki Millennials' })
+
+    assert.deepEqual(result, [])
+  }
+
+  @Test()
+  public async shouldKeepSelectAndOrderByWhenReturningUpdatedData({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const result = await this.driver
+      .table('users')
+      .select('id')
+      .whereIn('id', ['1', '2'])
+      .orderBy('id', 'DESC')
+      .update({ name: 'Robert Kiyosaki Millennials' })
+
+    assert.deepEqual(result, [{ id: '2' }, { id: '1' }])
   }
 
   @Test()
@@ -2341,6 +2384,72 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToAddAWhereFullTextClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.raw(
+      `CREATE INDEX users_name_fulltext ON users USING GIN (to_tsvector('simple', coalesce("name", '')))`
+    )
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereFullText('name', 'buffet')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '2', name: 'Warren Buffet' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereFullTextClauseWithMultipleColumnsToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.alterTable('users', builder => builder.string('email'))
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki', email: 'robert@athenna.io' },
+      { id: '2', name: 'Warren Buffet', email: 'buffet@athenna.io' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereFullText(['name', 'email'], 'robert')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '1', name: 'Robert Kiyosaki' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToAddAWhereFullTextClauseInBooleanModeToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Warren Kiyosaki' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .whereFullText('name', 'warren -buffet', { mode: 'boolean', language: 'english' })
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '3', name: 'Warren Kiyosaki' }])
+  }
+
+  @Test()
+  public async shouldThrowEmptyColumnExceptionWhenTryingToRunWhereFullTextWithoutColumns({ assert }: Context) {
+    assert.throws(() => this.driver.table('users').whereFullText([], 'buffet'), EmptyColumnException)
+  }
+
+  @Test()
+  public async shouldThrowEmptyValueExceptionWhenTryingToRunWhereFullTextWithoutValue({ assert }: Context) {
+    assert.throws(() => this.driver.table('users').whereFullText('name', undefined), EmptyValueException)
+  }
+
+  @Test()
   public async shouldBeAbleToAddAWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -2801,6 +2910,28 @@ export default class PostgresDriverTest {
   }
 
   @Test()
+  public async shouldBeAbleToAddAOrWhereFullTextClauseToTheQueryUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' },
+      { id: '3', name: 'Charlie Munger' }
+    ])
+
+    const data = await this.driver
+      .table('users')
+      .select('id', 'name')
+      .where('id', '1')
+      .orWhereFullText('name', 'buffet')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [
+      { id: '1', name: 'Robert Kiyosaki' },
+      { id: '2', name: 'Warren Buffet' }
+    ])
+  }
+
+  @Test()
   public async shouldBeAbleToAddAOrWhereExistsClauseToTheQueryUsingDriver({ assert }: Context) {
     await this.driver.table('users').createMany([
       { id: '1', name: 'Robert Kiyosaki' },
@@ -3131,5 +3262,371 @@ export default class PostgresDriverTest {
   @Test()
   public async shouldThrowWhenTryingToLimitByInvalidValue({ assert }: Context) {
     assert.throws(() => this.driver.limit(undefined as any), EmptyValueException)
+  }
+
+  @Test()
+  public async shouldBeAbleToMergeJsonIntoANullColumnUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1' })
+
+    const result = await this.driver.table('events').where('id', '1').mergeJson('metadata', { crawlFinished: true })
+
+    assert.containSubset(result, { id: '1', metadata: { crawlFinished: true } })
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { crawlFinished: true } })
+  }
+
+  @Test()
+  public async shouldPreserveUnmentionedKeysWhenMergingJsonUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { a: 1, b: { c: 1 } } })
+
+    await this.driver.table('events').where('id', '1').mergeJson('metadata', { a: 2, d: 3 })
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { a: 2, b: { c: 1 }, d: 3 } })
+  }
+
+  @Test()
+  public async shouldReplaceNestedValuesEntirelyWhenMergingJsonUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { a: { x: 1, y: 2 } } })
+
+    await this.driver
+      .table('events')
+      .where('id', '1')
+      .mergeJson('metadata', { a: { z: 3 } })
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { a: { z: 3 } } })
+  }
+
+  @Test()
+  public async shouldBeAbleToMergeJsonTogetherWithOtherColumnsInTheSameUpdateUsingDriver({ assert }: Context) {
+    await this.driver.alterTable('events', builder => {
+      builder.string('name')
+    })
+    await this.driver.table('events').create({ id: '1', name: 'old', metadata: { a: 1 } })
+
+    const result = await this.driver
+      .table('events')
+      .where('id', '1')
+      .update({ name: 'new', metadata: JsonOperation.merge({ b: 2 }) })
+
+    assert.containSubset(result, { id: '1', name: 'new', metadata: { a: 1, b: 2 } })
+  }
+
+  @Test()
+  public async shouldPreserveBothKeysWhenMergingJsonConcurrentlyUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: {} })
+
+    await Promise.all([
+      this.driver.table('events').where('id', '1').mergeJson('metadata', { a: 1 }),
+      this.driver.table('events').where('id', '1').mergeJson('metadata', { b: 2 })
+    ])
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { a: 1, b: 2 } })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncrementJsonWhenKeyIsMissingUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { other: 'x' } })
+
+    const result = await this.driver.table('events').where('id', '1').incrementJson('metadata->count')
+
+    assert.containSubset(result, { id: '1', metadata: { other: 'x', count: 1 } })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncrementJsonWhenColumnIsNullUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1' })
+
+    await this.driver.table('events').where('id', '1').incrementJson('metadata->count')
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { count: 1 } })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncrementJsonWhenKeyExistsUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { count: 5 } })
+
+    await this.driver.table('events').where('id', '1').incrementJson('metadata->count', 3)
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { count: 8 } })
+  }
+
+  @Test()
+  public async shouldBeAbleToDecrementJsonUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { count: 5 } })
+
+    await this.driver.table('events').where('id', '1').decrementJson('metadata->count', 2)
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { count: 3 } })
+  }
+
+  @Test()
+  public async shouldBeAbleToIncrementJsonInANestedPathCreatingParentsUsingDriver({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: {} },
+      { id: '2', metadata: { stats: { count: 1, other: true } } }
+    ])
+
+    await this.driver.table('events').incrementJson('metadata->stats->count')
+
+    assert.deepEqual(await this.driver.table('events').orderBy('id').findMany(), [
+      { id: '1', metadata: { stats: { count: 1 } } },
+      { id: '2', metadata: { stats: { count: 2, other: true } } }
+    ])
+  }
+
+  @Test()
+  public async shouldSumAllConcurrentIncrementJsonUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1' })
+
+    await Promise.all(
+      Array.from({ length: 20 }).map(() =>
+        this.driver.table('events').where('id', '1').incrementJson('metadata->count')
+      )
+    )
+
+    assert.deepEqual(await this.driver.table('events').find(), { id: '1', metadata: { count: 20 } })
+  }
+
+  @Test()
+  public async shouldReturnEmptyArrayWhenIncrementJsonDoesNotMatchAnyRowUsingDriver({ assert }: Context) {
+    await this.driver.table('events').create({ id: '1', metadata: { count: 1 } })
+
+    const result = await this.driver.table('events').where('id', '2').incrementJson('metadata->count')
+
+    assert.deepEqual(result, [])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterMissingAndNullKeysUsingWhereJsonNull({ assert }: Context) {
+    await this.driver
+      .table('events')
+      .createMany([
+        { id: '1', metadata: { a: null } },
+        { id: '2', metadata: {} },
+        { id: '3', metadata: { a: 1 } },
+        { id: '4' }
+      ])
+
+    const data = await this.driver.table('events').select('id').whereJsonNull('metadata->a').orderBy('id').findMany()
+
+    assert.deepEqual(data, [{ id: '1' }, { id: '2' }, { id: '4' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterExistingKeysUsingWhereJsonNotNull({ assert }: Context) {
+    await this.driver
+      .table('events')
+      .createMany([
+        { id: '1', metadata: { a: null } },
+        { id: '2', metadata: {} },
+        { id: '3', metadata: { a: 1 } },
+        { id: '4' }
+      ])
+
+    const data = await this.driver.table('events').select('id').whereJsonNotNull('metadata->a').findMany()
+
+    assert.deepEqual(data, [{ id: '3' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToFilterUsingOrWhereJsonNullAndOrWhereJsonNotNull({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { a: null } },
+      { id: '2', metadata: { a: 2 } },
+      { id: '3', metadata: { a: 1 } }
+    ])
+
+    const nulls = await this.driver
+      .table('events')
+      .select('id')
+      .where('id', '3')
+      .orWhereJsonNull('metadata->a')
+      .orderBy('id')
+      .findMany()
+    const notNulls = await this.driver
+      .table('events')
+      .select('id')
+      .where('id', '1')
+      .orWhereJsonNotNull('metadata->a')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(nulls, [{ id: '1' }, { id: '3' }])
+    assert.deepEqual(notNulls, [{ id: '1' }, { id: '2' }, { id: '3' }])
+  }
+
+  @Test()
+  public async shouldThrowWhenUsingWhereJsonNullWithAWildcardSelector({ assert }: Context) {
+    assert.throws(() => this.driver.table('events').whereJsonNull('metadata->*->a'), Error)
+  }
+
+  @Test()
+  public async shouldCompileScalarWhereJsonWithArrowOperatorsAndCastByValueType({ assert }: Context) {
+    const text = this.driver.table('events').whereJson('metadata->key', 'value').getQueryBuilder().toString()
+    const number = this.driver.table('events').whereJson('metadata->key', '>', 1).getQueryBuilder().toString()
+    const boolean = this.driver.table('events').whereJson('metadata->key', true).getQueryBuilder().toString()
+    const nested = this.driver.table('events').whereJson('metadata->a->b', 'x').getQueryBuilder().toString()
+    const wildcard = this.driver.table('events').whereJson('metadata->*->name', 'x').getQueryBuilder().toString()
+
+    assert.include(text, `"metadata" ->> 'key' = 'value'`)
+    assert.include(number, `("metadata" ->> 'key')::numeric > 1`)
+    assert.include(boolean, `("metadata" ->> 'key')::boolean = true`)
+    assert.include(nested, `"metadata" #>> '{"a","b"}' = 'x'`)
+    assert.include(wildcard, 'jsonb_path_exists')
+  }
+
+  @Test()
+  public async shouldNotMatchMissingKeysWhenComparingWithWhereJson({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { a: 1 } },
+      { id: '2', metadata: {} }
+    ])
+
+    const data = await this.driver.table('events').select('id').whereJson('metadata->a', '!=', 2).findMany()
+
+    assert.deepEqual(data, [{ id: '1' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseInBetweenAndILikeOperatorsInWhereJson({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { a: 'foo' } },
+      { id: '2', metadata: { a: 'bar' } },
+      { id: '3', metadata: { a: 10 } }
+    ])
+
+    const query = () => this.driver.table('events').select('id')
+
+    assert.deepEqual(await query().whereJson('metadata->a', 'in', ['foo', 'bar']).orderBy('id').findMany(), [
+      { id: '1' },
+      { id: '2' }
+    ])
+    assert.deepEqual(await query().whereJson('metadata->a', 'not in', ['foo']).orderBy('id').findMany(), [
+      { id: '2' },
+      { id: '3' }
+    ])
+    assert.deepEqual(await query().whereJson('metadata->a', 'ilike', '%FO%').findMany(), [{ id: '1' }])
+    assert.deepEqual(await query().whereJson('metadata->a', 'not ilike', '%FO%').orderBy('id').findMany(), [
+      { id: '2' },
+      { id: '3' }
+    ])
+
+    await this.driver.table('events').whereIn('id', ['1', '2']).delete()
+    await this.driver.table('events').createMany([
+      { id: '4', metadata: { a: 4 } },
+      { id: '5', metadata: { a: 30 } }
+    ])
+
+    assert.deepEqual(await query().whereJson('metadata->a', 'between', [5, 20]).findMany(), [{ id: '3' }])
+    assert.deepEqual(await query().whereJson('metadata->a', 'not between', [5, 20]).orderBy('id').findMany(), [
+      { id: '4' },
+      { id: '5' }
+    ])
+  }
+
+  @Test()
+  public async shouldBeAbleToOrderByPlacingNullsFirstOrLastUsingDriver({ assert }: Context) {
+    await this.driver.table('users').createMany([
+      { id: '1', name: null },
+      { id: '2', name: 'A' },
+      { id: '3', name: 'B' }
+    ])
+
+    const last = await this.driver.table('users').select('id').orderBy('name', 'ASC', { nulls: 'last' }).findMany()
+    const first = await this.driver.table('users').select('id').orderBy('name', 'DESC', { nulls: 'first' }).findMany()
+
+    assert.deepEqual(last, [{ id: '2' }, { id: '3' }, { id: '1' }])
+    assert.deepEqual(first, [{ id: '1' }, { id: '3' }, { id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToOrderByAJsonPathUsingDriver({ assert }: Context) {
+    await this.driver
+      .table('events')
+      .createMany([{ id: '1', metadata: { title: 'b' } }, { id: '2', metadata: { title: 'a' } }, { id: '3' }])
+
+    const asc = await this.driver
+      .table('events')
+      .select('id')
+      .orderBy('metadata->title', 'ASC', { nulls: 'last' })
+      .findMany()
+    const desc = await this.driver
+      .table('events')
+      .select('id')
+      .orderBy('metadata->title', 'DESC', { nulls: 'last' })
+      .findMany()
+
+    assert.deepEqual(asc, [{ id: '2' }, { id: '1' }, { id: '3' }])
+    assert.deepEqual(desc, [{ id: '1' }, { id: '2' }, { id: '3' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseWhereILikeWithAJsonPathUsingDriver({ assert }: Context) {
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { title: 'Hello World' } },
+      { id: '2', metadata: { title: 'Other' } }
+    ])
+
+    const data = await this.driver.table('events').select('id').whereILike('metadata->title', '%hello%').findMany()
+    const orData = await this.driver
+      .table('events')
+      .select('id')
+      .where('id', '2')
+      .orWhereILike('metadata->title', '%hello%')
+      .orderBy('id')
+      .findMany()
+
+    assert.deepEqual(data, [{ id: '1' }])
+    assert.deepEqual(orData, [{ id: '1' }, { id: '2' }])
+  }
+
+  @Test()
+  public async shouldBeAbleToUseWhereILikeIgnoringAccentsUsingDriver({ assert }: Context) {
+    await this.driver.raw('CREATE EXTENSION IF NOT EXISTS unaccent')
+    await this.driver.table('events').createMany([
+      { id: '1', metadata: { title: 'João' } },
+      { id: '2', metadata: { title: 'Other' } }
+    ])
+    await this.driver.table('users').createMany([
+      { id: '1', name: 'João' },
+      { id: '2', name: 'Lenon' }
+    ])
+
+    const users = await this.driver
+      .table('users')
+      .select('id')
+      .whereILike('name', '%joao%', { unaccent: true })
+      .findMany()
+    const events = await this.driver
+      .table('events')
+      .select('id')
+      .whereILike('metadata->title', '%joao%', { unaccent: true })
+      .findMany()
+    const sql = this.driver.table('users').whereILike('name', '%joao%', { unaccent: true }).getQueryBuilder().toString()
+
+    assert.deepEqual(users, [{ id: '1' }])
+    assert.deepEqual(events, [{ id: '1' }])
+    assert.include(sql, `unaccent("name") ILIKE unaccent('%joao%')`)
+  }
+
+  @Test()
+  public async shouldBeAbleToSearchAcrossColumnsAndJsonPathsUsingDriver({ assert }: Context) {
+    await this.driver.alterTable('events', builder => {
+      builder.string('name')
+    })
+    await this.driver.table('events').createMany([
+      { id: '1', name: 'foo', metadata: { title: 'x' } },
+      { id: '2', name: 'x', metadata: { title: 'FOO' } },
+      { id: '3', name: 'x', metadata: { title: 'x' } }
+    ])
+
+    const data = await new QueryBuilder(this.driver, 'events')
+      .select('id')
+      .search(['name', 'metadata->title'], 'foo')
+      .orderBy('id')
+      .findMany()
+    const untouched = await new QueryBuilder(this.driver, 'events').select('id').search(['name'], '').findMany()
+
+    assert.deepEqual(data, [{ id: '1' }, { id: '2' }])
+    assert.lengthOf(untouched, 3)
   }
 }

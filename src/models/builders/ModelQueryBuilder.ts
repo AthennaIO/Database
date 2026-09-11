@@ -11,6 +11,8 @@ import {
   Is,
   Options,
   Collection,
+  type Where,
+  type FilterOptions,
   type PaginationOptions
 } from '@athenna/common'
 
@@ -18,8 +20,13 @@ import type {
   Direction,
   Operations,
   ModelColumns,
-  ModelRelations
+  SearchOptions,
+  ModelRelations,
+  OrderByOptions,
+  FullTextSearchOptions
 } from '#src/types'
+
+import { JsonOperation } from '#src/helpers/JsonOperation'
 
 import type { BaseModel } from '#src/models/BaseModel'
 import type { Driver } from '#src/database/drivers/Driver'
@@ -591,6 +598,60 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Shallow merge `object` into the JSON `column` atomically: first
+   * level keys replace the existing ones and everything else in the
+   * column is kept. A `NULL` column is treated as `{}`. Sugar for
+   * `update({ [column]: Database.jsonMerge(object) })`, so it goes
+   * through the model hooks and returns the updated models like
+   * `update()`.
+   *
+   * @example
+   * ```ts
+   * await Integration.query()
+   *   .where('id', id)
+   *   .mergeJson('metadata', { crawlFinished: true })
+   * ```
+   */
+  public async mergeJson(column: ModelColumns<M>, object: Record<string, any>) {
+    return this.update({ [column]: JsonOperation.merge(object) } as any)
+  }
+
+  /**
+   * Increment the number at the JSON `selector` atomically. A
+   * missing key or a `NULL` column counts as `0` and missing
+   * parents are created. Sugar for
+   * `update({ [column]: Database.jsonIncrement(path, by) })`, so it
+   * goes through the model hooks and returns the updated models
+   * like `update()`.
+   *
+   * @example
+   * ```ts
+   * await Integration.query()
+   *   .where('id', id)
+   *   .incrementJson('metadata->totalIndexedCount')
+   * ```
+   */
+  public async incrementJson(selector: string, by = 1) {
+    const parsed = JsonOperation.parseSelector(selector)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${selector}`)
+    }
+
+    return this.update({
+      [parsed.column]: JsonOperation.increment(parsed.path, by)
+    } as any)
+  }
+
+  /**
+   * Decrement the number at the JSON `selector` atomically. Same as
+   * `incrementJson(selector, -by)`.
+   */
+  public async decrementJson(selector: string, by = 1) {
+    return this.incrementJson(selector, -by)
+  }
+
+  /**
    * Update a value in database without firing the lifecycle hooks.
    * Used by the soft delete path, which must not masquerade as an
    * update to the hooks.
@@ -848,22 +909,31 @@ export class ModelQueryBuilder<
   }
 
   /**
-   * Build a grouped OR search across any mix of direct columns and
-   * relation columns in a single `WHERE (...)` clause.
+   * Build a grouped OR search across any mix of direct columns,
+   * JSON paths and relation columns in a single `WHERE (...)`
+   * clause using `ILIKE '%term%'`.
    *
-   * Each entry in `fields` is either a direct column property (e.g. `name`)
-   * or a `relation.column` path (e.g. `profile.bio`). The resulting SQL is a
-   * single parenthesized group joined exclusively by `OR`. Passing a falsy
-   * `term` short-circuits and the query is left untouched.
+   * Each entry in `fields` is a column property (`name`), a JSON
+   * path (`metadata->title`) or a `relation.column` path
+   * (`profile.bio`, `orders.product.name` for nested relations),
+   * which is applied inside a `whereHas()`. The resulting SQL is a
+   * single parenthesized group joined exclusively by `OR`. Passing
+   * a falsy `term` short-circuits and the query is left untouched.
+   *
+   * `options.unaccent` wraps both sides in `unaccent()` so accents
+   * are ignored. Only Postgres supports it and it requires the
+   * `unaccent` extension. Other drivers ignore the option.
    *
    * @example
    * ```ts
-   * User.query().search(['name', 'email', 'profile.bio'], 'john')
+   * User.query().search(['name', 'email', 'metadata->title', 'profile.bio'], 'john')
+   * User.query().search(['name'], 'joao', { unaccent: true })
    * ```
    */
   public search(
     fields: (ModelColumns<M> | ModelRelations<M> | string)[],
-    term: string
+    term: string,
+    options: SearchOptions = {}
   ) {
     if (!term) {
       return this
@@ -873,20 +943,259 @@ export class ModelQueryBuilder<
 
     this.where(qb => {
       fields.forEach((field, i) => {
-        const isRelation = (field as string).includes('.')
+        const isFirst = i === 0
+        const relations = (field as string).split('.')
+        const column = relations.pop()
 
-        if (isRelation) {
-          const [relation, column] = (field as string).split('.')
-          const relOp = i === 0 ? 'whereHas' : 'orWhereHas'
+        if (!relations.length) {
+          const op = isFirst ? 'whereILike' : 'orWhereILike'
 
-          ;(qb as any)[relOp](relation, (q: any) => q.whereILike(column, value))
+          ;(qb as any)[op](column, value, options)
 
           return
         }
 
-        const op = i === 0 ? 'whereILike' : 'orWhereILike'
+        const op = isFirst ? 'whereHas' : 'orWhereHas'
 
-        ;(qb as any)[op](field, value)
+        this.applyInRelation(qb, op, relations, (query: any) =>
+          query.whereILike(column, value, options)
+        )
+      })
+    })
+
+    return this
+  }
+
+  /**
+   * Apply the same `where`, `orderBy`, `select` and `includes`
+   * filters that a client sends in the query string, usually
+   * parsed and authorized by `request.filters()` from
+   * `@athenna/http`. Nothing is validated here: only pass filters
+   * that were already allowed.
+   *
+   * - `where`: filters are grouped by field and filters on the
+   *   same field are combined with `AND`. `=` and `!=` with `null`
+   *   become `whereNull`/`whereNotNull`, `contains`/`not_contains`
+   *   become `ILIKE '%value%'`/`NOT ILIKE`, `relation.column`
+   *   paths (any depth) are applied inside `whereHas()` and
+   *   `column->key` paths use `whereJson()`.
+   * - `orderBy`: applied in order, JSON paths supported.
+   * - `select`: the columns to select, empty is a no-op.
+   * - `includes`: the relations to eager load.
+   * - `page` and `limit` are ignored, call `paginate()` yourself.
+   * - `search` is ignored, call `search()` with the fields to look
+   *   into yourself.
+   *
+   * @example
+   * ```ts
+   * const filters = request.filters({ where: ['status', 'avatar.name'] })
+   *
+   * VoiceClone.query()
+   *   .search(filters.search, ['name', 'avatar.name'])
+   *   .filter(filters)
+   *   .paginate({ page: filters.page, limit: filters.limit })
+   * ```
+   */
+  public filter(options: Partial<FilterOptions> = {}) {
+    if (options.select?.length) {
+      this.select(...(options.select as ModelColumns<M>[]))
+    }
+
+    options.includes?.forEach(include => this.with(include))
+
+    if (options.where?.length) {
+      this.applyWhereFilters(options.where)
+    }
+
+    options.orderBy?.forEach(({ field, direction }) =>
+      this.orderBy(field as ModelColumns<M>, direction)
+    )
+
+    return this
+  }
+
+  /**
+   * Group the where filters by field and apply each group, chaining
+   * `whereHas()` for `relation.column` fields.
+   */
+  private applyWhereFilters(where: Where[]) {
+    const groups = new Map<string, Where[]>()
+
+    where.forEach(filter => {
+      groups.set(filter.field, [...(groups.get(filter.field) || []), filter])
+    })
+
+    groups.forEach((filters, field) => {
+      const relations = field.split('.')
+      const column = relations.pop()
+
+      if (!relations.length) {
+        this.where(qb => this.applyWhereFiltersInColumn(qb, column, filters))
+
+        return
+      }
+
+      this.applyInRelation(this, 'whereHas', relations, (query: any) =>
+        query.where((qb: any) =>
+          this.applyWhereFiltersInColumn(qb, column, filters)
+        )
+      )
+    })
+  }
+
+  /**
+   * Chain `whereHas()`/`orWhereHas()` through the relation path and
+   * run the closure in the innermost query.
+   */
+  private applyInRelation(
+    query: any,
+    method: 'whereHas' | 'orWhereHas',
+    relations: string[],
+    closure: (query: any) => any
+  ) {
+    const [relation, ...rest] = relations
+
+    query[method](relation, (nested: any) => {
+      if (!rest.length) {
+        closure(nested)
+
+        return
+      }
+
+      this.applyInRelation(nested, 'whereHas', rest, closure)
+    })
+  }
+
+  /**
+   * Apply the filters of a single column. Filters on the same
+   * column are chained, so they are combined with `AND`. JSON
+   * paths go through `whereJson()`, which supports every operator
+   * of the DSL, and plain columns through the dedicated `where*()`.
+   */
+  private applyWhereFiltersInColumn(
+    query: any,
+    column: string,
+    filters: Where[]
+  ) {
+    const isJson = column.includes('->')
+
+    const where = (operator: string, value: any) => {
+      if (isJson) {
+        return query.whereJson(column, operator, value)
+      }
+
+      switch (operator) {
+        case 'in':
+          return query.whereIn(column, value)
+        case 'not in':
+          return query.whereNotIn(column, value)
+        case 'between':
+          return query.whereBetween(column, value)
+        case 'not between':
+          return query.whereNotBetween(column, value)
+        case 'not ilike':
+          return query.whereNot((qb: any) => qb.whereILike(column, value))
+        default:
+          return query.where(column, operator, value)
+      }
+    }
+
+    filters.forEach(({ op, value }) => {
+      switch (op) {
+        case '=':
+          if (Is.Null(value)) {
+            return isJson
+              ? query.whereJsonNull(column)
+              : query.whereNull(column)
+          }
+
+          return where('=', value)
+        case '!=':
+          if (Is.Null(value)) {
+            return isJson
+              ? query.whereJsonNotNull(column)
+              : query.whereNotNull(column)
+          }
+
+          return where('<>', value)
+        case '>':
+        case '>=':
+        case '<':
+        case '<=':
+          return where(op, value)
+        case 'in':
+          return where('in', value)
+        case 'not_in':
+          return where('not in', value)
+        case 'between':
+          return where('between', value)
+        case 'not_between':
+          return where('not between', value)
+        case 'contains':
+          return query.whereILike(column, `%${value}%`)
+        case 'not_contains':
+          return where('not ilike', `%${value}%`)
+      }
+    })
+  }
+
+  /**
+   * Same as `search()` but using the full text search engine of
+   * your database instead of `LIKE`, see `whereFullText()`.
+   *
+   * Direct columns are grouped in a single `whereFullText()` call
+   * and `relation.column` paths are grouped per relation inside a
+   * `whereHas()`, all joined by `OR` in a single `WHERE (...)`. The
+   * grouping matters for MySQL, where the set of columns must match
+   * a FULLTEXT index. Passing a falsy `term` short-circuits and the
+   * query is left untouched.
+   *
+   * @example
+   * ```ts
+   * User.query().fullTextSearch(['name', 'email', 'profile.bio'], 'john')
+   * ```
+   */
+  public fullTextSearch(
+    fields: (ModelColumns<M> | ModelRelations<M> | string)[],
+    term: string,
+    options?: FullTextSearchOptions
+  ) {
+    if (!term) {
+      return this
+    }
+
+    const columns: string[] = []
+    const relations = new Map<string, string[]>()
+
+    fields.forEach(field => {
+      const [relation, column] = (field as string).split('.')
+
+      if (!column) {
+        columns.push(relation)
+
+        return
+      }
+
+      relations.set(relation, [...(relations.get(relation) || []), column])
+    })
+
+    this.where(qb => {
+      let isFirst = true
+
+      if (columns.length) {
+        ;(qb as any).whereFullText(columns, term, options)
+
+        isFirst = false
+      }
+
+      relations.forEach((relationColumns, relation) => {
+        const op = isFirst ? 'whereHas' : 'orWhereHas'
+
+        ;(qb as any)[op](relation, (q: any) =>
+          q.whereFullText(relationColumns, term, options)
+        )
+
+        isFirst = false
       })
     })
 
@@ -1186,10 +1495,50 @@ export class ModelQueryBuilder<
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: ModelColumns<M>, value: any) {
-    const name = this.schema.getColumnNameByProperty(column)
+  public whereILike(
+    column: ModelColumns<M>,
+    value: any,
+    options?: SearchOptions
+  ) {
+    const name = this.getSelectorColumnName(column)
 
-    super.whereILike(name, value)
+    super.whereILike(name, value, options)
+
+    return this
+  }
+
+  /**
+   * Get the column name of a property that may be a JSON selector,
+   * e.g. `metadata->title` maps only the `metadata` part.
+   */
+  private getSelectorColumnName(property: ModelColumns<M> | string) {
+    const parsed = JsonOperation.parseSelector(property as string)
+
+    if (!parsed) {
+      return this.schema.getColumnNameByProperty(property)
+    }
+
+    return `${this.schema.getColumnNameByProperty(parsed.column)}->${
+      parsed.path
+    }`
+  }
+
+  /**
+   * Set a where full text search statement in your query. The
+   * statement is dialect specific and relies on an index that
+   * YOU must create in your migrations, see each driver for the
+   * exact requirements.
+   */
+  public whereFullText(
+    columns: ModelColumns<M> | ModelColumns<M>[],
+    value: string,
+    options?: FullTextSearchOptions
+  ) {
+    const names = this.schema.getColumnNamesByProperties(
+      Is.Array(columns) ? columns : [columns]
+    )
+
+    super.whereFullText(names, value, options)
 
     return this
   }
@@ -1271,9 +1620,34 @@ export class ModelQueryBuilder<
    * Set a where json statement in your query.
    */
   public whereJson(column: ModelColumns<M>, operation: any, value?: any) {
-    const name = this.schema.getColumnNameByProperty(column)
+    const name = this.getSelectorColumnName(column)
 
     super.whereJson(name, operation, value)
+
+    return this
+  }
+
+  /**
+   * Set a where json null statement in your query. Matches when
+   * the key is missing or its value is `null`.
+   *
+   * @example
+   * ```ts
+   * Avatar.query().whereJsonNull('metadata->videoAiFreeUsed')
+   * ```
+   */
+  public whereJsonNull(column: ModelColumns<M> | string) {
+    super.whereJsonNull(this.getSelectorColumnName(column))
+
+    return this
+  }
+
+  /**
+   * Set a where json not null statement in your query. Matches
+   * when the key exists and its value is not `null`.
+   */
+  public whereJsonNotNull(column: ModelColumns<M> | string) {
+    super.whereJsonNotNull(this.getSelectorColumnName(column))
 
     return this
   }
@@ -1368,12 +1742,16 @@ export class ModelQueryBuilder<
 
   public orWhereILike(statement: Partial<M>): this
   public orWhereILike(statement: Record<string, any>): this
-  public orWhereILike(key: ModelColumns<M>, value: any): this
+  public orWhereILike(
+    key: ModelColumns<M>,
+    value: any,
+    options?: SearchOptions
+  ): this
 
   /**
    * Set a orWhere ILike statement in your query.
    */
-  public orWhereILike(statement: any, value?: any) {
+  public orWhereILike(statement: any, value?: any, options?: SearchOptions) {
     if (!Is.String(statement) && Is.Undefined(value)) {
       const parsed = this.schema.propertiesToColumnNames(statement)
 
@@ -1382,9 +1760,27 @@ export class ModelQueryBuilder<
       return this
     }
 
-    const name = this.schema.getColumnNameByProperty(statement)
+    const name = this.getSelectorColumnName(statement)
 
-    super.orWhereILike(name, value)
+    super.orWhereILike(name, value, options)
+
+    return this
+  }
+
+  /**
+   * Set an or where full text search statement in your query.
+   * Same requirements of `whereFullText()`.
+   */
+  public orWhereFullText(
+    columns: ModelColumns<M> | ModelColumns<M>[],
+    value: string,
+    options?: FullTextSearchOptions
+  ) {
+    const names = this.schema.getColumnNamesByProperties(
+      Is.Array(columns) ? columns : [columns]
+    )
+
+    super.orWhereFullText(names, value, options)
 
     return this
   }
@@ -1470,7 +1866,7 @@ export class ModelQueryBuilder<
     operation: Operations,
     value?: any
   ) {
-    const name = this.schema.getColumnNameByProperty(column)
+    const name = this.getSelectorColumnName(column)
 
     super.orWhereJson(name, operation, value)
 
@@ -1478,12 +1874,34 @@ export class ModelQueryBuilder<
   }
 
   /**
+   * Set an or where json null statement in your query.
+   */
+  public orWhereJsonNull(column: ModelColumns<M> | string) {
+    super.orWhereJsonNull(this.getSelectorColumnName(column))
+
+    return this
+  }
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public orWhereJsonNotNull(column: ModelColumns<M> | string) {
+    super.orWhereJsonNotNull(this.getSelectorColumnName(column))
+
+    return this
+  }
+
+  /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: ModelColumns<M>, direction: Direction = 'ASC') {
-    const name = this.schema.getColumnNameByProperty(column)
+  public orderBy(
+    column: ModelColumns<M> | string,
+    direction: Direction = 'ASC',
+    options?: OrderByOptions
+  ) {
+    const name = this.getSelectorColumnName(column)
 
-    super.orderBy(name, direction)
+    super.orderBy(name, direction, options)
 
     return this
   }
@@ -1602,7 +2020,11 @@ export class ModelQueryBuilder<
     const records = {}
     const columns = this.schema
       .getAllUniqueColumns()
-      .filter(column => data[column.name] !== undefined)
+      .filter(
+        column =>
+          data[column.name] !== undefined &&
+          !JsonOperation.is(data[column.name])
+      )
 
     await Promise.all(
       columns.map(async column => {

@@ -829,6 +829,48 @@ export class FakeDriver {
   }
 
   /**
+   * Set a where full text search statement in your query.
+   */
+  public static whereFullText() {
+    return this
+  }
+
+  /**
+   * Shallow merge an object into a JSON column.
+   */
+  public static async mergeJson(): Promise<any> {
+    return undefined
+  }
+
+  /**
+   * Increment a number inside a JSON column.
+   */
+  public static async incrementJson(): Promise<any> {
+    return undefined
+  }
+
+  /**
+   * Decrement a number inside a JSON column.
+   */
+  public static async decrementJson(): Promise<any> {
+    return undefined
+  }
+
+  /**
+   * Set a where json null statement in your query.
+   */
+  public static whereJsonNull() {
+    return this
+  }
+
+  /**
+   * Set a where json not null statement in your query.
+   */
+  public static whereJsonNotNull() {
+    return this
+  }
+
+  /**
    * Set a where in statement in your query.
    */
   public static whereIn() {
@@ -940,6 +982,27 @@ export class FakeDriver {
    * Set an or where ILike statement in your query.
    */
   public static orWhereILike() {
+    return this
+  }
+
+  /**
+   * Set an or where full text search statement in your query.
+   */
+  public static orWhereFullText() {
+    return this
+  }
+
+  /**
+   * Set an or where json null statement in your query.
+   */
+  public static orWhereJsonNull() {
+    return this
+  }
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public static orWhereJsonNotNull() {
     return this
   }
 

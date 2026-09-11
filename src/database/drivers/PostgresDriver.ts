@@ -10,19 +10,24 @@
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Is, Json, Options } from '@athenna/common'
-import type { Operations, LockOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import type { Operations, LockOptions, FullTextSearchOptions } from '#src/types'
 import { CheckViolationException } from '#src/exceptions/CheckViolationException'
 import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
 import { NotNullViolationException } from '#src/exceptions/NotNullViolationException'
 import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class PostgresDriver extends BaseKnexDriver {
+  protected supportsReturning = true
+  protected supportsILike = true
+  protected supportsUnaccent = true
+  protected supportsNullsOrdering = true
+
   /**
    * Connect to database.
    */
@@ -165,6 +170,44 @@ export class PostgresDriver extends BaseKnexDriver {
     return this.qb.insert(preparedData, '*')
   }
 
+  /**
+   * Compile the Postgres full text search statement:
+   *
+   * ```sql
+   * to_tsvector('simple', coalesce("a", '') || ' ' || coalesce("b", ''))
+   *   @@ plainto_tsquery('simple', ?)
+   * ```
+   *
+   * It works without an index, but Postgres will compute the
+   * `tsvector` for every row. To make it use a GIN index, create
+   * it in your migration with EXACTLY the same expression and
+   * language:
+   *
+   * ```sql
+   * CREATE INDEX users_name_fulltext ON users
+   *   USING GIN (to_tsvector('simple', coalesce("name", '')))
+   * ```
+   *
+   * `options.mode` as `boolean` switches to `websearch_to_tsquery`,
+   * which understands quoted phrases, `-word` and `OR`.
+   */
+  protected compileFullText(
+    columns: string[],
+    value: string,
+    options: FullTextSearchOptions
+  ) {
+    const language = (options.language ?? 'simple').replace(/'/g, "''")
+    const parser =
+      options.mode === 'boolean' ? 'websearch_to_tsquery' : 'plainto_tsquery'
+
+    const document = columns.map(() => "coalesce(??, '')").join(" || ' ' || ")
+
+    return {
+      sql: `to_tsvector('${language}', ${document}) @@ ${parser}('${language}', ?)`,
+      bindings: [...columns, value]
+    }
+  }
+
   public whereJson(column: string, value: any): this
   public whereJson(column: string, operation: Operations, value: any): this
 
@@ -182,12 +225,25 @@ export class PostgresDriver extends BaseKnexDriver {
       throw new Error(`Invalid JSON selector: ${column}`)
     }
 
-    const path = this.parseJsonSelectorToWildcardPath(parsed.path)
     const normalized = this.normalizeJsonOperation(operator, value)
+
+    if (this.isScalarJsonWhere(parsed, normalized.value)) {
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
+        normalized.value
+      )
+
+      this.qb.whereRaw(sql, bindings)
+
+      return this
+    }
+
+    const path = this.parseJsonSelectorToWildcardPath(parsed.path)
 
     this.qb.whereRaw('jsonb_path_exists(??, ?::jsonpath, ?::jsonb)', [
       parsed.column,
-      `${path} ? (@ ${normalized.operator} $value)`,
+      `${path} ? (@ ${this.getJsonPathOperator(normalized.operator)} $value)`,
       JSON.stringify({ value: normalized.value })
     ])
 
@@ -211,12 +267,25 @@ export class PostgresDriver extends BaseKnexDriver {
       throw new Error(`Invalid JSON selector: ${column}`)
     }
 
-    const path = this.parseJsonSelectorToWildcardPath(parsed.path)
     const normalized = this.normalizeJsonOperation(operator, value)
+
+    if (this.isScalarJsonWhere(parsed, normalized.value)) {
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
+        normalized.value
+      )
+
+      this.qb.orWhereRaw(sql, bindings)
+
+      return this
+    }
+
+    const path = this.parseJsonSelectorToWildcardPath(parsed.path)
 
     this.qb.orWhereRaw('jsonb_path_exists(??, ?::jsonpath, ?::jsonb)', [
       parsed.column,
-      `${path} ? (@ ${normalized.operator} $value)`,
+      `${path} ? (@ ${this.getJsonPathOperator(normalized.operator)} $value)`,
       JSON.stringify({ value: normalized.value })
     ])
 
@@ -251,13 +320,13 @@ export class PostgresDriver extends BaseKnexDriver {
   private normalizeJsonOperation(operator: any, value?: any) {
     if (Is.Undefined(value)) {
       return {
-        operator: '==',
+        operator: '=',
         value: operator
       }
     }
 
     return {
-      operator: this.getJsonPathOperator(operator),
+      operator,
       value
     }
   }
@@ -278,6 +347,117 @@ export class PostgresDriver extends BaseKnexDriver {
     }
 
     return operators[operator] || operator
+  }
+
+  /**
+   * Whether the where should extract the scalar with `->>`/`#>>`
+   * and compare it in SQL, which lets the planner use expression
+   * indexes such as `((metadata->>'key'))`. Wildcards and JSON
+   * values (objects) still go through `jsonb_path_exists`.
+   */
+  private isScalarJsonWhere(parsed: { path: string }, value: any) {
+    if (parsed.path.includes('*')) {
+      return false
+    }
+
+    return !Is.Object(value)
+  }
+
+  /**
+   * Compile the scalar extraction. A single key uses `->>` to
+   * match expression indexes literally and deeper paths use `#>>`.
+   */
+  protected compileJsonScalar(column: string, path: string[]) {
+    if (path.length === 1 && !/^\d+$/.test(path[0])) {
+      return { sql: '?? ->> ?', bindings: [column, path[0]] }
+    }
+
+    return { sql: '?? #>> ?', bindings: [column, this.toTextArray(path)] }
+  }
+
+  /**
+   * Cast the extracted text by the type of the compared value so
+   * numbers and booleans compare as such and not as text.
+   */
+  protected castJsonScalar(
+    expression: { sql: string; bindings: any[] },
+    value: any
+  ) {
+    if (Is.Number(value)) {
+      return {
+        sql: `(${expression.sql})::numeric`,
+        bindings: expression.bindings
+      }
+    }
+
+    if (Is.Boolean(value)) {
+      return {
+        sql: `(${expression.sql})::boolean`,
+        bindings: expression.bindings
+      }
+    }
+
+    return expression
+  }
+
+  /**
+   * Compile the shallow merge:
+   *
+   * ```sql
+   * coalesce("metadata", '{}'::jsonb) || '{"key":"value"}'::jsonb
+   * ```
+   */
+  protected compileJsonMerge(column: string, object: Record<string, any>) {
+    return {
+      sql: "coalesce(??, '{}'::jsonb) || ?::jsonb",
+      bindings: [column, JSON.stringify(object)]
+    }
+  }
+
+  /**
+   * Compile the increment, creating the missing parent objects of
+   * the path so `metadata->stats->count` works on `{}`:
+   *
+   * ```sql
+   * jsonb_set(
+   *   coalesce("metadata", '{}'::jsonb),
+   *   '{count}',
+   *   to_jsonb(coalesce(("metadata" #>> '{count}')::numeric, 0) + 1),
+   *   true
+   * )
+   * ```
+   */
+  protected compileJsonIncrement(column: string, path: string[], by: number) {
+    let document = {
+      sql: "coalesce(??, '{}'::jsonb)",
+      bindings: [column] as any[]
+    }
+
+    for (let depth = 1; depth < path.length; depth++) {
+      const parent = this.toTextArray(path.slice(0, depth))
+
+      document = {
+        sql: `jsonb_set(${document.sql}, ?, coalesce(?? #> ?, '{}'::jsonb), true)`,
+        bindings: [...document.bindings, parent, column, parent]
+      }
+    }
+
+    const target = this.toTextArray(path)
+
+    return {
+      sql: `jsonb_set(${document.sql}, ?, to_jsonb(coalesce((?? #>> ?)::numeric, 0) + ?), true)`,
+      bindings: [...document.bindings, target, column, target, by]
+    }
+  }
+
+  /**
+   * Convert path parts to a Postgres `text[]` literal, e.g.
+   * `{"stats","count"}`.
+   */
+  private toTextArray(parts: string[]) {
+    const quoted = parts.map(part => `"${part.replace(/(["\\])/g, '\\$1')}"`)
+
+    return `{${quoted.join(',')}}`
   }
 
   /**

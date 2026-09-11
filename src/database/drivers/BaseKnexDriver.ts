@@ -21,13 +21,17 @@ import type {
   Direction,
   Operations,
   LockOptions,
-  ConnectionOptions
+  SearchOptions,
+  OrderByOptions,
+  ConnectionOptions,
+  FullTextSearchOptions
 } from '#src/types'
 
 import type { Knex } from 'knex'
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Driver } from '#src/database/drivers/Driver'
+import { JsonOperation } from '#src/helpers/JsonOperation'
 import { Transaction } from '#src/database/transactions/Transaction'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { EmptyValueException } from '#src/exceptions/EmptyValueException'
@@ -39,6 +43,30 @@ import { NotImplementedMethodException } from '#src/exceptions/NotImplementedMet
 import { NotConnectedDatabaseException } from '#src/exceptions/NotConnectedDatabaseException'
 
 export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
+  /**
+   * Whether the dialect supports `UPDATE ... RETURNING`.
+   */
+  protected supportsReturning = false
+
+  /**
+   * Whether the dialect supports the `ILIKE` operator. Dialects
+   * without it emulate it with `LOWER(a) LIKE LOWER(b)` in JSON
+   * comparisons.
+   */
+  protected supportsILike = false
+
+  /**
+   * Whether the dialect supports the `unaccent()` function. Only
+   * Postgres does, and it requires the `unaccent` extension.
+   */
+  protected supportsUnaccent = false
+
+  /**
+   * Whether the dialect supports `ORDER BY ... NULLS FIRST/LAST`.
+   * Dialects without it emulate it with an `IS NULL` sort key.
+   */
+  protected supportsNullsOrdering = false
+
   /**
    * Connect to database.
    */
@@ -690,17 +718,297 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
    * Update a value in database.
    */
   public async update<T = any>(data: Partial<T>): Promise<T | T[]> {
-    const preparedData = this.prepareInsert(data)
+    const preparedData = this.prepareInsert(this.compileJsonOperations(data))
 
-    await this.runTranslatingErrors(() => this.qb.clone().update(preparedData))
+    const ids = await this.runTranslatingErrors(() =>
+      this.updateReturningIds(preparedData)
+    )
 
-    const result = await this.findMany()
+    if (!ids.length) {
+      this.qb = this.query()
+
+      return []
+    }
+
+    this.qb.clearWhere()
+
+    const result = await this.whereIn(this.primaryKey, ids).findMany()
 
     if (result.length === 1) {
       return result[0]
     }
 
     return result
+  }
+
+  /**
+   * Run the update and resolve the primary keys of the rows it changed.
+   * Drivers with `RETURNING` support do it in one round-trip. Others
+   * select the matching keys first and then update only those rows, so
+   * a concurrent writer that already changed them makes the update
+   * affect nothing and resolve empty.
+   */
+  protected async updateReturningIds<T = any>(data: Partial<T>) {
+    if (this.supportsReturning) {
+      const rows = await this.qb.clone().update(data).returning(this.primaryKey)
+
+      return rows.map(row => row[this.primaryKey])
+    }
+
+    const rows = await this.qb.clone().clearSelect().select(this.primaryKey)
+    const ids = rows.map(row => row[this.primaryKey])
+
+    if (!ids.length) {
+      return []
+    }
+
+    const affected = await this.qb
+      .clone()
+      .whereIn(this.primaryKey, ids)
+      .update(data)
+
+    if (!affected) {
+      return []
+    }
+
+    return ids
+  }
+
+  /**
+   * Replace every `JsonOperation` marker in the data by the raw
+   * SQL expression that runs it atomically in the database.
+   */
+  protected compileJsonOperations<T = any>(data: Partial<T>): Partial<T> {
+    return Object.entries(data).reduce((compiled, [column, value]) => {
+      if (!JsonOperation.is(value)) {
+        compiled[column] = value
+
+        return compiled
+      }
+
+      const { sql, bindings } =
+        value.type === 'merge'
+          ? this.compileJsonMerge(column, value.value)
+          : this.compileJsonIncrement(column, value.path, value.value)
+
+      compiled[column] = this.raw(sql, bindings)
+
+      return compiled
+    }, {} as Partial<T>)
+  }
+
+  /**
+   * Compile the expression that shallow merges `object` into the
+   * JSON `column`. Each dialect that supports it overrides it.
+   */
+  protected compileJsonMerge(
+    _column: string,
+    _object: Record<string, any>
+  ): { sql: string; bindings: any[] } {
+    throw new NotImplementedMethodException('mergeJson', this.connection)
+  }
+
+  /**
+   * Compile the expression that increments the number at `path`
+   * inside the JSON `column`. Each dialect that supports it
+   * overrides it.
+   */
+  protected compileJsonIncrement(
+    _column: string,
+    _path: string[],
+    _by: number
+  ): { sql: string; bindings: any[] } {
+    throw new NotImplementedMethodException('incrementJson', this.connection)
+  }
+
+  /**
+   * Compile the expression that extracts the value at `path` of
+   * the JSON `column` as text, e.g. `col ->> 'key'` in Postgres.
+   * Each dialect overrides it.
+   */
+  protected compileJsonScalar(
+    _column: string,
+    _path: string[]
+  ): { sql: string; bindings: any[] } {
+    throw new NotImplementedMethodException('whereJson', this.connection)
+  }
+
+  /**
+   * Cast the scalar expression according to the type of the value
+   * it will be compared against. Dialects with typed JSON
+   * extraction (Postgres) override it.
+   */
+  protected castJsonScalar(
+    expression: { sql: string; bindings: any[] },
+    _value: any
+  ) {
+    return expression
+  }
+
+  /**
+   * Compile the `IS NULL` check of a JSON scalar expression. Must
+   * match both a missing key and a JSON `null`.
+   */
+  protected compileJsonIsNull(
+    expression: { sql: string; bindings: any[] },
+    _column: string,
+    _path: string[]
+  ): { sql: string; bindings: any[] } {
+    return {
+      sql: `${expression.sql} IS NULL`,
+      bindings: expression.bindings
+    }
+  }
+
+  /**
+   * Compile a full `expression <operator> value` condition over a
+   * JSON scalar, handling the operators that need a special right
+   * hand side (`in`, `between`, `ilike`...) and the `null` value.
+   */
+  protected compileJsonComparison(
+    column: string,
+    path: string[],
+    expression: { sql: string; bindings: any[] },
+    operator: string,
+    value: any
+  ): { sql: string; bindings: any[] } {
+    const op = String(operator).toLowerCase()
+
+    if (Is.Null(value) && ['=', '!=', '<>'].includes(op)) {
+      const isNull = this.compileJsonIsNull(expression, column, path)
+
+      return op === '='
+        ? isNull
+        : { sql: `NOT (${isNull.sql})`, bindings: isNull.bindings }
+    }
+
+    switch (op) {
+      case 'in':
+      case 'not in': {
+        const values = Is.Array(value) ? value : [value]
+        const target = this.castJsonScalar(expression, values[0])
+
+        return {
+          sql: `${target.sql} ${op} (${values.map(() => '?').join(', ')})`,
+          bindings: [...target.bindings, ...values]
+        }
+      }
+      case 'between':
+      case 'not between': {
+        const target = this.castJsonScalar(expression, value[0])
+
+        return {
+          sql: `${target.sql} ${op} ? and ?`,
+          bindings: [...target.bindings, value[0], value[1]]
+        }
+      }
+      case 'ilike':
+      case 'not ilike': {
+        if (this.supportsILike) {
+          return {
+            sql: `${expression.sql} ${op} ?`,
+            bindings: [...expression.bindings, value]
+          }
+        }
+
+        return {
+          sql: `LOWER(${expression.sql}) ${
+            op === 'ilike' ? 'like' : 'not like'
+          } LOWER(?)`,
+          bindings: [...expression.bindings, value]
+        }
+      }
+      case 'like':
+      case 'not like':
+        return {
+          sql: `${expression.sql} ${op} ?`,
+          bindings: [...expression.bindings, value]
+        }
+      default: {
+        const target = this.castJsonScalar(expression, value)
+
+        return {
+          sql: `${target.sql} ${op} ?`,
+          bindings: [...target.bindings, value]
+        }
+      }
+    }
+  }
+
+  /**
+   * Compile the where condition of a JSON selector without
+   * wildcard: extracts the scalar and compares it.
+   */
+  protected compileJsonWhere(
+    parsed: { column: string; path: string },
+    operator: string,
+    value: any
+  ) {
+    const path = this.splitJsonPath(parsed.path)
+    const expression = this.compileJsonScalar(parsed.column, path)
+
+    return this.compileJsonComparison(
+      parsed.column,
+      path,
+      expression,
+      operator,
+      value
+    )
+  }
+
+  /**
+   * Compile the `IS NULL`/`IS NOT NULL` condition of a JSON
+   * selector, validating it.
+   */
+  protected compileJsonNull(method: string, column: string, not: boolean) {
+    if (Is.Undefined(column) || !Is.String(column)) {
+      throw new EmptyColumnException(method)
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    if (parsed.path.includes('*')) {
+      throw new Error(
+        `${method} does not support wildcard selectors: ${column}`
+      )
+    }
+
+    const path = this.splitJsonPath(parsed.path)
+    const expression = this.compileJsonScalar(parsed.column, path)
+    const isNull = this.compileJsonIsNull(expression, parsed.column, path)
+
+    return not
+      ? { sql: `NOT (${isNull.sql})`, bindings: isNull.bindings }
+      : isNull
+  }
+
+  /**
+   * Split a `a->b->c` selector path into `['a', 'b', 'c']`.
+   */
+  protected splitJsonPath(path: string) {
+    return JsonOperation.parsePath(path)
+  }
+
+  /**
+   * Convert path parts to a `$.a.b[0]` json path, quoting keys
+   * that are not plain identifiers.
+   */
+  protected toJsonPath(parts: string[]) {
+    return parts.reduce((jsonPath, part) => {
+      if (/^\d+$/.test(part)) {
+        return `${jsonPath}[${part}]`
+      }
+
+      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(part)) {
+        return `${jsonPath}.${part}`
+      }
+
+      return `${jsonPath}."${part.replace(/"/g, '\\"')}"`
+    }, '$')
   }
 
   /**
@@ -1403,7 +1711,7 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string, value: any) {
+  public whereILike(column: string, value: any, options: SearchOptions = {}) {
     if (Is.Undefined(column) || !Is.String(column)) {
       throw new EmptyColumnException('whereILike')
     }
@@ -1412,7 +1720,80 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
       throw new EmptyValueException('whereILike')
     }
 
+    const compiled = this.compileILike('whereILike', column, value, options)
+
+    if (compiled) {
+      this.qb.whereRaw(compiled.sql, compiled.bindings)
+
+      return this
+    }
+
+    if (this.isUsingJsonSelector(column)) {
+      return this.whereJson(column, 'ilike', value)
+    }
+
     this.qb.whereILike(column, value)
+
+    return this
+  }
+
+  /**
+   * Compile the accent insensitive `ILIKE` when requested and
+   * supported. Returns `null` when the regular `ILIKE` should be
+   * used instead.
+   */
+  protected compileILike(
+    method: string,
+    column: string,
+    value: any,
+    options: SearchOptions
+  ): { sql: string; bindings: any[] } | null {
+    if (!options.unaccent || !this.supportsUnaccent) {
+      return null
+    }
+
+    let expression = { sql: '??', bindings: [column] }
+
+    if (this.isUsingJsonSelector(column)) {
+      const parsed = this.parseJsonSelector(column)
+
+      if (!parsed) {
+        throw new Error(`Invalid JSON selector: ${column}`)
+      }
+
+      if (parsed.path.includes('*')) {
+        throw new Error(
+          `${method} does not support wildcard selectors: ${column}`
+        )
+      }
+
+      expression = this.compileJsonScalar(
+        parsed.column,
+        this.splitJsonPath(parsed.path)
+      )
+    }
+
+    return {
+      sql: `unaccent(${expression.sql}) ILIKE unaccent(?)`,
+      bindings: [...expression.bindings, value]
+    }
+  }
+
+  /**
+   * Set a where full text search statement in your query. The SQL
+   * generated is dialect specific, see `PostgresDriver`, `MySqlDriver`
+   * and `SqliteDriver` for the exact statement and the index each
+   * one requires.
+   */
+  public whereFullText(
+    columns: string | string[],
+    value: string,
+    options: FullTextSearchOptions = {}
+  ) {
+    const names = this.parseFullTextColumns('whereFullText', columns, value)
+    const { sql, bindings } = this.compileFullText(names, value, options)
+
+    this.qb.whereRaw(sql, bindings)
 
     return this
   }
@@ -1533,6 +1914,68 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
     }
 
     this.qb.whereJsonPath(parsed.column, path, operator, value)
+
+    return this
+  }
+
+  /**
+   * Set a where json null statement in your query. Matches when
+   * the key is missing or its value is `null`.
+   */
+  public whereJsonNull(column: string) {
+    const { sql, bindings } = this.compileJsonNull(
+      'whereJsonNull',
+      column,
+      false
+    )
+
+    this.qb.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set a where json not null statement in your query. Matches
+   * when the key exists and its value is not `null`.
+   */
+  public whereJsonNotNull(column: string) {
+    const { sql, bindings } = this.compileJsonNull(
+      'whereJsonNotNull',
+      column,
+      true
+    )
+
+    this.qb.whereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where json null statement in your query.
+   */
+  public orWhereJsonNull(column: string) {
+    const { sql, bindings } = this.compileJsonNull(
+      'orWhereJsonNull',
+      column,
+      false
+    )
+
+    this.qb.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Set an or where json not null statement in your query.
+   */
+  public orWhereJsonNotNull(column: string) {
+    const { sql, bindings } = this.compileJsonNull(
+      'orWhereJsonNotNull',
+      column,
+      true
+    )
+
+    this.qb.orWhereRaw(sql, bindings)
 
     return this
   }
@@ -1699,7 +2142,7 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an or where ILike statement in your query.
    */
-  public orWhereILike(column: string, value: any) {
+  public orWhereILike(column: string, value: any, options: SearchOptions = {}) {
     if (Is.Undefined(column) || !Is.String(column)) {
       throw new EmptyColumnException('orWhereILike')
     }
@@ -1708,9 +2151,75 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
       throw new EmptyValueException('orWhereILike')
     }
 
+    const compiled = this.compileILike('orWhereILike', column, value, options)
+
+    if (compiled) {
+      this.qb.orWhereRaw(compiled.sql, compiled.bindings)
+
+      return this
+    }
+
+    if (this.isUsingJsonSelector(column)) {
+      return this.orWhereJson(column, 'ilike', value)
+    }
+
     this.qb.orWhereILike(column, value)
 
     return this
+  }
+
+  /**
+   * Set an or where full text search statement in your query.
+   * Same requirements of `whereFullText()`.
+   */
+  public orWhereFullText(
+    columns: string | string[],
+    value: string,
+    options: FullTextSearchOptions = {}
+  ) {
+    const names = this.parseFullTextColumns('orWhereFullText', columns, value)
+    const { sql, bindings } = this.compileFullText(names, value, options)
+
+    this.qb.orWhereRaw(sql, bindings)
+
+    return this
+  }
+
+  /**
+   * Validate the full text search arguments and normalize the
+   * columns to an array.
+   */
+  protected parseFullTextColumns(
+    method: string,
+    columns: string | string[],
+    value: string
+  ) {
+    const names = Is.Array(columns) ? columns : [columns]
+
+    if (!names.length || names.some(name => !Is.String(name))) {
+      throw new EmptyColumnException(method)
+    }
+
+    if (Is.Undefined(value)) {
+      throw new EmptyValueException(method)
+    }
+
+    return names
+  }
+
+  /**
+   * Compile the dialect specific full text search statement.
+   * Each dialect that supports full text search overrides it.
+   */
+  protected compileFullText(
+    _columns: string[],
+    _value: string,
+    _options: FullTextSearchOptions
+  ): { sql: string; bindings: any[] } {
+    throw new NotImplementedMethodException(
+      this.whereFullText.name,
+      this.connection
+    )
   }
 
   /**
@@ -1866,14 +2375,88 @@ export class BaseKnexDriver extends Driver<Knex, Knex.QueryBuilder> {
   /**
    * Set an order by statement in your query.
    */
-  public orderBy(column: string, direction: Direction = 'ASC') {
+  public orderBy(
+    column: string,
+    direction: Direction = 'ASC',
+    options: OrderByOptions = {}
+  ) {
     if (Is.Undefined(column) || !Is.String(column)) {
       throw new EmptyColumnException('orderBy')
     }
 
-    this.qb.orderBy(column, direction.toUpperCase())
+    const dir = direction.toUpperCase() as 'ASC' | 'DESC'
+
+    if (!this.isUsingJsonSelector(column)) {
+      if (options.nulls) {
+        const { sql, bindings } = this.compileOrderBy(
+          { sql: '??', bindings: [column] },
+          dir,
+          options.nulls
+        )
+
+        this.qb.orderByRaw(sql, bindings)
+
+        return this
+      }
+
+      this.qb.orderBy(column, dir)
+
+      return this
+    }
+
+    const parsed = this.parseJsonSelector(column)
+
+    if (!parsed) {
+      throw new Error(`Invalid JSON selector: ${column}`)
+    }
+
+    const expression = this.compileJsonScalar(
+      parsed.column,
+      this.splitJsonPath(parsed.path)
+    )
+
+    const { sql, bindings } = this.compileOrderBy(
+      expression,
+      dir,
+      options.nulls
+    )
+
+    this.qb.orderByRaw(sql, bindings)
 
     return this
+  }
+
+  /**
+   * Compile an `ORDER BY` item over a raw expression, placing the
+   * nulls as requested. Dialects without `NULLS FIRST/LAST` sort
+   * by `expression IS NULL` first, which is `false` for values and
+   * `true` for nulls.
+   */
+  protected compileOrderBy(
+    expression: { sql: string; bindings: any[] },
+    direction: 'ASC' | 'DESC',
+    nulls?: 'first' | 'last'
+  ): { sql: string; bindings: any[] } {
+    if (!nulls) {
+      return {
+        sql: `${expression.sql} ${direction}`,
+        bindings: expression.bindings
+      }
+    }
+
+    if (this.supportsNullsOrdering) {
+      return {
+        sql: `${expression.sql} ${direction} NULLS ${nulls.toUpperCase()}`,
+        bindings: expression.bindings
+      }
+    }
+
+    return {
+      sql: `(${expression.sql} IS NULL) ${
+        nulls === 'first' ? 'DESC' : 'ASC'
+      }, ${expression.sql} ${direction}`,
+      bindings: [...expression.bindings, ...expression.bindings]
+    }
   }
 
   /**

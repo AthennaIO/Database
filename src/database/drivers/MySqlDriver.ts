@@ -10,13 +10,13 @@
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Is, Json, Options } from '@athenna/common'
-import type { Operations, LockOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import { LockTimeoutException } from '#src/exceptions/LockTimeoutException'
 import { WrongMethodException } from '#src/exceptions/WrongMethodException'
 import { EmptyColumnException } from '#src/exceptions/EmptyColumnException'
+import type { Operations, LockOptions, FullTextSearchOptions } from '#src/types'
 import { CheckViolationException } from '#src/exceptions/CheckViolationException'
 import { UniqueViolationException } from '#src/exceptions/UniqueViolationException'
 import { NotNullViolationException } from '#src/exceptions/NotNullViolationException'
@@ -150,6 +150,43 @@ export class MySqlDriver extends BaseKnexDriver {
     return this.whereIn(this.primaryKey, ids).findMany()
   }
 
+  /**
+   * Compile the MySQL full text search statement:
+   *
+   * ```sql
+   * MATCH(`a`, `b`) AGAINST(? IN NATURAL LANGUAGE MODE)
+   * ```
+   *
+   * MySQL REQUIRES a FULLTEXT index covering exactly the same set
+   * of columns given to the method, otherwise the query fails with
+   * `Can't find FULLTEXT index matching the column list`. Create
+   * it in your migration:
+   *
+   * ```ts
+   * table.index(['name', 'email'], 'users_fulltext', 'FULLTEXT')
+   * ```
+   *
+   * `options.mode` as `boolean` switches to `IN BOOLEAN MODE`,
+   * which understands operators such as `+word`, `-word` and `"phrase"`.
+   */
+  protected compileFullText(
+    columns: string[],
+    value: string,
+    options: FullTextSearchOptions
+  ) {
+    const mode =
+      options.mode === 'boolean'
+        ? 'IN BOOLEAN MODE'
+        : 'IN NATURAL LANGUAGE MODE'
+
+    const match = columns.map(() => '??').join(', ')
+
+    return {
+      sql: `MATCH(${match}) AGAINST(? ${mode})`,
+      bindings: [...columns, value]
+    }
+  }
+
   public whereJson(column: string, value: any): this
   public whereJson(column: string, operation: Operations, value: any): this
 
@@ -170,14 +207,13 @@ export class MySqlDriver extends BaseKnexDriver {
     const normalized = this.normalizeJsonOperation(operator, value)
 
     if (!parsed.path.includes('*')) {
-      this.qb.whereRaw(
-        'JSON_UNQUOTE(JSON_EXTRACT(??, ?)) ' + normalized.operator + ' ?',
-        [
-          parsed.column,
-          this.parseJsonSelectorToMySqlPath(parsed.path),
-          normalized.value
-        ]
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
+        normalized.value
       )
+
+      this.qb.whereRaw(sql, bindings)
 
       return this
     }
@@ -214,14 +250,13 @@ export class MySqlDriver extends BaseKnexDriver {
     const normalized = this.normalizeJsonOperation(operator, value)
 
     if (!parsed.path.includes('*')) {
-      this.qb.orWhereRaw(
-        'JSON_UNQUOTE(JSON_EXTRACT(??, ?)) ' + normalized.operator + ' ?',
-        [
-          parsed.column,
-          this.parseJsonSelectorToMySqlPath(parsed.path),
-          normalized.value
-        ]
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
+        normalized.value
       )
+
+      this.qb.orWhereRaw(sql, bindings)
 
       return this
     }
@@ -236,18 +271,6 @@ export class MySqlDriver extends BaseKnexDriver {
     )
 
     return this
-  }
-
-  /**
-   * Convert a json selector path to mysql json path.
-   */
-  private parseJsonSelectorToMySqlPath(path: string) {
-    const parts = path
-      .split('->')
-      .map(part => part.trim())
-      .filter(Boolean)
-
-    return this.toJsonPath(parts)
   }
 
   /**
@@ -268,16 +291,90 @@ export class MySqlDriver extends BaseKnexDriver {
   }
 
   /**
-   * Convert path parts to a valid json path.
+   * Compile the scalar extraction as text:
+   *
+   * ```sql
+   * JSON_UNQUOTE(JSON_EXTRACT(`metadata`, '$.key'))
+   * ```
    */
-  private toJsonPath(parts: string[]) {
-    return parts.reduce((jsonPath, part) => {
-      if (/^\d+$/.test(part)) {
-        return `${jsonPath}[${part}]`
-      }
+  protected compileJsonScalar(column: string, path: string[]) {
+    return {
+      sql: 'JSON_UNQUOTE(JSON_EXTRACT(??, ?))',
+      bindings: [column, this.toJsonPath(path)]
+    }
+  }
 
-      return `${jsonPath}.${part}`
-    }, '$')
+  /**
+   * `JSON_UNQUOTE()` turns a JSON `null` into the string `'null'`,
+   * so the JSON type is checked to match both missing keys and
+   * JSON nulls.
+   */
+  protected compileJsonIsNull(
+    expression: { sql: string; bindings: any[] },
+    column: string,
+    path: string[]
+  ) {
+    return {
+      sql: `(${expression.sql} IS NULL OR JSON_TYPE(JSON_EXTRACT(??, ?)) = 'NULL')`,
+      bindings: [...expression.bindings, column, this.toJsonPath(path)]
+    }
+  }
+
+  /**
+   * Compile the shallow merge setting each first level key, since
+   * `JSON_MERGE_PATCH` would merge nested objects deeply:
+   *
+   * ```sql
+   * JSON_SET(coalesce(`metadata`, '{}'), '$.key', CAST('"value"' AS JSON))
+   * ```
+   */
+  protected compileJsonMerge(column: string, object: Record<string, any>) {
+    const keys = Object.keys(object)
+
+    if (!keys.length) {
+      return { sql: "coalesce(??, '{}')", bindings: [column] }
+    }
+
+    return {
+      sql: `JSON_SET(coalesce(??, '{}'), ${keys
+        .map(() => '?, CAST(? AS JSON)')
+        .join(', ')})`,
+      bindings: [
+        column,
+        ...keys.flatMap(key => [
+          this.toJsonPath([key]),
+          JSON.stringify(object[key] === undefined ? null : object[key])
+        ])
+      ]
+    }
+  }
+
+  /**
+   * Compile the increment, creating the missing parent objects of
+   * the path since `JSON_SET` ignores paths whose parent is missing:
+   *
+   * ```sql
+   * JSON_SET(coalesce(`metadata`, '{}'), '$.count', coalesce(JSON_EXTRACT(`metadata`, '$.count'), 0) + 1)
+   * ```
+   */
+  protected compileJsonIncrement(column: string, path: string[], by: number) {
+    let document = { sql: "coalesce(??, '{}')", bindings: [column] as any[] }
+
+    for (let depth = 1; depth < path.length; depth++) {
+      const parent = this.toJsonPath(path.slice(0, depth))
+
+      document = {
+        sql: `JSON_SET(${document.sql}, ?, coalesce(JSON_EXTRACT(??, ?), JSON_OBJECT()))`,
+        bindings: [...document.bindings, parent, column, parent]
+      }
+    }
+
+    const target = this.toJsonPath(path)
+
+    return {
+      sql: `JSON_SET(${document.sql}, ?, coalesce(JSON_EXTRACT(??, ?), 0) + ?)`,
+      bindings: [...document.bindings, target, column, target, by]
+    }
   }
 
   /**

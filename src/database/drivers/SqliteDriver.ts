@@ -10,7 +10,7 @@
 import { debug } from '#src/debug'
 import { Log } from '@athenna/logger'
 import { Is, Json, Options } from '@athenna/common'
-import type { Operations, LockOptions } from '#src/types'
+import type { Operations, LockOptions, SearchOptions } from '#src/types'
 import { ConnectionFactory } from '#src/factories/ConnectionFactory'
 import { BaseKnexDriver } from '#src/database/drivers/BaseKnexDriver'
 import type { ConnectionOptions } from '#src/types/ConnectionOptions'
@@ -23,6 +23,9 @@ import { NotNullViolationException } from '#src/exceptions/NotNullViolationExcep
 import { ForeignKeyViolationException } from '#src/exceptions/ForeignKeyViolationException'
 
 export class SqliteDriver extends BaseKnexDriver {
+  protected supportsReturning = true
+  protected supportsNullsOrdering = true
+
   /**
    * The tail of each named lock's waiting chain, keyed by
    * "connection:key". A lock() call waits on the current tail and
@@ -251,11 +254,13 @@ export class SqliteDriver extends BaseKnexDriver {
     const normalized = this.normalizeJsonOperation(operator, value)
 
     if (!parsed.path.includes('*')) {
-      this.qb.whereRaw('json_extract(??, ?) ' + normalized.operator + ' ?', [
-        parsed.column,
-        this.parseJsonSelectorToSqlitePath(parsed.path),
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
         normalized.value
-      ])
+      )
+
+      this.qb.whereRaw(sql, bindings)
 
       return this
     }
@@ -292,11 +297,13 @@ export class SqliteDriver extends BaseKnexDriver {
     const normalized = this.normalizeJsonOperation(operator, value)
 
     if (!parsed.path.includes('*')) {
-      this.qb.orWhereRaw('json_extract(??, ?) ' + normalized.operator + ' ?', [
-        parsed.column,
-        this.parseJsonSelectorToSqlitePath(parsed.path),
+      const { sql, bindings } = this.compileJsonWhere(
+        parsed,
+        normalized.operator,
         normalized.value
-      ])
+      )
+
+      this.qb.orWhereRaw(sql, bindings)
 
       return this
     }
@@ -311,18 +318,6 @@ export class SqliteDriver extends BaseKnexDriver {
     )
 
     return this
-  }
-
-  /**
-   * Convert a json selector path to sqlite json path.
-   */
-  private parseJsonSelectorToSqlitePath(path: string) {
-    const parts = path
-      .split('->')
-      .map(part => part.trim())
-      .filter(Boolean)
-
-    return this.toJsonPath(parts)
   }
 
   /**
@@ -343,16 +338,63 @@ export class SqliteDriver extends BaseKnexDriver {
   }
 
   /**
-   * Convert path parts to a valid json path.
+   * Compile the scalar extraction:
+   *
+   * ```sql
+   * json_extract(`metadata`, '$.key')
+   * ```
    */
-  private toJsonPath(parts: string[]) {
-    return parts.reduce((jsonPath, part) => {
-      if (/^\d+$/.test(part)) {
-        return `${jsonPath}[${part}]`
-      }
+  protected compileJsonScalar(column: string, path: string[]) {
+    return {
+      sql: 'json_extract(??, ?)',
+      bindings: [column, this.toJsonPath(path)]
+    }
+  }
 
-      return `${jsonPath}.${part}`
-    }, '$')
+  /**
+   * Compile the shallow merge setting each first level key, since
+   * `json_patch` would merge nested objects deeply:
+   *
+   * ```sql
+   * json_set(coalesce(`metadata`, '{}'), '$.key', json('"value"'))
+   * ```
+   */
+  protected compileJsonMerge(column: string, object: Record<string, any>) {
+    const keys = Object.keys(object)
+
+    if (!keys.length) {
+      return { sql: "coalesce(??, '{}')", bindings: [column] }
+    }
+
+    return {
+      sql: `json_set(coalesce(??, '{}'), ${keys
+        .map(() => '?, json(?)')
+        .join(', ')})`,
+      bindings: [
+        column,
+        ...keys.flatMap(key => [
+          this.toJsonPath([key]),
+          JSON.stringify(object[key] === undefined ? null : object[key])
+        ])
+      ]
+    }
+  }
+
+  /**
+   * Compile the increment. SQLite creates the missing parents of
+   * the path by itself:
+   *
+   * ```sql
+   * json_set(coalesce(`metadata`, '{}'), '$.count', coalesce(json_extract(`metadata`, '$.count'), 0) + 1)
+   * ```
+   */
+  protected compileJsonIncrement(column: string, path: string[], by: number) {
+    const target = this.toJsonPath(path)
+
+    return {
+      sql: "json_set(coalesce(??, '{}'), ?, coalesce(json_extract(??, ?), 0) + ?)",
+      bindings: [column, target, column, target, by]
+    }
   }
 
   /**
@@ -414,7 +456,11 @@ export class SqliteDriver extends BaseKnexDriver {
   /**
    * Set a where ILike statement in your query.
    */
-  public whereILike(column: string, value: any) {
+  public whereILike(column: string, value: any, _options?: SearchOptions) {
+    if (this.isUsingJsonSelector(column)) {
+      return this.whereJson(column, 'ilike', value)
+    }
+
     this.qb.whereLike(column, value)
 
     return this
@@ -423,10 +469,55 @@ export class SqliteDriver extends BaseKnexDriver {
   /**
    * Set a where ILike statement in your query.
    */
-  public orWhereILike(column: string, value: any) {
+  public orWhereILike(column: string, value: any, _options?: SearchOptions) {
+    if (this.isUsingJsonSelector(column)) {
+      return this.orWhereJson(column, 'ilike', value)
+    }
+
     this.qb.orWhereLike(column, value)
 
     return this
+  }
+
+  /**
+   * SQLite full text search requires an FTS5 virtual table, which
+   * can't be expressed on top of a regular table. This is a fallback
+   * that builds a grouped `LIKE '%value%'` across the given columns,
+   * so the same code works when using SQLite for tests and Postgres
+   * or MySQL in production. Options are ignored.
+   */
+  public whereFullText(columns: string | string[], value: string) {
+    const names = this.parseFullTextColumns('whereFullText', columns, value)
+
+    this.qb.where(qb => this.compileFullTextFallback(qb, names, value))
+
+    return this
+  }
+
+  /**
+   * Same fallback of `whereFullText()` but as an `OR` clause.
+   */
+  public orWhereFullText(columns: string | string[], value: string) {
+    const names = this.parseFullTextColumns('orWhereFullText', columns, value)
+
+    this.qb.orWhere(qb => this.compileFullTextFallback(qb, names, value))
+
+    return this
+  }
+
+  /**
+   * Add a `column LIKE '%value%'` for each column joined by `OR`.
+   */
+  private compileFullTextFallback(qb: any, columns: string[], value: string) {
+    debug(
+      'sqlite does not support full text search on regular tables, falling back to LIKE'
+    )
+
+    columns.forEach((column, i) => {
+      const method = i === 0 ? 'whereLike' : 'orWhereLike'
+
+      qb[method](column, `%${value}%`)
+    })
   }
 
   /**
