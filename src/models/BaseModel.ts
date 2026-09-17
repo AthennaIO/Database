@@ -19,6 +19,7 @@ import {
 
 import { Database } from '#src/facades/Database'
 import { faker, type Faker } from '@faker-js/faker'
+import type { Driver } from '#src/database/drivers/Driver'
 import { ModelSchema } from '#src/models/schemas/ModelSchema'
 import type { ModelColumns, ModelRelations } from '#src/types'
 import { ORIGINAL_SYMBOL } from '#src/constants/OriginalSymbol'
@@ -180,10 +181,12 @@ export class BaseModel {
   /**
    * Create a query builder for the model.
    */
-  public static query<T extends typeof BaseModel>(this: T) {
-    const driver = Database.connection(this.connection()).driver
+  public static query<T extends typeof BaseModel>(
+    this: T
+  ): ModelQueryBuilder<InstanceType<T>, Driver> {
+    const driver: Driver = Database.connection(this.connection()).driver
 
-    return new ModelQueryBuilder<InstanceType<T>, typeof driver>(this, driver)
+    return new ModelQueryBuilder<InstanceType<T>, Driver>(this, driver)
       .setAttributes(this.isToSetAttributes)
       .uniqueValidation(this.isToValidateUnique)
       .nullableValidation(this.isToValidateNullable)

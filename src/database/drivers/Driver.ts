@@ -870,16 +870,17 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a where statement in your query.
    */
-  public abstract where(
-    statement: any,
-    operation?: string | Operations,
-    value?: any
-  ): this
+  public abstract where(statement: (query: this) => void): this
+  public abstract where(statement: Record<string, any>): this
+  public abstract where(key: string, value: any): this
+  public abstract where(key: string, operation: Operations, value: any): this
 
   /**
    * Set a where not statement in your query.
    */
-  public abstract whereNot(statement: any, value?: any): this
+  public abstract whereNot(statement: (query: this) => void): this
+  public abstract whereNot(statement: Record<string, any>): this
+  public abstract whereNot(key: string, value: any): this
 
   /**
    * Set a where raw statement in your query.
@@ -987,19 +988,17 @@ export abstract class Driver<Client = any, QB = any> {
   /**
    * Set a or where statement in your query.
    */
-  public abstract orWhere(
-    statement: string | Record<string, any>,
-    operation: string | Record<string, any>,
-    value: Record<string, any>
-  ): this
+  public abstract orWhere(statement: (query: this) => void): this
+  public abstract orWhere(statement: Record<string, any>): this
+  public abstract orWhere(key: string, value: any): this
+  public abstract orWhere(key: string, operation: Operations, value: any): this
 
   /**
    * Set an or where not statement in your query.
    */
-  public abstract orWhereNot(
-    statement: string | Record<string, any>,
-    value: any
-  ): this
+  public abstract orWhereNot(statement: (query: this) => void): this
+  public abstract orWhereNot(statement: Record<string, any>): this
+  public abstract orWhereNot(key: string, value: any): this
 
   /**
    * Set a or where raw statement in your query.
